@@ -104,7 +104,7 @@ void GLAPIENTRY MessageCallback(GLenum _source,
 
     std::cerr
     << TERMINAL_NOTIF << "\nGL CALLBACK "       << *color << "[" << type << "]"
-    << TERMINAL_RESET << "\n\tid       = "        << *color << id
+    << TERMINAL_RESET << "\n\tid       = "      << *color << id
     << TERMINAL_RESET << "\n\tfrom     = "      << *color << source
     << TERMINAL_RESET << "\n\tseverity = "      << *color << severity
     << TERMINAL_RESET << "\n\tmessage  = "      << *color << message

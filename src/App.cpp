@@ -7,6 +7,8 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/glm.hpp>
 
+#include <Timer.hpp>
+
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 App::App(GLFWwindow* window) : window(window)
@@ -214,8 +216,12 @@ void App::mainloop()
 
 
     /// MAIN LOOP
+
+    BenchTimer timerTest;
     while(state != quit)
     {
+        timerTest.start();
+
         double delta_time = Get_delta_time();
 
         glfwPollEvents();
@@ -231,6 +237,8 @@ void App::mainloop()
             int winsize[2] = {1920, 1080};
             glUniform2iv(0, 1, winsize);
         }
+        if(glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
+            std::cout << timerTest << "\n";
 
         mainInput(delta_time);
 
@@ -254,5 +262,7 @@ void App::mainloop()
         glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(points)/3, instanced_cnt);
 
         glfwSwapBuffers(window);
+
+        timerTest.end();
     }
 }
