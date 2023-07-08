@@ -65,7 +65,7 @@ class ShaderProgram
         void activate();
         void deactivate();
 
-        GLuint get_program() {return program;};
+        GLuint get_program() const {return program;};
 };
 
 #endif
