@@ -53,7 +53,6 @@ void BenchTimer::end()
 
     if((now-avgLastUpdate).count() > avgLength)
     {
-        std::cout << (now-avgLastUpdate).count()  << " avg update\n";
         avgLastUpdate = now;
         avgUpdateCounter = 0;
         avgLast = avg;

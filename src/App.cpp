@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 
 #include <Timer.hpp>
+#include <Sprites.hpp>
 
 //https://antongerdelan.net/opengl/hellotriangle.html
 
@@ -214,6 +215,15 @@ void App::mainloop()
     // glVertexAttribDivisor(1, 1); // This sets the vertex attribute to instanced attribute.
 
 
+    ShaderProgram BQBtestShader("shader/test2d.frag", "shader/test2d.vert", "");
+    BatchedQuadBuffer BQBtest;
+    BQBtest.setProgram(BQBtestShader);
+
+    ModelState2D newQuad;
+    newQuad.position.x = 1.0;
+    newQuad.scale = vec2(0.5, 0.5);
+    BQBtest.BatchQuad(newQuad);
+    BQBtest.create();
 
     /// MAIN LOOP
 
@@ -230,6 +240,8 @@ void App::mainloop()
 
         if(glfwGetKey(window, GLFW_KEY_F5) == GLFW_PRESS)
         {
+            BQBtestShader.CompileAndLink();
+
             system("cls");
             glDeleteProgram(shader.get_program());
             shader.CompileAndLink();
@@ -260,6 +272,11 @@ void App::mainloop()
         // glDrawArrays(GL_POINTS, 0, buffer_size);
 
         glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(points)/3, instanced_cnt);
+
+
+
+        BQBtest.render();
+
 
         glfwSwapBuffers(window);
 

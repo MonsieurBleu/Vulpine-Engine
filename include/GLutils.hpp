@@ -76,7 +76,7 @@ void GLAPIENTRY MessageCallback(GLenum _source,
                                 const GLchar* message,
                                 const void* userParam )
 {
-    return;
+    // return;
     if(id == 1281) // Invalid shader programm, spam if a shader fail to compile
         return;
 

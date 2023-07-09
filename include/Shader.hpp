@@ -8,9 +8,6 @@
 #include <GLFW/glfw3.h>
 
 
-#define OCTREE_BINDING_BASE_LOCATION 2
-
-
 enum ShaderError
 {
     ShaderOk,
@@ -62,8 +59,8 @@ class ShaderProgram
 
         ShaderError CompileAndLink();
 
-        void activate();
-        void deactivate();
+        void activate() const;
+        void deactivate() const;
 
         GLuint get_program() const {return program;};
 };

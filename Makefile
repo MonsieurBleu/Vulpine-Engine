@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -Wall -Ofast
+CPPFLAGS = -Wall -g
 LIBFLAGS = -I include -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 
 LINKFLAGS = libglfw3.a libglfw3dll.a 
 OBJ = obj/main.o obj/App.o obj/Utils.o obj/Shader.o obj/Camera.o

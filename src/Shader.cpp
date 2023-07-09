@@ -151,12 +151,12 @@ ShaderError ShaderProgram::CompileAndLink()
     return ShaderOk;
 }
 
-void ShaderProgram::activate()
+void ShaderProgram::activate() const
 {
     glUseProgram(program);
 }
 
-void ShaderProgram::deactivate()
+void ShaderProgram::deactivate() const
 {
     glUseProgram(program);
 }
