@@ -1,4 +1,5 @@
-#include <App.hpp>
+#include <Globals.hpp>
+
 #include <Utils.hpp>
 #include <string.h> // for memset
 
@@ -15,6 +16,12 @@
 App::App(GLFWwindow* window) : window(window)
 {
     timestart = Get_time_ms();
+
+    /*
+        TODO : 
+            Test if the videoMode automaticlly update
+    */
+    globals._videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 }
 
 void App::mainInput(double deltatime)
@@ -28,7 +35,6 @@ void App::mainInput(double deltatime)
         myfile.write((char*)&camera.getState(), sizeof(CameraState));
         myfile.close();
     }
-
 
     float camspeed = 15.0;
     if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
@@ -222,17 +228,31 @@ void App::mainloop()
     ModelState2D newQuad;
     newQuad.position.x = 1.0;
     newQuad.scale = vec2(0.5, 0.5);
+    newQuad.depth = 0.5;
     BQBtest.BatchQuad(newQuad);
-    BQBtest.create();
+    
+
+    BQBtest.BatchQuad({
+            {0.f, 0.f},
+            {0.75, 0.75},
+            3.1415, 
+            0.f
+        });
+
+    BQBtest.BatchQuad({
+            {0.f, 0.f},
+            {1.f, 1.f},
+            3.1415*0.5, 
+            0.25
+        });
+
+    // BQBtest.create();
 
     /// MAIN LOOP
 
-    BenchTimer timerTest;
     while(state != quit)
     {
-        timerTest.start();
-
-        double delta_time = Get_delta_time();
+        globals.appTime.start();
 
         glfwPollEvents();
 
@@ -246,13 +266,13 @@ void App::mainloop()
             glDeleteProgram(shader.get_program());
             shader.CompileAndLink();
             shader.activate();
-            int winsize[2] = {1920, 1080};
-            glUniform2iv(0, 1, winsize);
+
+            glUniform2iv(0, 1, globals.screenResolutionAddr());
         }
         if(glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
-            std::cout << timerTest << "\n";
+            std::cout << globals.appTime << "\n";
 
-        mainInput(delta_time);
+        mainInput(globals.appTime.getDelta());
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         // glClear(GL_COLOR_BUFFER_BIT);
@@ -262,7 +282,7 @@ void App::mainloop()
 
         glBindVertexArray(vao);
 
-        glUniform1f(1, (Get_time_ms()-timestart)*1.0/1000.0);
+        glUniform1f(1, globals.appTime.getElapsedTime());
         glUniformMatrix4fv(2, 1, GL_FALSE, &camera.updateProjectionViewMatrix()[0][0]);
         glUniform3fv(3, 1, &camera.getPosition()[0]);
         glUniform3fv(4, 1, &camera.getDirection()[0]);
@@ -277,9 +297,8 @@ void App::mainloop()
 
         BQBtest.render();
 
-
         glfwSwapBuffers(window);
 
-        timerTest.end();
+        globals.appTime.end();
     }
 }

@@ -69,12 +69,22 @@ struct Quad
     };
 };
 
-Quad createQuadAttribute(vec2 attribute)
+struct QuadAttrib
 {
-    Quad attributeQuad;
-
-    vec2 array[6] = 
+    vec2 points[6] =
     {
+        vec2(0.f, 0.f),
+        vec2(0.f, 0.f),
+        vec2(0.f, 0.f),
+        vec2(0.f, 0.f),
+        vec2(0.f, 0.f),
+        vec2(0.f, 0.f)
+    };
+};
+
+void createQuadAttribute(vec2 attribute, QuadAttrib *destination)
+{
+    *destination = {
         attribute,
         attribute,
         attribute,
@@ -82,10 +92,6 @@ Quad createQuadAttribute(vec2 attribute)
         attribute,
         attribute
     };
-
-    memcpy(array, attributeQuad.points, sizeof(array));
-
-    return attributeQuad;
 }
 
 class BatchedQuadBuffer
@@ -100,9 +106,9 @@ class BatchedQuadBuffer
     GLuint vaoHandle = 0;
 
     Quad *vertexBuffer;
-    Quad *positionBuffer;
-    Quad *scaleBuffer;
-    Quad *rotationDepthBuffer;
+    QuadAttrib *positionBuffer;
+    QuadAttrib *scaleBuffer;
+    QuadAttrib *rotationDepthBuffer;
 
     uint64 tail = 0;
     uint64 size = 0;
@@ -116,35 +122,35 @@ class BatchedQuadBuffer
             size = baseSize;
 
             vertexBuffer        = new Quad[size];
-            positionBuffer      = new Quad[size];
-            scaleBuffer         = new Quad[size];
-            rotationDepthBuffer = new Quad[size];
+            positionBuffer      = new QuadAttrib[size];
+            scaleBuffer         = new QuadAttrib[size];
+            rotationDepthBuffer = new QuadAttrib[size];
         }
 
         void setProgram(const ShaderProgram &newProgram)
             {program = &newProgram;};
         
-        void BatchQuad(ModelState2D state)
+        uint64 BatchQuad(ModelState2D const &state)
         {
             if(tail >= size) resize();
 
             Quad newQuad;
             float rRotation = state.dRotation*DEGREE_TO_RADIANS;
-            vertexBuffer[tail]        = newQuad;
-            positionBuffer[tail]      = createQuadAttribute(state.position);
-            scaleBuffer[tail]         = createQuadAttribute(state.scale);
-            rotationDepthBuffer[tail] = createQuadAttribute(vec2(rRotation, state.depth));
+            vertexBuffer[tail] = newQuad;
+            createQuadAttribute(state.position,               &positionBuffer[tail]);
+            createQuadAttribute(state.scale,                  &scaleBuffer[tail]);
+            createQuadAttribute(vec2(rRotation, state.depth), &rotationDepthBuffer[tail]);
 
-            tail++;
+            return tail++;
         };
 
         void resize()
         {
             uint64 newsize = size + chunckSize;
             Quad *_vertexBuffer        = new Quad[newsize];
-            Quad *_positionBuffer      = new Quad[newsize];
-            Quad *_scaleBuffer         = new Quad[newsize];
-            Quad *_rotationDepthBuffer = new Quad[newsize];
+            QuadAttrib *_positionBuffer      = new QuadAttrib[newsize];
+            QuadAttrib *_scaleBuffer         = new QuadAttrib[newsize];
+            QuadAttrib *_rotationDepthBuffer = new QuadAttrib[newsize];
 
             memcpy(_vertexBuffer, vertexBuffer, size*sizeof(Quad));
             memcpy(_positionBuffer, positionBuffer, size*sizeof(Quad));
@@ -167,7 +173,7 @@ class BatchedQuadBuffer
             // https://subscription.packtpub.com/book/game-development/9781782167020/1/ch01lvl1sec14/sending-data-to-a-shader-using-vertex-attributes-and-vertex-buffer-objects
 
             GLuint vboHandles[4];
-            glGenBuffers(1, vboHandles);
+            glGenBuffers(2, vboHandles);
 
             vertexVBO        = vboHandles[0];
             positionVBO      = vboHandles[1];
@@ -181,11 +187,11 @@ class BatchedQuadBuffer
             glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
             glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, positionBuffer, GL_STATIC_DRAW);
 
-            // glBindBuffer(GL_ARRAY_BUFFER, scaleVBO);
-            // glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, scaleBuffer, GL_STATIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, scaleVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, scaleBuffer, GL_STATIC_DRAW);
 
-            // glBindBuffer(GL_ARRAY_BUFFER, rotationDepthVBO);
-            // glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, rotationDepthBuffer, GL_STATIC_DRAW);
+            glBindBuffer(GL_ARRAY_BUFFER, rotationDepthVBO);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, rotationDepthBuffer, GL_STATIC_DRAW);
 
 
             glGenVertexArrays( 1, &vaoHandle );
@@ -193,29 +199,33 @@ class BatchedQuadBuffer
 
             glEnableVertexAttribArray(0); 
             glEnableVertexAttribArray(1);
+            glEnableVertexAttribArray(2);
+            glEnableVertexAttribArray(3);
 
-            // Map index 0 to the position buffer
-            glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
-            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+            glBindVertexBuffer(0, vertexVBO,            0, sizeof(GLfloat)*2);
+            glBindVertexBuffer(1, positionVBO,          0, sizeof(GLfloat)*2);
+            glBindVertexBuffer(2, scaleVBO,             0, sizeof(GLfloat)*2);
+            glBindVertexBuffer(3, rotationDepthVBO,     0, sizeof(GLfloat)*2);
+            
+            glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
+            glVertexAttribFormat(1, 2, GL_FLOAT, GL_FALSE, 0);
+            glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 0);
+            glVertexAttribFormat(3, 2, GL_FLOAT, GL_FALSE, 0);
 
-            glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-
-            // glEnableVertexAttribArray(2); 
-            // glBindBuffer(GL_ARRAY_BUFFER, scaleVBO);
-            // glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, NULL);
-
-            // glEnableVertexAttribArray(3); 
-            // glBindBuffer(GL_ARRAY_BUFFER, rotationDepthVBO);
-            // glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+            glVertexAttribBinding(0, 0);
+            glVertexAttribBinding(1, 1);
+            glVertexAttribBinding(2, 2);
+            glVertexAttribBinding(3, 3);
         }
 
         void render()
         {
+            if(tail == 0) return;
+
             if(program) program->activate();
 
             glBindVertexArray(vaoHandle);
-            glDrawArrays(GL_TRIANGLES, 0, sizeof(Quad)*tail);
+            glDrawArrays(GL_TRIANGLES, 0, 6*tail);
 
             if(program) program->deactivate();
         }

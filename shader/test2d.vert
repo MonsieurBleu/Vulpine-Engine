@@ -19,15 +19,28 @@ out vec2 quadUv;
 void main()
 {
     vec2 screenPosition = vertexPosition;
-    screenPosition.x *= 1080.0/1920.0;
+
+    screenPosition *= vec2(1080.0, 1080.0);
+    
+    screenPosition *= quadScale;
+    screenPosition.x = screenPosition.x*cos(quadRotationDepth.x) - screenPosition.y*sin(quadRotationDepth.x);
+    screenPosition.y = screenPosition.x*sin(quadRotationDepth.x) + screenPosition.y*cos(quadRotationDepth.x);
+    
+    screenPosition /= vec2(1920.0, 1080.0);
+
     screenPosition += quadPosition;
-    screenPosition *= 0.25;
+
 
     vertexColor = vec4(1.0);
-    vertexColor.rg = (vertexPosition + 1.0)*0.5;
-    
-    
-    gl_Position = vec4(screenPosition.x, screenPosition.y, 0.0, 1.0);
+    vertexColor.rgb = vec3(abs(quadRotationDepth.x)*5.0);
 
-    // gl_Position = MVP * vec4(_vertexPosition, 1.0);
+    // vertexColor.r = distance(vertexPosition, vec2(0.0));
+    
+    /*
+        TODO : fix rotation
+    */
+
+
+    
+    gl_Position = vec4(screenPosition.x, screenPosition.y, quadRotationDepth.y, 1.0);
 };

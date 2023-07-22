@@ -1,13 +1,19 @@
+#ifndef TIMER_HPP
+#define TIMER_HPP
+
 #include <chrono>
 typedef std::chrono::high_resolution_clock clockmicro;
 typedef std::chrono::duration<float, std::milli> duration;
 
 #define NS_TO_MS 1000000;
 #define NS_TO_S  1000000000; 
+#define MS_TO_S  0.001;
 
 class BenchTimer
 {
-    public :
+    friend std::ostream& operator<<(std::ostream& os, BenchTimer e);
+
+    private : 
 
         duration delta;
         duration min;
@@ -25,10 +31,30 @@ class BenchTimer
 
         uint64_t updateCounter = 0;
 
+        float elapsedTime;
+        float deltaS;
+
+    public :
+
         void end();
         void start();
 
         void setAvgLengthMS(int64_t newLength);
+
+        /**
+         * @brief Get the Delta time in secondes
+         */
+        float getDelta() const {return deltaS;};
+        /**
+         * @brief Get the Delta time in milisecondes
+         */
+        float getDeltaMS() const {return delta.count();};
+        /**
+         * @brief Get the Elapsed time in secondes 
+         */
+        float getElapsedTime() const {return elapsedTime;};
+
+        std::ostream& operator<<(std::ostream& os);
 };
 
 void BenchTimer::start()
@@ -41,6 +67,8 @@ void BenchTimer::end()
     clockmicro::time_point now = clockmicro::now();
     delta = now-lastStartTime;
     lastTimeUpdate = now;
+    deltaS = delta.count()*MS_TO_S;
+    elapsedTime += deltaS;
 
     avg = ((avg*avgUpdateCounter)+delta)/(avgUpdateCounter+1);
     avgTotal = ((avgTotal*updateCounter)+delta)/(updateCounter+1);
@@ -81,3 +109,5 @@ std::ostream& operator<<(std::ostream& os, BenchTimer e)
 
     return os;
 }
+
+#endif
