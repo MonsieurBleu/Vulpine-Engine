@@ -5,11 +5,10 @@
 
 #include <fstream>
 
-#include <glm/gtx/transform.hpp>
-#include <glm/glm.hpp>
-
 #include <Timer.hpp>
 #include <Sprites.hpp>
+
+#include <Uniforms.hpp>
 
 //https://antongerdelan.net/opengl/hellotriangle.html
 
@@ -22,6 +21,19 @@ App::App(GLFWwindow* window) : window(window)
             Test if the videoMode automaticlly update
     */
     globals._videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+    globals._standartShaderUniform2D =
+    {
+        ShaderUniform((vec2 *)globals.screenResolutionAddr(), 0),
+        ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
+    };
+
+    globals._standartShaderUniform3D =
+    {
+        ShaderUniform((vec2 *)globals.screenResolutionAddr(), 0),
+        ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
+        ShaderUniform(camera.getProjectionViewMatrixAddr(),   2)
+    };
 }
 
 void App::mainInput(double deltatime)
@@ -90,6 +102,21 @@ void App::mainInput(double deltatime)
     // }   
 }
 
+void App::mainloopStartRoutine()
+{
+    globals.appTime.start();
+}
+
+void App::mainloopPreRenderRoutine()
+{
+    camera.updateProjectionViewMatrix();
+}
+
+void App::mainloopEndRoutine()
+{
+    glfwSwapBuffers(window);
+    globals.appTime.end();
+}
 
 void App::mainloop()
 {   
@@ -118,7 +145,8 @@ void App::mainloop()
     /// CREATING A SHADER PROGRAM
     // ShaderProgram test("shader/test.frag", "shader/test.vert", "");
     // ShaderProgram test("shader/Voxel.frag", "shader/Voxel.vert", "shader/Voxel.geom");
-    ShaderProgram shader("shader/test.frag", "shader/test.vert", "");
+    ShaderProgram shader("shader/test.frag", "shader/test.vert", "", 
+    globals.standartShaderUniform3D());
 
     shader.activate();
     int winsizeh[2] = {1920/2, 1080/2};
@@ -221,7 +249,7 @@ void App::mainloop()
     // glVertexAttribDivisor(1, 1); // This sets the vertex attribute to instanced attribute.
 
 
-    ShaderProgram BQBtestShader("shader/test2d.frag", "shader/test2d.vert", "");
+    ShaderProgram BQBtestShader("shader/test2d.frag", "shader/test2d.vert", "", globals.standartShaderUniform2D());
     BatchedQuadBuffer BQBtest;
     BQBtest.setProgram(BQBtestShader);
 
@@ -246,14 +274,13 @@ void App::mainloop()
             0.25
         });
 
-    // BQBtest.create();
-
+    BQBtest.create();
     /// MAIN LOOP
 
     while(state != quit)
     {
-        globals.appTime.start();
-
+        mainloopStartRoutine();
+        
         glfwPollEvents();
 
         camera.updateMouseFollow(window);
@@ -266,39 +293,25 @@ void App::mainloop()
             glDeleteProgram(shader.get_program());
             shader.CompileAndLink();
             shader.activate();
-
-            glUniform2iv(0, 1, globals.screenResolutionAddr());
         }
         if(glfwGetKey(window, GLFW_KEY_F1) == GLFW_PRESS)
             std::cout << globals.appTime << "\n";
 
         mainInput(globals.appTime.getDelta());
 
+        mainloopPreRenderRoutine();
+
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        // glClear(GL_COLOR_BUFFER_BIT);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
-        
+
         shader.activate();
 
         glBindVertexArray(vao);
 
-        glUniform1f(1, globals.appTime.getElapsedTime());
-        glUniformMatrix4fv(2, 1, GL_FALSE, &camera.updateProjectionViewMatrix()[0][0]);
-        glUniform3fv(3, 1, &camera.getPosition()[0]);
-        glUniform3fv(4, 1, &camera.getDirection()[0]);
-
-        // glDrawArrays(GL_TRIANGLES, 0, 6);
-
-        // glDrawArrays(GL_POINTS, 0, buffer_size);
-
         glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(points)/3, instanced_cnt);
 
+        BQBtest.draw();
 
-
-        BQBtest.render();
-
-        glfwSwapBuffers(window);
-
-        globals.appTime.end();
+        mainloopEndRoutine();
     }
 }

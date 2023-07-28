@@ -7,18 +7,35 @@
 #include <Utils.hpp>
 #include <GLutils.hpp>
 
-int unit_test()
+// #define DO_TEST
+#ifdef DO_TEST
+#include <Uniforms.hpp>
+int featureTest()
 {
+    float test = 5.0;
 
+    vec2 test2d(3.1415f, 3.1415f);
+
+    ShaderUniformGroup testSUG(
+        {
+            ShaderUniform(0, 0),
+            ShaderUniform(&test, 0),
+            ShaderUniform(3.1415f, 3),
+            ShaderUniform(ivec2(3, 9), 1),
+            ShaderUniform(&test2d, 2),
+        });
+
+    std::cout << testSUG;
 
     exit(EXIT_SUCCESS);
 };
+#endif
 
 int main()
 {
-    // unit_test();
-    // std::cout << sizeof(Voxel) << "\n";
-    // return 0;
+    #ifdef DO_TEST
+    featureTest();
+    #endif
 
     atexit(checkHeap);
 

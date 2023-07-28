@@ -5,7 +5,6 @@
 
 #include <Camera.hpp>
 #include <Shader.hpp>
-// #include <Map.hpp>
 
 struct fCoord3D
 {
@@ -34,7 +33,11 @@ class App
 
     public :
         App(GLFWwindow* window);
+
+        void mainloopStartRoutine();
         void mainloop();
+        void mainloopPreRenderRoutine();
+        void mainloopEndRoutine();
 
 };
 

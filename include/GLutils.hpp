@@ -9,6 +9,8 @@
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+
 #include <Utils.hpp>
 
 #define SHOW_GL_NOTIF

@@ -72,7 +72,9 @@ ShaderError Shader::refresh()
 
 ShaderProgram::ShaderProgram(const std::string _fragPath, 
                              const std::string _vertPath, 
-                             const std::string _geomPath)
+                             const std::string _geomPath,
+                             std::vector<ShaderUniform> uniforms)
+                             : uniforms(uniforms)
 {
     frag.prepare_loading(_fragPath);
 
@@ -154,6 +156,7 @@ ShaderError ShaderProgram::CompileAndLink()
 void ShaderProgram::activate() const
 {
     glUseProgram(program);
+    uniforms.update();
 }
 
 void ShaderProgram::deactivate() const

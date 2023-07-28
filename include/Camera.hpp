@@ -56,6 +56,7 @@ class Camera
         void updateViewMatrix();
         void updateProjectionMatrix();
         const mat4 updateProjectionViewMatrix();
+        const mat4* getProjectionViewMatrixAddr() const {return &projectionViewMatrix;};
 
         void updateMouseFollow(GLFWwindow *window);
 

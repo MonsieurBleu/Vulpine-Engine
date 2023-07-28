@@ -17,6 +17,9 @@ class Globals
         glm::vec2 _mousePosition;
 
 
+        std::vector<ShaderUniform> _standartShaderUniform2D;
+        std::vector<ShaderUniform> _standartShaderUniform3D;
+
     public :
 
         /**
@@ -37,12 +40,12 @@ class Globals
         const int* screenResolutionAddr() const {return &(_videoMode->width);};
         const glm::vec2 mousePosition() const {return _mousePosition;};
 
-        // const BenchTimer appTime() const {};
-        // const BenchTimer unposedTime()const {};
-
 
         BenchTimer appTime;
         BenchTimer unposedTime;
+
+        std::vector<ShaderUniform> standartShaderUniform2D() const {return _standartShaderUniform2D;};
+        std::vector<ShaderUniform> standartShaderUniform3D() const {return _standartShaderUniform3D;};
 };
 
 

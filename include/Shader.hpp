@@ -7,6 +7,9 @@
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
+#include <Uniforms.hpp>
+
+
 
 enum ShaderError
 {
@@ -53,9 +56,12 @@ class ShaderProgram
 
     public :
 
+        ShaderUniformGroup uniforms;
+
         ShaderProgram(const std::string _fragPath, 
                       const std::string _vertPath = "", 
-                      const std::string _geomPath = "");
+                      const std::string _geomPath = "",
+                      std::vector<ShaderUniform> uniforms = {});
 
         ShaderError CompileAndLink();
 
@@ -63,6 +69,7 @@ class ShaderProgram
         void deactivate() const;
 
         GLuint get_program() const {return program;};
+
 };
 
 #endif

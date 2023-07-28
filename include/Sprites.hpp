@@ -218,7 +218,7 @@ class BatchedQuadBuffer
             glVertexAttribBinding(3, 3);
         }
 
-        void render()
+        void draw()
         {
             if(tail == 0) return;
 

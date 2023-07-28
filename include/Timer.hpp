@@ -54,6 +54,8 @@ class BenchTimer
          */
         float getElapsedTime() const {return elapsedTime;};
 
+        const float* getElapsedTimeAddr() const {return &elapsedTime;};
+
         std::ostream& operator<<(std::ostream& os);
 };
 
