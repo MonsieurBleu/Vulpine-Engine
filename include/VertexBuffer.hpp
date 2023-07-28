@@ -15,6 +15,8 @@ using namespace glm;
 
 #define MAX_PER_VERTEX_SIZE 5
 
+typedef std::shared_ptr<char []> GenericSharedBuffer;
+
 class VertexAttribute
 {
     private :
@@ -30,7 +32,7 @@ class VertexAttribute
         GLenum type = GL_FLOAT;
 
     public :
-    
+
         /*
             TODO : test if the src is correctly copied
         */

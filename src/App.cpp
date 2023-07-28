@@ -10,6 +10,8 @@
 
 #include <Uniforms.hpp>
 
+#include <Mesh.hpp>
+
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 App::App(GLFWwindow* window) : window(window)
@@ -253,29 +255,76 @@ void App::mainloop()
     BatchedQuadBuffer BQBtest;
     BQBtest.setProgram(BQBtestShader);
 
-    ModelState2D newQuad;
-    newQuad.position.x = 1.0;
-    newQuad.scale = vec2(0.5, 0.5);
-    newQuad.depth = 0.5;
-    BQBtest.BatchQuad(newQuad);
+    // ModelState2D newQuad;
+    // newQuad.position.x = 1.0;
+    // newQuad.scale = vec2(0.5, 0.5);
+    // newQuad.depth = 0.5;
+    // BQBtest.BatchQuad(newQuad);
     
 
-    BQBtest.BatchQuad({
-            {0.f, 0.f},
-            {0.75, 0.75},
-            3.1415, 
-            0.f
-        });
+    // BQBtest.BatchQuad({
+    //         {0.f, 0.f},
+    //         {0.75, 0.75},
+    //         3.1415, 
+    //         0.f
+    //     });
 
-    BQBtest.BatchQuad({
-            {0.f, 0.f},
-            {1.f, 1.f},
-            3.1415*0.5, 
-            0.25
-        });
+    // BQBtest.BatchQuad({
+    //         {0.f, 0.f},
+    //         {1.f, 1.f},
+    //         3.1415*0.5, 
+    //         0.25
+    //     });
 
-    BQBtest.create();
-    /// MAIN LOOP
+    // BQBtest.create();
+    
+
+    
+    MeshMaterial meshShader(
+        new ShaderProgram(
+            "shader/meshTest.frag", 
+            "shader/meshTest.vert", 
+            "", 
+            globals.standartShaderUniform3D()));
+
+    uint64 vertexCount = 3;
+
+    MeshVao meshVao(
+        new VertexAttributeGroup(
+            {
+                VertexAttribute
+                (
+                    GenericSharedBuffer((char *)new float[3*3]
+                    {
+                        0.f, 0.f, 0.f,
+                        10.f, 0.f, 0.f,
+                        0.f, 10.f, 0.f,
+                    }),
+                    0,
+                    vertexCount,
+                    3,
+                    GL_FLOAT,
+                    false
+                ),
+                VertexAttribute
+                (
+                    GenericSharedBuffer((char *)new float[3*3]
+                    {
+                        1.f, 0.f, 0.f,
+                        0.f, 1.f, 0.f,
+                        0.f, 0.f, 1.f,
+                    }),
+                    1,
+                    vertexCount,
+                    3,
+                    GL_FLOAT,
+                    false
+                )
+            }
+        ));
+
+    Mesh mesh(meshShader, meshVao);
+
 
     while(state != quit)
     {
@@ -310,7 +359,9 @@ void App::mainloop()
 
         glDrawArraysInstanced(GL_TRIANGLES, 0, sizeof(points)/3, instanced_cnt);
 
-        BQBtest.draw();
+        // BQBtest.draw();
+
+        mesh.draw();
 
         mainloopEndRoutine();
     }
