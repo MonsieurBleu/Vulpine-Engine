@@ -1,8 +1,9 @@
+#include <iostream>
 #include <VertexBuffer.hpp>
 
 using namespace glm;
 
-int VertexAttribute::create(std::shared_ptr<void> _src, 
+VertexAttribute::VertexAttribute(std::shared_ptr<char []> _src, 
                            GLuint _location,
                            uint64 _vertexCount, 
                            uint8  _perVertexSize = 3, 
@@ -10,13 +11,12 @@ int VertexAttribute::create(std::shared_ptr<void> _src,
                            bool   _copySource = false)
 {
     if(perVertexSize == 0 || perVertexSize > MAX_PER_VERTEX_SIZE)
-        return -1;
+        return;
 
     location = _location;
     vertexCount = _vertexCount;
     perVertexSize = _perVertexSize;
     type = _type;
-    bufferSize = perValuesSize*perVertexSize*vertexCount;
 
     switch (type)
     {
@@ -47,12 +47,15 @@ int VertexAttribute::create(std::shared_ptr<void> _src,
         break;
     }
 
+    bufferSize = perValuesSize*perVertexSize*vertexCount;
+
     if(_copySource)
-        buffer = std::make_shared<void>(_src);
+    {
+        buffer = std::shared_ptr<char []>(new char[bufferSize]);
+        memcpy((void*)buffer.get(), (void*)_src.get(), bufferSize);
+    }
     else
         buffer = _src;
-
-    return 0;
 }
 
 void VertexAttribute::genBuffer()
@@ -66,16 +69,26 @@ void VertexAttribute::sendAllToGPU()
     glBufferData(GL_ARRAY_BUFFER, bufferSize, buffer.get(), GL_STATIC_DRAW);
 }
 
-void VertexAttribute::bindVertexBuffer()
+void VertexAttribute::setFormat()
 {
     glBindVertexBuffer(location, handle, 0, perValuesSize*perVertexSize);
-    glVertexAttribFormat(location, perValuesSize, type, GL_FALSE, 0);
+    glVertexAttribFormat(location, perVertexSize, type, GL_FALSE, 0);
 }
 
 
+VertexAttributeGroup::VertexAttributeGroup(std::vector<VertexAttribute> &newAttributes)
+{
+    add(newAttributes);
+}
+
+VertexAttributeGroup::VertexAttributeGroup(std::vector<VertexAttribute> newAttributes)
+{
+    add(newAttributes);
+}
+
 void VertexAttributeGroup::forEach(void (*func)(int, VertexAttribute&))
 {
-    for(int i = 0; i < attributes.size(); i++)
+    for(uint64 i = 0; i < attributes.size(); i++)
     {
         func(i, attributes[i]);
     }
@@ -83,7 +96,7 @@ void VertexAttributeGroup::forEach(void (*func)(int, VertexAttribute&))
 
 void VertexAttributeGroup::forEach(void (*func)(int, const VertexAttribute&)) const
 {
-    for(int i = 0; i < attributes.size(); i++)
+    for(uint64 i = 0; i != attributes.size(); i++)
     {
         func(i, attributes[i]);
     }
@@ -91,7 +104,7 @@ void VertexAttributeGroup::forEach(void (*func)(int, const VertexAttribute&)) co
 
 void VertexAttributeGroup::add(std::vector<VertexAttribute> &newAttributes)
 {
-    for(auto i = newAttributes.begin(); i < newAttributes.end(); i++)
+    for(auto i = newAttributes.begin(); i != newAttributes.end(); i++)
     {
         attributes.push_back(*i);
     }
@@ -116,7 +129,7 @@ void VertexAttributeGroup::generate()
     forEach([](int i, VertexAttribute& attribute)
     {
         glEnableVertexAttribArray(i);
-        attribute.bindVertexBuffer();
+        attribute.setFormat();
         glVertexAttribBinding(i, attribute.getLocation());
     }); 
 };

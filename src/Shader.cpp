@@ -4,7 +4,7 @@
 #include <iostream>
 
 
-void Shader::prepare_loading(const std::string& path)
+void Shader::prepareLoading(const std::string& path)
 {
     startbenchrono();
 
@@ -76,13 +76,13 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
                              std::vector<ShaderUniform> uniforms)
                              : uniforms(uniforms)
 {
-    frag.prepare_loading(_fragPath);
+    frag.prepareLoading(_fragPath);
 
     if(!_vertPath.empty())
-        vert.prepare_loading(_vertPath);
+        vert.prepareLoading(_vertPath);
 
     if(!_geomPath.empty())
-        geom.prepare_loading(_geomPath);
+        geom.prepareLoading(_geomPath);
 
     CompileAndLink();
 }

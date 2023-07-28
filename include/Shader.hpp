@@ -37,7 +37,7 @@ class Shader
         //    .frag for fragment shaders
         // You then can load the shader using the refresh() method
         // This method is only needed to be called once
-        void prepare_loading(const std::string& Path);
+        void prepareLoading(const std::string& Path);
         ShaderError refresh();
 
         GLuint get_shader(){return shader;};

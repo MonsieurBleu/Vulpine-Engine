@@ -2,6 +2,8 @@
 #include <iostream>
 #include <Shader.hpp>
 
+#include <VertexBuffer.hpp>
+
 #include <GL/glew.h>
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
@@ -172,50 +174,118 @@ class BatchedQuadBuffer
         {
             // https://subscription.packtpub.com/book/game-development/9781782167020/1/ch01lvl1sec14/sending-data-to-a-shader-using-vertex-attributes-and-vertex-buffer-objects
 
-            GLuint vboHandles[4];
-            glGenBuffers(2, vboHandles);
+            // GLuint vboHandles[4];
+            // glGenBuffers(2, vboHandles);
 
-            vertexVBO        = vboHandles[0];
-            positionVBO      = vboHandles[1];
-            scaleVBO         = vboHandles[2];
-            rotationDepthVBO = vboHandles[3];
+            // vertexVBO        = vboHandles[0];
+            // positionVBO      = vboHandles[1];
+            // scaleVBO         = vboHandles[2];
+            // rotationDepthVBO = vboHandles[3];
 
-            //// Passing data to the GPU
-            glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, vertexBuffer, GL_STATIC_DRAW);
+            // //// Passing data to the GPU
+            // glBindBuffer(GL_ARRAY_BUFFER, vertexVBO);
+            // glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, vertexBuffer, GL_STATIC_DRAW);
 
-            glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, positionBuffer, GL_STATIC_DRAW);
+            // glBindBuffer(GL_ARRAY_BUFFER, positionVBO);
+            // glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, positionBuffer, GL_STATIC_DRAW);
 
-            glBindBuffer(GL_ARRAY_BUFFER, scaleVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, scaleBuffer, GL_STATIC_DRAW);
+            // glBindBuffer(GL_ARRAY_BUFFER, scaleVBO);
+            // glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, scaleBuffer, GL_STATIC_DRAW);
 
-            glBindBuffer(GL_ARRAY_BUFFER, rotationDepthVBO);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, rotationDepthBuffer, GL_STATIC_DRAW);
+            // glBindBuffer(GL_ARRAY_BUFFER, rotationDepthVBO);
+            // glBufferData(GL_ARRAY_BUFFER, sizeof(Quad)*size, rotationDepthBuffer, GL_STATIC_DRAW);
 
 
-            glGenVertexArrays( 1, &vaoHandle );
-            glBindVertexArray(vaoHandle);
+            // glGenVertexArrays( 1, &vaoHandle );
+            // glBindVertexArray(vaoHandle);
 
-            glEnableVertexAttribArray(0); 
-            glEnableVertexAttribArray(1);
-            glEnableVertexAttribArray(2);
-            glEnableVertexAttribArray(3);
+            // glEnableVertexAttribArray(0); 
+            // glEnableVertexAttribArray(1);
+            // glEnableVertexAttribArray(2);
+            // glEnableVertexAttribArray(3);
 
-            glBindVertexBuffer(0, vertexVBO,            0, sizeof(GLfloat)*2);
-            glBindVertexBuffer(1, positionVBO,          0, sizeof(GLfloat)*2);
-            glBindVertexBuffer(2, scaleVBO,             0, sizeof(GLfloat)*2);
-            glBindVertexBuffer(3, rotationDepthVBO,     0, sizeof(GLfloat)*2);
+            // glBindVertexBuffer(0, vertexVBO,            0, sizeof(GLfloat)*2);
+            // glBindVertexBuffer(1, positionVBO,          0, sizeof(GLfloat)*2);
+            // glBindVertexBuffer(2, scaleVBO,             0, sizeof(GLfloat)*2);
+            // glBindVertexBuffer(3, rotationDepthVBO,     0, sizeof(GLfloat)*2);
             
-            glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
-            glVertexAttribFormat(1, 2, GL_FLOAT, GL_FALSE, 0);
-            glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 0);
-            glVertexAttribFormat(3, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribFormat(1, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribFormat(3, 2, GL_FLOAT, GL_FALSE, 0);
 
-            glVertexAttribBinding(0, 0);
-            glVertexAttribBinding(1, 1);
-            glVertexAttribBinding(2, 2);
-            glVertexAttribBinding(3, 3);
+            // glVertexAttribBinding(0, 0);
+            // glVertexAttribBinding(1, 1);
+            // glVertexAttribBinding(2, 2);
+            // glVertexAttribBinding(3, 3);
+
+
+            // std::cout << vaoHandle << "\n";
+            // std::cout << vertexVBO << "\n";
+            // std::cout << positionVBO << "\n";
+            // std::cout << scaleVBO << "\n";
+            // std::cout << rotationDepthVBO << "\n";
+
+
+            std::shared_ptr<char []> v = std::shared_ptr<char[]>(new char[1024]);
+            std::shared_ptr<char []> p = std::shared_ptr<char[]>(new char[1024]);
+            std::shared_ptr<char []> s = std::shared_ptr<char[]>(new char[1024]);
+            std::shared_ptr<char []> r = std::shared_ptr<char[]>(new char[1024]);
+
+            memcpy((void*)v.get(), vertexBuffer, 1024);
+            memcpy((void*)p.get(), positionBuffer, 1024);
+            memcpy((void*)s.get(), scaleBuffer, 1024);
+            memcpy((void*)r.get(), rotationDepthBuffer, 1024);
+
+            // VertexAttribute va(v, 0, 6*tail, 2, GL_FLOAT, false);
+            // VertexAttribute pa(p, 0, 6*tail, 2, GL_FLOAT, false);
+            // VertexAttribute sa(s, 0, 6*tail, 2, GL_FLOAT, false);
+            // VertexAttribute ra(r, 0, 6*tail, 2, GL_FLOAT, false);
+
+            // va.genBuffer();
+            // va.sendAllToGPU();
+            // pa.genBuffer();
+            // pa.sendAllToGPU();
+            // sa.genBuffer();
+            // sa.sendAllToGPU();
+            // ra.genBuffer();
+            // ra.sendAllToGPU();
+
+            // glGenVertexArrays(1, &vaoHandle);
+            // glBindVertexArray(vaoHandle);
+
+            // glEnableVertexAttribArray(0); 
+            // glBindVertexBuffer(0, va.getHandle(), 0, sizeof(GLfloat)*2);
+            // glVertexAttribFormat(0, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribBinding(0, 0);
+
+            // glEnableVertexAttribArray(1);
+            // glBindVertexBuffer(1, pa.getHandle(), 0, sizeof(GLfloat)*2);
+            // glVertexAttribFormat(1, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribBinding(1, 1);
+
+            // glEnableVertexAttribArray(2);
+            // glBindVertexBuffer(2, sa.getHandle(), 0, sizeof(GLfloat)*2);
+            // glVertexAttribFormat(2, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribBinding(2, 2);
+
+            // glEnableVertexAttribArray(3);
+            // glBindVertexBuffer(3, ra.getHandle(), 0, sizeof(GLfloat)*2);
+            // glVertexAttribFormat(3, 2, GL_FLOAT, GL_FALSE, 0);
+            // glVertexAttribBinding(3, 3);
+
+
+            VertexAttributeGroup attrib(
+                {
+                    VertexAttribute(v, 0, 6*tail, 2, GL_FLOAT, false),
+                    VertexAttribute(p, 1, 6*tail, 2, GL_FLOAT, false),
+                    VertexAttribute(s, 2, 6*tail, 2, GL_FLOAT, false),
+                    VertexAttribute(r, 3, 6*tail, 2, GL_FLOAT, false)
+                });
+            
+            attrib.generate();
+
+            vaoHandle = attrib.getHandle();
         }
 
         void draw()

@@ -18,8 +18,6 @@ using namespace glm;
 class VertexAttribute
 {
     private :
-        std::string name;
-
         uint8  perValuesSize = 0;
         uint8  perVertexSize = 3;
         uint64 vertexCount;
@@ -27,18 +25,16 @@ class VertexAttribute
 
         GLuint handle = 0;
         GLuint location = 0;
-        std::shared_ptr<void> buffer;
+        std::shared_ptr<char []> buffer;
 
         GLenum type = GL_FLOAT;
 
     public :
-
-        VertexAttribute();
-
+    
         /*
             TODO : test if the src is correctly copied
         */
-        int create(std::shared_ptr<void> _src, 
+        VertexAttribute(std::shared_ptr<char []> _src, 
                    GLuint _location,
                    uint64 _vertexCount,
                    uint8  _perVertexSize,
@@ -47,23 +43,27 @@ class VertexAttribute
 
         void genBuffer();
         void sendAllToGPU();
-        void bindVertexBuffer();
-
+        void setFormat();
 
         GLuint getLocation() const {return location;};
+        GLuint getHandle() const {return handle;};
+        GLuint getVertexCount() const {return vertexCount;};
 };
 
 class VertexAttributeGroup
 {
     private : 
 
-        std::vector<VertexAttribute> attributes;
-
         GLuint arrayHandle;
 
         bool handleCreated = false;
 
     public : 
+
+        std::vector<VertexAttribute> attributes;
+
+        VertexAttributeGroup(std::vector<VertexAttribute> newAttributes);
+        VertexAttributeGroup(std::vector<VertexAttribute> &newAttributes);
 
         void add(std::vector<VertexAttribute> &newAttributes);
         void add(VertexAttribute newAttribute);
@@ -72,6 +72,8 @@ class VertexAttributeGroup
 
         void forEach(void (*func)(int, VertexAttribute&));
         void forEach(void (*func)(int, const VertexAttribute&)) const;
+
+        GLuint getHandle() const {return arrayHandle;};
 };
 
 #endif
