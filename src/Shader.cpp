@@ -2,6 +2,7 @@
 #include <Utils.hpp>
 
 #include <iostream>
+#include "Shadinclude.hpp"
 
 
 void Shader::prepareLoading(const std::string& path)
@@ -24,7 +25,8 @@ ShaderError Shader::refresh()
 {
     shader = glCreateShader(type);
 
-    std::string code = readFile(Path);
+    // std::string code = readFile(Path);
+    std::string code = Shadinclude::load(Path, "#include");
 
     if(code.empty())
         return ShaderNoFile;
@@ -84,10 +86,10 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
     if(!_geomPath.empty())
         geom.prepareLoading(_geomPath);
 
-    CompileAndLink();
+    compileAndLink();
 }
 
-ShaderError ShaderProgram::CompileAndLink()
+ShaderError ShaderProgram::compileAndLink()
 {
     //// COMPILING SHADERS
     ShaderError serrf = frag.refresh();
@@ -137,7 +139,7 @@ ShaderError ShaderProgram::CompileAndLink()
 
     std::cout 
     << TERMINAL_OK 
-    << "Shader Program " 
+    << "Shader Program (id " << program << ") "
     << TERMINAL_FILENAME
     << frag.get_Path() 
     << (vert.get_Path().empty() ? "" : " "+vert.get_Path())
@@ -153,8 +155,16 @@ ShaderError ShaderProgram::CompileAndLink()
     return ShaderOk;
 }
 
+ShaderError ShaderProgram::reset()
+{
+    glDeleteProgram(program);
+    return compileAndLink();
+}
+
 void ShaderProgram::activate() const
 {
+    // std::cout << "activating program " << program << "\n";
+
     glUseProgram(program);
     uniforms.update();
 }

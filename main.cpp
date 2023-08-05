@@ -40,7 +40,6 @@ int main()
     atexit(checkHeap);
 
     system("cls");
-    std::cout << "#### RAY TRACED VOXELS ####\n";
 
     // start GL context and O/S window using the GLFW helper library
     if (!glfwInit())

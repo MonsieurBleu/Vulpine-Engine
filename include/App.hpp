@@ -6,11 +6,7 @@
 #include <Camera.hpp>
 #include <Shader.hpp>
 
-struct fCoord3D
-{
-    float x, y, z;
-};
-
+#include <Inputs.hpp>
 
 enum AppState
 {
@@ -21,6 +17,7 @@ enum AppState
 class App
 {
     private :
+
         AppState state = run;
         GLFWwindow* window;
         uint64_t timestart;

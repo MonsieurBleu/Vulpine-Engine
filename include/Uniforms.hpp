@@ -5,10 +5,11 @@
 #include <GL/glew.h>
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
-#include <glm/glm.hpp>
 
 #include <string>
 #include <vector>
+
+#include <Matrix.hpp>
 
 #define STATIC_CAST_VOIDPTR *(void**)(int *)&
 #define STATIC_CAST_FLOAT   *(float *)&
@@ -174,7 +175,7 @@ class ShaderUniform
             : data(data), 
               dataState(reference),
               location(location),
-              type(_1fv) {};        
+              type(_1f) {};        
 
 
         // ============| FLOATS 2D
@@ -411,6 +412,21 @@ class ShaderUniform
               dataState(reference),
               location(location),
               type(Matrix4fv) {};
+
+        ShaderUniform(const ModelMatrix3D data, int location = UNIFORM_NO_LOCATION) 
+            : data(&additionalData), 
+              dataState(copiedInAdditionalData),
+              location(location),
+              type(Matrix4fv)
+            {
+                memcpy(additionalData, (void*)&data, sizeof(mat4));
+            };
+
+        ShaderUniform(const ModelMatrix3D *data, int location = UNIFORM_NO_LOCATION) 
+            : data(data), 
+              dataState(reference),
+              location(location),
+              type(Matrix4fv) {};
 };
 
 
@@ -459,5 +475,9 @@ class ShaderUniformGroup
 std::ostream& operator<<(std::ostream& os, ShaderUniform u);
 
 std::ostream& operator<<(std::ostream& os, ShaderUniformGroup g);
+
+std::vector<ShaderUniform>& operator+(std::vector<ShaderUniform>& a, ShaderUniform &b);
+
+std::vector<ShaderUniform>& operator+(std::vector<ShaderUniform>& a, std::vector<ShaderUniform>& b);
 
 #endif

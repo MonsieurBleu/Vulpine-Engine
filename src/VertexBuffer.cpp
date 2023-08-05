@@ -115,7 +115,7 @@ void VertexAttributeGroup::add(VertexAttribute newAttribute)
     attributes.push_back(newAttribute);
 }
 
-void VertexAttributeGroup::generate()
+VertexAttributeGroup& VertexAttributeGroup::generate()
 {
     forEach([](int i, VertexAttribute& attribute)
     {
@@ -132,4 +132,6 @@ void VertexAttributeGroup::generate()
         attribute.setFormat();
         glVertexAttribBinding(i, attribute.getLocation());
     }); 
+
+    return *this;
 };

@@ -70,7 +70,7 @@ class VertexAttributeGroup
         void add(std::vector<VertexAttribute> &newAttributes);
         void add(VertexAttribute newAttribute);
 
-        void generate();
+        VertexAttributeGroup& generate();
 
         void forEach(void (*func)(int, VertexAttribute&));
         void forEach(void (*func)(int, const VertexAttribute&)) const;

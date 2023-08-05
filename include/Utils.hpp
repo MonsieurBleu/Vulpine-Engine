@@ -19,6 +19,9 @@ const std::string TERMINAL_NOTIF    = "\e[1;36m";
 
 
 /// FILES
+/*
+    TODO : replace with a faster version, using C functions (like in readOBJ)
+*/
 std::string readFile(const std::string& filePath);
 std::string getFileExtension(const std::string &fileName);
 
@@ -36,7 +39,6 @@ double Get_delta_time();
 /// HEAP CORRUPTION
 void checkHeap();
 
-
 /// VECTORS
 
 // #include <glm/glm.hpp>
@@ -48,9 +50,11 @@ void checkHeap();
 //     return os;
 // };
 
+// #include <glm/glm.hpp>
+
 // std::ostream& operator<<(std::ostream& os, const glm::vec3& u)
 // {
-//     os << "vec2(" << u.x << ", " << u.y << "," << u.z << ")";
+//     os << "vec3(" << u.x << ", " << u.y << ", " << u.z << ")";
 //     return os;
 // };
 

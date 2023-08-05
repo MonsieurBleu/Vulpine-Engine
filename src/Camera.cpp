@@ -44,6 +44,7 @@ void Camera::updateViewMatrix()
 
 void Camera::updateProjectionMatrix()
 {
+    // projectionMatrix = perspective(state.FOV, width / height, state.nearPlane, state.farPlane);
     projectionMatrix = perspective(state.FOV, width / height, state.nearPlane, state.farPlane);
 }
 

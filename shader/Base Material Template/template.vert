@@ -17,11 +17,6 @@ out vec3 color;
 out vec3 normal;
 out vec3 position;
 
-#define VERTEX_LIGHTING
-#define DIFFUSE
-#define SPECULAR 
-#define RIM 
-
 void main()
 {
     color = _color;

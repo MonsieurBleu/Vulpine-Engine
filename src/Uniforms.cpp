@@ -48,9 +48,12 @@ void ShaderUniform::activate() const
 {
     if(location == UNIFORM_NO_LOCATION) return;
 
+    // if(location == 1 && type == _1f)
+
+
     switch (type)
     {
-        case _1f  : glUniform1f(location, STATIC_CAST_FLOAT data); break;
+        case _1f  : glUniform1f(location,  *(float*)data);     break;
         case _2fv : glUniform2fv(location, 1, (float *) data); break;
         case _3fv : glUniform3fv(location, 1, (float *) data); break;
         case _4fv : glUniform4fv(location, 1, (float *) data); break;
@@ -182,4 +185,21 @@ std::ostream& operator<<(std::ostream& os, ShaderUniformGroup g)
     std::cout << TERMINAL_RESET;
 
     return os;
+}
+
+std::vector<ShaderUniform>& operator+(std::vector<ShaderUniform>& a, std::vector<ShaderUniform>& b)
+{
+    for(auto i = b.begin(); i != b.end(); i++)
+    {
+        a.push_back(*i);
+    }
+    
+    return a;
+}
+
+std::vector<ShaderUniform>& operator+(std::vector<ShaderUniform>& a, ShaderUniform& b)
+{
+    a.push_back(b);
+    
+    return a;
 }

@@ -35,7 +35,7 @@ void main()
     finalpos.y += cos(finalpos.x*0.005*iTime)*5.0;
 
 
-    gl_Position = MVP * vec4(finalpos, 1.0);
+    gl_Position = MVP * vec4(finalpos +  vec3(500.0, 0.0, 0.0), 1.0);
 
     // vertex_color.rgb = Vpos + 0.5;
     // vertex_color.rgb = offsets/10.0 + 0.5;

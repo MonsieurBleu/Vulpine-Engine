@@ -63,12 +63,13 @@ class ShaderProgram
                       const std::string _geomPath = "",
                       std::vector<ShaderUniform> uniforms = {});
 
-        ShaderError CompileAndLink();
+        ShaderError compileAndLink();
+        ShaderError reset();
 
         void activate() const;
         void deactivate() const;
 
-        GLuint get_program() const {return program;};
+        GLuint getProgram() const {return program;};
 
 };
 
