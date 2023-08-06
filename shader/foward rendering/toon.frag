@@ -1,10 +1,10 @@
 #version 460
 
-#include include/uniform/Base3D.glsl
-#include include/uniform/Model3D.glsl
+#include uniform/Base3D.glsl
+#include uniform/Model3D.glsl
 
-#include include/globals/Fragment3DInputs.glsl
-#include include/globals/Fragment3DOutputs.glsl
+#include globals/Fragment3DInputs.glsl
+#include globals/Fragment3DOutputs.glsl
 
 vec3 lightDirection = normalize(vec3(-1.0, 1.0, 1.0));
 vec3 ambientLight = vec3(0.5);
@@ -75,7 +75,5 @@ void main()
     */
     fragColor.rgb *= (ambientLight + diffuseResult + specularResult + rimResult);
     fragColor.a = 0.0;
-    fragNormal = normal;
-    fragAlbedo = diffuseResult;
-    fragPosition = (vec4(position, 1.0)*_cameraViewMatrix);
+    #include code/SetFragment3DOutputs.glsl
 };

@@ -40,10 +40,14 @@ class Mesh
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
 };
 
-#define MESH_MODEL_UNIFORM_MATRIX     4
-#define MESH_MODEL_UNIFORM_ROTATION   5
-#define MESH_MODEL_UNIFORM_SCALE      6
-#define MESH_MODEL_UNIFORM_POSITION   7
+#define MODEL_UNIFORM_START           16
+#define MESH_MODEL_UNIFORM_MATRIX     MODEL_UNIFORM_START + 0
+#define MESH_MODEL_UNIFORM_ROTATION   MODEL_UNIFORM_START + 1
+#define MESH_MODEL_UNIFORM_SCALE      MODEL_UNIFORM_START + 2
+#define MESH_MODEL_UNIFORM_POSITION   MODEL_UNIFORM_START + 3
+
+#define ModelRef std::shared_ptr<MeshModel3D> 
+#define newModel std::make_shared<MeshModel3D>
 
 /*
     A special type of Mesh that contains additionnal 

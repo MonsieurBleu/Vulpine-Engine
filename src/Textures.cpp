@@ -3,7 +3,7 @@
 
 using namespace glm;
 
-Texture2D& Texture2D::setResolution(ivec2 resolution)
+Texture2D& Texture2D::setResolution(const ivec2 resolution)
 {
     _resolution = resolution;
     return *this;
@@ -48,6 +48,13 @@ Texture2D& Texture2D::setAttachement(GLenum attachement)
 Texture2D& Texture2D::setWrapMode(GLenum wrapMode)
 {
     _wrapMode = wrapMode;
+    return *this;
+}
+
+Texture2D& Texture2D::bind(GLuint location)
+{
+    glActiveTexture(GL_TEXTURE0 + location);
+    glBindTexture(GL_TEXTURE_2D, handle);
     return *this;
 }
 

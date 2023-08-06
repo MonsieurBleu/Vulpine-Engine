@@ -23,9 +23,14 @@
 std::mutex inputMutex;
 InputBuffer inputs;
 
-App::App(GLFWwindow* window) : window(window)
+Globals globals;
+
+App::App(GLFWwindow* window) : 
+    window(window), 
+    renderBuffer(globals.renderSizeAddr()),
+    SSAO(renderBuffer)
 {
-    timestart = Get_time_ms();
+    timestart = GetTimeMs();
 
     glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
     {
@@ -39,6 +44,7 @@ App::App(GLFWwindow* window) : window(window)
     globals._videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
     glfwGetWindowSize(window, &globals._windowSize.x, &globals._windowSize.y);
+    globals._renderSize = ivec2(globals._windowSize.x*globals._renderScale, globals._windowSize.y*globals._renderScale);
 
     globals._standartShaderUniform2D =
     {
@@ -49,12 +55,12 @@ App::App(GLFWwindow* window) : window(window)
 
     globals._standartShaderUniform3D =
     {
-        ShaderUniform(globals.windowSizeAddr(), 0),
+        ShaderUniform(globals.windowSizeAddr(),               0),
         ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
         ShaderUniform(camera.getProjectionViewMatrixAddr(),   2),
-        ShaderUniform(camera.getPositionAddr(),               3),
-        ShaderUniform(camera.getViewMatrixAddr(),             8),
-        ShaderUniform(camera.getProjectionMatrixAddr(),       9)
+        ShaderUniform(camera.getViewMatrixAddr(),             3),
+        ShaderUniform(camera.getProjectionMatrixAddr(),       4),
+        ShaderUniform(camera.getPositionAddr(),               5)
     };
 
     globals._fullscreenQuad.setVao(
@@ -74,6 +80,9 @@ App::App(GLFWwindow* window) : window(window)
         )));
     
     globals._fullscreenQuad.getVao()->generate();
+
+    SSAO.setup();
+    renderBuffer.generate();
 }
 
 void App::mainInput(double deltatime)
@@ -138,8 +147,6 @@ void App::mainloopStartRoutine()
 void App::mainloopPreRenderRoutine()
 {
     camera.updateProjectionViewMatrix();
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
 }
 
 void App::mainloopEndRoutine()
@@ -169,15 +176,6 @@ void App::mainloop()
         myfile.close();
         camera.setState(buff);
     }
-
-    MeshMaterial meshMaterial(
-        new ShaderProgram(
-            "shader/meshTest.frag", 
-            "shader/meshTest.vert", 
-            "", 
-            globals.standartShaderUniform3D()
-            ));
-
 
     std::vector<MeshVao> TemplateMeshes =
     {
@@ -215,29 +213,29 @@ void App::mainloop()
     {
         MeshMaterial(
             new ShaderProgram(
-                "shader/meshTest.frag", 
-                "shader/meshTest.vert", 
+                "shader/foward rendering/basic.frag", 
+                "shader/foward rendering/basic.vert", 
                 "", 
                 globals.standartShaderUniform3D())), 
 
         MeshMaterial(
             new ShaderProgram(
-                "shader/gouraud.frag", 
-                "shader/gouraud.vert", 
+                "shader/foward rendering/gouraud.frag", 
+                "shader/foward rendering/gouraud.vert", 
                 "", 
                 globals.standartShaderUniform3D())), 
 
         MeshMaterial(
             new ShaderProgram(
-                "shader/phong.frag", 
-                "shader/phong.vert", 
+                "shader/foward rendering/phong.frag", 
+                "shader/foward rendering/phong.vert", 
                 "", 
                 globals.standartShaderUniform3D())), 
 
         MeshMaterial(
             new ShaderProgram(
-                "shader/toon.frag", 
-                "shader/toon.vert", 
+                "shader/foward rendering/toon.frag", 
+                "shader/foward rendering/toon.vert", 
                 "", 
                 globals.standartShaderUniform3D())),            
     };
@@ -246,20 +244,25 @@ void App::mainloop()
 
     Scene scene;
 
-    std::shared_ptr<MeshModel3D> model = std::make_shared<MeshModel3D>(
+    ModelRef model = newModel(
         materials[materialId], 
         TemplateMeshes[TemplateId],
-        ModelState3D().scaleScalar(100.0));
+        ModelState3D()
+            .scaleScalar(100.0));
 
-    std::shared_ptr<MeshModel3D> model2 = std::make_shared<MeshModel3D>(
+    ModelRef model2 = newModel(
         materials[materialId], 
         TemplateMeshesFlatShade[TemplateId],
-        ModelState3D().scaleScalar(100.0).setPosition(vec3(200.0, 0.0, 0.0)));
+        ModelState3D()
+            .scaleScalar(100.0)
+            .setPosition(vec3(200.0, 0.0, 0.0)));
 
-    std::shared_ptr<MeshModel3D> room = std::make_shared<MeshModel3D>(
+    ModelRef room = newModel(
         materials[materialId], 
         readOBJ("ressources/room.obj"),
-        ModelState3D().scaleScalar(100.0).setPosition(vec3(0.0, -20.0, 0.0)));
+        ModelState3D()
+            .scaleScalar(100.0)
+            .setPosition(vec3(0.0, -20.0, 0.0)));
 
 
     scene.add(room, false);
@@ -268,84 +271,14 @@ void App::mainloop()
 
     bool wireframe = false;
 
-    ShaderProgram PostProcessing("shader/frame.frag", "shader/2dBase.vert", "", globals.standartShaderUniform2D());
-
-    RenderBuffer screen3D(globals.windowSize());
+    ShaderProgram PostProcessing(
+        "shader/post-process/final composing.frag", 
+        "shader/post-process/basic.vert", 
+        "", 
+        globals.standartShaderUniform2D());
 
     const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
     glDrawBuffers(4, buffers);
-
-    ////// SSAO 
-    // generate sample kernel
-    // ----------------------
-    std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-    std::default_random_engine generator;
-    std::vector<glm::vec3> ssaoKernel;
-    for (unsigned int i = 0; i < 64; ++i)
-    {
-        glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, randomFloats(generator));
-        sample = glm::normalize(sample);
-        sample *= randomFloats(generator);
-        float scale = float(i) / 64.0f;
-
-        // scale samples s.t. they're more aligned to center of kernel
-        float a = 0.1f;
-        float b = 1.0f;
-        float f = (scale * scale);
-        scale = a + f * (b - a);
-        sample *= scale;
-        ssaoKernel.push_back(sample);
-    }
-
-    // generate noise texture
-    // ----------------------
-    std::vector<glm::vec3> ssaoNoise;
-    for (unsigned int i = 0; i < 16; i++)
-    {
-        glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0, randomFloats(generator) * 2.0 - 1.0, 0.0f); // rotate around z-axis (in tangent space)
-        ssaoNoise.push_back(noise);
-    }
-
-    // unsigned int noiseTexture; 
-    // glGenTextures(1, &noiseTexture);
-    // glBindTexture(GL_TEXTURE_2D, noiseTexture);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 4, 4, 0, GL_RGB, GL_FLOAT, &ssaoNoise[0]);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
-
-
-    Texture2D ssaoNoiseTexture = Texture2D()
-        .setResolution(ivec2(4, 4))
-        .setInternalFormat(GL_RGBA16F)
-        .setFormat(GL_RGB)
-        .setPixelType(GL_FLOAT)
-        .setFilter(GL_NEAREST)
-        .setPixelSource(&ssaoNoise[0])
-        .setWrapMode(GL_REPEAT)
-        .generate();
-
-    FrameBuffer ssaoFBO = FrameBuffer()
-        .addTexture(
-            Texture2D()
-                .setResolution(globals.windowSize())
-                .setInternalFormat(GL_RGB)
-                .setFormat(GL_RGB)
-                .setPixelType(GL_FLOAT)
-                .setAttachement(GL_COLOR_ATTACHMENT0))
-        .generate();
-    
-    auto ssaoUniforms = globals.standartShaderUniform2D();
-    ssaoUniforms.push_back(ShaderUniform(camera.getProjectionMatrixAddr(), 9));
-
-    ShaderProgram SSAO(
-            "shader/SSAO.frag", 
-            "shader/2dBase.vert", 
-            "", 
-            ssaoUniforms
-            );
-    //////////////////////////////////////
 
     while(state != quit)
     {
@@ -365,9 +298,8 @@ void App::mainloop()
             {
             case GLFW_KEY_F5:
                 system("cls");
-                SSAO.reset();
+                SSAO.getShader().reset();
                 PostProcessing.reset();
-                meshMaterial->reset();
                 for(uint64 i = 0; i < materials.size(); i++)
                     materials[i]->reset();
                 break;
@@ -430,25 +362,17 @@ void App::mainloop()
         model->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         model2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
 
-        screen3D.activate();
+        renderBuffer.activate();
         scene.draw();
-        screen3D.deactivate();
+        renderBuffer.deactivate();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+        renderBuffer.bindTextures();
 
-        screen3D.bindTextures();
-
-        ssaoFBO.activate();
-        SSAO.activate();
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, ssaoNoiseTexture.getHandle());
-        glUniform3fv(16, 64, (float*)&ssaoKernel[0]);
-        globals.drawFullscreenQuad();
-        ssaoFBO.deactivate();
+        SSAO.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
-        ssaoFBO.bindTexture(0, 6);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
 

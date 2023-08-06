@@ -4,6 +4,9 @@
 #include <fstream>
 #include <iostream>
 
+#include <Constants.hpp>
+#include <Utils.hpp>
+
 //	===========
 //	Shadinclude
 //	===========
@@ -76,7 +79,7 @@ public:
 
 		if (!file.is_open())
 		{
-			std::cerr << "ERROR: could not open the shader at: " << path << "\n" << std::endl;
+			std::cerr << TERMINAL_ERROR << "ERROR: could not open the shader at: " << path << "\n" << std::endl;
 			return fullSourceCode;
 		}
 
@@ -94,9 +97,10 @@ public:
 				lineBuffer.erase(0, eraseSize);
 
 				// The include path is relative to the current shader file path
-				std::string pathOfThisFile;
-				getFilePath(path, pathOfThisFile);
-				lineBuffer.insert(0, pathOfThisFile);
+				// std::string pathOfThisFile;
+				// getFilePath(path, pathOfThisFile);
+				// lineBuffer.insert(0, pathOfThisFile);
+                lineBuffer.insert(0, SHADER_INCLUDE_FOLDER);
 
 				// By using recursion, the new include file can be extracted
 				// and inserted at this location in the shader source code

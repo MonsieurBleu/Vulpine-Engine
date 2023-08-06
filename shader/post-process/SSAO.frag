@@ -12,23 +12,11 @@ layout (location = 0) in vec2 vertexPosition;
 layout (binding = 0) uniform sampler2D bColor;
 layout (binding = 1) uniform sampler2D bDepth;
 layout (binding = 2) uniform sampler2D gNormal;
-layout (binding = 3) uniform sampler2D bAlbedo;
-layout (binding = 4) uniform sampler2D gPosition;
-
-layout (binding = 5) uniform sampler2D texNoise;
+layout (binding = 3) uniform sampler2D texNoise;
 
 in vec2 uvScreen;
-in vec2 ViewRay;
 
 out vec3 _AO;
-
-float LinearizeDepth(in vec2 uv)
-{
-    float zNear = 0.1;    
-    float zFar  = 100.0; 
-    float depth = texture(bDepth, uv).x;
-    return (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear));
-}
 
 vec3 calculate_view_position(vec2 texture_coordinate, float depth_from_depth_buffer)
 {
@@ -54,11 +42,8 @@ float bias = 1.0;
 
 void main()
 {
-    // vec3 fragPos = texture(gPosition, uvScreen).xyz;
-    // fragPos.z = LinearizeDepth(uvScreen);
     vec3 fragPos = calculate_view_position(uvScreen, texture(bDepth, uvScreen).x);
 
-    // vec3 normal = normalize(texture(gNormal, uvScreen).rgb);
     vec3 normal = texture(gNormal, uvScreen).rgb * 2.0 - 1.0;
     vec3 randomVec = normalize(texture(texNoise, uvScreen * noiseScale).xyz);
     // create TBN change-of-basis matrix: from tangent-space to view-space
@@ -83,8 +68,6 @@ void main()
         offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0        
 
         // get sample depth
-        // float sampleDepth = texture(gPosition, offset.xy).z; // get depth value of kernel sample
-        // float sampleDepth = LinearizeDepth(offset.xy);
         float sampleDepth = calculate_view_position(offset.xy, texture(bDepth, offset.xy).x).z;
 
         // range check & accumulate
@@ -94,12 +77,4 @@ void main()
     occlusion = 1.0 - (occlusion / kernelSize);
 
     _AO = vec3(pow(occlusion, 2.0));
-
-    // _AO = vec3(LinearizeDepth(uvScreen));
-    // _AO = texture(gNormal, uvScreen).rgb;
-    // _AO = texture(gNormal, uvScreen).rgb;
-
-    // vec3 Vposition = calculate_view_position(uvScreen, texture(bDepth, uvScreen).x);
-    // _AO.rg = Vposition.xy*0.0025 + 0.5;
-    // _AO.b = Vposition.z;
 }

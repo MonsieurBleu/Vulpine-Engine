@@ -148,11 +148,17 @@ class ShaderUniform
     int  location;
     UniformTypes type;
 
+    int _count = 1;
+
     public :
 
         int getLocation() const {return location;};
 
         void activate() const;
+
+        void setData(const void *newData){data = newData;};
+
+        ShaderUniform& setCount(int count);
 
         // ============| DEFAULT NO DATA
 
@@ -427,6 +433,9 @@ class ShaderUniform
               dataState(reference),
               location(location),
               type(Matrix4fv) {};
+
+
+
 };
 
 
@@ -469,8 +478,9 @@ class ShaderUniformGroup
 
         void forEach(void (*func)(int, ShaderUniform&));
         void forEach(void (*func)(int, const ShaderUniform&)) const;
-};
 
+        void add(ShaderUniform newUniform);
+};
 
 std::ostream& operator<<(std::ostream& os, ShaderUniform u);
 

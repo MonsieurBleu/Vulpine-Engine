@@ -2,8 +2,9 @@
 #define GLUTILS_HPP
 
 #include <iostream>
-
+#include <list>
 #include <string.h>
+#include <algorithm>
 
 #include <GL/glew.h>
 #define GLFW_DLL
@@ -14,15 +15,21 @@
 #include <Utils.hpp>
 
 #define SHOW_GL_NOTIF
+#define PREVENT_GL_NOTIF_SPAM
 
-/// OPEN GL
-struct BlueGLenum
+struct GLenum_t
 {
     GLenum val;
-    BlueGLenum(GLenum val) : val(val) {};
+    GLenum_t(GLenum val) : val(val) {};
 };
 
-std::ostream& operator<<(std::ostream& os, BlueGLenum e)
+struct errorHistoric
+{
+    GLuint id;
+    uint64 time;
+};
+
+std::ostream& operator<<(std::ostream& os, GLenum_t e)
 {
     switch (e.val)
     {
@@ -78,14 +85,27 @@ void GLAPIENTRY MessageCallback(GLenum _source,
                                 const GLchar* message,
                                 const void* userParam )
 {
-    // return;
-    if(id == 1281) // Invalid shader programm, spam if a shader fail to compile
-        return;
+    /*
+        Historic that restrain message callback spam at each frame
+        Some non duplicated error could be missed.
+    */
+#ifdef PREVENT_GL_NOTIF_SPAM
+    static std::list<errorHistoric> historic;
+    static const uint64 spamTimeout = 10000;
+
+    uint64 now = GetTimeMs();
+
+    for(auto i = historic.begin(); i != historic.end(); i++)
+        if(i->id == id && (now-i->time) < spamTimeout)
+            return;
+
+    historic.push_front((errorHistoric){id, now});
+#endif
 
     const std::string *color = &TERMINAL_RESET;
-    BlueGLenum severity(_severity);
-    BlueGLenum type(_type);
-    BlueGLenum source(_source);
+    GLenum_t severity(_severity);
+    GLenum_t type(_type);
+    GLenum_t source(_source);
 
     if(type.val == GL_DEBUG_TYPE_ERROR)
     {

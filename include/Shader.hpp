@@ -58,6 +58,8 @@ class ShaderProgram
 
         ShaderUniformGroup uniforms;
 
+        ShaderProgram() {};
+
         ShaderProgram(const std::string _fragPath, 
                       const std::string _vertPath = "", 
                       const std::string _geomPath = "",
@@ -71,6 +73,7 @@ class ShaderProgram
 
         GLuint getProgram() const {return program;};
 
+        ShaderProgram& addUniform(ShaderUniform newUniform);
 };
 
 #endif

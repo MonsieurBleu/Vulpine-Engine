@@ -1,6 +1,7 @@
 #ifndef TIMER_HPP
 #define TIMER_HPP
 
+#include <iostream>
 #include <chrono>
 typedef std::chrono::high_resolution_clock clockmicro;
 typedef std::chrono::duration<float, std::milli> duration;
@@ -44,72 +45,21 @@ class BenchTimer
         /**
          * @brief Get the Delta time in secondes
          */
-        float getDelta() const {return deltaS;};
+        float getDelta() const;
         /**
          * @brief Get the Delta time in milisecondes
          */
-        float getDeltaMS() const {return delta.count();};
+        float getDeltaMS() const;
         /**
          * @brief Get the Elapsed time in secondes 
          */
-        float getElapsedTime() const {return elapsedTime;};
+        float getElapsedTime() const;
 
-        const float* getElapsedTimeAddr() const {return &elapsedTime;};
+        const float* getElapsedTimeAddr() const;
 
         std::ostream& operator<<(std::ostream& os);
 };
 
-void BenchTimer::start()
-{
-    lastStartTime = clockmicro::now();
-}
-
-void BenchTimer::end()
-{
-    clockmicro::time_point now = clockmicro::now();
-    delta = now-lastStartTime;
-    lastTimeUpdate = now;
-    deltaS = delta.count()*MS_TO_S;
-    elapsedTime += deltaS;
-
-    avg = ((avg*avgUpdateCounter)+delta)/(avgUpdateCounter+1);
-    avgTotal = ((avgTotal*updateCounter)+delta)/(updateCounter+1);
-
-    if(delta < min || !min.count()) min = delta;
-    if(delta > max || !min.count()) max = delta;
-
-    updateCounter ++;
-    avgUpdateCounter ++;
-
-    if((now-avgLastUpdate).count() > avgLength)
-    {
-        avgLastUpdate = now;
-        avgUpdateCounter = 0;
-        avgLast = avg;
-    }
-}
-
-void BenchTimer::setAvgLengthMS(int64_t newLength)
-{
-    avgLength = newLength*NS_TO_MS;
-}
-
-
-#include <iostream>
-
-std::ostream& operator<<(std::ostream& os, BenchTimer e)
-{
-
-    os << "delta    : " << e.delta.count() << "\n";
-    os << "min      : " << e.min.count() << "\n";
-    os << "max      : " << e.max.count() << "\n";
-    os << "avgTotal : " << e.avgTotal.count() << "\n";
-    os << "avg      : " << e.avgLast.count() << "\n";
-
-    os << "updateCounter  : " << e.updateCounter << "\n";
-    os << "lastTimeUpdate : " << e.lastTimeUpdate.time_since_epoch().count() << "\n";
-
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, BenchTimer e);
 
 #endif

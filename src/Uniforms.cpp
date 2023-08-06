@@ -48,32 +48,39 @@ void ShaderUniform::activate() const
 {
     if(location == UNIFORM_NO_LOCATION) return;
 
-    // if(location == 1 && type == _1f)
-
+    int count = _count;
+    if(dataState != reference)
+        count = 1;
 
     switch (type)
     {
         case _1f  : glUniform1f(location,  *(float*)data);     break;
-        case _2fv : glUniform2fv(location, 1, (float *) data); break;
-        case _3fv : glUniform3fv(location, 1, (float *) data); break;
-        case _4fv : glUniform4fv(location, 1, (float *) data); break;
+        case _2fv : glUniform2fv(location, count, (float *) data); break;
+        case _3fv : glUniform3fv(location, count, (float *) data); break;
+        case _4fv : glUniform4fv(location, count, (float *) data); break;
         
         case _1i  : glUniform1i(location, *(int*)data); break;
-        case _2iv : glUniform2iv(location, 1, (int *) data); break;
-        case _3iv : glUniform3iv(location, 1, (int *) data); break;
-        case _4iv : glUniform4iv(location, 1, (int *) data); break;
+        case _2iv : glUniform2iv(location, count, (int *) data); break;
+        case _3iv : glUniform3iv(location, count, (int *) data); break;
+        case _4iv : glUniform4iv(location, count, (int *) data); break;
 
         case _1ui  : glUniform1ui(location, *(uint32*) data); break;
-        case _2uiv : glUniform2uiv(location, 1, (uint32 *) data); break;
-        case _3uiv : glUniform3uiv(location, 1, (uint32 *) data); break;
-        case _4uiv : glUniform4uiv(location, 1, (uint32 *) data); break;
+        case _2uiv : glUniform2uiv(location, count, (uint32 *) data); break;
+        case _3uiv : glUniform3uiv(location, count, (uint32 *) data); break;
+        case _4uiv : glUniform4uiv(location, count, (uint32 *) data); break;
 
-        case Matrix2fv : glUniformMatrix2fv(location, 1, false, (float*)data);
-        case Matrix3fv : glUniformMatrix3fv(location, 1, false, (float*)data);
-        case Matrix4fv : glUniformMatrix4fv(location, 1, false, (float*)data);
+        case Matrix2fv : glUniformMatrix2fv(location, count, false, (float*)data);
+        case Matrix3fv : glUniformMatrix3fv(location, count, false, (float*)data);
+        case Matrix4fv : glUniformMatrix4fv(location, count, false, (float*)data);
 
         default: break;
     }
+}
+
+ShaderUniform& ShaderUniform::setCount(int count)
+{
+    _count = count;
+    return *this;
 }
 
 ShaderUniformGroup::ShaderUniformGroup(std::vector<ShaderUniform> uniforms, bool autoCheckLocations) 
@@ -145,6 +152,11 @@ void ShaderUniformGroup::update() const
     {
         uniform.activate();
     });
+}
+
+void ShaderUniformGroup::add(ShaderUniform newUniform)
+{
+    uniforms.push_back(newUniform);
 }
 
 std::ostream& operator<<(std::ostream& os, ShaderUniform u)

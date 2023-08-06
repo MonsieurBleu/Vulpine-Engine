@@ -62,12 +62,15 @@ void FrameBuffer::bindTexture(uint64 id, uint location)
     glBindTexture(GL_TEXTURE_2D, textures[id].getHandle());
 }
 
-RenderBuffer::RenderBuffer(ivec2 resolution)
+RenderBuffer::RenderBuffer(const ivec2 *resolution) : resolution(resolution)
+{}
+
+void RenderBuffer::generate()
 {
     (*this)
         .addTexture(
             Texture2D() // COLOR 
-                .setResolution(resolution)
+                .setResolution(*resolution)
                 .setInternalFormat(GL_SRGB)
                 .setFormat(GL_RGB)
                 .setPixelType(GL_UNSIGNED_SHORT)
@@ -76,7 +79,7 @@ RenderBuffer::RenderBuffer(ivec2 resolution)
                 .setAttachement(GL_COLOR_ATTACHMENT0))
         .addTexture(
             Texture2D() // DEPTH
-                .setResolution(resolution)
+                .setResolution(*resolution)
                 .setInternalFormat(GL_DEPTH_COMPONENT)
                 .setFormat(GL_DEPTH_COMPONENT)
                 .setPixelType(GL_FLOAT)
@@ -85,31 +88,13 @@ RenderBuffer::RenderBuffer(ivec2 resolution)
                 .setAttachement(GL_DEPTH_ATTACHMENT))
         .addTexture(
             Texture2D() // NORMAL
-                .setResolution(resolution)
+                .setResolution(*resolution)
                 .setInternalFormat(GL_RGB)
                 .setFormat(GL_RGB)
                 .setPixelType(GL_FLOAT)
                 .setFilter(GL_LINEAR)
                 .setWrapMode(GL_CLAMP_TO_EDGE)
                 .setAttachement(GL_COLOR_ATTACHMENT1))
-        .addTexture(
-            Texture2D() // Albedo
-                .setResolution(resolution)
-                .setInternalFormat(GL_RGB)
-                .setFormat(GL_RGB)
-                .setPixelType(GL_UNSIGNED_SHORT)
-                .setFilter(GL_LINEAR)
-                .setWrapMode(GL_CLAMP_TO_EDGE)
-                .setAttachement(GL_COLOR_ATTACHMENT2))
-        .addTexture(
-            Texture2D() // Position
-                .setResolution(resolution)
-                .setInternalFormat(GL_RGBA)
-                .setFormat(GL_RGBA)
-                .setPixelType(GL_UNSIGNED_SHORT)
-                .setFilter(GL_LINEAR)
-                .setWrapMode(GL_CLAMP_TO_EDGE)
-                .setAttachement(GL_COLOR_ATTACHMENT3))
         .generate();
 }
 

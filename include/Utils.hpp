@@ -32,7 +32,7 @@ typedef std::chrono::duration<float, std::milli> duration;
 
 void startbenchrono();
 void endbenchrono();
-uint64_t Get_time_ms();
+uint64_t GetTimeMs();
 
 double Get_delta_time();
 

@@ -27,7 +27,7 @@ class Texture2D
         GLenum _attachement;
 
     public :   
-        Texture2D& setResolution(ivec2 resolution);
+        Texture2D& setResolution(const ivec2 resolution);
         Texture2D& setInternalFormat(GLenum format);
         Texture2D& setFormat(GLenum format);
         Texture2D& setPixelType(GLenum type);
@@ -37,6 +37,8 @@ class Texture2D
         Texture2D& setWrapMode(GLenum wrapMode);
 
         Texture2D& generate();      
+
+        Texture2D& bind(GLuint location);
         
         GLuint getHandle(){return handle;};
         GLenum getAttachement(){return _attachement;};

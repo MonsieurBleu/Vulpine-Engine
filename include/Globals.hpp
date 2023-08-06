@@ -19,11 +19,15 @@ class Globals
         glm::vec2 _mousePosition;
 
         ivec2 _windowSize;
+        ivec2 _renderSize;
+        float _renderScale = 1.0;
 
         std::vector<ShaderUniform> _standartShaderUniform2D;
         std::vector<ShaderUniform> _standartShaderUniform3D;
 
         Mesh _fullscreenQuad;
+
+        
 
     public :
 
@@ -37,29 +41,32 @@ class Globals
         // void operator=(const Globals&) = delete;
 
 
-        const AppState state() const {return _state;};
+        const AppState state() const;
 
-        const GLFWvidmode* videoMode() const {return _videoMode;};
+        const GLFWvidmode* videoMode() const;
 
-        glm::ivec2 screenResolution() const {return ivec2(_videoMode->width, _videoMode->height);};
-        const int* screenResolutionAddr() const {return &(_videoMode->width);};
-        const glm::vec2 mousePosition() const {return _mousePosition;};
+        glm::ivec2 screenResolution() const;
+        const int* screenResolutionAddr() const;
+        const glm::vec2 mousePosition() const;
 
         BenchTimer appTime;
         BenchTimer unposedTime;
 
-        std::vector<ShaderUniform> standartShaderUniform2D() const {return _standartShaderUniform2D;};
-        std::vector<ShaderUniform> standartShaderUniform3D() const {return _standartShaderUniform3D;};
+        std::vector<ShaderUniform> standartShaderUniform2D() const;
+        std::vector<ShaderUniform> standartShaderUniform3D() const;
 
-        int windowWidth() const {return _windowSize.x;};
-        int windowHeight() const {return _windowSize.y;};
-        ivec2 windowSize() const {return _windowSize;};
-        const ivec2* windowSizeAddr() const {return &_windowSize;};
+        int windowWidth() const;
+        int windowHeight() const;
+        ivec2 windowSize() const;
+        const ivec2* windowSizeAddr() const;
 
-        void drawFullscreenQuad() {_fullscreenQuad.drawVAO();};
+        float renderScale() const;
+        ivec2 renderSize() const;
+        const ivec2* renderSizeAddr() const;
+
+        void drawFullscreenQuad();
 };
 
-
-Globals globals;
+extern Globals globals;
 
 #endif

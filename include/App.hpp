@@ -8,6 +8,8 @@
 
 #include <Inputs.hpp>
 
+#include <RenderPass.hpp>
+
 enum AppState
 {
     quit,
@@ -27,6 +29,9 @@ class App
         Camera camera;
 
         void mainInput(double deltatime);
+
+        RenderBuffer renderBuffer;
+        SSAOPass SSAO;
 
     public :
         App(GLFWwindow* window);

@@ -91,7 +91,7 @@ void endbenchrono()
     std::cout << " in " << TERMINAL_TIMER << elapsed.count() << " ms \n" << TERMINAL_RESET;
 }
 
-uint64_t Get_time_ms()
+uint64_t GetTimeMs()
 {
     return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }

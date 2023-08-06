@@ -9,11 +9,8 @@ layout (location = 0) in vec2 vertexPosition;
 layout (binding = 0) uniform sampler2D bColor;
 layout (binding = 1) uniform sampler2D bDepth;
 layout (binding = 2) uniform sampler2D bNormal;
-layout (binding = 3) uniform sampler2D bAlbedo;
-layout (binding = 4) uniform sampler2D bPositon;
-
+layout (binding = 3) uniform sampler2D bAO;
 layout (binding = 5) uniform sampler2D texNoise;
-layout (binding = 6) uniform sampler2D bAO;
 
 in vec2 uvScreen;
 in vec2 ViewRay;

@@ -1,9 +1,0 @@
-    color = _color;
-    // normal = _normal;
-    normal = (_modelRotation * vec4(_normal, 1.0)).rgb;
-    // mat3 normalMatrix = transpose(inverse(mat3(_cameraViewMatrix * _modelMatrix)));
-    // normal = normalMatrix * _normal;
-    // mat3 normalMatrix = transpose(inverse(mat3(_cameraViewMatrix * _modelMatrix)));
-    // normal = _normal*normalMatrix;
-    // position = (_modelRotation * vec4(_positionInModel*_modelScale, 1.0)).rgb + _modelPosition;
-    position = (_modelMatrix * vec4(_positionInModel, 1.0)).rgb;

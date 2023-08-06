@@ -173,3 +173,9 @@ void ShaderProgram::deactivate() const
 {
     glUseProgram(program);
 }
+
+ShaderProgram& ShaderProgram::addUniform(ShaderUniform newUniform)
+{
+    uniforms.add(newUniform);
+    return *this;
+}
