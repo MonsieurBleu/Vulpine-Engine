@@ -365,10 +365,10 @@ void App::mainloop()
         renderBuffer.activate();
         scene.draw();
         renderBuffer.deactivate();
+        renderBuffer.bindTextures();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        renderBuffer.bindTextures();
 
         SSAO.render(camera);
 

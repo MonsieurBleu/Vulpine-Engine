@@ -17,6 +17,17 @@ in vec2 ViewRay;
 
 out vec4 _fragColor;
 
+vec3 rgb2hsv(vec3 c)
+{
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
 float LinearizeDepth(in vec2 uv)
 {
     float zNear = 0.1;    // TODO: Replace by the zNear of your perspective projection
@@ -37,16 +48,16 @@ vec4 toLinear(vec4 sRGB)
     return vec4(mix(higher, lower, cutoff), sRGB.a);
 }
 
-vec3 getBlurAO(vec2 TexCoords)
+vec4 getBlurAO(vec2 TexCoords)
 {
     vec2 texelSize = 1.0 / vec2(textureSize(bAO, 0));
-    vec3 result = vec3(0.0);
+    vec4 result = vec4(0.0);
     for (int x = -2; x < 2; ++x) 
     {
         for (int y = -2; y < 2; ++y) 
         {
             vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(bAO, TexCoords + offset).rgb;
+            result += texture(bAO, TexCoords + offset);
         }
     }
     return result / (4.0 * 4.0);
@@ -66,7 +77,16 @@ void main()
     _fragColor.g = texture(bColor, gUv).g;
     _fragColor.b = texture(bColor, bUv).b;
 
-    _fragColor.rgb *= getBlurAO(uvScreen);
+    // _fragColor.rgb *= getBlurAO(uvScreen);
+    vec4 AO = getBlurAO(uvScreen);
+    // _fragColor.rgb = mix(_fragColor.rgb, AO.rgb, AO.a);
+    // _fragColor.rgb = vec3(AO.a);
+    // _fragColor.rgb = AO.rgb;
+    // _fragColor.rgb = _fragColor.rgb*AO.rgb;
+    // _fragColor.rgb = mix(_fragColor.rgb, AO.rgb, vec3(rgb2hsv(AO.rgb).b));
+    // _fragColor.rgb *= 1.0 - AO.rgb*2.0;
+    _fragColor.rgb *= 1.0 - AO.rgb*(1.0 + rgb2hsv(_fragColor.rgb).b);
+    _fragColor.rgb *= AO.a;
 
     _fragColor.a = 1.0;
 }

@@ -61,8 +61,8 @@ void SSAOPass::setup()
         .addTexture(
             Texture2D()
                 .setResolution(globals.windowSize())
-                .setInternalFormat(GL_RGB)
-                .setFormat(GL_RGB)
+                .setInternalFormat(GL_RGBA)
+                .setFormat(GL_RGBA)
                 .setPixelType(GL_FLOAT)
                 .setAttachement(GL_COLOR_ATTACHMENT0))
         .generate();
@@ -85,6 +85,8 @@ void SSAOPass::render(Camera &camera)
     FBO.activate();
     shader.activate();
     cameraProjMatrix.activate();
+    ShaderUniform(inverse(camera.getViewMatrix()), 3).activate();
+    ShaderUniform(camera.getViewMatrix(), 4).activate();
     ssaoNoiseTexture.bind(3);
     globals.drawFullscreenQuad();
     FBO.deactivate();
