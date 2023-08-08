@@ -1,5 +1,6 @@
 #include <FrameBuffer.hpp>
 #include <iostream>
+#include <CompilingOptions.hpp>
 
 FrameBuffer& FrameBuffer::addTexture(Texture2D texture)
 {
@@ -44,6 +45,11 @@ void FrameBuffer::activate()
     glBindFramebuffer(GL_FRAMEBUFFER, handle);
     // glClearColor(0.2, 0.3, 0.3, 1.0);
     glClearColor(0.0, 0.0, 0.0, 0.0);
+    #ifdef INVERTED_Z
+    glClearDepth(0.0f);
+    #else
+    glClearDepth(1.0f);
+    #endif
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);  
     glViewport(0, 0, textures[0].getResolution().x, textures[0].getResolution().y);
 }
@@ -80,7 +86,7 @@ void RenderBuffer::generate()
         .addTexture(
             Texture2D() // DEPTH
                 .setResolution(*resolution)
-                .setInternalFormat(GL_DEPTH_COMPONENT)
+                .setInternalFormat(GL_DEPTH_COMPONENT32F)
                 .setFormat(GL_DEPTH_COMPONENT)
                 .setPixelType(GL_FLOAT)
                 .setFilter(GL_LINEAR)
@@ -111,6 +117,11 @@ void RenderBuffer::activate()
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
+    #ifdef INVERTED_Z
+    glDepthFunc(GL_GREATER);
+    #else
+    glDepthFunc(GL_LESS);
+    #endif
     FrameBuffer::activate();
 }
 

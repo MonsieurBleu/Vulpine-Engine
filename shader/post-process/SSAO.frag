@@ -40,7 +40,7 @@ vec3 hsv2rgb(vec3 c)
 
 vec3 calculate_view_position(vec2 texture_coordinate, float depth_from_depth_buffer)
 {
-    vec3 clip_space_position = vec3(texture_coordinate, depth_from_depth_buffer) * 2.0 - vec3(1.0);
+    vec3 clip_space_position = vec3(texture_coordinate, depth_from_depth_buffer) * 2.0 - 1.0;
 
     mat4 inverse_projection_matrix = inverse(_cameraProjectionMatrix);
 
@@ -102,7 +102,7 @@ void main()
         // occlusion += (sampleDepth >= samplePos.z + bias ? vec4(1.0) : vec4(0.0)) * rangeCheck * vec4(texture(bColor, offset.xy).rgb, 1.0);  
     
         if(sampleDepth >= samplePos.z + bias)
-            occlusion.a += rangeCheck;
+            occlusion.a += rangeCheck*0.5;
 
         if(sampleDepth >= samplePos.z + colorBias)
         {

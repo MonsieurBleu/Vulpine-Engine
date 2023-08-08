@@ -26,7 +26,7 @@ struct GLenum_t
 struct errorHistoric
 {
     GLuint id;
-    uint64 time;
+    long time;
 };
 
 std::ostream& operator<<(std::ostream& os, GLenum_t e)
@@ -91,9 +91,9 @@ void GLAPIENTRY MessageCallback(GLenum _source,
     */
 #ifdef PREVENT_GL_NOTIF_SPAM
     static std::list<errorHistoric> historic;
-    static const uint64 spamTimeout = 10000;
+    static const long spamTimeout = 10000;
 
-    uint64 now = GetTimeMs();
+    long now = GetTimeMs();
 
     for(auto i = historic.begin(); i != historic.end(); i++)
         if(i->id == id && (now-i->time) < spamTimeout)

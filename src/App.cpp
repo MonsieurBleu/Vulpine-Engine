@@ -18,6 +18,11 @@
 
 #include <random>
 
+#include <Light.hpp>
+
+#include <CompilingOptions.hpp>
+
+
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
@@ -165,6 +170,7 @@ void App::mainloop()
 
     /// SETTING UP THE CAMERA 
     camera.init(radians(50.0f), globals.windowWidth(), globals.windowHeight(), 0.1f, 1000.0f);
+    // camera.init(radians(50.0f), globals.windowWidth(), globals.windowHeight(), 1000.0f, 0.1f);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -280,6 +286,42 @@ void App::mainloop()
     const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
     glDrawBuffers(4, buffers);
 
+    #ifdef INVERTED_Z
+    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+    #endif
+
+    ScenePointLight redLight = newPointLight(
+        PointLight()
+        .setColor(vec3(1, 0, 0))
+        .setPosition(vec3(100, 50, 0))
+        .setIntensity(1)
+        .setSize(vec3(2, 1, 1)));
+
+    ScenePointLight blueLight = newPointLight(
+        PointLight()
+        .setColor(vec3(0, 0.5, 1.0))
+        .setPosition(vec3(100, 50, -100))
+        .setIntensity(2)
+        .setSize(vec3(1, 1, 1)));
+
+    scene.add(redLight);
+    scene.add(blueLight);
+
+
+    // std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+    // std::default_random_engine generator;
+    // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
+    // {
+    //     scene.add(
+    //         newPointLight(
+    //             PointLight()
+    //             .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
+    //             .setPosition(vec3(400, 200, 400) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
+    //             .setIntensity(1)
+    //             )
+    //     );
+    // }
+
     while(state != quit)
     {
         mainloopStartRoutine();
@@ -361,8 +403,10 @@ void App::mainloop()
 
         model->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         model2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
+        blueLight->setPosition(vec3(100, 50 + 50*(1.0 + cos(globals.appTime.getElapsedTime())), -100));
 
         renderBuffer.activate();
+        // ligthBuffer.activate(0);
         scene.draw();
         renderBuffer.deactivate();
         renderBuffer.bindTextures();

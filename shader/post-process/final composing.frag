@@ -86,7 +86,7 @@ void main()
     // _fragColor.rgb = mix(_fragColor.rgb, AO.rgb, vec3(rgb2hsv(AO.rgb).b));
     // _fragColor.rgb *= 1.0 - AO.rgb*2.0;
     _fragColor.rgb *= 1.0 - AO.rgb*(1.0 + rgb2hsv(_fragColor.rgb).b);
-    _fragColor.rgb *= AO.a;
+    // _fragColor.rgb *= AO.a;
 
     _fragColor.a = 1.0;
 }
