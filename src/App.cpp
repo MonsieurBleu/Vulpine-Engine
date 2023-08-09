@@ -95,9 +95,9 @@ void App::mainInput(double deltatime)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
     
-    float camspeed = 15.0;
+    float camspeed = 0.3;
     if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        camspeed *= 10.0;
+        camspeed *= 5.0;
 
     vec3 velocity(0.0);
 
@@ -254,21 +254,21 @@ void App::mainloop()
         materials[materialId], 
         TemplateMeshes[TemplateId],
         ModelState3D()
-            .scaleScalar(100.0));
+            .scaleScalar(1.0));
 
     ModelRef model2 = newModel(
         materials[materialId], 
         TemplateMeshesFlatShade[TemplateId],
         ModelState3D()
-            .scaleScalar(100.0)
-            .setPosition(vec3(200.0, 0.0, 0.0)));
+            .scaleScalar(1.0)
+            .setPosition(vec3(2.0, 0.0, 0.0)));
 
     ModelRef room = newModel(
         materials[materialId], 
         readOBJ("ressources/room.obj"),
         ModelState3D()
-            .scaleScalar(100.0)
-            .setPosition(vec3(0.0, -20.0, 0.0)));
+            .scaleScalar(1.0)
+            .setPosition(vec3(0.0, -0.2, 0.0)));
 
 
     scene.add(room, false);
@@ -293,34 +293,43 @@ void App::mainloop()
     ScenePointLight redLight = newPointLight(
         PointLight()
         .setColor(vec3(1, 0, 0))
-        .setPosition(vec3(100, 50, 0))
+        .setPosition(vec3(1, 0.5, 0.0))
         .setIntensity(1)
-        .setSize(vec3(2, 1, 1)));
+        .setRadius(1.0));
 
     ScenePointLight blueLight = newPointLight(
         PointLight()
         .setColor(vec3(0, 0.5, 1.0))
-        .setPosition(vec3(100, 50, -100))
+        .setPosition(vec3(1, 0.5, -1))
         .setIntensity(2)
-        .setSize(vec3(1, 1, 1)));
+        .setRadius(3.0));
 
-    scene.add(redLight);
-    scene.add(blueLight);
+    // scene.add(
+    //     newDirectionLight(
+    //         DirectionLight()
+    //             .setColor(vec3(1.0))
+    //             .setDirection(normalize(vec3(-0.5, 1.0, 0.25)))
+    //             .setIntensity(0.5)
+    //     )
+    // );
+    // scene.add(redLight);
+    // scene.add(blueLight);
 
-
-    // std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-    // std::default_random_engine generator;
-    // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
-    // {
-    //     scene.add(
-    //         newPointLight(
-    //             PointLight()
-    //             .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
-    //             .setPosition(vec3(400, 200, 400) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
-    //             .setIntensity(1)
-    //             )
-    //     );
-    // }
+    std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+    std::default_random_engine generator;
+    // for(int i = 0; i < 16; i++)
+    for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
+    {
+        scene.add(
+            newPointLight(
+                PointLight()
+                .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
+                .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
+                .setIntensity(1)
+                .setRadius(1.0)
+                )
+        );
+    }
 
     while(state != quit)
     {
@@ -338,6 +347,11 @@ void App::mainloop()
 
             switch (input.key)
             {
+            case GLFW_KEY_F3 :
+                std::cout 
+                << globals.appTime << "\n";
+                break;
+
             case GLFW_KEY_F5:
                 system("cls");
                 SSAO.getShader().reset();
@@ -412,7 +426,6 @@ void App::mainloop()
         renderBuffer.bindTextures();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
 
         SSAO.render(camera);
 

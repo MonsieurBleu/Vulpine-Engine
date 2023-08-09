@@ -35,7 +35,12 @@ class BenchTimer
         float elapsedTime;
         float deltaS;
 
+        std::string name;
+
     public :
+
+        BenchTimer();
+        BenchTimer(std::string name);
 
         void end();
         void start();

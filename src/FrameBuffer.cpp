@@ -101,6 +101,15 @@ void RenderBuffer::generate()
                 .setFilter(GL_LINEAR)
                 .setWrapMode(GL_CLAMP_TO_EDGE)
                 .setAttachement(GL_COLOR_ATTACHMENT1))
+        .addTexture(
+            Texture2D() // EMISSIVE
+                .setResolution(*resolution)
+                .setInternalFormat(GL_RGB)
+                .setFormat(GL_RGB)
+                .setPixelType(GL_FLOAT)
+                .setFilter(GL_LINEAR)
+                .setWrapMode(GL_CLAMP_TO_EDGE)
+                .setAttachement(GL_COLOR_ATTACHMENT2))
         .generate();
 }
 
@@ -109,14 +118,18 @@ void RenderBuffer::bindTextures()
     bindTexture(0, 0);
     bindTexture(1, 1);
     bindTexture(2, 2);
-    bindTexture(3, 3);
-    bindTexture(4, 4);
+    bindTexture(3, 4);
 }
 
 void RenderBuffer::activate()
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW); 
+
     #ifdef INVERTED_Z
     glDepthFunc(GL_GREATER);
     #else
@@ -130,4 +143,5 @@ void RenderBuffer::deactivate()
     FrameBuffer::deactivate();
     glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }

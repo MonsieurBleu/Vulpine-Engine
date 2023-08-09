@@ -109,9 +109,9 @@ PointLight& PointLight::setColor(vec3 color)
     return *this;
 }
 
-PointLight& PointLight::setSize(vec3 size)
+PointLight& PointLight::setRadius(float radius)
 {
-    _direction = vec4(size, _direction.a);
+    _direction.x = radius;
     return *this;
 }
 

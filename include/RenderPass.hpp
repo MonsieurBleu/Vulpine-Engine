@@ -1,6 +1,7 @@
 #ifndef RENDER_PASS_HPP
 #define RENDER_PASS_HPP
 
+#include <Timer.hpp>
 #include <Shader.hpp>
 #include <FrameBuffer.hpp>
 #include <Camera.hpp>

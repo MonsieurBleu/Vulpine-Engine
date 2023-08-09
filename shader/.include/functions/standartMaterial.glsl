@@ -4,7 +4,7 @@
 float diffuseIntensity = 0.5;
 float specularIntensity = 0.5;
 float fresnelIntensity = 0.25;
-vec3 ambientLight = vec3(0.5);
+vec3 ambientLight = vec3(0.1);
 
 vec3 getDSF(vec3 lightDirection, vec3 lightColor)
 {
@@ -68,25 +68,27 @@ vec3 getMultiLightDFS()
                 break;
 
             case 1 :
-                lightResult = getDSF(light.direction.xyz, light.color.rgb)*light.color.a;
+                lightResult = 2.0*getDSF(light.direction.xyz, light.color.rgb)*light.color.a;
                 break;
 
             case 2 : 
             {
-                float maxDist = max(light.direction.x*100.0, 0.0001);
+                float maxDist = max(light.direction.x, 0.0001);
                 float distFactor = max(maxDist - distance(position, light.position.xyz), 0.f)/maxDist;
                 distFactor = pow(distFactor, 2.0);
                 vec3 direction = -normalize( position - light.position.xyz);
                 // vec3 direction = vec3(1.0);
+                // float finalFactor = max(distFactor*light.color.a - ambientLight.x*3.0, 0.f);
 
-                lightResult = getDSF(direction, light.color.rgb)*distFactor*light.color.a;
+                if(distFactor > 0.0001)
+                    lightResult = getDSF(direction, light.color.rgb)*distFactor*light.color.a;
             }
                 break;
 
             default : break;
         }
         
-        result += lightResult;
+        result += max(lightResult - ambientLight*0.5, vec3(0.f));
 
         id ++;
     }

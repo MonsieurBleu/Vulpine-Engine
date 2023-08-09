@@ -48,7 +48,7 @@ class PointLight : public Light
         PointLight();
         PointLight& setPosition(vec3 position);
         PointLight& setColor(vec3 color);
-        PointLight& setSize(vec3 size);
+        PointLight& setRadius(float radius);
         PointLight& setIntensity(float intensity);
 
         vec3 position() const;

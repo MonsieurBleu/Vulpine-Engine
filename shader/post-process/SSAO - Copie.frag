@@ -38,32 +38,32 @@ vec3 hsv2rgb(vec3 c)
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
+vec3 calculate_view_position(vec2 texture_coordinate, float depth_from_depth_buffer)
 {
-    float test = 18.0;
+    vec3 clip_space_position = vec3(texture_coordinate, depth_from_depth_buffer) * 2.0 - 1.0;
 
-    vec4 clipSpacePos = vec4(textureCoordinate * test - test/2, 
-                            depth,
-                            1.0);
-    
-    vec4 position = clipSpacePos * inverse(_cameraProjectionMatrix);
+    mat4 inverse_projection_matrix = inverse(_cameraProjectionMatrix);
 
-    position.z = 1.0 - position.z;
+    vec4 view_position =
+        vec4(
+            vec2(inverse_projection_matrix[0][0], inverse_projection_matrix[1][1]) * clip_space_position.xy,
+            -1,
+            inverse_projection_matrix[2][3] * clip_space_position.z + inverse_projection_matrix[3][3]);
 
-    return position.xyz/-position.w;
+    return(view_position.xyz / view_position.w);
 }
 
 // tile noise texture over screen, based on screen dimensions divided by noise size
 vec2 noiseScale = vec2(float(iResolution.x)/4.0, float(iResolution.y)/4.0);
 
 int kernelSize = 64;
-float radius = 5.0;
-float bias = 1.0;
-float colorBias = 1.0;
+float radius = 0.05;
+float bias = 0.01;
+float colorBias = 0.5;
 
 void main()
 {
-    vec3 fragPos = calculateViewPosition(uvScreen, texture(bDepth, uvScreen).x);
+    vec3 fragPos = calculate_view_position(uvScreen, texture(bDepth, uvScreen).x);
     vec3 fragWorldPos = (_cameraViewInverse * vec4(fragPos, 1.0)).xyz;
 
     vec3 fragColor = texture(bColor, uvScreen).rgb;
@@ -91,11 +91,10 @@ void main()
         vec4 offset = vec4(samplePos, 1.0);
         offset = _cameraProjectionMatrix * offset; // from view to clip-space
         offset.xyz /= offset.w; // perspective divide
-        offset.xy = offset.xy * 0.5 + 0.5; // transform to range 0.0 - 1.0        
-        // offset.z = 1.0 - offset.z;
+        offset.xyz = offset.xyz * 0.5 + 0.5; // transform to range 0.0 - 1.0        
 
         // get sample depth
-        float sampleDepth = calculateViewPosition(offset.xy, texture(bDepth, offset.xy).x).z;
+        float sampleDepth = calculate_view_position(offset.xy, texture(bDepth, offset.xy).x).z;
 
         // range check & accumulate
         float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
@@ -103,7 +102,7 @@ void main()
         // occlusion += (sampleDepth >= samplePos.z + bias ? vec4(1.0) : vec4(0.0)) * rangeCheck * vec4(texture(bColor, offset.xy).rgb, 1.0);  
     
         if(sampleDepth >= samplePos.z + bias)
-            occlusion.a += rangeCheck;
+            occlusion.a += rangeCheck*0.5;
 
         if(sampleDepth >= samplePos.z + colorBias)
         {
@@ -124,10 +123,8 @@ void main()
     // occlusion.rgb *= 5.0 * pow(1.0 - rgb2hsv(occlusion.rgb).b, lumDiscriminationExp);
 
     _AO.rgb = pow(occlusion.rgb, vec3(1.0));
-    _AO.a = pow(1.0 - occlusion.a/kernelSize, 2.0);
+    _AO.a = pow(1.0 - occlusion.a/kernelSize, 0.5);
 
     // if(occlusion == 1.0)
     //     _AO = vec3(0.25, 0.0, 0.0);
-
-    // _AO.rgb = calculateViewPosition(uvScreen, texture(bDepth, uvScreen).x);
 }

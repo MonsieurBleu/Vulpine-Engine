@@ -10,6 +10,7 @@ layout (binding = 0) uniform sampler2D bColor;
 layout (binding = 1) uniform sampler2D bDepth;
 layout (binding = 2) uniform sampler2D bNormal;
 layout (binding = 3) uniform sampler2D bAO;
+layout (binding = 4) uniform sampler2D bEmmisive;
 layout (binding = 5) uniform sampler2D texNoise;
 
 in vec2 uvScreen;
@@ -63,6 +64,104 @@ vec4 getBlurAO(vec2 TexCoords)
     return result / (4.0 * 4.0);
 }
 
+vec4 blur13(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
+  vec4 color = vec4(0.0);
+  vec2 off1 = vec2(1.411764705882353) * direction;
+  vec2 off2 = vec2(3.2941176470588234) * direction;
+  vec2 off3 = vec2(5.176470588235294) * direction;
+  vec2 off4 = vec2(4.123489131235294) * direction;
+  color += texture(image, uv) * 0.1964825501511404;
+  color += texture(image, uv + (off1 / resolution)) * 0.2969069646728344;
+  color += texture(image, uv - (off1 / resolution)) * 0.2969069646728344;
+  color += texture(image, uv + (off2 / resolution)) * 0.09447039785044732;
+  color += texture(image, uv - (off2 / resolution)) * 0.09447039785044732;
+  color += texture(image, uv + (off3 / resolution)) * 0.010381362401148057;
+  color += texture(image, uv - (off3 / resolution)) * 0.010381362401148057;
+  color += texture(image, uv + (off4 / resolution)) * 0.214563213624011544;
+  color += texture(image, uv - (off4 / resolution)) * 0.214563213624011544;
+  return color;
+}
+
+
+bool horizontal = false;
+float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+
+vec3 getBloom(vec2 TexCoords)
+{             
+    vec2 tex_offset = 1.0 / textureSize(bEmmisive, 0); // gets size of single texel
+    vec3 result = texture(bEmmisive, TexCoords).rgb * weight[0]; // current fragment's contribution
+    
+    if(horizontal)
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(bEmmisive, TexCoords + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+            result += texture(bEmmisive, TexCoords - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+        }
+    }
+    else
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(bEmmisive, TexCoords + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+            result += texture(bEmmisive, TexCoords - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+        }
+    }
+    
+    return result;
+}
+
+// How far from the center to take samples from the fragment you are currently on
+const int radius = 25;
+// Keep it between 1.0f and 2.0f (the higher this is the further the blur reaches)
+float spreadBlur = 2.f;
+float weights[radius];
+
+vec3 blur(sampler2D screenTexture, vec2 texCoords)
+{             
+    // Calculate the weights using the Gaussian equation
+    float x = 0.0f;
+    for (int i = 0; i < radius; i++)
+    {
+        // Decides the distance between each sample on the Gaussian function
+        if (spreadBlur <= 2.0f)
+            x += 3.0f / radius;
+        else
+            x += 6.0f / radius;
+
+        weights[i] = exp(-0.5f * pow(x / spreadBlur, 2.0f)) / (spreadBlur * sqrt(2 * 3.14159265f));
+    }
+
+
+    vec2 tex_offset = 1.0f / textureSize(screenTexture, 0);
+    vec3 result = texture(screenTexture, texCoords).rgb * weights[0];
+
+    // Calculate horizontal blur
+    // if(horizontal)
+    // {
+        for(int i = 1; i < radius; i+= 5)
+        {
+            // Take into account pixels to the right
+            result += texture(screenTexture, texCoords + vec2(tex_offset.x * i, 0.0)).rgb * weights[i];
+            // Take into account pixels on the left
+            result += texture(screenTexture, texCoords - vec2(tex_offset.x * i, 0.0)).rgb * weights[i];
+        }
+    // }
+    // Calculate vertical blur
+    // else
+    // {
+        for(int i = 1; i < radius; i+= 5)
+        {
+            // Take into account pixels above
+            result += texture(screenTexture, texCoords + vec2(0.0, tex_offset.y * i)).rgb * weights[i];
+            // Take into account pixels below
+            result += texture(screenTexture, texCoords - vec2(0.0, tex_offset.y * i)).rgb * weights[i];
+        }
+    // }
+    
+    return result;
+}
+
 void main()
 {
     vec3 BackgroundColor = vec3(0.2, 0.3, 0.3);
@@ -84,9 +183,21 @@ void main()
     // _fragColor.rgb = AO.rgb;
     // _fragColor.rgb = _fragColor.rgb*AO.rgb;
     // _fragColor.rgb = mix(_fragColor.rgb, AO.rgb, vec3(rgb2hsv(AO.rgb).b));
-    // _fragColor.rgb *= 1.0 - AO.rgb*2.0;
-    _fragColor.rgb *= 1.0 - AO.rgb*(1.0 + rgb2hsv(_fragColor.rgb).b);
-    // _fragColor.rgb *= AO.a;
+    _fragColor.rgb *= 1.0 - AO.rgb*2.0;
+    // _fragColor.rgb *= 1.0 - AO.rgb*2.0*(2.0 - rgb2hsv(_fragColor.rgb).b);
+    // _fragColor.rgb = vec3(AO.a);
+    // _fragColor.rgb = vec3(1.0) - AO.rgb;
+
+    // _fragColor.rgb = AO.rgb;
+
+    // _fragColor.rgb = texture(bEmmisive, uvScreen).rgb;
+    // vec3 bloom = getBlurEmmisive(uvScreen).rgb;
+    // vec3 bloom = getBloom(uvScreen);
+    // vec3 bloom = blur13(bEmmisive, uvScreen, 0.5*vec2(float(iResolution.x), float(iResolution.y)), vec2(0.5, 0.5)).rgb;
+    vec3 bloom = blur(bEmmisive, uvScreen);
+    _fragColor.rgb += bloom.rgb;
+    // _fragColor.rgb = _fragColor.rgb + _fragColor.rgb*getBlurEmmisive(uvScreen).rgb*2.0;
+    // _fragColor.rgb = mix(_fragColor.rgb, bloom, 1.0 - rgb2hsv(bloom).b);
 
     _fragColor.a = 1.0;
 }
