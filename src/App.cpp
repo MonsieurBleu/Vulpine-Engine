@@ -277,7 +277,7 @@ void App::mainloop()
 
     bool wireframe = false;
 
-    ShaderProgram PostProcessing(
+    ShaderProgram PostProcessing = ShaderProgram(
         "shader/post-process/final composing.frag", 
         "shader/post-process/basic.vert", 
         "", 
@@ -309,7 +309,7 @@ void App::mainloop()
             DirectionLight()
                 .setColor(vec3(1.0))
                 .setDirection(normalize(vec3(-0.5, 1.0, 0.25)))
-                .setIntensity(0.5)
+                .setIntensity(0.25)
         )
     );
     // scene.add(redLight);
@@ -318,18 +318,18 @@ void App::mainloop()
     std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
     std::default_random_engine generator;
     // for(int i = 0; i < 16; i++)
-    for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
-    {
-        scene.add(
-            newPointLight(
-                PointLight()
-                .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
-                .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
-                .setIntensity(1)
-                .setRadius(1.0)
-                )
-        );
-    }
+    // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
+    // {
+    //     scene.add(
+    //         newPointLight(
+    //             PointLight()
+    //             .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
+    //             .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
+    //             .setIntensity(1)
+    //             .setRadius(1.0)
+    //             )
+    //     );
+    // }
 
     while(state != quit)
     {
@@ -400,6 +400,10 @@ void App::mainloop()
                 model->setMaterial(materials[materialId]);
                 model2->setMaterial(materials[materialId]);
                 room->setMaterial(materials[materialId]);
+                break;
+
+            case GLFW_KEY_1 :
+                SSAO.toggle();
                 break;
 
             default:

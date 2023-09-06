@@ -13,6 +13,8 @@ class RenderPass
     protected :
         FrameBuffer FBO;
         ShaderProgram shader;
+        bool isEnable = true;
+        bool needClear = true;
 
     public : 
         RenderPass() {};
@@ -23,6 +25,9 @@ class RenderPass
         
         FrameBuffer& getFBO();
         ShaderProgram& getShader();
+        void enable();
+        void disable();
+        void toggle();
 };
 
 class SSAOPass : public RenderPass

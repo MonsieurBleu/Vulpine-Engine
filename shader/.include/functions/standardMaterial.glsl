@@ -8,12 +8,12 @@
 float diffuseIntensity = 0.5;
 float specularIntensity = 0.1;
 float fresnelIntensity = 0.1;
-vec3 ambientLight = vec3(0.1);
+vec3 ambientLight = vec3(0.25);
 #else
 float diffuseIntensity = 0.5;
 float specularIntensity = 0.5;
 float fresnelIntensity = 0.25;
-vec3 ambientLight = vec3(0.1);
+vec3 ambientLight = vec3(0.25);
 #endif
 
 vec3 getDSF(vec3 lightDirection, vec3 lightColor)
@@ -83,7 +83,7 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
 
 vec3 getMultiLightStandard()
 {
-    int id = 1;
+    int id = 0;
     vec3 result = vec3(0.0);
     while(true)
     {

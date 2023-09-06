@@ -5,6 +5,17 @@
 FrameBuffer& RenderPass::getFBO(){return FBO;};
 ShaderProgram& RenderPass::getShader(){return shader;};
 
+void RenderPass::enable(){isEnable = true;};
+void RenderPass::disable()
+{
+    isEnable = false;
+    needClear = true;
+};
+void RenderPass::toggle()
+{
+    needClear = isEnable;
+    isEnable = !isEnable;
+};
 
 void RenderPass::bindResults(std::vector<ivec2> binds)
 {
@@ -80,16 +91,25 @@ void SSAOPass::setup()
 
 void SSAOPass::render(Camera &camera)
 {
-    cameraProjMatrix.setData(camera.getProjectionMatrixAddr());
+    if(isEnable)
+    {
+        cameraProjMatrix.setData(camera.getProjectionMatrixAddr());
 
-    FBO.activate();
-    shader.activate();
-    cameraProjMatrix.activate();
-    ShaderUniform(inverse(camera.getViewMatrix()), 3).activate();
-    ShaderUniform(camera.getViewMatrix(), 4).activate();
-    ssaoNoiseTexture.bind(3);
-    globals.drawFullscreenQuad();
-    FBO.deactivate();
+        FBO.activate();
+        shader.activate();
+        cameraProjMatrix.activate();
+        ShaderUniform(inverse(camera.getViewMatrix()), 3).activate();
+        ShaderUniform(camera.getViewMatrix(), 4).activate();
+        ssaoNoiseTexture.bind(3);
+        globals.drawFullscreenQuad();
+        FBO.deactivate();
 
-    bindResults({vec2(0, AO_RESULTS_BINDING_LOCATION)});
+        bindResults({vec2(0, AO_RESULTS_BINDING_LOCATION)});
+    }
+    else if(needClear)
+    {
+        FBO.activate();
+        glClear(0);
+        FBO.deactivate();
+    }
 }
