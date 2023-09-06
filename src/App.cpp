@@ -304,14 +304,14 @@ void App::mainloop()
         .setIntensity(2)
         .setRadius(3.0));
 
-    // scene.add(
-    //     newDirectionLight(
-    //         DirectionLight()
-    //             .setColor(vec3(1.0))
-    //             .setDirection(normalize(vec3(-0.5, 1.0, 0.25)))
-    //             .setIntensity(0.5)
-    //     )
-    // );
+    scene.add(
+        newDirectionLight(
+            DirectionLight()
+                .setColor(vec3(1.0))
+                .setDirection(normalize(vec3(-0.5, 1.0, 0.25)))
+                .setIntensity(0.5)
+        )
+    );
     // scene.add(redLight);
     // scene.add(blueLight);
 
