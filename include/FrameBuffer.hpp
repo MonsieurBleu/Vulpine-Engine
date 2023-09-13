@@ -9,7 +9,7 @@ using namespace glm;
 
 class FrameBuffer
 {
-    private : 
+    protected : 
         std::vector<Texture2D> textures;
 
         GLuint handle;
@@ -29,7 +29,15 @@ class FrameBuffer
         void deactivate();
 
         void bindTexture(uint64 id, uint location);
+
+        Texture2D getTexture(int id);
 };
+
+#define RENDER_BUFFER_COLOR_TEXTURE_ID 0
+#define RENDER_BUFFER_DEPTH_TEXTURE_ID 1
+#define RENDER_BUFFER_NORMAL_TEXTURE_ID 2
+#define RENDER_BUFFER_EMISSIVE_TEXTURE_ID 3
+#define RENDER_BUFFER_SRGB8_BUFF_ID 4
 
 class RenderBuffer : public FrameBuffer
 {    
@@ -42,6 +50,8 @@ class RenderBuffer : public FrameBuffer
         void activate();
         void deactivate();
         void generate();
+
+        
 };
 
 #endif

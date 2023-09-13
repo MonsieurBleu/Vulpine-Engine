@@ -176,28 +176,14 @@ void main()
     _fragColor.g = texture(bColor, gUv).g;
     _fragColor.b = texture(bColor, bUv).b;
 
-    // _fragColor.rgb *= getBlurAO(uvScreen);
     vec4 AO = getBlurAO(uvScreen);
-    // _fragColor.rgb = mix(_fragColor.rgb, AO.rgb, AO.a);
-    // _fragColor.rgb = vec3(AO.a);
-    // _fragColor.rgb = AO.rgb;
-    // _fragColor.rgb = _fragColor.rgb*AO.rgb;
-    // _fragColor.rgb = mix(_fragColor.rgb, AO.rgb, vec3(rgb2hsv(AO.rgb).b));
     _fragColor.rgb *= 1.0 - AO.rgb*2.0;
-    // _fragColor.rgb *= 1.0 - AO.rgb*2.0*(2.0 - rgb2hsv(_fragColor.rgb).b);
-    // _fragColor.rgb = vec3(AO.a);
-    // _fragColor.rgb = vec3(1.0) - AO.rgb;
 
-    // _fragColor.rgb = AO.rgb;
-
-    // _fragColor.rgb = texture(bEmmisive, uvScreen).rgb;
-    // vec3 bloom = getBlurEmmisive(uvScreen).rgb;
-    // vec3 bloom = getBloom(uvScreen);
-    // vec3 bloom = blur13(bEmmisive, uvScreen, 0.5*vec2(float(iResolution.x), float(iResolution.y)), vec2(0.5, 0.5)).rgb;
-    vec3 bloom = blur(bEmmisive, uvScreen);
-    _fragColor.rgb += bloom.rgb;
-    // _fragColor.rgb = _fragColor.rgb + _fragColor.rgb*getBlurEmmisive(uvScreen).rgb*2.0;
-    // _fragColor.rgb = mix(_fragColor.rgb, bloom, 1.0 - rgb2hsv(bloom).b);
+    // vec3 bloom = blur(bEmmisive, uvScreen);
+    // _fragColor.rgb += bloom;
+    // _fragColor.rgb += texture(bNormal, uvScreen).rgb;
+    _fragColor.rgb += texture(bEmmisive, uvScreen).rgb;
+    // _fragColor.rgb = texture(bAO, uvScreen).rgb;
 
     _fragColor.a = 1.0;
 }

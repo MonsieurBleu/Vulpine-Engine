@@ -3,6 +3,8 @@
 
 using namespace glm;
 
+Texture2D::Texture2D(){}
+
 Texture2D& Texture2D::setResolution(const ivec2 resolution)
 {
     _resolution = resolution;
@@ -60,26 +62,31 @@ Texture2D& Texture2D::bind(GLuint location)
 
 Texture2D& Texture2D::generate()
 {
-    glGenTextures(1, &handle);
-    glBindTexture(GL_TEXTURE_2D, handle);
+    if(!generated)
+    {
+        glGenTextures(1, &handle);
+        glBindTexture(GL_TEXTURE_2D, handle);
 
-    glTexImage2D(
-        GL_TEXTURE_2D,
-        0,
-        _internalFormat,
-        _resolution.x,
-        _resolution.y,
-        0,
-        _format,
-        _type,
-        _pixelSource
-    );
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            _internalFormat,
+            _resolution.x,
+            _resolution.y,
+            0,
+            _format,
+            _type,
+            _pixelSource
+        );
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
 
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode); 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode); 
+
+        generated = true;
+    }
     
     return *this;
 }

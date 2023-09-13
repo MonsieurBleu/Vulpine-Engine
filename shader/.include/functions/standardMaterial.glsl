@@ -129,4 +129,5 @@ vec3 getStandardEmmisive(vec3 color, vec3 ambientLight)
             max(
                 rgb2v(color.rgb) - min(max(ambientLight*1.5, 0.1), 0.8), 
                 0.0);
+
 }

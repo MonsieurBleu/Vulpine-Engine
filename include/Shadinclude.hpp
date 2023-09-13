@@ -79,7 +79,7 @@ public:
 
 		if (!file.is_open())
 		{
-			std::cerr << TERMINAL_ERROR << "ERROR: could not open the shader at: " << path << "\n" << std::endl;
+			std::cerr << TERMINAL_ERROR << "ERROR : could not open the shader at: " << path << "\n" << std::endl;
 			return fullSourceCode;
 		}
 

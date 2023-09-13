@@ -44,4 +44,19 @@ class SSAOPass : public RenderPass
         void render(Camera &camera);
 };
 
+/*
+    Read in the emmissive texture, write the result in the color texture
+*/
+class BloomPass : public RenderPass
+{
+    private : 
+        RenderBuffer& inputs;
+        FrameBuffer FBO2;
+    
+    public : 
+        BloomPass(RenderBuffer& inputsBuffer);
+        void setup();
+        void render(Camera &camera);
+};
+
 #endif

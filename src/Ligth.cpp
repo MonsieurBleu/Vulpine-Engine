@@ -30,12 +30,6 @@ LightBuffer::LightBuffer()
 void LightBuffer::send()
 {
     add(Light());
-
-    for(int i = 0; i < currentID; i ++)
-    {
-        std::cout << buffer[i];
-    }
-
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Light)*MAX_LIGHT_COUNTER, buffer.get(), GL_DYNAMIC_COPY);
     

@@ -113,7 +113,7 @@ void GLAPIENTRY MessageCallback(GLenum _source,
     }
     else if(severity.val == GL_DEBUG_SEVERITY_NOTIFICATION)
     {
-    #ifndef SHOW_GL_NOTIF
+    #ifdef SHOW_GL_NOTIF
         color = &TERMINAL_NOTIF;
     #else
         return;

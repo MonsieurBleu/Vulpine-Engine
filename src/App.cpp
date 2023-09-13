@@ -33,7 +33,8 @@ Globals globals;
 App::App(GLFWwindow* window) : 
     window(window), 
     renderBuffer(globals.renderSizeAddr()),
-    SSAO(renderBuffer)
+    SSAO(renderBuffer),
+    Bloom(renderBuffer)
 {
     timestart = GetTimeMs();
 
@@ -86,8 +87,9 @@ App::App(GLFWwindow* window) :
     
     globals._fullscreenQuad.getVao()->generate();
 
-    SSAO.setup();
     renderBuffer.generate();
+    SSAO.setup();
+    Bloom.setup();
 }
 
 void App::mainInput(double deltatime)
@@ -188,13 +190,13 @@ void App::mainloop()
         readOBJ("ressources/sphere.obj"),
         readOBJ("ressources/hardsurface.obj"),
         readOBJ("ressources/voronoi.obj"),
-        readOBJ("ressources/cube.obj"),
-        readOBJ("ressources/fox.obj"),
-        readOBJ("ressources/nerd.obj"),
-        readOBJ("ressources/sword.obj"),
-        readOBJ("ressources/airboat.obj"),
-        readOBJ("ressources/cowgirl.obj"),
-        readOBJ("ressources/wraith.obj"),
+        // readOBJ("ressources/cube.obj"),
+        // readOBJ("ressources/fox.obj"),
+        // readOBJ("ressources/nerd.obj"),
+        // readOBJ("ressources/sword.obj"),
+        // readOBJ("ressources/airboat.obj"),
+        // readOBJ("ressources/cowgirl.obj"),
+        // readOBJ("ressources/wraith.obj"),
         readOBJ("ressources/female.obj"),
     };
 
@@ -205,31 +207,31 @@ void App::mainloop()
         readOBJ("ressources/sphere_flatshade.obj"),
         readOBJ("ressources/hardsurface_flatshade.obj"),
         readOBJ("ressources/voronoi_flatshade.obj"),
-        readOBJ("ressources/cube_flatshade.obj"),
-        readOBJ("ressources/fox_flatshade.obj"),
-        readOBJ("ressources/nerd_flatshade.obj"),
-        readOBJ("ressources/sword_flatshade.obj"),
-        readOBJ("ressources/airboat_flatshade.obj"),
-        readOBJ("ressources/cowgirl_flatshade.obj"),
-        readOBJ("ressources/wraith_flatshade.obj"),
+        // readOBJ("ressources/cube_flatshade.obj"),
+        // readOBJ("ressources/fox_flatshade.obj"),
+        // readOBJ("ressources/nerd_flatshade.obj"),
+        // readOBJ("ressources/sword_flatshade.obj"),
+        // readOBJ("ressources/airboat_flatshade.obj"),
+        // readOBJ("ressources/cowgirl_flatshade.obj"),
+        // readOBJ("ressources/wraith_flatshade.obj"),
         readOBJ("ressources/female_flatshade.obj"),
     };
 
     std::vector<MeshMaterial> materials = 
     {
-        MeshMaterial(
-            new ShaderProgram(
-                "shader/foward rendering/basic.frag", 
-                "shader/foward rendering/basic.vert", 
-                "", 
-                globals.standartShaderUniform3D())), 
+        // MeshMaterial(
+        //     new ShaderProgram(
+        //         "shader/foward rendering/basic.frag", 
+        //         "shader/foward rendering/basic.vert", 
+        //         "", 
+        //         globals.standartShaderUniform3D())), 
 
-        MeshMaterial(
-            new ShaderProgram(
-                "shader/foward rendering/gouraud.frag", 
-                "shader/foward rendering/gouraud.vert", 
-                "", 
-                globals.standartShaderUniform3D())), 
+        // MeshMaterial(
+        //     new ShaderProgram(
+        //         "shader/foward rendering/gouraud.frag", 
+        //         "shader/foward rendering/gouraud.vert", 
+        //         "", 
+        //         globals.standartShaderUniform3D())), 
 
         MeshMaterial(
             new ShaderProgram(
@@ -238,12 +240,12 @@ void App::mainloop()
                 "", 
                 globals.standartShaderUniform3D())), 
 
-        MeshMaterial(
-            new ShaderProgram(
-                "shader/foward rendering/toon.frag", 
-                "shader/foward rendering/toon.vert", 
-                "", 
-                globals.standartShaderUniform3D())),            
+        // MeshMaterial(
+        //     new ShaderProgram(
+        //         "shader/foward rendering/toon.frag", 
+        //         "shader/foward rendering/toon.vert", 
+        //         "", 
+        //         globals.standartShaderUniform3D())),            
     };
 
     uint64 materialId = 0;
@@ -283,9 +285,6 @@ void App::mainloop()
         "", 
         globals.standartShaderUniform2D());
 
-    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
-    glDrawBuffers(4, buffers);
-
     #ifdef INVERTED_Z
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
     #endif
@@ -309,7 +308,7 @@ void App::mainloop()
             DirectionLight()
                 .setColor(vec3(1.0))
                 .setDirection(normalize(vec3(-0.5, 1.0, 0.25)))
-                .setIntensity(0.25)
+                .setIntensity(0.1)
         )
     );
     // scene.add(redLight);
@@ -317,19 +316,19 @@ void App::mainloop()
 
     std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
     std::default_random_engine generator;
-    // for(int i = 0; i < 16; i++)
+    for(int i = 0; i < 16; i++)
     // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
-    // {
-    //     scene.add(
-    //         newPointLight(
-    //             PointLight()
-    //             .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
-    //             .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
-    //             .setIntensity(1)
-    //             .setRadius(1.0)
-    //             )
-    //     );
-    // }
+    {
+        scene.add(
+            newPointLight(
+                PointLight()
+                .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
+                .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
+                .setIntensity(1.75)
+                .setRadius(5.0)
+                )
+        );
+    }
 
     while(state != quit)
     {
@@ -355,6 +354,7 @@ void App::mainloop()
             case GLFW_KEY_F5:
                 system("cls");
                 SSAO.getShader().reset();
+                Bloom.getShader().reset();
                 PostProcessing.reset();
                 for(uint64 i = 0; i < materials.size(); i++)
                     materials[i]->reset();
@@ -431,7 +431,8 @@ void App::mainloop()
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        SSAO.render(camera);
+        // SSAO.render(camera);
+        Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
         PostProcessing.activate();

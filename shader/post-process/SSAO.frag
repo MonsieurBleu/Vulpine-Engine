@@ -16,6 +16,8 @@ layout (binding = 1) uniform sampler2D bDepth;
 layout (binding = 2) uniform sampler2D gNormal;
 layout (binding = 3) uniform sampler2D texNoise;
 
+layout (binding = 2) uniform sampler2D bNormal;
+
 in vec2 uvScreen;
 
 out vec4 _AO;

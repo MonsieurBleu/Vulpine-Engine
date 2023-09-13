@@ -113,3 +113,49 @@ void SSAOPass::render(Camera &camera)
         FBO.deactivate();
     }
 }
+
+BloomPass::BloomPass(RenderBuffer& inputsBuffer) : inputs(inputsBuffer)
+{};
+
+void BloomPass::setup()
+{
+    shader = ShaderProgram(
+        "shader/post-process/Bloom.frag", 
+        "shader/post-process/basic.vert", 
+        "",
+        globals.standartShaderUniform2D());
+    
+    FBO
+        .addTexture(
+            inputs.getTexture(RENDER_BUFFER_SRGB8_BUFF_ID)
+                .setAttachement(GL_COLOR_ATTACHMENT0))
+        .generate();
+
+    FBO2
+        .addTexture(
+            inputs.getTexture(RENDER_BUFFER_EMISSIVE_TEXTURE_ID)
+                .setAttachement(GL_COLOR_ATTACHMENT0))
+        .generate();
+}
+
+void BloomPass::render(Camera &camera)
+{
+    if(isEnable)
+    {
+        shader.activate();
+
+        FBO.activate();
+        inputs.bindTexture(RENDER_BUFFER_EMISSIVE_TEXTURE_ID, 4);
+        globals.drawFullscreenQuad();
+        FBO.deactivate();
+
+        FBO2.activate();
+        inputs.bindTexture(RENDER_BUFFER_SRGB8_BUFF_ID, 4);
+        globals.drawFullscreenQuad();
+        FBO2.deactivate();   
+
+        inputs.bindTexture(RENDER_BUFFER_EMISSIVE_TEXTURE_ID, 4);
+
+        shader.deactivate();
+    }
+}

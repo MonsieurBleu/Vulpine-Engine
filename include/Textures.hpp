@@ -24,9 +24,15 @@ class Texture2D
 
         ivec2 _resolution;
 
-        GLenum _attachement;
+        GLenum _attachement = 0;
+
+        bool generated = false;
 
     public :   
+
+        Texture2D();
+
+        // TODO : add security when the texture is arleady generated
         Texture2D& setResolution(const ivec2 resolution);
         Texture2D& setInternalFormat(GLenum format);
         Texture2D& setFormat(GLenum format);

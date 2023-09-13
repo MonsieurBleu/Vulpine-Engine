@@ -1,6 +1,12 @@
 #include <FrameBuffer.hpp>
 #include <iostream>
 #include <CompilingOptions.hpp>
+#include <Utils.hpp>
+
+Texture2D FrameBuffer::getTexture(int id)
+{
+    return textures[id%textures.size()];
+}
 
 FrameBuffer& FrameBuffer::addTexture(Texture2D texture)
 {
@@ -26,13 +32,19 @@ FrameBuffer& FrameBuffer::bindTextures()
 {
     for(uint64 i = 0; i < textures.size(); i++)
     {
-        glFramebufferTexture2D(
-            GL_FRAMEBUFFER, 
-            textures[i].getAttachement(), 
-            GL_TEXTURE_2D, 
-            textures[i].getHandle(), 
-            0);
+        if(textures[i].getAttachement())
+        {
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER, 
+                textures[i].getAttachement(), 
+                GL_TEXTURE_2D, 
+                textures[i].getHandle(), 
+                0);
+        }
     }
+
+    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
+    glDrawBuffers(3, buffers);
 
     return *this;
 }
@@ -62,7 +74,15 @@ void FrameBuffer::deactivate()
 void FrameBuffer::bindTexture(uint64 id, uint location)
 {
     if(id >= textures.size())
+    {
+        std::cerr 
+        << TERMINAL_WARNING << "FrameBuffer Error : can't bind out of bound texture at id " 
+        << TERMINAL_INFO << id
+        << TERMINAL_WARNING << " and location "
+        << TERMINAL_INFO << location
+        << TERMINAL_WARNING << ". The maximum id is " << textures.size()-1 << ".\n";
         return;
+    }
 
     glActiveTexture(GL_TEXTURE0 + location);
     glBindTexture(GL_TEXTURE_2D, textures[id].getHandle());
@@ -98,27 +118,35 @@ void RenderBuffer::generate()
                 .setInternalFormat(GL_RGB)
                 .setFormat(GL_RGB)
                 .setPixelType(GL_FLOAT)
-                .setFilter(GL_LINEAR)
+                .setFilter(GL_NEAREST)
                 .setWrapMode(GL_CLAMP_TO_EDGE)
                 .setAttachement(GL_COLOR_ATTACHMENT1))
         .addTexture(
             Texture2D() // EMISSIVE
                 .setResolution(*resolution)
-                .setInternalFormat(GL_RGB)
+                .setInternalFormat(GL_SRGB)
                 .setFormat(GL_RGB)
-                .setPixelType(GL_FLOAT)
+                .setPixelType(GL_UNSIGNED_SHORT)
                 .setFilter(GL_LINEAR)
                 .setWrapMode(GL_CLAMP_TO_EDGE)
                 .setAttachement(GL_COLOR_ATTACHMENT2))
-        .generate();
+        .addTexture(
+            Texture2D() // SRGB8 BUFFER
+                .setResolution(*resolution)
+                .setInternalFormat(GL_RGB)
+                .setFormat(GL_RGB)
+                .setPixelType(GL_UNSIGNED_SHORT)
+                .setFilter(GL_LINEAR)
+                .setWrapMode(GL_CLAMP_TO_EDGE))
+        .generate(); 
 }
 
 void RenderBuffer::bindTextures()
 {
-    bindTexture(0, 0);
-    bindTexture(1, 1);
-    bindTexture(2, 2);
-    bindTexture(3, 4);
+    bindTexture(RENDER_BUFFER_COLOR_TEXTURE_ID, 0);
+    bindTexture(RENDER_BUFFER_DEPTH_TEXTURE_ID, 1);
+    bindTexture(RENDER_BUFFER_NORMAL_TEXTURE_ID, 2);
+    bindTexture(RENDER_BUFFER_EMISSIVE_TEXTURE_ID, 4);
 }
 
 void RenderBuffer::activate()

@@ -32,6 +32,7 @@ class App
 
         RenderBuffer renderBuffer;
         SSAOPass SSAO;
+        BloomPass Bloom;
 
     public :
         App(GLFWwindow* window);
