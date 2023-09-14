@@ -4,7 +4,7 @@ layout (location = 0) uniform ivec2 iResolution;
 layout (location = 1) uniform float iTime;
 layout (location = 2) uniform mat4 MVP;
 
-layout (location = 0) in vec2 vertexPosition;
+layout (location = 10) uniform int bloomEnable;
 
 layout (binding = 0) uniform sampler2D bColor;
 layout (binding = 1) uniform sampler2D bDepth;
@@ -182,8 +182,10 @@ void main()
     // vec3 bloom = blur(bEmmisive, uvScreen);
     // _fragColor.rgb += bloom;
     // _fragColor.rgb += texture(bNormal, uvScreen).rgb;
-    _fragColor.rgb += texture(bEmmisive, uvScreen).rgb;
     // _fragColor.rgb = texture(bAO, uvScreen).rgb;
+
+    if(bloomEnable != 0) 
+        _fragColor.rgb += texture(bEmmisive, uvScreen).rgb;
 
     _fragColor.a = 1.0;
 }

@@ -17,6 +17,11 @@ void RenderPass::toggle()
     isEnable = !isEnable;
 };
 
+const int* RenderPass::getIsEnableAddr()
+{
+    return &isEnable;
+}
+
 void RenderPass::bindResults(std::vector<ivec2> binds)
 {
     for(auto i = binds.begin(); i != binds.end(); i++)
@@ -145,11 +150,13 @@ void BloomPass::render(Camera &camera)
         shader.activate();
 
         FBO.activate();
+        glUniform1i(3, 1);
         inputs.bindTexture(RENDER_BUFFER_EMISSIVE_TEXTURE_ID, 4);
         globals.drawFullscreenQuad();
         FBO.deactivate();
 
         FBO2.activate();
+        glUniform1i(3, 2);
         inputs.bindTexture(RENDER_BUFFER_SRGB8_BUFF_ID, 4);
         globals.drawFullscreenQuad();
         FBO2.deactivate();   

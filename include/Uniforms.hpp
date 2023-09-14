@@ -249,7 +249,7 @@ class ShaderUniform
             : data(data), 
               dataState(reference),
               location(location),
-              type(_1iv) {};        
+              type(_1i) {};        
 
 
         // ============| INTS 2D
@@ -316,7 +316,7 @@ class ShaderUniform
             : data(data), 
               dataState(reference),
               location(location),
-              type(_1uiv) {};        
+              type(_1ui) {};        
 
 
         // ============| UNSIGNED INTS 2D

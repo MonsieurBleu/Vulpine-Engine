@@ -13,7 +13,7 @@ class RenderPass
     protected :
         FrameBuffer FBO;
         ShaderProgram shader;
-        bool isEnable = true;
+        int isEnable = true;
         bool needClear = true;
 
     public : 
@@ -25,6 +25,7 @@ class RenderPass
         
         FrameBuffer& getFBO();
         ShaderProgram& getShader();
+        const int* getIsEnableAddr();
         void enable();
         void disable();
         void toggle();

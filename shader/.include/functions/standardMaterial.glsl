@@ -1,8 +1,8 @@
 #include functions/HSV.glsl
 
 #define DIFFUSE
-#define SPECULAR
-#define RIM
+// #define SPECULAR
+#define FRESNEL
 
 #ifdef TOON
 float diffuseIntensity = 0.5;
@@ -10,10 +10,10 @@ float specularIntensity = 0.1;
 float fresnelIntensity = 0.1;
 vec3 ambientLight = vec3(0.25);
 #else
-float diffuseIntensity = 0.5;
-float specularIntensity = 0.5;
+float diffuseIntensity = 0.35;
+float specularIntensity = 0.1;
 float fresnelIntensity = 0.25;
-vec3 ambientLight = vec3(0.25);
+vec3 ambientLight = vec3(0.75);
 #endif
 
 vec3 getDSF(vec3 lightDirection, vec3 lightColor)
@@ -25,16 +25,18 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     /*
         UTILS
     */
+    vec3 nNormal = normalize(normal);
+
     vec3 viewDir = normalize(_cameraPosition - position);
-    vec3 reflectDir = reflect(-lightDirection, normal); 
-    float nDotL = max(dot(lightDirection, normal), 0);
+    vec3 reflectDir = reflect(-lightDirection, nNormal); 
+    float nDotL = max(dot(lightDirection, nNormal), 0);
 
     /*
         DIFFUSE 
     */
     float diffuse = 0.0;
 #ifdef DIFFUSE
-    diffuse = nDotL;
+    diffuse = pow(nDotL, 0.2);
 
     #ifdef TOON
         float dstep = 0.1;
@@ -51,7 +53,7 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float specular = 0.0;
 #ifdef SPECULAR
-    int specularExponent = 8;
+    int specularExponent = 16;
     specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
 
     #ifdef TOON
@@ -63,22 +65,28 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     vec3 specularResult = specular*specularIntensity*specularColor;
 
     /*
-        RIM
+        FRESNEL
     */
-    float rim = 0.0;
-#ifdef RIM 
-    rim = 1.0 - dot(viewDir, normal);
+    float fresnel = 0.0;
+#ifdef FRESNEL 
+    fresnel = 1.0 - dot(normal, viewDir);
+
+    fresnel *= diffuse;
+
+    fresnel = pow(fresnel, 2.0);
 
     #ifdef TOON
         float rstep = 0.75;
         float rsmooth = 0.05;
-        rim = smoothstep(rstep, rstep+rsmooth, rim);
+        fresnel = smoothstep(rstep, rstep+rsmooth, fresnel);
     #endif
 
 #endif
-    vec3 rimResult = rim*fresnelIntensity*fresnelColor;
+    vec3 fresnelResult = fresnel*fresnelIntensity*fresnelColor;
 
-    return diffuseResult + specularResult + rimResult;
+    return diffuseResult + specularResult + fresnelResult;
+    // return max(diffuseResult, fresnelResult) + specularResult;
+    // return diffuseResult + specularResult + fresnelResult;
 }
 
 vec3 getMultiLightStandard()
@@ -123,11 +131,12 @@ vec3 getMultiLightStandard()
     return (result + ambientLight)* color;
 }
 
-vec3 getStandardEmmisive(vec3 color, vec3 ambientLight)
+vec3 getStandardEmmisive(vec3 fcolor, vec3 ambientLight)
 {
-    return  color.rgb * 
-            max(
-                rgb2v(color.rgb) - min(max(ambientLight*1.5, 0.1), 0.8), 
-                0.0);
+    // return  color.rgb * 
+    //         max(
+    //             rgb2v(color.rgb) - min(max(ambientLight*1.5, 0.1), 0.8), 
+    //             0.0);
 
+    return fcolor * (rgb2v(fcolor) - ambientLight);
 }

@@ -284,6 +284,8 @@ void App::mainloop()
         "shader/post-process/basic.vert", 
         "", 
         globals.standartShaderUniform2D());
+    
+    PostProcessing.addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10));
 
     #ifdef INVERTED_Z
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
@@ -293,42 +295,42 @@ void App::mainloop()
         PointLight()
         .setColor(vec3(1, 0, 0))
         .setPosition(vec3(1, 0.5, 0.0))
-        .setIntensity(1)
-        .setRadius(1.0));
+        .setIntensity(0.75)
+        .setRadius(15.0));
 
     ScenePointLight blueLight = newPointLight(
         PointLight()
         .setColor(vec3(0, 0.5, 1.0))
-        .setPosition(vec3(1, 0.5, -1))
-        .setIntensity(2)
-        .setRadius(3.0));
+        .setPosition(vec3(-1, 0.5, 0.0))
+        .setIntensity(1.0)
+        .setRadius(10.0));
 
     scene.add(
         newDirectionLight(
             DirectionLight()
                 .setColor(vec3(1.0))
-                .setDirection(normalize(vec3(-0.5, 1.0, 0.25)))
-                .setIntensity(0.1)
+                .setDirection(normalize(vec3(-0.5, 0.5, 0.25)))
+                .setIntensity(1.0)
         )
     );
     // scene.add(redLight);
     // scene.add(blueLight);
 
-    std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-    std::default_random_engine generator;
-    for(int i = 0; i < 16; i++)
+    // std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+    // std::default_random_engine generator;
+    // for(int i = 0; i < 16; i++)
     // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
-    {
-        scene.add(
-            newPointLight(
-                PointLight()
-                .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
-                .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
-                .setIntensity(1.75)
-                .setRadius(5.0)
-                )
-        );
-    }
+    // {
+    //     scene.add(
+    //         newPointLight(
+    //             PointLight()
+    //             .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
+    //             .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
+    //             .setIntensity(1.75)
+    //             .setRadius(5.0)
+    //             )
+    //     );
+    // }
 
     while(state != quit)
     {
@@ -405,6 +407,10 @@ void App::mainloop()
             case GLFW_KEY_1 :
                 SSAO.toggle();
                 break;
+            
+            case GLFW_KEY_2 :
+                Bloom.toggle();
+                break;
 
             default:
                 break;
@@ -431,7 +437,7 @@ void App::mainloop()
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        // SSAO.render(camera);
+        SSAO.render(camera);
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
