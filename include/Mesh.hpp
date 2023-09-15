@@ -4,6 +4,7 @@
 #include <string>
 #include <Shader.hpp>
 #include <VertexBuffer.hpp>
+#include <Textures.hpp>
 
 #define MESH_BASE_ATTRIBUTE_LOCATION_POSITION 0
 #define MESH_BASE_ATTRIBUTE_LOCATION_COLOR    1
@@ -19,8 +20,13 @@ class Mesh
     protected :
         MeshMaterial material;
         MeshVao vao;
+        Texture2D colorMap;
 
     public :
+
+        bool invertFaces = false;
+        bool depthWrite = true;
+
         Mesh(){};
         // Mesh(Mesh& mesh);
         Mesh(MeshMaterial material, 
@@ -35,6 +41,7 @@ class Mesh
 
         Mesh& setMaterial(MeshMaterial _material);
         Mesh& setVao(MeshVao _vao);
+        Mesh& setColorMap(Texture2D texture);
 
         virtual void draw(GLenum mode = GL_TRIANGLES);
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
@@ -86,6 +93,6 @@ class MeshModel3D : public Mesh
 
 Mesh readSTL(const std::string filePath);
 
-MeshVao readOBJ(const std::string filePath);
+MeshVao readOBJ(const std::string filePath, bool useVertexColors = true);
 
 #endif

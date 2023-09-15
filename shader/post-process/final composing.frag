@@ -185,7 +185,15 @@ void main()
     // _fragColor.rgb = texture(bAO, uvScreen).rgb;
 
     if(bloomEnable != 0) 
-        _fragColor.rgb += texture(bEmmisive, uvScreen).rgb;
+        _fragColor.rgb += 0.5*texture(bEmmisive, uvScreen).rgb; 
+
+    float exposure = 3.0;
+    float gamma = 1.0;
+    // exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-_fragColor.rgb * exposure);
+    // gamma correction 
+    mapped = pow(mapped, vec3(1.0 / gamma));
+    _fragColor.rgb = mapped;
 
     _fragColor.a = 1.0;
 }

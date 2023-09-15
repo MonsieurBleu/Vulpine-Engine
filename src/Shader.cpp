@@ -23,6 +23,7 @@ void Shader::prepareLoading(const std::string& path)
 
 ShaderError Shader::refresh()
 {
+    startbenchrono();
     shader = glCreateShader(type);
 
     // std::string code = readFile(Path);

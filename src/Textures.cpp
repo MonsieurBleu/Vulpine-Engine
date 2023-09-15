@@ -1,5 +1,9 @@
 #include <Textures.hpp>
 #include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stb_image.h>
+#include <Utils.hpp>
+#include <Timer.hpp>
 
 using namespace glm;
 
@@ -55,8 +59,11 @@ Texture2D& Texture2D::setWrapMode(GLenum wrapMode)
 
 Texture2D& Texture2D::bind(GLuint location)
 {
-    glActiveTexture(GL_TEXTURE0 + location);
-    glBindTexture(GL_TEXTURE_2D, handle);
+    if(generated)
+    {
+        glActiveTexture(GL_TEXTURE0 + location);
+        glBindTexture(GL_TEXTURE_2D, handle);
+    }
     return *this;
 }
 
@@ -93,13 +100,37 @@ Texture2D& Texture2D::generate()
 
 Texture2D& Texture2D::loadFromFile(const char* filename)
 {
-    GLFWimage imageData;
-    // undefined ?????
-    // glfwReadImage(filename, &imageData, NULL); 
+    BenchTimer timer;
+    timer.start();
+    int n, fileStatus;
+    fileStatus = stbi_info(filename, &_resolution.x, &_resolution.y, &n);
 
-    https://www.glfw.org/GLFWUsersGuide277.pdf
+    if(!fileStatus)
+    {
+        std::cerr 
+        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can't load image " 
+        << TERMINAL_FILENAME << filename 
+        << TERMINAL_ERROR << ". This file either don't exist or the format is not supported.\n"
+        << TERMINAL_RESET; 
+    }
 
-    _pixelSource = imageData.pixels;
+    _pixelSource = stbi_load(filename, &_resolution.x, &_resolution.y, &n, 0);
 
-    /// suite ) https://www.youtube.com/watch?v=SMyj87VJRJM
+    if(!_pixelSource)
+    {
+        std::cerr 
+        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can load info but can't load pixels of image " 
+        << TERMINAL_FILENAME << filename << "\n"
+        << TERMINAL_RESET; 
+    }
+
+    timer.end();
+    std::cout 
+    << TERMINAL_OK << "Successfully loaded image "
+    << TERMINAL_FILENAME << filename 
+    << TERMINAL_OK << " in " 
+    << TERMINAL_TIMER << timer.getElapsedTime() << " s\n"
+    << TERMINAL_RESET;
+
+    return *(this);
 }

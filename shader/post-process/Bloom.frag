@@ -121,7 +121,7 @@ void main()
 
     if(pass == 1)
     {
-        fragColor *= 1.0 - 1.5*rgb2v(texture(bSource, uvScreen).rgb);
+        // fragColor *= 1.0 - 1.5*rgb2v(texture(bSource, uvScreen).rgb);
     }
 
     // vec2 direction = vec2(10.0);

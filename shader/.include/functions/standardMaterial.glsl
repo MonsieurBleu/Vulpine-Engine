@@ -1,7 +1,7 @@
 #include functions/HSV.glsl
 
 #define DIFFUSE
-// #define SPECULAR
+#define SPECULAR
 #define FRESNEL
 
 #ifdef TOON
@@ -10,8 +10,8 @@ float specularIntensity = 0.1;
 float fresnelIntensity = 0.1;
 vec3 ambientLight = vec3(0.25);
 #else
-float diffuseIntensity = 0.35;
-float specularIntensity = 0.1;
+float diffuseIntensity = 0.5;
+float specularIntensity = 1.0;
 float fresnelIntensity = 0.25;
 vec3 ambientLight = vec3(0.75);
 #endif
@@ -36,7 +36,7 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float diffuse = 0.0;
 #ifdef DIFFUSE
-    diffuse = pow(nDotL, 0.2);
+    diffuse = pow(nDotL, 0.5);
 
     #ifdef TOON
         float dstep = 0.1;

@@ -273,9 +273,9 @@ void App::mainloop()
             .setPosition(vec3(0.0, -0.2, 0.0)));
 
 
-    scene.add(room, false);
-    scene.add(model, false);
-    scene.add(model2, false);
+    // scene.add(room, false);
+    // scene.add(model, false);
+    // scene.add(model2, false);
 
     bool wireframe = false;
 
@@ -309,7 +309,7 @@ void App::mainloop()
         newDirectionLight(
             DirectionLight()
                 .setColor(vec3(1.0))
-                .setDirection(normalize(vec3(-0.5, 0.5, 0.25)))
+                .setDirection(normalize(vec3(0.0, 1.0, 0.5)))
                 .setIntensity(1.0)
         )
     );
@@ -331,6 +331,91 @@ void App::mainloop()
     //             )
     //     );
     // }
+
+    MeshMaterial uvPhong(
+            new ShaderProgram(
+                "shader/foward rendering/uv/phong.frag", 
+                "shader/foward rendering/uv/phong.vert", 
+                "", 
+                globals.standartShaderUniform3D() 
+            ));
+
+    MeshMaterial uvBasic(
+            new ShaderProgram(
+                "shader/foward rendering/uv/basic.frag", 
+                "shader/foward rendering/uv/phong.vert", 
+                "", 
+                globals.standartShaderUniform3D() 
+            ));
+
+    Texture2D test = Texture2D().loadFromFile("ressources/test/jug.jpg").generate();
+
+    ModelRef jug = newModel(
+        uvPhong, 
+        readOBJ("ressources/test/jug.obj", false),
+        ModelState3D()
+            .scaleScalar(5.0)
+            .setPosition(vec3(0.0, 0.0, 0.0)));
+    
+    jug->setColorMap(test);
+
+    ModelRef barberShopChair = newModel(
+        uvPhong, 
+        readOBJ("ressources/test/BarberShopChair.obj", false),
+        ModelState3D()
+            .scaleScalar(1.0)
+            .setPosition(vec3(2.0, 0.0, 0.0)));
+    
+    barberShopChair->setColorMap(
+        Texture2D()
+            .loadFromFile("ressources/test/BarberShopChair.jpg")
+            .generate());
+
+    ModelRef woman = newModel(
+        uvPhong, 
+        readOBJ("ressources/test/woman/woman.obj", false),
+        ModelState3D()
+            .scaleScalar(1.0)
+            .setPosition(vec3(-2.0, 0.0, 0.0)));
+    
+    woman->setColorMap(
+        Texture2D()
+            .loadFromFile("ressources/test/woman/color.jpg")
+            .generate());
+
+    ModelRef guitar = newModel(
+        uvPhong, 
+        readOBJ("ressources/test/guitar/guitar.obj", false),
+        ModelState3D()
+            .scaleScalar(2.0)
+            .setPosition(vec3(4.0, 0.0, 0.0)));
+    
+    guitar->setColorMap(
+        Texture2D()
+            .loadFromFile("ressources/test/guitar/color.png")
+            .generate());
+
+    ModelRef skybox = newModel(
+        uvBasic, 
+        readOBJ("ressources/test/skybox/skybox.obj", false),
+        ModelState3D()
+            .scaleScalar(10.0)
+            .setPosition(vec3(0.0, 0.0, 0.0))
+            .setRotation(vec3(0, 90, 0)));
+    
+    skybox->setColorMap(
+        Texture2D()
+            .loadFromFile("ressources/test/skybox/puresky.hdr")
+            .generate());
+
+    skybox->invertFaces = true;
+    skybox->depthWrite = false;
+
+    scene.add(skybox);
+    scene.add(jug);
+    scene.add(barberShopChair);
+    scene.add(woman);
+    scene.add(guitar);
 
     while(state != quit)
     {
@@ -360,6 +445,7 @@ void App::mainloop()
                 PostProcessing.reset();
                 for(uint64 i = 0; i < materials.size(); i++)
                     materials[i]->reset();
+                jug->getMaterial()->reset();
                 break;
             
             case GLFW_KEY_F2:
