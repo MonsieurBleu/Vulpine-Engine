@@ -90,3 +90,16 @@ Texture2D& Texture2D::generate()
     
     return *this;
 }
+
+Texture2D& Texture2D::loadFromFile(const char* filename)
+{
+    GLFWimage imageData;
+    // undefined ?????
+    // glfwReadImage(filename, &imageData, NULL); 
+
+    https://www.glfw.org/GLFWUsersGuide277.pdf
+
+    _pixelSource = imageData.pixels;
+
+    /// suite ) https://www.youtube.com/watch?v=SMyj87VJRJM
+}

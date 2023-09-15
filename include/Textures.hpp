@@ -41,6 +41,7 @@ class Texture2D
         Texture2D& setPixelSource(const void *source);
         Texture2D& setAttachement(GLenum attachement);
         Texture2D& setWrapMode(GLenum wrapMode);
+        Texture2D& loadFromFile(const char* filename);
 
         Texture2D& generate();      
 

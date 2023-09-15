@@ -11,6 +11,7 @@ in vec2 uvScreen;
 
 out vec3 fragColor;
 
+#include functions/HSV.glsl
 
 // How far from the center to take samples from the fragment you are currently on
 const int radius = 70;
@@ -117,6 +118,11 @@ void main()
     // if(pass == 2) b = 0.25;
 
     fragColor = b * blur(bSource, uvScreen).rgb;
+
+    if(pass == 1)
+    {
+        fragColor *= 1.0 - 1.5*rgb2v(texture(bSource, uvScreen).rgb);
+    }
 
     // vec2 direction = vec2(10.0);
 
