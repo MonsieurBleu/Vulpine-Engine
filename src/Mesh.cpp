@@ -36,6 +36,7 @@ Mesh& Mesh::setMaterial(MeshMaterial _material)
 Mesh& Mesh::setVao(MeshVao _vao)
 {
     vao = _vao;
+    vao->generate();
     return *this;
 }
 
@@ -47,8 +48,8 @@ Mesh& Mesh::setColorMap(Texture2D texture)
 
 void MeshModel3D::drawVAO(GLenum mode)
 {
-    uniforms.update();
     state.update();
+    uniforms.update();
 
     colorMap.bind(0);
 

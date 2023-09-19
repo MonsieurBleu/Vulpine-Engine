@@ -36,7 +36,7 @@ Scene::Scene()
 
 }
 
-void Scene::add(std::shared_ptr<Mesh> mesh, bool sort)
+void Scene::add(ModelRef mesh, bool sort)
 {
     if(!sort)
     {
@@ -61,6 +61,31 @@ void Scene::add(SceneLight light)
     lights.push_back(light);
 }
 
+void Scene::addGroupElement(ObjectGroupRef group)
+{
+    for(auto i = group->meshes.begin(); i != group->meshes.end(); i++)
+    {
+        add(*i);
+    }
+
+    for(auto i = group->lights.begin(); i != group->lights.end(); i++)
+    {
+        add(*i);
+    }
+
+    for(auto i = group->children.begin(); i != group->children.end(); i++)
+    {
+        addGroupElement(*i);
+    }
+}
+
+void Scene::add(ObjectGroupRef group)
+{
+    addGroupElement(group);
+
+    groups.push_back(group);
+}
+
 void MeshGroup::draw()
 {
     material->activate();
@@ -73,6 +98,9 @@ void MeshGroup::draw()
 
 void Scene::draw()
 {
+    for(auto i = groups.begin(); i != groups.end(); i++)
+        (*i)->update();
+
     for(auto i = lights.begin(); i != lights.end(); i++)
         ligthBuffer.add(**i);
 

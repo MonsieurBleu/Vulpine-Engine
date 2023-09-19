@@ -22,6 +22,8 @@
 
 #include <CompilingOptions.hpp>
 
+#include <Helpers.hpp>
+
 
 //https://antongerdelan.net/opengl/hellotriangle.html
 
@@ -305,14 +307,14 @@ void App::mainloop()
         .setIntensity(1.0)
         .setRadius(10.0));
 
-    scene.add(
-        newDirectionLight(
-            DirectionLight()
-                .setColor(vec3(1.0))
-                .setDirection(normalize(vec3(0.0, 1.0, 0.5)))
-                .setIntensity(1.0)
-        )
-    );
+    // scene.add(
+    //     newDirectionLight(
+    //         DirectionLight()
+    //             .setColor(vec3(1.0))
+    //             .setDirection(normalize(vec3(0.0, 1.0, 0.5)))
+    //             .setIntensity(1.0)
+    //     )
+    // );
     // scene.add(redLight);
     // scene.add(blueLight);
 
@@ -412,10 +414,41 @@ void App::mainloop()
     skybox->depthWrite = false;
 
     scene.add(skybox);
-    scene.add(jug);
-    scene.add(barberShopChair);
-    scene.add(woman);
-    scene.add(guitar);
+    // scene.add(jug);
+    // scene.add(barberShopChair);
+    // scene.add(woman);
+    // scene.add(guitar);
+
+    ObjectGroupRef group = newObjectGroup();
+    group->add(jug);
+    ObjectGroupRef group2 = newObjectGroup();
+    group->add(group2);
+    group->add(barberShopChair);
+    group2->add(woman);
+    group2->add(guitar);
+
+    ScenePointLight testLight = newPointLight(
+        PointLight()
+        .setColor(vec3(1.0, 0.2, 0.0))
+        .setIntensity(20.0)
+        .setRadius(5.0)
+        .setPosition(barberShopChair->state.position)
+        );
+    group->add(testLight);
+    scene.add(std::make_shared<PointLightHelper>(PointLightHelper(testLight)));
+    
+    scene.add(group);
+    group->state.scaleScalar(1.0);
+    group->update();
+
+
+
+    // ModelRef helper = newModel();
+    // helper->setVao(readOBJ("ressources/helpers/PointLight.obj"));
+    // helper->setMaterial(materials[0]);
+    // scene.add(helper);
+    // helper->state.scaleScalar(5.0);
+
 
     while(state != quit)
     {
@@ -513,7 +546,8 @@ void App::mainloop()
 
         model->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         model2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        blueLight->setPosition(vec3(100, 50 + 50*(1.0 + cos(globals.appTime.getElapsedTime())), -100));
+        group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
+        // group2->state.setRotation(vec3(globals.appTime.getElapsedTime()*0.5, 0.0, 0.0));
 
         renderBuffer.activate();
         // ligthBuffer.activate(0);

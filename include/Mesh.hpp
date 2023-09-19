@@ -66,14 +66,15 @@ class Mesh
 */
 class MeshModel3D : public Mesh
 {
-    private :
+    protected :
 
         ShaderUniformGroup uniforms;
 
         void createUniforms();
 
     public :
-        MeshModel3D() : Mesh(){};
+        MeshModel3D() : Mesh()
+            {createUniforms();};
 
         MeshModel3D(Mesh& mesh) : Mesh(mesh)
             {createUniforms();};
@@ -88,7 +89,7 @@ class MeshModel3D : public Mesh
 
         ModelState3D state;
 
-        void drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual void drawVAO(GLenum mode = GL_TRIANGLES);
 };
 
 Mesh readSTL(const std::string filePath);

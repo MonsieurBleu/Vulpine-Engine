@@ -49,7 +49,7 @@ class ModelState3D
         return *this;
     }
 
-    ModelState3D& update()
+    bool update()
     {
         if(needUpdate)
         {
@@ -60,10 +60,25 @@ class ModelState3D
             modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
 
             needUpdate = false;
+
+            return true;
         }
 
-        return *this;
+        return false;
     }   
+
+    ModelState3D& forceUpdate()
+    {
+        rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+        mat4 scaleMatrix = glm::scale(mat4(1.0), scale);
+        mat4 translateMatrix = translate(mat4(1.0), position);
+
+        modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
+
+        needUpdate = false;
+
+        return *this;
+    }
 };
 
 class ModelMatrix3D : mat4

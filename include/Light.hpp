@@ -8,6 +8,8 @@ using namespace glm;
 
 #define MAX_LIGHT_COUNTER 0xff
 
+class ObjectGroup;
+
 enum lightTypes
 {
     NO_LIGHT,
@@ -19,6 +21,7 @@ class Light
 {
     friend std::ostream& operator<<(std::ostream&, const Light &);
     // friend LightBuffer;
+    friend ObjectGroup;
 
     protected :
         vec4 _position = vec4(0);
@@ -53,10 +56,16 @@ class PointLight : public Light
 
         vec3 position() const;
         vec3 color() const;
+        float radius() const;
         float intensity() const;
 };
 
-
+typedef std::shared_ptr<Light> SceneLight;
+typedef std::shared_ptr<DirectionLight> SceneDirectionalLight;
+typedef std::shared_ptr<PointLight> ScenePointLight;
+#define newLight std::make_shared<Light>
+#define newDirectionLight std::make_shared<DirectionLight>
+#define newPointLight std::make_shared<PointLight>
 
 
 class LightBuffer
@@ -71,7 +80,7 @@ class LightBuffer
     public :
 
         LightBuffer();
-        LightBuffer& add(Light newLight);
+        LightBuffer& add(Light light);
         void send();
         void activate(int location);
         void reset();

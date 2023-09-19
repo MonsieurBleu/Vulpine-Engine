@@ -40,12 +40,12 @@ void LightBuffer::activate(int location)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, handle);
 }
 
-LightBuffer& LightBuffer::add(Light newLight)
+LightBuffer& LightBuffer::add(Light light)
 {
     if(currentID >= MAX_LIGHT_COUNTER)
         return *this;
     
-    buffer[currentID] = newLight;
+    buffer[currentID] = light;
     currentID++;
 
     return *this;
@@ -118,3 +118,4 @@ PointLight& PointLight::setIntensity(float intensity)
 vec3 PointLight::position() const {return vec3(_position.x, _position.y, _position.z);};
 vec3 PointLight::color() const {return vec3(_color.x, _color.y, _color.z);};
 float PointLight::intensity() const {return _color.a;};
+float PointLight::radius() const {return _direction.x;};
