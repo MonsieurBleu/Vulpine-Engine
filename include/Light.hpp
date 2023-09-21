@@ -59,6 +59,8 @@ class DirectionLight : public Light
         DirectionLight& setColor(vec3 color);
         DirectionLight& setIntensity(float intensity);
 
+        vec3 direction();
+
         void applyModifier(const ModelState3D& state) override;
 };
 

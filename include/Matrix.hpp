@@ -6,16 +6,18 @@
 #include <glm/gtx/euler_angles.hpp>
 
 using namespace glm;
-
+// TODO : FIX LOOKAT
 class ModelState3D
 {
     private :
         bool needUpdate = true;
+        bool usingLookAt = false;
 
     public :
         vec3 position      = vec3(0.f);
         vec3 scale         = vec3(1.f);
         vec3 rotation      = vec3(0.f);
+        vec3 lookAtPoint   = vec3(0.f);
         float depth        = 0.f;
         mat4 rotationMatrix = mat4(1.0);
         mat4 modelMatrix = mat4(1.0);
@@ -49,11 +51,29 @@ class ModelState3D
         return *this;
     }
 
+    ModelState3D& lookAt(vec3 newLookPoint)
+    {
+        usingLookAt = true;
+        lookAtPoint = newLookPoint;
+        return *this;
+    }
+
+    ModelState3D& disableLookAt()
+    {
+        usingLookAt = false;
+        return *this;
+    } 
+
+
     bool update()
     {
         if(needUpdate)
         {
-            rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+            if(usingLookAt)
+                rotationMatrix = glm::lookAt(position, lookAtPoint, vec3(0, 1, 0));
+            else
+                rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+
             mat4 scaleMatrix = glm::scale(mat4(1.0), scale);
             mat4 translateMatrix = translate(mat4(1.0), position);
 

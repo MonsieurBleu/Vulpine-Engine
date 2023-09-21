@@ -29,7 +29,7 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
 
     vec3 viewDir = normalize(_cameraPosition - position);
     vec3 reflectDir = reflect(-lightDirection, nNormal); 
-    float nDotL = max(dot(lightDirection, nNormal), 0);
+    float nDotL = max(dot(-lightDirection, nNormal), 0);
 
     /*
         DIFFUSE 

@@ -29,11 +29,20 @@ class PointLightHelper : public ObjectGroup
 
         PointLightHelper(ScenePointLight light);
         void update(bool forceUpdate = false) override;
-        // void drawVAO(GLenum mode = GL_TRIANGLES);
-        // void draw(GLenum mode = GL_TRIANGLES);
-
-        // void preDrawRoutine() override;
 };
+
+class DirectionalLightHelper : public ObjectGroup
+{
+    private : 
+
+        const SceneDirectionalLight light;
+
+    public :
+
+        DirectionalLightHelper(SceneDirectionalLight light);
+        void update(bool forceUpdate = false) override;
+};
+
 
 
 #endif

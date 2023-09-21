@@ -430,8 +430,8 @@ void App::mainloop()
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
             .setColor(vec3(0.0, 0.5, 1.0))
-            .setDirection(normalize(vec3(0.0, 1.0, -5.0)))
-            .setIntensity(0.5)
+            .setDirection(normalize(vec3(0.0, 1.0, 0.0)))
+            .setIntensity(0.75)
             );
     
     group->add(testLight);
@@ -454,6 +454,7 @@ void App::mainloop()
     scene.add(helper);
 
 
+    scene.add(std::make_shared<DirectionalLightHelper>(DirectionalLightHelper(sun)));
 
 
     while(state != quit)
@@ -552,8 +553,10 @@ void App::mainloop()
 
         model->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         model2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
+        // group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         // group2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
+        testLight->setColor(vec3(0.5) + vec3(0.5)*cos(vec3(globals.appTime.getElapsedTime())*vec3(0.5, 1.2, 3.5)));
+        sun->setDirection(normalize(vec3(sin(globals.appTime.getElapsedTime()*0.5), cos(globals.appTime.getElapsedTime()*0.5), 0)));
 
         renderBuffer.activate();
         // ligthBuffer.activate(0);
@@ -569,7 +572,7 @@ void App::mainloop()
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
         PostProcessing.activate();
         globals.drawFullscreenQuad();
-
+ 
         mainloopEndRoutine();
     }
 }

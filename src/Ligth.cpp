@@ -95,33 +95,30 @@ DirectionLight& DirectionLight::setIntensity(float intensity)
     return *this;
 }
 
+vec3 DirectionLight::direction()
+{
+    return infos._direction;
+}
+
 void DirectionLight::applyModifier(const ModelState3D& state)
 {
-    // vec4 newPosition = state.modelMatrix * vec4(tmpPosition, 1.0);
-    // newPosition.a = infos._position.a;
-    // infos._position = newPosition;
-
-    // // Deducing scale : http://facweb.cs.depaul.edu/andre/gam374/extractingTRS.pdf
-    // vec3 colx = vec3(state.modelMatrix[0][0], state.modelMatrix[1][0], state.modelMatrix[2][0]);
-    // infos._direction.x = tmpRadius * glm::length(colx);
-
     // Deducing rotation : http://facweb.cs.depaul.edu/andre/gam374/extractingTRS.pdf
-    vec3 invScale = vec3(
-        1.0/length(vec3(state.modelMatrix[0][0], state.modelMatrix[1][0], state.modelMatrix[2][0])),
-        1.0/length(vec3(state.modelMatrix[0][1], state.modelMatrix[1][1], state.modelMatrix[2][1])),
-        1.0/length(vec3(state.modelMatrix[0][2], state.modelMatrix[1][2], state.modelMatrix[2][2]))
-    );
+    // vec3 invScale = vec3(
+    //     1.0/length(vec3(state.modelMatrix[0][0], state.modelMatrix[1][0], state.modelMatrix[2][0])),
+    //     1.0/length(vec3(state.modelMatrix[0][1], state.modelMatrix[1][1], state.modelMatrix[2][1])),
+    //     1.0/length(vec3(state.modelMatrix[0][2], state.modelMatrix[1][2], state.modelMatrix[2][2]))
+    // );
 
-    mat4 rotationMatrix = mat4(
-        state.modelMatrix[0][0]*invScale.x, state.modelMatrix[0][1]*invScale.x, state.modelMatrix[0][2]*invScale.x, 0,
-        state.modelMatrix[1][0]*invScale.y, state.modelMatrix[1][1]*invScale.y, state.modelMatrix[1][2]*invScale.y, 0,
-        state.modelMatrix[2][0]*invScale.z, state.modelMatrix[2][1]*invScale.z, state.modelMatrix[2][2]*invScale.z, 0,
-        0, 0, 0, 1
-    );
+    // mat4 rotationMatrix = mat4(
+    //     state.modelMatrix[0][0]*invScale.x, state.modelMatrix[0][1]*invScale.x, state.modelMatrix[0][2]*invScale.x, 0,
+    //     state.modelMatrix[1][0]*invScale.y, state.modelMatrix[1][1]*invScale.y, state.modelMatrix[1][2]*invScale.y, 0,
+    //     state.modelMatrix[2][0]*invScale.z, state.modelMatrix[2][1]*invScale.z, state.modelMatrix[2][2]*invScale.z, 0,
+    //     0, 0, 0, 1
+    // );
 
-    vec4 newDirection = rotationMatrix * vec4(tmpDirection, 1.0);
-    newDirection.a = infos._direction.a;
-    infos._direction = vec4(normalize(vec3(newDirection)), infos._direction.a);
+    // vec4 newDirection = rotationMatrix * vec4(tmpDirection, 1.0);
+    // newDirection.a = infos._direction.a;
+    // infos._direction = vec4(normalize(vec3(newDirection)), infos._direction.a);
 }
 
 
