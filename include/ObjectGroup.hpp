@@ -21,7 +21,6 @@ class ObjectGroup
         std::list<ObjectGroupRef> children;
         std::list<ModelRef> meshes;
         std::list<SceneLight> lights;
-        std::list<SceneLight> lightsDummys;
 
     public : 
         ModelState3D state;

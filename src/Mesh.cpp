@@ -46,8 +46,12 @@ Mesh& Mesh::setColorMap(Texture2D texture)
     return *this;
 }
 
+void MeshModel3D::preDrawRoutine(){}
+
 void MeshModel3D::drawVAO(GLenum mode)
 {
+    preDrawRoutine();
+
     state.update();
     uniforms.update();
 

@@ -307,14 +307,6 @@ void App::mainloop()
         .setIntensity(1.0)
         .setRadius(10.0));
 
-    // scene.add(
-    //     newDirectionLight(
-    //         DirectionLight()
-    //             .setColor(vec3(1.0))
-    //             .setDirection(normalize(vec3(0.0, 1.0, 0.5)))
-    //             .setIntensity(1.0)
-    //     )
-    // );
     // scene.add(redLight);
     // scene.add(blueLight);
 
@@ -413,41 +405,55 @@ void App::mainloop()
     skybox->invertFaces = true;
     skybox->depthWrite = false;
 
-    scene.add(skybox);
+    // scene.add(skybox);
     // scene.add(jug);
     // scene.add(barberShopChair);
     // scene.add(woman);
     // scene.add(guitar);
 
     ObjectGroupRef group = newObjectGroup();
-    group->add(jug);
     ObjectGroupRef group2 = newObjectGroup();
-    group->add(group2);
+    group->add(jug);
     group->add(barberShopChair);
-    group2->add(woman);
-    group2->add(guitar);
+    group->add(woman);
+    group->add(guitar);
 
     ScenePointLight testLight = newPointLight(
         PointLight()
         .setColor(vec3(1.0, 0.2, 0.0))
-        .setIntensity(20.0)
-        .setRadius(5.0)
-        .setPosition(barberShopChair->state.position)
+        .setIntensity(1.0)
+        .setRadius(3.0)
+        .setPosition(vec3(3, 1, 0))
+        // .setPosition(barberShopChair->state.position)
         );
-    group->add(testLight);
-    scene.add(std::make_shared<PointLightHelper>(PointLightHelper(testLight)));
+
+    SceneDirectionalLight sun = newDirectionLight(
+        DirectionLight()
+            .setColor(vec3(0.0, 0.5, 1.0))
+            .setDirection(normalize(vec3(0.0, 1.0, -5.0)))
+            .setIntensity(0.5)
+            );
     
+    group->add(testLight);
+    group->add(sun);
+    group->add(
+        newModel(
+            materials[0],
+            readOBJ("ressources/plane.obj"),
+            ModelState3D()
+                .scaleScalar(0.1)
+        )
+    );
+
     scene.add(group);
-    group->state.scaleScalar(1.0);
-    group->update();
+    scene.add(group2);
 
 
+    ObjectGroupRef helper = std::make_shared<PointLightHelper>(PointLightHelper(testLight));
+    // helper->state.scaleScalar(50.0); 
+    scene.add(helper);
 
-    // ModelRef helper = newModel();
-    // helper->setVao(readOBJ("ressources/helpers/PointLight.obj"));
-    // helper->setMaterial(materials[0]);
-    // scene.add(helper);
-    // helper->state.scaleScalar(5.0);
+
 
 
     while(state != quit)
@@ -547,7 +553,7 @@ void App::mainloop()
         model->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         model2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        // group2->state.setRotation(vec3(globals.appTime.getElapsedTime()*0.5, 0.0, 0.0));
+        // group2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
 
         renderBuffer.activate();
         // ligthBuffer.activate(0);

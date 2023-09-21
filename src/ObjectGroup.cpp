@@ -14,16 +14,22 @@ void ObjectGroup::update(bool forceUpdate)
         }
     }
 
-    auto j = lightsDummys.begin();
-    for(auto i = lights.begin(); 
-        i != lights.end() && j != lightsDummys.end(); 
-        i++, j++)
-    {
-        (*i)->_position = state.modelMatrix * (*j)->_position;
+    // auto j = lightsDummys.begin();
+    // for(auto i = lights.begin(); 
+    //     i != lights.end() && j != lightsDummys.end(); 
+    //     i++, j++)
+    // {
+    //     // need to be rework
+    //     // (*i)->infos._position = state.modelMatrix * (*j)->infos._position;
         
-        if((*i)->_infos.a == POINT_LIGHT)
-            (*i)->_direction.x = (*j)->_direction.x * state.scale.x;
-    }
+    //     // if((*i)->infos._infos.a == POINT_LIGHT)
+    //     //     (*i)->infos._direction.x = (*j)->infos._direction.x * state.scale.x;
+
+    //     (*i)->applyModifier(state);
+    // }
+
+    for(auto i = lights.begin(); i != lights.end(); i++)
+        (*i)->applyModifier(state);
 
     for(auto i = children.begin(); i != children.end(); i++)
     {
@@ -41,8 +47,10 @@ void ObjectGroup::add(ModelRef meshe)
 
 void ObjectGroup::add(SceneLight light)
 {
-    lights.push_back(newLight(*light));
-    lightsDummys.push_back(light);
+    // lights.push_back(newLight(*light));
+    // lightsDummys.push_back(light);
+
+    lights.push_back(light);
 }
 
 void ObjectGroup::add(ObjectGroupRef group)

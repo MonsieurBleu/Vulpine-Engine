@@ -3,6 +3,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include <Matrix.hpp>
 
 using namespace glm;
 
@@ -17,6 +18,14 @@ enum lightTypes
     POINT_LIGHT
 };
 
+struct LightInfos
+{
+    vec4 _position = vec4(0);
+    vec4 _color = vec4(1);
+    vec4 _direction = vec4(0);
+    ivec4 _infos = vec4(0);
+};
+
 class Light
 {
     friend std::ostream& operator<<(std::ostream&, const Light &);
@@ -24,30 +33,43 @@ class Light
     friend ObjectGroup;
 
     protected :
-        vec4 _position = vec4(0);
-        vec4 _color = vec4(1);
-        vec4 _direction = vec4(0);
-        ivec4 _infos = vec4(0);
+        // vec4 _position = vec4(0);
+        // vec4 _color = vec4(1);
+        // vec4 _direction = vec4(0);
+        // ivec4 _infos = vec4(0);
+
+        LightInfos infos;
     
     public :
-        const void* getAttribAddr();
-
+        const void* getAttribAddr() const;
+        LightInfos getInfos() const;
+        virtual void applyModifier(const ModelState3D& state);
 };  
 
 class DirectionLight : public Light
 {
+    private : 
+
+        vec3 tmpDirection = vec3(0);
+
     public :
 
         DirectionLight();
         DirectionLight& setDirection(vec3 direction);
         DirectionLight& setColor(vec3 color);
         DirectionLight& setIntensity(float intensity);
+
+        void applyModifier(const ModelState3D& state) override;
 };
 
 class PointLight : public Light
 {
-    public :
+    private :
 
+        vec3 tmpPosition = vec3(0);
+        float tmpRadius = 1.0;
+    
+    public :
         PointLight();
         PointLight& setPosition(vec3 position);
         PointLight& setColor(vec3 color);
@@ -58,6 +80,8 @@ class PointLight : public Light
         vec3 color() const;
         float radius() const;
         float intensity() const;
+
+        void applyModifier(const ModelState3D& state) override;
 };
 
 typedef std::shared_ptr<Light> SceneLight;
@@ -74,7 +98,7 @@ class LightBuffer
 
         uint handle;
 
-        std::shared_ptr<Light[]> buffer;
+        std::shared_ptr<LightInfos[]> buffer;
         int currentID = 0;
 
     public :

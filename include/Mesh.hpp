@@ -90,6 +90,7 @@ class MeshModel3D : public Mesh
         ModelState3D state;
 
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual void preDrawRoutine();
 };
 
 Mesh readSTL(const std::string filePath);

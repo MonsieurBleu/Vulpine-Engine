@@ -13,7 +13,7 @@ vec3 ambientLight = vec3(0.25);
 float diffuseIntensity = 0.5;
 float specularIntensity = 1.0;
 float fresnelIntensity = 0.25;
-vec3 ambientLight = vec3(0.75);
+vec3 ambientLight = vec3(0.1);
 #endif
 
 vec3 getDSF(vec3 lightDirection, vec3 lightColor)
@@ -25,7 +25,7 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     /*
         UTILS
     */
-    vec3 nNormal = normalize(normal);
+    vec3 nNormal = -normalize(normal);
 
     vec3 viewDir = normalize(_cameraPosition - position);
     vec3 reflectDir = reflect(-lightDirection, nNormal); 
@@ -53,7 +53,8 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float specular = 0.0;
 #ifdef SPECULAR
-    int specularExponent = 16;
+    int specularExponent = 4;
+    // specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
     specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
 
     #ifdef TOON
@@ -111,8 +112,8 @@ vec3 getMultiLightStandard()
             {
                 float maxDist = max(light.direction.x, 0.0001);
                 float distFactor = max(maxDist - distance(position, light.position.xyz), 0.f)/maxDist;
-                distFactor = pow(distFactor, 2.0);
-                vec3 direction = -normalize( position - light.position.xyz);
+                // distFactor = pow(distFactor, 2.0);
+                vec3 direction = normalize(position - light.position.xyz);
                 // vec3 direction = vec3(1.0);
                 // float finalFactor = max(distFactor*light.color.a - ambientLight.x*3.0, 0.f);
                 
