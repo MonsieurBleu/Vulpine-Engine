@@ -1,8 +1,10 @@
 #include functions/HSV.glsl
 
+layout (binding = 1) uniform sampler2D bSkyTexture;
+
 #define DIFFUSE
-#define SPECULAR
-#define FRESNEL
+// #define SPECULAR
+// #define FRESNEL
 
 #ifdef TOON
 float diffuseIntensity = 0.5;
@@ -13,7 +15,7 @@ vec3 ambientLight = vec3(0.25);
 float diffuseIntensity = 0.5;
 float specularIntensity = 1.0;
 float fresnelIntensity = 0.25;
-vec3 ambientLight = vec3(0.1);
+vec3 ambientLight = vec3(0.75);
 #endif
 
 vec3 getDSF(vec3 lightDirection, vec3 lightColor)
@@ -25,10 +27,10 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     /*
         UTILS
     */
-    vec3 nNormal = -normalize(normal);
+    vec3 nNormal = normalize(normal);
 
     vec3 viewDir = normalize(_cameraPosition - position);
-    vec3 reflectDir = reflect(-lightDirection, nNormal); 
+    vec3 reflectDir = reflect(lightDirection, nNormal); 
     float nDotL = max(dot(-lightDirection, nNormal), 0);
 
     /*

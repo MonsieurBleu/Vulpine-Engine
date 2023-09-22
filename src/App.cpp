@@ -397,15 +397,16 @@ void App::mainloop()
             .setPosition(vec3(0.0, 0.0, 0.0))
             .setRotation(vec3(0, 90, 0)));
     
-    skybox->setColorMap(
-        Texture2D()
+    Texture2D skyTexture =Texture2D()
             .loadFromFile("ressources/test/skybox/puresky.hdr")
-            .generate());
+            .generate();
+
+    skybox->setColorMap(skyTexture);
 
     skybox->invertFaces = true;
     skybox->depthWrite = false;
 
-    // scene.add(skybox);
+    scene.add(skybox);
     // scene.add(jug);
     // scene.add(barberShopChair);
     // scene.add(woman);
@@ -421,7 +422,7 @@ void App::mainloop()
     ScenePointLight testLight = newPointLight(
         PointLight()
         .setColor(vec3(1.0, 0.2, 0.0))
-        .setIntensity(1.0)
+        .setIntensity(2.0)
         .setRadius(3.0)
         .setPosition(vec3(3, 1, 0))
         // .setPosition(barberShopChair->state.position)
@@ -429,16 +430,17 @@ void App::mainloop()
 
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
-            .setColor(vec3(0.0, 0.5, 1.0))
-            .setDirection(normalize(vec3(0.0, 1.0, 0.0)))
-            .setIntensity(0.75)
+            .setColor(vec3(1.0, 0.95, 0.85))
+            .setDirection(normalize(vec3(1.0, 0.3, 1.0)))
+            .setIntensity(0.5)
             );
-    
-    group->add(testLight);
+
+    // group->add(testLight);
     group->add(sun);
     group->add(
         newModel(
-            materials[0],
+            // materials[0],
+            uvPhong,
             readOBJ("ressources/plane.obj"),
             ModelState3D()
                 .scaleScalar(0.1)
@@ -486,6 +488,7 @@ void App::mainloop()
                 for(uint64 i = 0; i < materials.size(); i++)
                     materials[i]->reset();
                 jug->getMaterial()->reset();
+                skybox->getMaterial()->reset();
                 break;
             
             case GLFW_KEY_F2:
@@ -556,10 +559,12 @@ void App::mainloop()
         // group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         // group2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         testLight->setColor(vec3(0.5) + vec3(0.5)*cos(vec3(globals.appTime.getElapsedTime())*vec3(0.5, 1.2, 3.5)));
-        sun->setDirection(normalize(vec3(sin(globals.appTime.getElapsedTime()*0.5), cos(globals.appTime.getElapsedTime()*0.5), 0)));
+        // sun->setDirection(normalize(vec3(sin(globals.appTime.getElapsedTime()*0.5), cos(globals.appTime.getElapsedTime()*0.5), 0)));
+        // group->state.setPosition(vec3(0, 0, 0.001) + group->state.position);
 
         renderBuffer.activate();
         // ligthBuffer.activate(0);
+        skyTexture.bind(1);
         scene.draw();
         renderBuffer.deactivate();
         renderBuffer.bindTextures();
