@@ -177,7 +177,9 @@ void main()
     _fragColor.b = texture(bColor, bUv).b;
 
     vec4 AO = getBlurAO(uvScreen);
-    _fragColor.rgb *= 1.0 - AO.rgb*2.0;
+    // _fragColor.rgb *= 1.0 - AO.rgb*2.0;
+    _fragColor.rgb *= pow(1.0 - AO.rgb, vec3(3.0));
+    // _fragColor.rgb *= pow(AO.a, 3.0);
 
     // vec3 bloom = blur(bEmmisive, uvScreen);
     // _fragColor.rgb += bloom;
@@ -185,10 +187,14 @@ void main()
     // _fragColor.rgb = texture(bAO, uvScreen).rgb;
 
     if(bloomEnable != 0) 
-        _fragColor.rgb += 0.5*texture(bEmmisive, uvScreen).rgb; 
+        _fragColor.rgb += 0.125*texture(bEmmisive, uvScreen).rgb; 
 
-    float exposure = 3.0;
-    float gamma = 1.0;
+    float exposure = 2.5;
+    float gamma = 1.75;
+    
+    // float exposure = 3.0;
+    // float gamma = 1.0;
+
     // exposure tone mapping
     vec3 mapped = vec3(1.0) - exp(-_fragColor.rgb * exposure);
     // gamma correction 

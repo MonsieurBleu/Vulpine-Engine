@@ -88,7 +88,6 @@ App::App(GLFWwindow* window) :
         )));
     
     globals._fullscreenQuad.getVao()->generate();
-
     renderBuffer.generate();
     SSAO.setup();
     Bloom.setup();
@@ -187,97 +186,7 @@ void App::mainloop()
         camera.setState(buff);
     }
 
-    std::vector<MeshVao> TemplateMeshes =
-    {
-        readOBJ("ressources/sphere.obj"),
-        readOBJ("ressources/hardsurface.obj"),
-        readOBJ("ressources/voronoi.obj"),
-        // readOBJ("ressources/cube.obj"),
-        // readOBJ("ressources/fox.obj"),
-        // readOBJ("ressources/nerd.obj"),
-        // readOBJ("ressources/sword.obj"),
-        // readOBJ("ressources/airboat.obj"),
-        // readOBJ("ressources/cowgirl.obj"),
-        // readOBJ("ressources/wraith.obj"),
-        readOBJ("ressources/female.obj"),
-    };
-
-    uint64 TemplateId = 0;
-
-    std::vector<MeshVao> TemplateMeshesFlatShade =
-    {
-        readOBJ("ressources/sphere_flatshade.obj"),
-        readOBJ("ressources/hardsurface_flatshade.obj"),
-        readOBJ("ressources/voronoi_flatshade.obj"),
-        // readOBJ("ressources/cube_flatshade.obj"),
-        // readOBJ("ressources/fox_flatshade.obj"),
-        // readOBJ("ressources/nerd_flatshade.obj"),
-        // readOBJ("ressources/sword_flatshade.obj"),
-        // readOBJ("ressources/airboat_flatshade.obj"),
-        // readOBJ("ressources/cowgirl_flatshade.obj"),
-        // readOBJ("ressources/wraith_flatshade.obj"),
-        readOBJ("ressources/female_flatshade.obj"),
-    };
-
-    std::vector<MeshMaterial> materials = 
-    {
-        // MeshMaterial(
-        //     new ShaderProgram(
-        //         "shader/foward rendering/basic.frag", 
-        //         "shader/foward rendering/basic.vert", 
-        //         "", 
-        //         globals.standartShaderUniform3D())), 
-
-        // MeshMaterial(
-        //     new ShaderProgram(
-        //         "shader/foward rendering/gouraud.frag", 
-        //         "shader/foward rendering/gouraud.vert", 
-        //         "", 
-        //         globals.standartShaderUniform3D())), 
-
-        MeshMaterial(
-            new ShaderProgram(
-                "shader/foward rendering/phong.frag", 
-                "shader/foward rendering/phong.vert", 
-                "", 
-                globals.standartShaderUniform3D())), 
-
-        // MeshMaterial(
-        //     new ShaderProgram(
-        //         "shader/foward rendering/toon.frag", 
-        //         "shader/foward rendering/toon.vert", 
-        //         "", 
-        //         globals.standartShaderUniform3D())),            
-    };
-
-    uint64 materialId = 0;
-
     Scene scene;
-
-    ModelRef model = newModel(
-        materials[materialId], 
-        TemplateMeshes[TemplateId],
-        ModelState3D()
-            .scaleScalar(1.0));
-
-    ModelRef model2 = newModel(
-        materials[materialId], 
-        TemplateMeshesFlatShade[TemplateId],
-        ModelState3D()
-            .scaleScalar(1.0)
-            .setPosition(vec3(2.0, 0.0, 0.0)));
-
-    ModelRef room = newModel(
-        materials[materialId], 
-        readOBJ("ressources/room.obj"),
-        ModelState3D()
-            .scaleScalar(1.0)
-            .setPosition(vec3(0.0, -0.2, 0.0)));
-
-
-    // scene.add(room, false);
-    // scene.add(model, false);
-    // scene.add(model2, false);
 
     bool wireframe = false;
 
@@ -389,13 +298,24 @@ void App::mainloop()
             .loadFromFile("ressources/test/guitar/color.png")
             .generate());
 
+    ModelRef plane = newModel(
+        uvPhong, 
+        readOBJ("ressources/plane.obj", false),
+        ModelState3D()
+            .scaleScalar(0.25)
+            .setPosition(vec3(0.0, 0.0, 0.0)));
+    
+    plane->setColorMap(
+        Texture2D()
+            .loadFromFile("ressources/test/sphere/floor.jpg")
+            .generate());
+
     ModelRef skybox = newModel(
         uvBasic, 
         readOBJ("ressources/test/skybox/skybox.obj", false),
         ModelState3D()
             .scaleScalar(10.0)
-            .setPosition(vec3(0.0, 0.0, 0.0))
-            .setRotation(vec3(0, 90, 0)));
+            .setPosition(vec3(0.0, 0.0, 0.0)));
     
     Texture2D skyTexture =Texture2D()
             .loadFromFile("ressources/test/skybox/puresky.hdr")
@@ -407,6 +327,7 @@ void App::mainloop()
     skybox->depthWrite = false;
 
     scene.add(skybox);
+    scene.add(plane);
     // scene.add(jug);
     // scene.add(barberShopChair);
     // scene.add(woman);
@@ -430,33 +351,21 @@ void App::mainloop()
 
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
-            .setColor(vec3(1.0, 0.95, 0.85))
-            .setDirection(normalize(vec3(1.0, 0.3, 1.0)))
-            .setIntensity(0.5)
+            .setColor(vec3(1.0, 0.85, 0.75))
+            .setDirection(normalize(vec3(-1.0, 0.1, 1.0)))
+            .setIntensity(1.0)
             );
 
     // group->add(testLight);
     group->add(sun);
-    group->add(
-        newModel(
-            // materials[0],
-            uvPhong,
-            readOBJ("ressources/plane.obj"),
-            ModelState3D()
-                .scaleScalar(0.1)
-        )
-    );
-
     scene.add(group);
     scene.add(group2);
 
 
     ObjectGroupRef helper = std::make_shared<PointLightHelper>(PointLightHelper(testLight));
     // helper->state.scaleScalar(50.0); 
-    scene.add(helper);
-
-
-    scene.add(std::make_shared<DirectionalLightHelper>(DirectionalLightHelper(sun)));
+    // scene.add(helper);
+    // scene.add(std::make_shared<DirectionalLightHelper>(DirectionalLightHelper(sun)));
 
 
     while(state != quit)
@@ -485,8 +394,6 @@ void App::mainloop()
                 SSAO.getShader().reset();
                 Bloom.getShader().reset();
                 PostProcessing.reset();
-                for(uint64 i = 0; i < materials.size(); i++)
-                    materials[i]->reset();
                 jug->getMaterial()->reset();
                 skybox->getMaterial()->reset();
                 break;
@@ -506,32 +413,7 @@ void App::mainloop()
             case GLFW_KEY_F1 :
                 wireframe = !wireframe;
                 break;
-
-            case GLFW_KEY_LEFT:
-                TemplateId = TemplateId == 0 ? TemplateMeshes.size()-1 : TemplateId-1;
-                model->setVao(TemplateMeshes[TemplateId]);
-                model2->setVao(TemplateMeshesFlatShade[TemplateId]);
-                break;
             
-            case GLFW_KEY_RIGHT:                
-                TemplateId = TemplateId == TemplateMeshes.size()-1 ? 0 : TemplateId+1;
-                model->setVao(TemplateMeshes[TemplateId]);
-                model2->setVao(TemplateMeshesFlatShade[TemplateId]);
-                break;
-            
-            case GLFW_KEY_UP :
-                materialId = materialId == materials.size()-1 ? 0 : materialId+1;
-                model->setMaterial(materials[materialId]);
-                model2->setMaterial(materials[materialId]);
-                room->setMaterial(materials[materialId]);
-                break;
-
-            case GLFW_KEY_DOWN :
-                materialId = materialId == 0 ? materials.size()-1 : materialId-1;
-                model->setMaterial(materials[materialId]);
-                model2->setMaterial(materials[materialId]);
-                room->setMaterial(materials[materialId]);
-                break;
 
             case GLFW_KEY_1 :
                 SSAO.toggle();
@@ -554,12 +436,14 @@ void App::mainloop()
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        model->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        model2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         // group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
         // group2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        testLight->setColor(vec3(0.5) + vec3(0.5)*cos(vec3(globals.appTime.getElapsedTime())*vec3(0.5, 1.2, 3.5)));
-        // sun->setDirection(normalize(vec3(sin(globals.appTime.getElapsedTime()*0.5), cos(globals.appTime.getElapsedTime()*0.5), 0)));
+        // testLight->setColor(vec3(0.5) + vec3(0.5)*cos(vec3(globals.appTime.getElapsedTime())*vec3(0.5, 1.2, 3.5)));
+        // sun->setDirection(normalize(vec3(
+        //     0,
+        //     cos(globals.appTime.getElapsedTime()*0.5), 
+        //     sin(globals.appTime.getElapsedTime()*0.5)
+        //     )));
         // group->state.setPosition(vec3(0, 0, 0.001) + group->state.position);
 
         renderBuffer.activate();

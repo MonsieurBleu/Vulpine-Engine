@@ -3,23 +3,37 @@
 layout (binding = 1) uniform sampler2D bSkyTexture;
 
 #define DIFFUSE
-// #define SPECULAR
-// #define FRESNEL
+#define SPECULAR
+#define FRESNEL
 
-#ifdef TOON
-float diffuseIntensity = 0.5;
-float specularIntensity = 0.1;
-float fresnelIntensity = 0.1;
-vec3 ambientLight = vec3(0.25);
-#else
-float diffuseIntensity = 0.5;
-float specularIntensity = 1.0;
-float fresnelIntensity = 0.25;
-vec3 ambientLight = vec3(0.75);
-#endif
+//////
+float mSpecular = 0.5;
+float mRoughness = 0.5;
+float mMetallic = 0.4;
+//////
 
-vec3 getDSF(vec3 lightDirection, vec3 lightColor)
+
+vec3 ambientLight = vec3(0.5);
+
+struct Material
 {
+    vec3 diffuse;
+    vec3 specular;
+    vec3 fresnel;
+};
+
+Material getDSF(vec3 lightDirection, vec3 lightColor)
+{
+    #ifdef TOON
+    float diffuseIntensity = 0.5;
+    float specularIntensity = 0.1;
+    float fresnelIntensity = 0.1;
+    #else
+    float diffuseIntensity = 0.5;
+    float specularIntensity = 2.5*mSpecular;
+    float fresnelIntensity = 1.0;
+    #endif
+
     vec3 diffuseColor = lightColor;
     vec3 specularColor = lightColor;
     vec3 fresnelColor = lightColor;
@@ -55,7 +69,7 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float specular = 0.0;
 #ifdef SPECULAR
-    int specularExponent = 4;
+    float specularExponent = 32.0 - mSpecular*24.0;
     // specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
     specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
 
@@ -87,27 +101,37 @@ vec3 getDSF(vec3 lightDirection, vec3 lightColor)
 #endif
     vec3 fresnelResult = fresnel*fresnelIntensity*fresnelColor;
 
-    return diffuseResult + specularResult + fresnelResult;
+    // return diffuseResult + specularResult + fresnelResult;
     // return max(diffuseResult, fresnelResult) + specularResult;
     // return diffuseResult + specularResult + fresnelResult;
+
+    Material result;
+    result.diffuse = diffuseResult;
+    result.specular = specularResult;
+    result.fresnel = fresnelResult;
+    return result;
 }
 
-vec3 getMultiLightStandard()
+Material getMultiLightStandard()
 {
     int id = 0;
-    vec3 result = vec3(0.0);
+    // vec3 result = vec3(0.0);
+    Material result;
     while(true)
     {
         Light light = lights[id];
-        vec3 lightResult = vec3(0.0);
+        Material lightResult = {vec3(0.f), vec3(0.f), vec3(0.f)};
+        float factor = 1.0;
         switch(light.stencil.a)
         {
             case 0 :
-                return (result + ambientLight)* color;
+                return result;
                 break;
 
             case 1 :
-                lightResult = 2.0*getDSF(light.direction.xyz, light.color.rgb)*light.color.a;
+
+                lightResult = getDSF(light.direction.xyz, light.color.rgb);
+                factor = light.color.a;
                 break;
 
             case 2 : 
@@ -119,19 +143,25 @@ vec3 getMultiLightStandard()
                 // vec3 direction = vec3(1.0);
                 // float finalFactor = max(distFactor*light.color.a - ambientLight.x*3.0, 0.f);
                 
-                lightResult = getDSF(direction, light.color.rgb)*distFactor*light.color.a;
+                lightResult = getDSF(direction, light.color.rgb);
+                factor = distFactor*light.color.a;
             }
                 break;
 
             default : break;
         }
         
-        result += max(lightResult - ambientLight*0.5, vec3(0.f));
+        
+        result.diffuse += lightResult.diffuse * factor;
+        result.specular += lightResult.specular * factor;
+        result.fresnel += lightResult.fresnel * factor;
+
+        // result += max(lightResult - ambientLight*0.5, vec3(0.f));
 
         id ++;
     }
 
-    return (result + ambientLight)* color;
+    return result;
 }
 
 vec3 getStandardEmmisive(vec3 fcolor, vec3 ambientLight)

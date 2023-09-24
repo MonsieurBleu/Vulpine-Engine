@@ -136,13 +136,21 @@ DirectionalLightHelper::DirectionalLightHelper(SceneDirectionalLight light) : li
     state.setPosition(vec3(0, 1, 0));
 }
 
+/*
+    Don't work lmao 
+    TODO : fix it or remove it from the codebase
+*/
 void DirectionalLightHelper::update(bool forceUpdate)
 {
     // From direction vector to euleur coordinattes
     // No sources, just maths 
     vec3 dir = -light->direction();
-    float angle1 = acos(dir.y)*sign(asin(dir.z));
-    float angle2 = -acos(dir.y)*sign(asin(dir.x));
+    // float angle1 = atan2(-dir.y, -dir.z); 
+    // float angle2 = atan2(-dir.x, dir.y);
+
+    float angle1 = atan(dir.x/length(vec2(dir.x, dir.z)));
+    float angle2 = atan(-dir.x/dir.z);
+    
 
     state.setRotation(
         vec3(

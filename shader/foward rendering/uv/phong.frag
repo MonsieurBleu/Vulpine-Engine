@@ -17,28 +17,44 @@ layout (binding = 0) uniform sampler2D bTexture;
 
 in vec3 viewPos;
 
+
+
 #define PI 3.1415926538
 
 void main()
 {
+    // mSpecular = 0.5 + 0.5*cos(_iTime);
+    // mRoughness = 0.5 + 0.5*cos(_iTime);
+    // mMetallic = 0.5 + 0.5*cos(_iTime);
+
     color = texture(bTexture, vec2(uv.x, 1.0 - uv.y)).rgb;
 
     vec3 nNormal = normalize(normal);
     vec3 viewDir = normalize(_cameraPosition - position);
     vec3 reflectDir = reflect(viewDir, nNormal); 
+    // vec3 reflectDir = refract(viewDir, nNormal, 1.0/1.52);
 
-    float r = pow(max(dot(reflectDir, viewDir), 0.0), 16.0);
+    float r = pow(max(dot(reflectDir, viewDir), 1.0 - mRoughness), 5.0);
 
-    float angle1 = acos(reflectDir.x)*sign(asin(reflectDir.y));
-    float angle2 = -acos(reflectDir.z)*sign(asin(reflectDir.y));
+    vec2 uvSky = vec2(0.0);
+    uvSky.x = 0.5 + atan(reflectDir.z, -reflectDir.x) / (2.0*PI);
+    uvSky.y = -reflectDir.y*0.5 + 0.5;
 
-    angle1 = (angle1)/(PI);
-    angle2 = (angle2)/(PI);
-    vec2 uv = vec2(angle1, angle2);
-
-    vec3 rColor = texture(bSkyTexture, uv).rgb;
+    vec3 rColor = (1.0 - mRoughness)*r*texture(bSkyTexture, uvSky).rgb; 
 
     #include code/SetFragment3DOutputs.glsl
-    fragColor.rgb = 0.0*getMultiLightStandard() + rColor;
-    fragEmmisive = color*getStandardEmmisive(fragColor.rgb/color, ambientLight);
+    Material material = getMultiLightStandard();
+    vec3 materialColor = ambientLight + material.diffuse + material.specular + material.fresnel;
+    fragColor.rgb = color*materialColor + materialColor*rColor;
+    fragColor.rgb = mix(color, rColor, max(mMetallic - 0.1, 0.0))*materialColor;
+
+    fragEmmisive = fragColor.rgb * 2.0 * (rgb2v(fragColor.rgb) - ambientLight*0.5);
+
+    // vec3 e = material.diffuse + material.fresnel + rColor;
+    // fragEmmisive = 0.5 * pow(color, vec3(1.0)) * e * (rgb2v(e) - ambientLight*0.5);
+    // fragEmmisive = 0.5 * pow(color, vec3(0.5)) * e * (rgb2v(e) - ambientLight*0.5);
+    // fragEmmisive = pow(fragEmmisive, vec3(5.0));
+
+    // vec3 e = materialColor + 0.25*rColor;
+    // fragEmmisive = 0.5*pow(color, vec3(0.35))*(rgb2v(e) - ambientLight);
 }

@@ -76,7 +76,7 @@ void SSAOPass::setup()
     FBO = FrameBuffer()
         .addTexture(
             Texture2D()
-                .setResolution(globals.windowSize())
+                .setResolution(globals.renderSize())
                 .setInternalFormat(GL_RGBA)
                 .setFormat(GL_RGBA)
                 .setPixelType(GL_FLOAT)

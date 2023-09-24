@@ -85,7 +85,7 @@ DirectionLight& DirectionLight::setDirection(vec3 direction)
 
 DirectionLight& DirectionLight::setColor(vec3 color)
 {
-    infos._color = vec4(color, infos._color.a);
+    infos._color = vec4(color.r, color.g, color.b, infos._color.a);
     return *this;
 }
 
