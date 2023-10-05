@@ -8,6 +8,8 @@
 
 out vec3 viewPos;
 
+out float u;
+
 void main()
 {
     viewPos = (_cameraViewMatrix * 0.0001 * _modelMatrix * vec4(_positionInModel, 1.0)).rgb;
@@ -15,4 +17,6 @@ void main()
     #include code/SetVertex3DOutputs.glsl
 
     gl_Position = _cameraMatrix * vec4(position, 1.0);
+
+    u = float(gl_VertexID)/100.0;
 };

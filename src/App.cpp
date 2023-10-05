@@ -163,6 +163,168 @@ void App::mainloopEndRoutine()
     globals.appTime.end();
 }
 
+
+// Ancienement DrawCurve
+ModelRef newCurve(GenericSharedBuffer TabPointsOfCurve, long nbPoints)
+{
+    static MeshMaterial basic3DShader(
+        new ShaderProgram(
+            "shader/foward rendering/basic.frag", 
+            "shader/foward rendering/basic.vert", 
+            "", 
+            globals.standartShaderUniform3D()
+        )
+    );
+
+    MeshVao lineGeometry(new VertexAttributeGroup(
+        {
+                VertexAttribute(TabPointsOfCurve, 0, nbPoints-1, 3, GL_FLOAT, false),
+                VertexAttribute(TabPointsOfCurve, 1, nbPoints-1, 3, GL_FLOAT, false),
+                VertexAttribute(TabPointsOfCurve, 2, nbPoints-1, 3, GL_FLOAT, false)
+        }
+    ));
+
+    ModelRef lines(new MeshModel3D(
+        basic3DShader,
+        lineGeometry
+    ));
+
+    return lines;
+}
+
+GenericSharedBuffer HermiteCubicCurve(vec3 P0, vec3 P1, vec3 V0, vec3 V1, long nbU)
+{
+    size_t bufferSize = sizeof(vec3)*nbU;
+    GenericSharedBuffer linePositions = GenericSharedBuffer(new char[bufferSize]);
+    char* positionReader = linePositions.get();
+
+    for(long i = 0; i < nbU; i++)
+    {
+        float u = (float)i/(float)(nbU-1);
+
+        float u2 = u*u;
+        float u3 = u*u2;
+        float F1 = 2*u3 - 3*u2+ 1;
+        float F2 = -2*u3 + 3*u2;
+        float F3 = u3 - 2*u2 + u;
+        float F4 = u3 - u2;
+
+        vec3 newPoint = F1*P0 + F2*P1 + F3*V0 + F4*V1;
+        memcpy(positionReader, &newPoint, sizeof(vec3));
+        positionReader += sizeof(vec3);
+    }
+
+    return linePositions;
+}
+
+int fact(int x)
+{
+    int res = 1;
+
+    for(int i = 2; i <= x; i++)
+        res *= i;
+    
+    return res;
+}
+
+GenericSharedBuffer BezierCurveByBernstein(GenericSharedBuffer tabControlPoint, long nbControlPoint, long nbU)
+{
+    size_t bufferSize = sizeof(vec3)*nbU;
+    GenericSharedBuffer linePositions = GenericSharedBuffer(new char[bufferSize]);
+    char* positionReader = linePositions.get();
+
+    for(long i = 0; i < nbU; i++)
+    {
+        float u = (float)i/(float)(nbU-1);
+        long n = nbControlPoint-1;
+        vec3 newPoint(0.0);
+        
+        for(long j = 0; j < nbControlPoint; j++)
+        {
+            float B = 
+                ((float)fact(n)/((float)fact(j)*fact(n-j))) 
+                * pow(u, j) 
+                * pow(1.0-u, n-j);
+            newPoint += ((vec3*)tabControlPoint.get())[j]*B;
+        }
+
+        memcpy(positionReader, &newPoint, sizeof(vec3));
+        positionReader += sizeof(vec3);
+    }
+    
+    return linePositions;
+}
+
+vec3 CJRecurrence(GenericSharedBuffer points, long k, long i, float u, long maxRec)
+{
+    if(k == 0)
+        return ((vec3*)points.get())[i];
+
+    if(maxRec == 0)
+        return ((vec3*)points.get())[i];
+
+    return (1.f-u)*CJRecurrence(points, k-1, i, u, maxRec-1) + u *CJRecurrence(points, k-1, i+1, u, maxRec-1);
+}
+
+vec3 CJRecurrence2(GenericSharedBuffer points, long k, long i, float u, long maxRec, std::vector<vec3> buff)
+{
+    if(k == 0)
+        return ((vec3*)points.get())[i];
+
+    vec3 v = (1.f-u)*CJRecurrence(points, k-1, i, u, maxRec-1);
+    vec3 v2 = u *CJRecurrence(points, k-1, i+1, u, maxRec-1);
+    
+    if(maxRec == 0)
+    {
+        buff.push_back(v+v2);
+    }
+
+    return v + v2;
+}
+
+
+GenericSharedBuffer BezierCurveByCasteljau(GenericSharedBuffer TabControlPoint, long nbControlPoint, long nbU, long maxRec = 0) 
+{
+    size_t bufferSize = sizeof(vec3)*nbU;
+    GenericSharedBuffer linePositions = GenericSharedBuffer(new char[bufferSize]);
+    char* positionReader = linePositions.get();
+
+    long it = nbU - maxRec*4;
+
+    for(long i = 0; i < nbU; i++)
+    {
+        float u = (float)i/(float)(nbU-1);
+        
+        vec3 newPoint;
+
+        // if(i < maxRec*2)
+        //     newPoint = ((vec3*)TabControlPoint.get())[(int)u*nbControlPoint];
+        // else
+            newPoint = CJRecurrence(TabControlPoint, nbControlPoint-1, 0, u, 0xFFFF);
+
+        memcpy(positionReader, &newPoint, sizeof(vec3));
+        positionReader += sizeof(vec3);        
+    }
+    
+    return linePositions;
+}
+
+GenericSharedBuffer BezierCurveByCasteljau2(GenericSharedBuffer TabControlPoint, long nbControlPoint, long nbU, long maxRec = 0) 
+{
+    size_t bufferSize = sizeof(vec3)*nbControlPoint;
+    GenericSharedBuffer linePositions = GenericSharedBuffer(new char[bufferSize]);
+    char* positionReader = linePositions.get();
+
+    for(long i = 0; i < nbControlPoint; i++)
+    {
+        vec3 newPoint = CJRecurrence(TabControlPoint, maxRec, i, 0.5, 0xFFFFF);
+        memcpy(positionReader, &newPoint, sizeof(vec3));
+        positionReader += sizeof(vec3);
+    }
+
+    return linePositions;
+}
+
 void App::mainloop()
 {   
     /// CENTER WINDOW
@@ -202,47 +364,6 @@ void App::mainloop()
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
     #endif
 
-    ScenePointLight redLight = newPointLight(
-        PointLight()
-        .setColor(vec3(1, 0, 0))
-        .setPosition(vec3(1, 0.5, 0.0))
-        .setIntensity(0.75)
-        .setRadius(15.0));
-
-    ScenePointLight blueLight = newPointLight(
-        PointLight()
-        .setColor(vec3(0, 0.5, 1.0))
-        .setPosition(vec3(-1, 0.5, 0.0))
-        .setIntensity(1.0)
-        .setRadius(10.0));
-
-    // scene.add(redLight);
-    // scene.add(blueLight);
-
-    // std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-    // std::default_random_engine generator;
-    // for(int i = 0; i < 16; i++)
-    // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
-    // {
-    //     scene.add(
-    //         newPointLight(
-    //             PointLight()
-    //             .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
-    //             .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
-    //             .setIntensity(1.75)
-    //             .setRadius(5.0)
-    //             )
-    //     );
-    // }
-
-    MeshMaterial uvPhong(
-            new ShaderProgram(
-                "shader/foward rendering/uv/phong.frag", 
-                "shader/foward rendering/uv/phong.vert", 
-                "", 
-                globals.standartShaderUniform3D() 
-            ));
-
     MeshMaterial uvBasic(
             new ShaderProgram(
                 "shader/foward rendering/uv/basic.frag", 
@@ -250,65 +371,6 @@ void App::mainloop()
                 "", 
                 globals.standartShaderUniform3D() 
             ));
-
-    Texture2D test = Texture2D().loadFromFile("ressources/test/jug.jpg").generate();
-
-    ModelRef jug = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/jug.obj", false),
-        ModelState3D()
-            .scaleScalar(5.0)
-            .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    jug->setColorMap(test);
-
-    ModelRef barberShopChair = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/BarberShopChair.obj", false),
-        ModelState3D()
-            .scaleScalar(1.0)
-            .setPosition(vec3(2.0, 0.0, 0.0)));
-    
-    barberShopChair->setColorMap(
-        Texture2D()
-            .loadFromFile("ressources/test/BarberShopChair.jpg")
-            .generate());
-
-    ModelRef woman = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/woman/woman.obj", false),
-        ModelState3D()
-            .scaleScalar(1.0)
-            .setPosition(vec3(-2.0, 0.0, 0.0)));
-    
-    woman->setColorMap(
-        Texture2D()
-            .loadFromFile("ressources/test/woman/color.jpg")
-            .generate());
-
-    ModelRef guitar = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/guitar/guitar.obj", false),
-        ModelState3D()
-            .scaleScalar(2.0)
-            .setPosition(vec3(4.0, 0.0, 0.0)));
-    
-    guitar->setColorMap(
-        Texture2D()
-            .loadFromFile("ressources/test/guitar/color.png")
-            .generate());
-
-    ModelRef plane = newModel(
-        uvPhong, 
-        readOBJ("ressources/plane.obj", false),
-        ModelState3D()
-            .scaleScalar(0.25)
-            .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    plane->setColorMap(
-        Texture2D()
-            .loadFromFile("ressources/test/sphere/floor.jpg")
-            .generate());
 
     ModelRef skybox = newModel(
         uvBasic, 
@@ -326,28 +388,7 @@ void App::mainloop()
     skybox->invertFaces = true;
     skybox->depthWrite = false;
 
-    scene.add(skybox);
-    scene.add(plane);
-    // scene.add(jug);
-    // scene.add(barberShopChair);
-    // scene.add(woman);
-    // scene.add(guitar);
-
-    ObjectGroupRef group = newObjectGroup();
-    ObjectGroupRef group2 = newObjectGroup();
-    group->add(jug);
-    group->add(barberShopChair);
-    group->add(woman);
-    group->add(guitar);
-
-    ScenePointLight testLight = newPointLight(
-        PointLight()
-        .setColor(vec3(1.0, 0.2, 0.0))
-        .setIntensity(2.0)
-        .setRadius(3.0)
-        .setPosition(vec3(3, 1, 0))
-        // .setPosition(barberShopChair->state.position)
-        );
+    
 
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
@@ -356,17 +397,96 @@ void App::mainloop()
             .setIntensity(1.0)
             );
 
-    // group->add(testLight);
-    group->add(sun);
-    scene.add(group);
-    scene.add(group2);
+    scene.add(sun);
+    // scene.add(skybox);
 
+    // MeshMaterial basic3DShader(
+    //     new ShaderProgram(
+    //         "shader/foward rendering/basic.frag", 
+    //         "shader/foward rendering/basic.vert", 
+    //         "", 
+    //         globals.standartShaderUniform3D()
+    //     )
+    // );
 
-    ObjectGroupRef helper = std::make_shared<PointLightHelper>(PointLightHelper(testLight));
-    // helper->state.scaleScalar(50.0); 
-    // scene.add(helper);
-    // scene.add(std::make_shared<DirectionalLightHelper>(DirectionalLightHelper(sun)));
+    vec3 points [] =
+    {
+        vec3(0., 0., 0.),
+        vec3(1., 0., 0.),
+        vec3(1., 1., 0.),
+        vec3(2., 1., 0.)
+    };
 
+    GenericSharedBuffer pointsBuff = GenericSharedBuffer(new char[4*sizeof(vec3)]);
+    memcpy(pointsBuff.get(), points, 4*sizeof(vec3));
+
+    // GenericSharedBuffer linePositions = GenericSharedBuffer(new char[sizeof(points)]);
+    // memcpy(linePositions.get(), (char*)points, sizeof(points));
+
+    // MeshVao lineGeometry(new VertexAttributeGroup(
+    //     {
+    //             VertexAttribute(linePositions, 0, 4, 3, GL_FLOAT, false),
+    //             VertexAttribute(linePositions, 1, 4, 3, GL_FLOAT, false),
+    //             VertexAttribute(linePositions, 2, 4, 3, GL_FLOAT, false)
+    //     }
+    // ));
+
+    // ModelRef lines(new MeshModel3D(
+    //     basic3DShader,
+    //     lineGeometry
+    // ));
+    long nbU = 10;
+    // ModelRef lines = newCurve(
+    //     HermiteCubicCurve(
+    //         vec3(0, 0, 0),
+    //         vec3(2, 0, 0), 
+    //         vec3(1, 1, 0), 
+    //         vec3(1, -1, 0),
+    //         nbU), 
+    //     nbU);
+
+    // ModelRef lines = newCurve(
+    //     BezierCurveByBernstein(
+    //         pointsBuff, 
+    //         4, 
+    //         nbU),
+    //     nbU
+    // );
+
+    // ModelRef lines = newCurve(
+    //     BezierCurveByBernstein(
+    //         HermiteCubicCurve(
+    //             vec3(0, 0, 0),
+    //             vec3(2, 0, 0), 
+    //             vec3(1, 1, 0), 
+    //             vec3(1, -1, 0),
+    //             nbU), 
+    //         nbU, 
+    //         nbU),
+    //     nbU
+    // );
+
+    ModelRef lines = newCurve(
+        BezierCurveByCasteljau(
+            pointsBuff, 
+            4, 
+            nbU),
+        nbU
+    );
+    
+    const int tabSize = 1;
+    ModelRef linesTab[tabSize];
+    for(int i = 0; i < tabSize; i++)
+        linesTab[i] = newCurve(
+            BezierCurveByCasteljau2(
+                pointsBuff, 
+                4, 
+                nbU, 
+                0),
+            4
+        );
+
+    // scene.add(lines);
 
     while(state != quit)
     {
@@ -394,8 +514,8 @@ void App::mainloop()
                 SSAO.getShader().reset();
                 Bloom.getShader().reset();
                 PostProcessing.reset();
-                jug->getMaterial()->reset();
                 skybox->getMaterial()->reset();
+                lines->getMaterial()->reset();
                 break;
             
             case GLFW_KEY_F2:
@@ -436,27 +556,30 @@ void App::mainloop()
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        // group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        // group2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        // testLight->setColor(vec3(0.5) + vec3(0.5)*cos(vec3(globals.appTime.getElapsedTime())*vec3(0.5, 1.2, 3.5)));
-        // sun->setDirection(normalize(vec3(
-        //     0,
-        //     cos(globals.appTime.getElapsedTime()*0.5), 
-        //     sin(globals.appTime.getElapsedTime()*0.5)
-        //     )));
-        // group->state.setPosition(vec3(0, 0, 0.001) + group->state.position);
-
         renderBuffer.activate();
         // ligthBuffer.activate(0);
         skyTexture.bind(1);
         scene.draw();
+        
+        // lines->draw(GL_LINE_STRIP);
+        for(int i = 0; i < tabSize; i++)
+            linesTab[i]->draw(GL_LINE_STRIP);
+       
+        // glBegin(GL_LINE_STRIP);
+        // glColor3f(1.0, 0.0, 0.0);
+        // glVertex3f(0.0, 0.0, 0.0);
+        // glVertex3f(10.0, 10.0, .0);
+        // glVertex3f(-10.0, 10.0, .0);
+        // glEnd();
+
+
         renderBuffer.deactivate();
         renderBuffer.bindTextures();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        SSAO.render(camera);
-        Bloom.render(camera);
+        // SSAO.render(camera);
+        // Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
         PostProcessing.activate();
