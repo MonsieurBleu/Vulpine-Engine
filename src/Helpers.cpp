@@ -102,7 +102,7 @@ PointLightHelper::PointLightHelper(ScenePointLight light) : light(light)
                 globals.standartShaderUniform3D()
                 )
             ),
-        readOBJ("ressources/helpers/PointLight.obj"),
+        readOBJ("ressources/helpers/PointLight.obj", true),
         ModelState3D().scaleScalar(1.0)
     );
 

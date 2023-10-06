@@ -134,3 +134,41 @@ Texture2D& Texture2D::loadFromFile(const char* filename)
 
     return *(this);
 }
+
+Texture2D& Texture2D::loadFromFileHDR(const char* filename)
+{
+    BenchTimer timer;
+    timer.start();
+    int n, fileStatus;
+    fileStatus = stbi_info(filename, &_resolution.x, &_resolution.y, &n);
+
+    if(!fileStatus)
+    {
+        std::cerr 
+        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can't load image " 
+        << TERMINAL_FILENAME << filename 
+        << TERMINAL_ERROR << ". This file either don't exist or the format is not supported.\n"
+        << TERMINAL_RESET; 
+    }
+
+    _pixelSource = stbi_loadf(filename, &_resolution.x, &_resolution.y, &n, 0);
+    setPixelType(GL_FLOAT);
+
+    if(!_pixelSource)
+    {
+        std::cerr 
+        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can load info but can't load pixels of image " 
+        << TERMINAL_FILENAME << filename << "\n"
+        << TERMINAL_RESET; 
+    }
+
+    timer.end();
+    std::cout 
+    << TERMINAL_OK << "Successfully loaded image "
+    << TERMINAL_FILENAME << filename 
+    << TERMINAL_OK << " in " 
+    << TERMINAL_TIMER << timer.getElapsedTime() << " s\n"
+    << TERMINAL_RESET;
+
+    return *(this);
+}

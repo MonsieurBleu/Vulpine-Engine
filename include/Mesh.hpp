@@ -20,7 +20,8 @@ class Mesh
     protected :
         MeshMaterial material;
         MeshVao vao;
-        Texture2D colorMap;
+        std::vector<Texture2D> maps;
+        std::vector<int> mapsLocation;
 
     public :
 
@@ -41,7 +42,7 @@ class Mesh
 
         Mesh& setMaterial(MeshMaterial _material);
         Mesh& setVao(MeshVao _vao);
-        Mesh& setColorMap(Texture2D texture);
+        Mesh& setMap(Texture2D texture, int location);
 
         virtual void draw(GLenum mode = GL_TRIANGLES);
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
@@ -89,12 +90,17 @@ class MeshModel3D : public Mesh
 
         ModelState3D state;
 
+        MeshModel3D& loadFromFolder(
+            const std::string folderPath, 
+            bool loadColorMap = true, 
+            bool loadMaterialMap = true);
+
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
         virtual void preDrawRoutine();
 };
 
 Mesh readSTL(const std::string filePath);
 
-MeshVao readOBJ(const std::string filePath, bool useVertexColors = true);
+MeshVao readOBJ(const std::string filePath, bool useVertexColors = false);
 
 #endif

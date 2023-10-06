@@ -42,6 +42,7 @@ class Texture2D
         Texture2D& setAttachement(GLenum attachement);
         Texture2D& setWrapMode(GLenum wrapMode);
         Texture2D& loadFromFile(const char* filename);
+        Texture2D& loadFromFileHDR(const char* filename);
 
         Texture2D& generate();      
 

@@ -17,9 +17,15 @@ layout (binding = 0) uniform sampler2D bTexture;
 
 in vec3 viewPos;
 
+float gamma = 1.0;
+float exposure = 1.0;
+
 void main()
 {
-    color = texture(bTexture, vec2(uv.x, 1.0 - uv.y)).rgb;
+    color = texture(bTexture, vec2(uv.x, uv.y)).rgb;
+
+    // color = pow(vec3(1.0) - exp(-color*exposure), vec3(1.0/gamma));
+
     fragColor.rgb = color;
     fragEmmisive = getStandardEmmisive(fragColor.rgb, ambientLight);
 

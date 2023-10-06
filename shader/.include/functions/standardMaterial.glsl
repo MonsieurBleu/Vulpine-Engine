@@ -1,6 +1,6 @@
 #include functions/HSV.glsl
 
-layout (binding = 1) uniform sampler2D bSkyTexture;
+layout (binding = 4) uniform sampler2D bSkyTexture;
 
 #define DIFFUSE
 #define SPECULAR
@@ -12,8 +12,8 @@ float mRoughness = 0.5;
 float mMetallic = 0.4;
 //////
 
-
-vec3 ambientLight = vec3(0.5);
+vec3 normalComposed;
+vec3 ambientLight = vec3(0.2);
 
 struct Material
 {
@@ -22,17 +22,14 @@ struct Material
     vec3 fresnel;
 };
 
+
 Material getDSF(vec3 lightDirection, vec3 lightColor)
 {
-    #ifdef TOON
     float diffuseIntensity = 0.5;
-    float specularIntensity = 0.1;
-    float fresnelIntensity = 0.1;
-    #else
-    float diffuseIntensity = 0.5;
-    float specularIntensity = 2.5*mSpecular;
-    float fresnelIntensity = 1.0;
-    #endif
+    // float specularIntensity = 5.0*mSpecular;
+    // float specularIntensity = (1.0-rgb2v(color)) + mMetallic*40.0;
+    float specularIntensity = 2.0*(1.0-pow(rgb2v(color), 5.0)) + mMetallic*40.0;
+    float fresnelIntensity = 0.2 + 1.0*mMetallic;
 
     vec3 diffuseColor = lightColor;
     vec3 specularColor = lightColor;
@@ -41,7 +38,7 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     /*
         UTILS
     */
-    vec3 nNormal = normalize(normal);
+    vec3 nNormal = normalize(normalComposed);
 
     vec3 viewDir = normalize(_cameraPosition - position);
     vec3 reflectDir = reflect(lightDirection, nNormal); 
@@ -52,7 +49,8 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float diffuse = 0.0;
 #ifdef DIFFUSE
-    diffuse = pow(nDotL, 0.5);
+    // diffuse = pow(nDotL, 0.5);
+    diffuse = nDotL;
 
     #ifdef TOON
         float dstep = 0.1;
@@ -69,7 +67,10 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float specular = 0.0;
 #ifdef SPECULAR
-    float specularExponent = 32.0 - mSpecular*24.0;
+    // float specularExponent = 32.0 - mSpecular*31.0;
+    // float specularExponent = 48.0 - mSpecular*32.0;
+    float specularExponent = 1.0 + 8.0 - 8.0*pow(mRoughness, 0.1);
+    // float specularExponent = 4.0;
     // specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
     specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
 

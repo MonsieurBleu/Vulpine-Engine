@@ -259,20 +259,24 @@ void App::mainloop()
         ModelState3D()
             .scaleScalar(5.0)
             .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    jug->setColorMap(test);
 
-    ModelRef barberShopChair = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/BarberShopChair.obj", false),
-        ModelState3D()
-            .scaleScalar(1.0)
-            .setPosition(vec3(2.0, 0.0, 0.0)));
+    // ModelRef barberShopChair = newModel(
+    //     uvPhong, 
+    //     readOBJ("ressources/test/chair/BarberShopChair.obj", false),
+    //     ModelState3D()
+    //         .scaleScalar(1.0)
+    //         .setPosition(vec3(2.0, 0.0, 0.0))
+    //         .setRotation(vec3(0.0, 0.5, 0.0)));
     
-    barberShopChair->setColorMap(
-        Texture2D()
-            .loadFromFile("ressources/test/BarberShopChair.jpg")
-            .generate());
+    ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
+    barberShopChair
+        ->loadFromFolder("ressources/test/chair/")
+        .state.setPosition(vec3(2.0, 0.0, 0.0));
+
+    ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
+    guitar
+        ->loadFromFolder("ressources/test/guitar/")
+        .state.setPosition(vec3(4.0, 0.0, 0.0));
 
     ModelRef woman = newModel(
         uvPhong, 
@@ -280,23 +284,13 @@ void App::mainloop()
         ModelState3D()
             .scaleScalar(1.0)
             .setPosition(vec3(-2.0, 0.0, 0.0)));
-    
-    woman->setColorMap(
-        Texture2D()
-            .loadFromFile("ressources/test/woman/color.jpg")
-            .generate());
 
-    ModelRef guitar = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/guitar/guitar.obj", false),
-        ModelState3D()
-            .scaleScalar(2.0)
-            .setPosition(vec3(4.0, 0.0, 0.0)));
-    
-    guitar->setColorMap(
-        Texture2D()
-            .loadFromFile("ressources/test/guitar/color.png")
-            .generate());
+    // ModelRef guitar = newModel(
+    //     uvPhong, 
+    //     readOBJ("ressources/test/guitar/guitar.obj", false),
+    //     ModelState3D()
+    //         .scaleScalar(2.0)
+    //         .setPosition(vec3(4.0, 0.0, 0.0)));
 
     ModelRef plane = newModel(
         uvPhong, 
@@ -305,10 +299,11 @@ void App::mainloop()
             .scaleScalar(0.25)
             .setPosition(vec3(0.0, 0.0, 0.0)));
     
-    plane->setColorMap(
+    plane->setMap(
         Texture2D()
             .loadFromFile("ressources/test/sphere/floor.jpg")
-            .generate());
+            .generate(),
+            0);
 
     ModelRef skybox = newModel(
         uvBasic, 
@@ -318,27 +313,27 @@ void App::mainloop()
             .setPosition(vec3(0.0, 0.0, 0.0)));
     
     Texture2D skyTexture =Texture2D()
-            .loadFromFile("ressources/test/skybox/puresky.hdr")
+            .loadFromFile("ressources/test/skybox/puresky2.png")
             .generate();
 
-    skybox->setColorMap(skyTexture);
+    skybox->setMap(skyTexture, 0);
 
     skybox->invertFaces = true;
     skybox->depthWrite = false;
 
     scene.add(skybox);
-    scene.add(plane);
+    // scene.add(plane);
     // scene.add(jug);
     // scene.add(barberShopChair);
     // scene.add(woman);
-    // scene.add(guitar);
+    scene.add(guitar);
 
     ObjectGroupRef group = newObjectGroup();
     ObjectGroupRef group2 = newObjectGroup();
-    group->add(jug);
+    // group->add(jug);
     group->add(barberShopChair);
-    group->add(woman);
-    group->add(guitar);
+    // group->add(woman);
+    // group->add(guitar);
 
     ScenePointLight testLight = newPointLight(
         PointLight()
@@ -352,7 +347,7 @@ void App::mainloop()
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
             .setColor(vec3(1.0, 0.85, 0.75))
-            .setDirection(normalize(vec3(-1.0, 0.1, 1.0)))
+            .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0)
             );
 
@@ -448,7 +443,7 @@ void App::mainloop()
 
         renderBuffer.activate();
         // ligthBuffer.activate(0);
-        skyTexture.bind(1);
+        skyTexture.bind(4);
         scene.draw();
         renderBuffer.deactivate();
         renderBuffer.bindTextures();

@@ -40,10 +40,11 @@ Mesh& Mesh::setVao(MeshVao _vao)
     return *this;
 }
 
-Mesh& Mesh::setColorMap(Texture2D texture)
+Mesh& Mesh::setMap(Texture2D texture, int location)
 {
-    colorMap = texture;
-    return *this;
+    maps.push_back(texture);
+    mapsLocation.push_back(location);
+    return (*this);
 }
 
 void MeshModel3D::preDrawRoutine(){}
@@ -55,7 +56,9 @@ void MeshModel3D::drawVAO(GLenum mode)
     state.update();
     uniforms.update();
 
-    colorMap.bind(0);
+    for(size_t i = 0; i < maps.size(); i ++)
+        if(maps[i].getHandle())
+            maps[i].bind(mapsLocation[i]);
 
     if(invertFaces)
         glCullFace(GL_FRONT);
@@ -83,6 +86,34 @@ void MeshModel3D::createUniforms()
         });
 }
 
+MeshModel3D& MeshModel3D::loadFromFolder(
+    const std::string folderPath, 
+    bool loadColorMap, 
+    bool loadMaterialMap)
+{
+    setVao(readOBJ(folderPath + "model.obj"));
+
+    if(loadColorMap)
+        setMap(
+            Texture2D()
+                .loadFromFile((folderPath + "color.png").c_str())
+                    .setFormat(GL_RGBA)
+                    .setInternalFormat(GL_SRGB8_ALPHA8)
+                    .generate(), 
+            0);
+
+    if(loadMaterialMap)
+        setMap(
+            Texture2D()
+                .loadFromFile((folderPath + "material.png").c_str())
+                    .setFormat(GL_RGBA)
+                    .setInternalFormat(GL_SRGB8_ALPHA8)
+                    .generate(), 
+            1);
+
+    return (*this);
+}
+
 MeshVao readOBJ(const std::string filePath, bool useVertexColors)
 {
     FILE *obj = fopen(filePath.c_str(), "r");
@@ -93,9 +124,12 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
 
     if(obj == nullptr || fsize == UINT64_MAX)
     {
-        std::cout << TERMINAL_ERROR;
-        perror("readOBJ : ");
-        std::cout << "\n The loader will return an empty object.\n" << TERMINAL_RESET;
+        std::cout 
+        << TERMINAL_ERROR << "Error loading file : "
+        << TERMINAL_FILENAME << filePath 
+        << TERMINAL_ERROR << "\n";
+        perror("\treadOBJ");
+        std::cout << "\tThe loader will return an empty object.\n" << TERMINAL_RESET;
 
         return MeshVao();
     }
