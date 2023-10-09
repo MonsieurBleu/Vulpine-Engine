@@ -69,6 +69,7 @@ void main()
 
     mSpecular = 0.9;
     mMetallic = 1.0 - NRM.a;
+    // mMetallic = max(1.0 - NRM.a, 0.5*(1.0 - NRM.b));
     mRoughness = NRM.b;
     color = CE.rgb;
     normalComposed = perturbNormal(normalize(normal), viewVector, NRM.xy, uv);
@@ -92,9 +93,9 @@ void main()
 
     // fragColor.rgb = mix(color*materialColor, rColor, max((1.0-mRoughness)*0.125, 0.0));
     
-    fragColor.rgb = mix(color, rColor, mRoughness*0.5)*materialColor;        
+    fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*materialColor;        
     // fragColor.rgb = color*materialColor;
-    fragColor.rgb *= mix(vec3(1.0), rColor, max(mMetallic*1.0, 0.0));
+    fragColor.rgb *= mix(vec3(1.0), rColor, max(mMetallic*0.9, 0.0));
 
     fragEmmisive = fragColor.rgb * 2.0 * (rgb2v(fragColor.rgb) - ambientLight*0.5);
 

@@ -5,6 +5,8 @@
 #include <Utils.hpp>
 #include <Timer.hpp>
 
+#include <ktx.h>
+
 using namespace glm;
 
 Texture2D::Texture2D(){}
@@ -137,8 +139,8 @@ Texture2D& Texture2D::loadFromFile(const char* filename)
 
 Texture2D& Texture2D::loadFromFileHDR(const char* filename)
 {
-    BenchTimer timer;
-    timer.start();
+    // BenchTimer timer;
+    // timer.start();
     int n, fileStatus;
     fileStatus = stbi_info(filename, &_resolution.x, &_resolution.y, &n);
 
@@ -162,13 +164,46 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
         << TERMINAL_RESET; 
     }
 
-    timer.end();
-    std::cout 
-    << TERMINAL_OK << "Successfully loaded image "
-    << TERMINAL_FILENAME << filename 
-    << TERMINAL_OK << " in " 
-    << TERMINAL_TIMER << timer.getElapsedTime() << " s\n"
-    << TERMINAL_RESET;
+    // timer.end();
+    // std::cout 
+    // << TERMINAL_OK << "Successfully loaded image "
+    // << TERMINAL_FILENAME << filename 
+    // << TERMINAL_OK << " in " 
+    // << TERMINAL_TIMER << timer.getElapsedTime() << " s\n"
+    // << TERMINAL_RESET;
+
+    return *(this);
+}
+
+Texture2D& Texture2D::loadFromFileKTX(const char* filename)
+{
+    ktxTexture* kTexture;
+    KTX_error_code result;
+    // ktx_size_t offset;
+    // ktx_uint32_t level, layer, faceSlice; 
+    GLenum target, glerror;
+
+    result = ktxTexture_CreateFromNamedFile(
+        filename,
+        KTX_TEXTURE_CREATE_NO_FLAGS,
+        &kTexture);
+
+    glGenTextures(1, &handle);
+    result = ktxTexture_GLUpload(kTexture, &handle, &target, &glerror);
+    
+    if(result)
+    {
+        std::cout 
+        << TERMINAL_ERROR << "Error loading file "
+        << TERMINAL_FILENAME << filename 
+        << TERMINAL_ERROR << ". Errore code : " << glerror
+        << TERMINAL_RESET << "\n";
+    }
+
+    // don't work but technilcy need that in the future
+    // ktxTexture_Destroy(handle);
+
+    generated = true;
 
     return *(this);
 }

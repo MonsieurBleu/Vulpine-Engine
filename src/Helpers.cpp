@@ -118,22 +118,44 @@ void PointLightHelper::update(bool forceUpdate)
 
 DirectionalLightHelper::DirectionalLightHelper(SceneDirectionalLight light) : light(light)
 {
+    GenericSharedBuffer pointsb(new char[sizeof(vec3)*2]);
+    vec3* points = (vec3*)pointsb.get();
+    points[0] = vec3(0.f);
+    points[1] = -light->direction();
+
+    GenericSharedBuffer colorsb(new char[sizeof(vec3)*2]);
+    vec3* colors = (vec3*)colorsb.get();
+    colors[0] = vec3(0.0f, 0.0f, 1.0f);
+    colors[1] = vec3(0.0, 1.0, 0.0);
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(pointsb, 0, 2, 3, GL_FLOAT, false),
+            VertexAttribute(colorsb, 2, 2, 3, GL_FLOAT, false)
+        })
+    );
+
+    vao->generate();
+
+    static MeshMaterial material = 
+    MeshMaterial(
+        new ShaderProgram(
+            "shader/foward rendering/basic.frag", 
+            "shader/foward rendering/basic.vert", 
+            "", 
+            globals.standartShaderUniform3D()
+            )
+        );
+
     ModelRef helper = newModel(
-        MeshMaterial(
-            new ShaderProgram(
-                "shader/foward rendering/basic.frag", 
-                "shader/foward rendering/basic.vert", 
-                "", 
-                globals.standartShaderUniform3D()
-                )
-            ),
-        readOBJ("ressources/helpers/DirectionnalLight.obj"),
+        material,
+        vao,
         ModelState3D().scaleScalar(1.0)
     );
 
-    add(helper);
+    helper->defaultMode = GL_LINES;
 
-    state.setPosition(vec3(0, 1, 0));
+    add(helper);
 }
 
 /*
@@ -144,20 +166,20 @@ void DirectionalLightHelper::update(bool forceUpdate)
 {
     // From direction vector to euleur coordinattes
     // No sources, just maths 
-    vec3 dir = -light->direction();
+    // vec3 dir = -light->direction();
     // float angle1 = atan2(-dir.y, -dir.z); 
     // float angle2 = atan2(-dir.x, dir.y);
 
-    float angle1 = atan(dir.x/length(vec2(dir.x, dir.z)));
-    float angle2 = atan(-dir.x/dir.z);
+    // float angle1 = atan(dir.x/length(vec2(dir.x, dir.z)));
+    // float angle2 = atan(-dir.x/dir.z);
     
 
-    state.setRotation(
-        vec3(
-            angle1,
-            0, // useless
-            angle2
-            ));
+    // state.setRotation(
+    //     vec3(
+    //         angle1,
+    //         0, // useless
+    //         angle2
+    //         ));
 
     this->ObjectGroup::update(forceUpdate);
 }

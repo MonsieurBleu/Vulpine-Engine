@@ -6,6 +6,8 @@ layout (binding = 4) uniform sampler2D bSkyTexture;
 #define SPECULAR
 #define FRESNEL
 
+#define BLINN
+
 //////
 float mSpecular = 0.5;
 float mRoughness = 0.5;
@@ -13,7 +15,7 @@ float mMetallic = 0.4;
 //////
 
 vec3 normalComposed;
-vec3 ambientLight = vec3(0.2);
+vec3 ambientLight = vec3(0.1);
 
 struct Material
 {
@@ -28,8 +30,10 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     float diffuseIntensity = 0.5;
     // float specularIntensity = 5.0*mSpecular;
     // float specularIntensity = (1.0-rgb2v(color)) + mMetallic*40.0;
-    float specularIntensity = 2.0*(1.0-pow(rgb2v(color), 5.0)) + mMetallic*40.0;
-    float fresnelIntensity = 0.2 + 1.0*mMetallic;
+    // float specularIntensity = 2.0*(1.0-pow(rgb2v(color), 5.0)) + mMetallic*40.0;
+    float specularIntensity = 2.0*(1.0-pow(rgb2v(color), 5.0)) + mMetallic*5.0;
+    
+    float fresnelIntensity = 2.0 + 1.0*mMetallic;
 
     vec3 diffuseColor = lightColor;
     vec3 specularColor = lightColor;
@@ -42,7 +46,11 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
 
     vec3 viewDir = normalize(_cameraPosition - position);
     vec3 reflectDir = reflect(lightDirection, nNormal); 
-    float nDotL = max(dot(-lightDirection, nNormal), 0);
+    float nDotL = max(dot(-lightDirection, nNormal), 0.f);
+
+#ifdef BLINN
+    vec3 halfwayDir = normalize(-lightDirection+viewDir);
+#endif
 
     /*
         DIFFUSE 
@@ -72,7 +80,12 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     float specularExponent = 1.0 + 8.0 - 8.0*pow(mRoughness, 0.1);
     // float specularExponent = 4.0;
     // specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
-    specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
+
+    #ifdef BLINN
+        specular = pow(max(dot(normal, halfwayDir), 0.0), 4.0*specularExponent);
+    #else
+        specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
+    #endif
 
     #ifdef TOON
         float sstep = 0.1;
@@ -90,6 +103,7 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     fresnel = 1.0 - dot(normal, viewDir);
 
     fresnel *= diffuse;
+    // fresnel *= smoothstep(0.0, 0.1, diffuse);
 
     fresnel = pow(fresnel, 2.0);
 

@@ -32,8 +32,8 @@ class BenchTimer
 
         uint64_t updateCounter = 0;
 
-        float elapsedTime;
-        float deltaS;
+        float elapsedTime = 0.0;
+        float deltaS = 0.0;
 
         std::string name;
 

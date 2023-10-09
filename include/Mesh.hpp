@@ -25,6 +25,7 @@ class Mesh
 
     public :
 
+        GLenum defaultMode = GL_TRIANGLES;
         bool invertFaces = false;
         bool depthWrite = true;
 
@@ -44,8 +45,8 @@ class Mesh
         Mesh& setVao(MeshVao _vao);
         Mesh& setMap(Texture2D texture, int location);
 
-        virtual void draw(GLenum mode = GL_TRIANGLES);
-        virtual void drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual void draw(GLenum mode = 0);
+        virtual void drawVAO(GLenum mode = 0);
 };
 
 #define MODEL_UNIFORM_START           16

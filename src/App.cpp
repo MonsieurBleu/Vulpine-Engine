@@ -98,7 +98,7 @@ void App::mainInput(double deltatime)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
     
-    float camspeed = 0.3;
+    float camspeed = 2.0;
     if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camspeed *= 5.0;
 
@@ -216,24 +216,26 @@ void App::mainloop()
         .setIntensity(1.0)
         .setRadius(10.0));
 
-    // scene.add(redLight);
-    // scene.add(blueLight);
+    /*    
+    scene.add(redLight);
+    scene.add(blueLight);
 
-    // std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
-    // std::default_random_engine generator;
-    // for(int i = 0; i < 16; i++)
-    // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
-    // {
-    //     scene.add(
-    //         newPointLight(
-    //             PointLight()
-    //             .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
-    //             .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
-    //             .setIntensity(1.75)
-    //             .setRadius(5.0)
-    //             )
-    //     );
-    // }
+    std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
+    std::default_random_engine generator;
+    for(int i = 0; i < 16; i++)
+    for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
+    {
+        scene.add(
+            newPointLight(
+                PointLight()
+                .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
+                .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
+                .setIntensity(1.75)
+                .setRadius(5.0)
+                )
+        );
+    }
+    */
 
     MeshMaterial uvPhong(
             new ShaderProgram(
@@ -251,117 +253,175 @@ void App::mainloop()
                 globals.standartShaderUniform3D() 
             ));
 
-    Texture2D test = Texture2D().loadFromFile("ressources/test/jug.jpg").generate();
-
-    ModelRef jug = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/jug.obj", false),
-        ModelState3D()
-            .scaleScalar(5.0)
-            .setPosition(vec3(0.0, 0.0, 0.0)));
-
-    // ModelRef barberShopChair = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/chair/BarberShopChair.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(1.0)
-    //         .setPosition(vec3(2.0, 0.0, 0.0))
-    //         .setRotation(vec3(0.0, 0.5, 0.0)));
-    
-    ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
-    barberShopChair
-        ->loadFromFolder("ressources/test/chair/")
-        .state.setPosition(vec3(2.0, 0.0, 0.0));
-
-    ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
-    guitar
-        ->loadFromFolder("ressources/test/guitar/")
-        .state.setPosition(vec3(4.0, 0.0, 0.0));
-
-    ModelRef woman = newModel(
-        uvPhong, 
-        readOBJ("ressources/test/woman/woman.obj", false),
-        ModelState3D()
-            .scaleScalar(1.0)
-            .setPosition(vec3(-2.0, 0.0, 0.0)));
-
-    // ModelRef guitar = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/guitar/guitar.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(2.0)
-    //         .setPosition(vec3(4.0, 0.0, 0.0)));
-
-    ModelRef plane = newModel(
-        uvPhong, 
-        readOBJ("ressources/plane.obj", false),
-        ModelState3D()
-            .scaleScalar(0.25)
-            .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    plane->setMap(
-        Texture2D()
-            .loadFromFile("ressources/test/sphere/floor.jpg")
-            .generate(),
-            0);
-
     ModelRef skybox = newModel(
         uvBasic, 
         readOBJ("ressources/test/skybox/skybox.obj", false),
         ModelState3D()
             .scaleScalar(10.0)
             .setPosition(vec3(0.0, 0.0, 0.0)));
-    
+
     Texture2D skyTexture =Texture2D()
             .loadFromFile("ressources/test/skybox/puresky2.png")
             .generate();
 
     skybox->setMap(skyTexture, 0);
-
     skybox->invertFaces = true;
     skybox->depthWrite = false;
-
     scene.add(skybox);
-    // scene.add(plane);
-    // scene.add(jug);
+    
+    {
+    // ModelRef jug = newModel(
+    //     uvPhong, 
+    //     readOBJ("ressources/test/jug.obj", false),
+    //     ModelState3D()
+    //         .scaleScalar(5.0)
+    //         .setPosition(vec3(0.0, 0.0, 0.0)));
+    
+    // ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
+    // barberShopChair
+    //     ->loadFromFolder("ressources/test/chair/")
+    //     .state.setPosition(vec3(2.0, 0.0, 0.0));
+
+    // ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
+    // guitar
+    //     ->loadFromFolder("ressources/test/guitar/")
+    //     .state.setPosition(vec3(4.0, 0.0, 0.0));
+
+    // ModelRef woman = newModel(
+    //     uvPhong, 
+    //     readOBJ("ressources/test/woman/woman.obj", false),
+    //     ModelState3D()
+    //         .scaleScalar(1.0)
+    //         .setPosition(vec3(-2.0, 0.0, 0.0)));
+
+    // ModelRef plane = newModel(
+    //     uvPhong, 
+    //     readOBJ("ressources/plane.obj", false),
+    //     ModelState3D()
+    //         .scaleScalar(0.25)
+    //         .setPosition(vec3(0.0, 0.0, 0.0)));
+    
+    // plane->setMap(
+    //     Texture2D()
+    //         .loadFromFile("ressources/test/sphere/floor.jpg")
+    //         .generate(),
+    //         0);
+    
+    // scene.add(guitar);
     // scene.add(barberShopChair);
-    // scene.add(woman);
-    scene.add(guitar);
-
-    ObjectGroupRef group = newObjectGroup();
-    ObjectGroupRef group2 = newObjectGroup();
-    // group->add(jug);
-    group->add(barberShopChair);
-    // group->add(woman);
-    // group->add(guitar);
-
-    ScenePointLight testLight = newPointLight(
-        PointLight()
-        .setColor(vec3(1.0, 0.2, 0.0))
-        .setIntensity(2.0)
-        .setRadius(3.0)
-        .setPosition(vec3(3, 1, 0))
-        // .setPosition(barberShopChair->state.position)
-        );
-
+    }
+    
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
             .setColor(vec3(1.0, 0.85, 0.75))
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0)
             );
-
-    // group->add(testLight);
-    group->add(sun);
-    scene.add(group);
-    scene.add(group2);
+    scene.add(sun);
+    
 
 
-    ObjectGroupRef helper = std::make_shared<PointLightHelper>(PointLightHelper(testLight));
-    // helper->state.scaleScalar(50.0); 
-    // scene.add(helper);
-    // scene.add(std::make_shared<DirectionalLightHelper>(DirectionalLightHelper(sun)));
+    ObjectGroupRef materialTesters = newObjectGroup();
+    std::vector<MeshVao> mtGeometry = 
+    {
+        readOBJ("ressources/material demo/sphere.obj"),
+        readOBJ("ressources/material demo/d20.obj"),
+        readOBJ("ressources/material demo/cube.obj"),
+    };
 
+    #define TEST_KTX
+
+    #ifndef TEST_KTX
+    std::vector<std::string> mtTextureName
+    {
+        "ressources/material demo/png/0",
+        "ressources/material demo/png/1",
+        "ressources/material demo/png/2",
+        "ressources/material demo/png/3",
+        "ressources/material demo/png/4",
+        "ressources/material demo/png/5",
+        "ressources/material demo/png/6",
+        "ressources/material demo/png/7",
+        "ressources/material demo/png/8",
+        "ressources/material demo/png/9",
+        "ressources/material demo/png/10",
+        "ressources/material demo/png/11"
+    };
+    #else
+    std::vector<std::string> mtTextureName
+    {
+        "ressources/material demo/ktx/0",
+        "ressources/material demo/ktx/1",
+        "ressources/material demo/ktx/2",
+        "ressources/material demo/ktx/3",
+        "ressources/material demo/ktx/4",
+        "ressources/material demo/ktx/5",
+        "ressources/material demo/ktx/6",
+        "ressources/material demo/ktx/7",
+        "ressources/material demo/ktx/8",
+        "ressources/material demo/ktx/9",
+        "ressources/material demo/ktx/10",
+        "ressources/material demo/ktx/11"
+    };
+    #endif
+
+    // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
+
+    BenchTimer mtTimer;
+    mtTimer.start();
+    for(size_t t = 0; t < mtTextureName.size(); t++)
+    {
+        Texture2D color;
+        Texture2D material;
+
+        #ifndef TEST_KTX
+        std::string namec = mtTextureName[t] + "CE.png";
+        color.loadFromFile(namec.c_str())
+            .setFormat(GL_RGBA)
+            .setInternalFormat(GL_SRGB8_ALPHA8)
+            .generate();
+
+        std::string namem = mtTextureName[t] + "NRM.png";
+        material.loadFromFile(namem.c_str())
+            .setFormat(GL_RGBA)
+            .setInternalFormat(GL_SRGB8_ALPHA8)
+            .generate();
+        #else
+        std::string namec = mtTextureName[t] + "CE.ktx";
+        color.loadFromFileKTX(namec.c_str());
+        std::string namem = mtTextureName[t] + "NRM.ktx";
+        material.loadFromFileKTX(namem.c_str());
+        #endif
+
+        for(size_t g = 0; g < mtGeometry.size(); g++)
+        {
+            std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
+            helper->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
+            helper->state.scaleScalar(2.0);
+            materialTesters->add(helper);
+
+            ModelRef model = newModel();
+            model->setMaterial(uvPhong);
+            model->setVao(mtGeometry[g]);
+
+            model->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
+            model->setMap(color, 0);
+            model->setMap(material, 1);
+
+            materialTesters->add(model);
+            // scene.add(model);
+        }
+    }
+    mtTimer.end();
+    std::cout 
+    << TERMINAL_OK << "Loaded all model images in "
+    << TERMINAL_TIMER << mtTimer.getElapsedTime()
+    << TERMINAL_OK << " s\n" << TERMINAL_RESET;
+
+    materialTesters->update(true);
+    scene.add(materialTesters);
+
+    glLineWidth(5.0);
 
     while(state != quit)
     {
@@ -389,7 +449,7 @@ void App::mainloop()
                 SSAO.getShader().reset();
                 Bloom.getShader().reset();
                 PostProcessing.reset();
-                jug->getMaterial()->reset();
+                uvPhong->reset();
                 skybox->getMaterial()->reset();
                 break;
             
@@ -430,16 +490,6 @@ void App::mainloop()
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        // group->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        // group2->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime()*0.5, 0.0));
-        // testLight->setColor(vec3(0.5) + vec3(0.5)*cos(vec3(globals.appTime.getElapsedTime())*vec3(0.5, 1.2, 3.5)));
-        // sun->setDirection(normalize(vec3(
-        //     0,
-        //     cos(globals.appTime.getElapsedTime()*0.5), 
-        //     sin(globals.appTime.getElapsedTime()*0.5)
-        //     )));
-        // group->state.setPosition(vec3(0, 0, 0.001) + group->state.position);
 
         renderBuffer.activate();
         // ligthBuffer.activate(0);

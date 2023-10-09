@@ -16,6 +16,8 @@ using namespace glm;
 void Mesh::drawVAO(GLenum mode)
 {
     glBindVertexArray(vao->getHandle());
+    if(!mode)
+        mode = defaultMode;
     glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 }
 
@@ -65,8 +67,9 @@ void MeshModel3D::drawVAO(GLenum mode)
     if(!depthWrite)
         glDisable(GL_DEPTH_TEST);
 
-
     glBindVertexArray(vao->getHandle());
+    if(!mode)
+        mode = defaultMode;
     glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
     if(invertFaces)

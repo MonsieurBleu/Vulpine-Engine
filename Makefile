@@ -1,6 +1,6 @@
 CC = g++
 CPPFLAGS = -Wall -g -Wno-strict-aliasing
-LIBFLAGS = -I include -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 
+LIBFLAGS = -I include -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx
 LINKFLAGS = libglfw3.a libglfw3dll.a 
 # OBJ = obj/main.o obj/App.o obj/Utils.o obj/Shader.o obj/Camera.o obj/Uniforms.o obj/VertexBuffer.o obj/Mesh.o obj/Scene.o obj/Inputs.o obj/FrameBuffer.o obj/Textures.o obj/RenderPass.o obj/Timer.o obj/Globals.o
 # OBJ = $(wildcard obj/*.cpp)
