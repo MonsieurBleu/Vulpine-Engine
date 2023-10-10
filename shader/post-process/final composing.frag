@@ -177,8 +177,8 @@ void main()
     _fragColor.b = texture(bColor, bUv).b;
 
     vec4 AO = getBlurAO(uvScreen);
-    _fragColor.rgb *= pow(1.0 - AO.rgb, vec3(4.0));
-    // _fragColor.rgb *= vec3(AO.a);
+    // _fragColor.rgb *= pow(1.0 - AO.rgb, vec3(1.0));
+    _fragColor.rgb = vec3(pow(AO.a, 5.0));
 
     // vec3 bloom = blur(bEmmisive, uvScreen);
     // _fragColor.rgb += bloom;
@@ -198,6 +198,8 @@ void main()
     // gamma correction 
     mapped = pow(mapped, vec3(1.0 / gamma));
     _fragColor.rgb = mapped;
+
+    // _fragColor.rgb = texture(bNormal, uvScreen).rgb;
 
     _fragColor.a = 1.0;
 }

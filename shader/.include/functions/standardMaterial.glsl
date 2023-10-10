@@ -12,10 +12,13 @@ layout (binding = 4) uniform sampler2D bSkyTexture;
 float mSpecular = 0.5;
 float mRoughness = 0.5;
 float mMetallic = 0.4;
+float mEmmisive = 0.0;
 //////
 
 vec3 normalComposed;
-vec3 ambientLight = vec3(0.1);
+vec3 viewDir;
+vec3 ambientLight = vec3(0.2);
+float colorVCorrection;
 
 struct Material
 {
@@ -24,16 +27,12 @@ struct Material
     vec3 fresnel;
 };
 
-
 Material getDSF(vec3 lightDirection, vec3 lightColor)
 {
     float diffuseIntensity = 0.5;
-    // float specularIntensity = 5.0*mSpecular;
-    // float specularIntensity = (1.0-rgb2v(color)) + mMetallic*40.0;
-    // float specularIntensity = 2.0*(1.0-pow(rgb2v(color), 5.0)) + mMetallic*40.0;
-    float specularIntensity = 2.0*(1.0-pow(rgb2v(color), 5.0)) + mMetallic*5.0;
+    float specularIntensity = 2.0*colorVCorrection + mMetallic*5.0;
     
-    float fresnelIntensity = 2.0 + 1.0*mMetallic;
+    float fresnelIntensity = 2.0 + mMetallic;
 
     vec3 diffuseColor = lightColor;
     vec3 specularColor = lightColor;
@@ -44,8 +43,7 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     */
     vec3 nNormal = normalize(normalComposed);
 
-    vec3 viewDir = normalize(_cameraPosition - position);
-    vec3 reflectDir = reflect(lightDirection, nNormal); 
+    // 
     float nDotL = max(dot(-lightDirection, nNormal), 0.f);
 
 #ifdef BLINN
@@ -75,15 +73,13 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float specular = 0.0;
 #ifdef SPECULAR
-    // float specularExponent = 32.0 - mSpecular*31.0;
-    // float specularExponent = 48.0 - mSpecular*32.0;
-    float specularExponent = 1.0 + 8.0 - 8.0*pow(mRoughness, 0.1);
-    // float specularExponent = 4.0;
-    // specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
 
     #ifdef BLINN
-        specular = pow(max(dot(normal, halfwayDir), 0.0), 4.0*specularExponent);
+        float specularExponent = 36.0 - 32.0*pow(mRoughness, 0.5);
+        specular = pow(max(dot(normal, halfwayDir), 0.0), specularExponent);
     #else
+        float specularExponent = 9.0 - 8.0*pow(mRoughness, 0.5);
+        vec3 reflectDir = reflect(lightDirection, nNormal); 
         specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
     #endif
 
@@ -100,12 +96,8 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     */
     float fresnel = 0.0;
 #ifdef FRESNEL 
-    fresnel = 1.0 - dot(normal, viewDir);
-
-    fresnel *= diffuse;
-    // fresnel *= smoothstep(0.0, 0.1, diffuse);
-
-    fresnel = pow(fresnel, 2.0);
+    fresnel = (1.0 - dot(normal, viewDir))*diffuse, 2.0;
+    fresnel *= fresnel;
 
     #ifdef TOON
         float rstep = 0.75;
@@ -115,10 +107,6 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
 
 #endif
     vec3 fresnelResult = fresnel*fresnelIntensity*fresnelColor;
-
-    // return diffuseResult + specularResult + fresnelResult;
-    // return max(diffuseResult, fresnelResult) + specularResult;
-    // return diffuseResult + specularResult + fresnelResult;
 
     Material result;
     result.diffuse = diffuseResult;
@@ -130,7 +118,6 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
 Material getMultiLightStandard()
 {
     int id = 0;
-    // vec3 result = vec3(0.0);
     Material result;
     while(true)
     {
@@ -153,10 +140,7 @@ Material getMultiLightStandard()
             {
                 float maxDist = max(light.direction.x, 0.0001);
                 float distFactor = max(maxDist - distance(position, light.position.xyz), 0.f)/maxDist;
-                // distFactor = pow(distFactor, 2.0);
                 vec3 direction = normalize(position - light.position.xyz);
-                // vec3 direction = vec3(1.0);
-                // float finalFactor = max(distFactor*light.color.a - ambientLight.x*3.0, 0.f);
                 
                 lightResult = getDSF(direction, light.color.rgb);
                 factor = distFactor*light.color.a;
@@ -170,8 +154,6 @@ Material getMultiLightStandard()
         result.diffuse += lightResult.diffuse * factor;
         result.specular += lightResult.specular * factor;
         result.fresnel += lightResult.fresnel * factor;
-
-        // result += max(lightResult - ambientLight*0.5, vec3(0.f));
 
         id ++;
     }

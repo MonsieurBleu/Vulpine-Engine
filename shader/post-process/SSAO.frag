@@ -44,7 +44,7 @@ vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 {
     float test = 18.0;
 
-    vec4 clipSpacePos = vec4(textureCoordinate * test - test/2, 
+    vec4 clipSpacePos = vec4(test*(textureCoordinate * 1.0 - 0.5), 
                             depth,
                             1.0);
     
@@ -71,7 +71,11 @@ void main()
     vec3 fragColor = texture(bColor, uvScreen).rgb;
 
     vec3 normal = texture(gNormal, uvScreen).rgb * 2.0 - 1.0;
-    vec3 randomVec = normalize(texture(texNoise, uvScreen * noiseScale).xyz);
+
+    normal = (_cameraViewInverse * vec4(normal, 0.0)).rgb; 
+    normal = normalize(normal);
+
+    vec3 randomVec = texture(texNoise, uvScreen * noiseScale).xyz * 2.0 - 1.0;
     // create TBN change-of-basis matrix: from tangent-space to view-space
     vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
     vec3 bitangent = cross(normal, tangent);
@@ -85,9 +89,9 @@ void main()
     {
         // get sample position
         vec3 samplePos = TBN * samples[i]; // from tangent to view-space
-        // samplePos = fragPos + samplePos * radius; 
-        samplePos = fragWorldPos + samplePos * radius; 
-        samplePos = (_cameraViewMatrix * vec4(samplePos, 1.0)).xyz;
+        samplePos = fragPos + samplePos * radius; 
+        // samplePos = fragWorldPos + samplePos * radius; 
+        // samplePos = (_cameraViewMatrix * vec4(samplePos, 1.0)).xyz;
         
         // project sample position (to sample texture) (to get position on screen/texture)
         vec4 offset = vec4(samplePos, 1.0);
@@ -100,7 +104,9 @@ void main()
         float sampleDepth = calculateViewPosition(offset.xy, texture(bDepth, offset.xy).x).z;
 
         // range check & accumulate
-        float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+        // float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
+        float rangeCheck = abs(fragPos.z - sampleDepth) < radius ? 1.0 : 0.0;
+
         // occlusion += (sampleDepth >= samplePos.z + bias ? vec3(1.0) : vec3(0.0)) * rangeCheck * (1.0 - texture(bColor, offset.xy).rgb);     
         // occlusion += (sampleDepth >= samplePos.z + bias ? vec4(1.0) : vec4(0.0)) * rangeCheck * vec4(texture(bColor, offset.xy).rgb, 1.0);  
     

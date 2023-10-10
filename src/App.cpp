@@ -189,6 +189,8 @@ void App::mainloop()
     Scene scene;
 
     bool wireframe = false;
+    bool vsync = true;
+    glfwSwapInterval(1);
 
     ShaderProgram PostProcessing = ShaderProgram(
         "shader/post-process/final composing.frag", 
@@ -409,7 +411,7 @@ void App::mainloop()
             model->setMap(material, 1);
 
             materialTesters->add(model);
-            // scene.add(model);
+            scene.add(model);
         }
     }
     mtTimer.end();
@@ -478,12 +480,19 @@ void App::mainloop()
                 Bloom.toggle();
                 break;
 
+            case GLFW_KEY_F9 : 
+                vsync = !vsync;
+                glfwSwapInterval(vsync ? 1 : 0);
+                break;
+
             default:
                 break;
             }
         }
 
         mainInput(globals.appTime.getDelta());
+
+        // materialTesters->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime(), 0.0));
 
         mainloopPreRenderRoutine();
         if(wireframe)
