@@ -17,7 +17,7 @@ float mEmmisive = 0.0;
 
 vec3 normalComposed;
 vec3 viewDir;
-vec3 ambientLight = vec3(0.2);
+vec3 ambientLight = vec3(0.005);
 float colorVCorrection;
 
 struct Material
@@ -32,7 +32,7 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     float diffuseIntensity = 0.5;
     float specularIntensity = 2.0*colorVCorrection + mMetallic*5.0;
     
-    float fresnelIntensity = 2.0 + mMetallic;
+    float fresnelIntensity = 4.0 + mMetallic;
 
     vec3 diffuseColor = lightColor;
     vec3 specularColor = lightColor;
@@ -77,6 +77,7 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     #ifdef BLINN
         float specularExponent = 36.0 - 32.0*pow(mRoughness, 0.5);
         specular = pow(max(dot(normal, halfwayDir), 0.0), specularExponent);
+        specular *= smoothstep(0.0, 1.0, diffuse);
     #else
         float specularExponent = 9.0 - 8.0*pow(mRoughness, 0.5);
         vec3 reflectDir = reflect(lightDirection, nNormal); 
@@ -143,7 +144,7 @@ Material getMultiLightStandard()
                 vec3 direction = normalize(position - light.position.xyz);
                 
                 lightResult = getDSF(direction, light.color.rgb);
-                factor = distFactor*light.color.a;
+                factor = distFactor*distFactor*light.color.a;
             }
                 break;
 

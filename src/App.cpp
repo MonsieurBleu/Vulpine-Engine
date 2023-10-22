@@ -99,7 +99,7 @@ void App::mainInput(double deltatime)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
     
-    float camspeed = 2.0;
+    float camspeed = 20.0;
     if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camspeed *= 5.0;
 
@@ -205,20 +205,6 @@ void App::mainloop()
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
     #endif
 
-    ScenePointLight redLight = newPointLight(
-        PointLight()
-        .setColor(vec3(1, 0, 0))
-        .setPosition(vec3(1, 0.5, 0.0))
-        .setIntensity(0.75)
-        .setRadius(15.0));
-
-    ScenePointLight blueLight = newPointLight(
-        PointLight()
-        .setColor(vec3(0, 0.5, 1.0))
-        .setPosition(vec3(-1, 0.5, 0.0))
-        .setIntensity(1.0)
-        .setRadius(10.0));
-
     /*    
     scene.add(redLight);
     scene.add(blueLight);
@@ -260,12 +246,17 @@ void App::mainloop()
         uvBasic, 
         readOBJ("ressources/test/skybox/skybox.obj", false),
         ModelState3D()
-            .scaleScalar(10.0)
+            .scaleScalar(1000.0)
             .setPosition(vec3(0.0, 0.0, 0.0)));
 
-    Texture2D skyTexture =Texture2D()
-            .loadFromFile("ressources/test/skybox/puresky2.png")
+    Texture2D skyTexture = Texture2D()
+            .loadFromFile("ressources/solar system/crab nebula.png")
+            .setFormat(GL_RGBA)
+            .setInternalFormat(GL_SRGB8_ALPHA8)
             .generate();
+
+    // Texture2D skyTexture = Texture2D()
+    //         .loadFromFileKTX("ressources/solar system/8k_mily_way.ktx");
 
     skybox->setMap(skyTexture, 0);
     skybox->invertFaces = true;
@@ -314,119 +305,54 @@ void App::mainloop()
     // scene.add(barberShopChair);
     }
     
-    SceneDirectionalLight sun = newDirectionLight(
-        DirectionLight()
-            .setColor(vec3(1.0, 0.85, 0.75))
-            .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
-            .setIntensity(1.0)
+    ScenePointLight sun = newPointLight(
+        PointLight()
+            .setColor(vec3(1.0, 1.0, 1.0))
+            .setRadius(1000.0)
+            .setIntensity(1.25)
             );
     scene.add(sun);
-    
+    // scene.add(std::make_shared<PointLightHelper>(sun));
 
+    ModelRef sunModel(new MeshModel3D());
+    sunModel->loadFromFolder("ressources/solar system/sun/");
+    sunModel->setMaterial(uvPhong);
+    scene.add(sunModel);
 
-    ObjectGroupRef materialTesters = newObjectGroup();
-    std::vector<MeshVao> mtGeometry = 
-    {
-        readOBJ("ressources/material demo/sphere.obj"),
-        readOBJ("ressources/material demo/d20.obj"),
-        readOBJ("ressources/material demo/cube.obj"),
-    };
+    ModelRef earth(new MeshModel3D());
+    earth->loadFromFolder("ressources/solar system/earth/");
+    earth->setMaterial(uvPhong);
+    scene.add(earth);
+    float ua = 150.f;
+    earth->state.setPosition(vec3(ua, 0, 0));
+    earth->state.scaleScalar(0.5);
 
-    #define TEST_KTX
+    ModelRef moon(new MeshModel3D());
+    moon->loadFromFolder("ressources/solar system/moon/");
+    moon->setMaterial(uvPhong);
+    scene.add(moon);
+    moon->state.scaleScalar(earth->state.scale.x*0.25);
 
-    #ifndef TEST_KTX
-    std::vector<std::string> mtTextureName
-    {
-        "ressources/material demo/png/0",
-        "ressources/material demo/png/1",
-        "ressources/material demo/png/2",
-        "ressources/material demo/png/3",
-        "ressources/material demo/png/4",
-        "ressources/material demo/png/5",
-        "ressources/material demo/png/6",
-        "ressources/material demo/png/7",
-        "ressources/material demo/png/8",
-        "ressources/material demo/png/9",
-        "ressources/material demo/png/10",
-        "ressources/material demo/png/11",
-        "ressources/material demo/ktx/12"
-    };
-    #else
-    std::vector<std::string> mtTextureName
-    {
-        "ressources/material demo/ktx/0",
-        "ressources/material demo/ktx/1",
-        "ressources/material demo/ktx/2",
-        "ressources/material demo/ktx/3",
-        "ressources/material demo/ktx/4",
-        "ressources/material demo/ktx/5",
-        "ressources/material demo/ktx/6",
-        "ressources/material demo/ktx/7",
-        "ressources/material demo/ktx/8",
-        "ressources/material demo/ktx/9",
-        "ressources/material demo/ktx/10",
-        "ressources/material demo/ktx/11",
-        "ressources/material demo/ktx/12"
-    };
-    #endif
+    ModelRef mars(new MeshModel3D());
+    mars->loadFromFolder("ressources/solar system/mars/");
+    mars->setMaterial(uvPhong);
+    scene.add(mars);
+    mars->state.scaleScalar(earth->state.scale.x*0.53);
 
-    // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
+    ModelRef venus(new MeshModel3D());
+    venus->loadFromFolder("ressources/solar system/venus/");
+    venus->setMaterial(uvPhong);
+    scene.add(venus);
+    venus->state.scaleScalar(earth->state.scale.x*0.86);
 
-    BenchTimer mtTimer;
-    mtTimer.start();
-    for(size_t t = 0; t < mtTextureName.size(); t++)
-    {
-        Texture2D color;
-        Texture2D material;
+    ModelRef mercury(new MeshModel3D());
+    mercury->loadFromFolder("ressources/solar system/mercury/");
+    mercury->setMaterial(uvPhong);
+    scene.add(mercury);
+    mercury->state.scaleScalar(earth->state.scale.x*0.38);
 
-        #ifndef TEST_KTX
-        std::string namec = mtTextureName[t] + "CE.png";
-        color.loadFromFile(namec.c_str())
-            .setFormat(GL_RGBA)
-            .setInternalFormat(GL_SRGB8_ALPHA8)
-            .generate();
-
-        std::string namem = mtTextureName[t] + "NRM.png";
-        material.loadFromFile(namem.c_str())
-            .setFormat(GL_RGBA)
-            .setInternalFormat(GL_SRGB8_ALPHA8)
-            .generate();
-        #else
-        std::string namec = mtTextureName[t] + "CE.ktx";
-        color.loadFromFileKTX(namec.c_str());
-        std::string namem = mtTextureName[t] + "NRM.ktx";
-        material.loadFromFileKTX(namem.c_str());
-        #endif
-
-        for(size_t g = 0; g < mtGeometry.size(); g++)
-        {
-            std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
-            helper->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-            helper->state.scaleScalar(2.0);
-            materialTesters->add(helper);
-
-            ModelRef model = newModel();
-            model->setMaterial(uvPhong);
-            model->setVao(mtGeometry[g]);
-
-            model->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-            model->setMap(color, 0);
-            model->setMap(material, 1);
-
-            materialTesters->add(model);
-            scene.add(model);
-        }
-    }
-    mtTimer.end();
-    std::cout 
-    << TERMINAL_OK << "Loaded all model images in "
-    << TERMINAL_TIMER << mtTimer.getElapsedTime()
-    << TERMINAL_OK << " s\n" << TERMINAL_RESET;
-
-    materialTesters->update(true);
-    scene.add(materialTesters);
-
-    glLineWidth(5.0);
+    float simSpeed = 500.0;
+    float simTime = 50.0;
 
     while(state != quit)
     {
@@ -434,7 +360,7 @@ void App::mainloop()
         
         glfwPollEvents();
 
-        camera.updateMouseFollow(window);
+        camera.updateMouseFollow(window);     
 
         GLFWKeyInfo input;
         while(inputs.pull(input))
@@ -473,7 +399,6 @@ void App::mainloop()
             case GLFW_KEY_F1 :
                 wireframe = !wireframe;
                 break;
-            
 
             case GLFW_KEY_1 :
                 SSAO.toggle();
@@ -487,6 +412,14 @@ void App::mainloop()
                 vsync = !vsync;
                 glfwSwapInterval(vsync ? 1 : 0);
                 break;
+            
+            case GLFW_KEY_P : 
+                simSpeed *= 2.0;
+                break;
+
+            case GLFW_KEY_O : 
+                simSpeed *= 0.5;
+                break;
 
             default:
                 break;
@@ -495,7 +428,27 @@ void App::mainloop()
 
         mainInput(globals.appTime.getDelta());
 
-        // materialTesters->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime(), 0.0));
+        simTime += simSpeed * globals.appTime.getDelta();
+        earth->state.setRotation(vec3(0, simTime, glm::radians(23.45)));
+        earth->state.setPosition(vec3(ua)*vec3(cos(simTime/365.25), 0.0, sin(simTime/365.25)));
+
+        // The moon always point the same face to the earth
+        float moonOrbit = simTime/29.5;
+        moon->state.setRotation(vec3(0, -moonOrbit, 0));
+        moon->state.setPosition(earth->state.position + vec3(20)*vec3(cos(moonOrbit), 0, sin(moonOrbit)));
+
+        float marsOrbit = simTime/687;
+        mars->state.setRotation(vec3(0, simTime, 0));
+        mars->state.setPosition(vec3(1.52*ua)*vec3(cos(marsOrbit), 0, sin(marsOrbit)));
+
+        float venusOrbit = simTime/225;
+        venus->state.setRotation(vec3(0, simTime/243, 0));
+        venus->state.setPosition(vec3(0.7*ua)*vec3(cos(venusOrbit), 0, sin(venusOrbit)));
+
+        float mercuryOrbit = simTime/88;
+        venus->state.setRotation(vec3(0, simTime/59, 0));
+        mercury->state.setPosition(vec3(0.39*ua)*vec3(cos(mercuryOrbit), 0, sin(mercuryOrbit)));  
+
 
         mainloopPreRenderRoutine();
         if(wireframe)
