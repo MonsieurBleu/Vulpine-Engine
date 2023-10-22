@@ -68,7 +68,8 @@ App::App(GLFWwindow* window) :
         ShaderUniform(camera.getProjectionViewMatrixAddr(),   2),
         ShaderUniform(camera.getViewMatrixAddr(),             3),
         ShaderUniform(camera.getProjectionMatrixAddr(),       4),
-        ShaderUniform(camera.getPositionAddr(),               5)
+        ShaderUniform(camera.getPositionAddr(),               5),
+        ShaderUniform(camera.getDirectionAddr(),              6)
     };
 
     globals._fullscreenQuad.setVao(
@@ -347,7 +348,8 @@ void App::mainloop()
         "ressources/material demo/png/8",
         "ressources/material demo/png/9",
         "ressources/material demo/png/10",
-        "ressources/material demo/png/11"
+        "ressources/material demo/png/11",
+        "ressources/material demo/ktx/12"
     };
     #else
     std::vector<std::string> mtTextureName
@@ -363,7 +365,8 @@ void App::mainloop()
         "ressources/material demo/ktx/8",
         "ressources/material demo/ktx/9",
         "ressources/material demo/ktx/10",
-        "ressources/material demo/ktx/11"
+        "ressources/material demo/ktx/11",
+        "ressources/material demo/ktx/12"
     };
     #endif
 

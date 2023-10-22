@@ -5,6 +5,7 @@ layout (location = 1) uniform float iTime;
 layout (location = 2) uniform mat4 MVP;
 layout (location = 3) uniform mat4 _cameraViewInverse;
 layout (location = 4) uniform mat4 _cameraViewMatrix;
+layout (location = 6) uniform vec3 _cameraDirection; 
 layout (location = 9) uniform mat4 _cameraProjectionMatrix; 
 
 layout (location = 16) uniform vec3 samples[64];
@@ -42,6 +43,8 @@ vec3 hsv2rgb(vec3 c)
 
 vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 {
+    // return _cameraDirection * (1.0-depth);
+
     float test = 18.0;
 
     vec4 clipSpacePos = vec4(test*(textureCoordinate * 1.0 - 0.5), 
@@ -52,27 +55,32 @@ vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 
     position.z = 1.0 - position.z;
 
-    return position.xyz/-position.w;
+    // position.z *= 0.05;
+    
+    position.xyz /= -position.w;
+
+    position.z = -abs(position.z);
+
+    return position.xyz;
 }
 
 // tile noise texture over screen, based on screen dimensions divided by noise size
 vec2 noiseScale = vec2(float(iResolution.x)/4.0, float(iResolution.y)/4.0);
 
 int kernelSize = 64;
-float radius = 5.0;
-float bias = 1.0;
+float radius = 5.0; // 5.0
+float bias = 0.5; // 0.5
 float colorBias = 1.0;
 
 void main()
 {
     vec3 fragPos = calculateViewPosition(uvScreen, texture(bDepth, uvScreen).x);
-    vec3 fragWorldPos = (_cameraViewInverse * vec4(fragPos, 1.0)).xyz;
+    // vec3 fragWorldPos = (_cameraViewInverse * vec4(fragPos, 1.0)).xyz;
 
     vec3 fragColor = texture(bColor, uvScreen).rgb;
 
     vec3 normal = texture(gNormal, uvScreen).rgb * 2.0 - 1.0;
-
-    normal = (_cameraViewInverse * vec4(normal, 0.0)).rgb; 
+    // normal = (_cameraViewInverse * vec4(normal, 0.0)).rgb; 
     normal = normalize(normal);
 
     vec3 randomVec = texture(texNoise, uvScreen * noiseScale).xyz * 2.0 - 1.0;
@@ -89,6 +97,7 @@ void main()
     {
         // get sample position
         vec3 samplePos = TBN * samples[i]; // from tangent to view-space
+        // vec3 samplePos = TBN * normalize(samples[i]); // from tangent to view-space
         samplePos = fragPos + samplePos * radius; 
         // samplePos = fragWorldPos + samplePos * radius; 
         // samplePos = (_cameraViewMatrix * vec4(samplePos, 1.0)).xyz;
@@ -105,22 +114,28 @@ void main()
 
         // range check & accumulate
         // float rangeCheck = smoothstep(0.0, 1.0, radius / abs(fragPos.z - sampleDepth));
-        float rangeCheck = abs(fragPos.z - sampleDepth) < radius ? 1.0 : 0.0;
+        // float rangeCheck = step(abs(fragPos.z - sampleDepth), radius);
+        float rangeCheck = smoothstep(radius, 0.0, abs(fragPos.z - sampleDepth));
+        // rangeCheck = 1.0;
 
         // occlusion += (sampleDepth >= samplePos.z + bias ? vec3(1.0) : vec3(0.0)) * rangeCheck * (1.0 - texture(bColor, offset.xy).rgb);     
-        // occlusion += (sampleDepth >= samplePos.z + bias ? vec4(1.0) : vec4(0.0)) * rangeCheck * vec4(texture(bColor, offset.xy).rgb, 1.0);  
-    
-        if(sampleDepth >= samplePos.z + bias)
-            occlusion.a += rangeCheck;
+        
+        occlusion.a += (-sampleDepth <= -samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;  
 
-        if(sampleDepth >= samplePos.z + colorBias)
-        {
-            vec3 sampleColor = texture(bColor, offset.xy).rgb;
-            occlusion.rgb = mix(
-                occlusion.rgb, 
-                1.0 - sampleColor, 
-                (rangeCheck/kernelSize));
-        }
+        vec3 sampleColor = texture(bColor, offset.xy).rgb;
+        occlusion.rgb += (-sampleDepth <= -samplePos.z - bias ? vec3(1.0 - sampleColor) : vec3(0.0)) * rangeCheck;  
+
+        // if(sampleDepth >= samplePos.z + bias)
+        //     occlusion.a += rangeCheck;
+
+        // if(sampleDepth >= samplePos.z + colorBias)
+        // {
+        //     vec3 sampleColor = texture(bColor, offset.xy).rgb;
+        //     occlusion.rgb = mix(
+        //         occlusion.rgb, 
+        //         1.0 - sampleColor, 
+        //         (rangeCheck/kernelSize));
+        // }
     }   
     // occlusion.rgb = 1.0 - (occlusion.rgb / kernelSize);
     // occlusion.a /= kernelSize;
@@ -131,11 +146,14 @@ void main()
     // occlusion = 1.0 - occlusion;
     // occlusion.rgb *= 5.0 * pow(1.0 - rgb2hsv(occlusion.rgb).b, lumDiscriminationExp);
 
-    _AO.rgb = pow(occlusion.rgb, vec3(1.0));
-    _AO.a = pow(1.0 - occlusion.a/kernelSize, 2.0);
+    _AO.rgb = 1.0 - pow(1.0 - occlusion.rgb/float(kernelSize), vec3(7.0));
+    _AO.a = 1.0 - pow(1.0 - (occlusion.a/float(kernelSize)), 15.0); //6
+    // _AO.a = -fragPos.z > 90000.0 ? 1.0 : _AO.a;
 
     // if(occlusion == 1.0)
     //     _AO = vec3(0.25, 0.0, 0.0);
 
     // _AO.rgb = calculateViewPosition(uvScreen, texture(bDepth, uvScreen).x);
+
+    // _AO.a = fragPos.z;
 }

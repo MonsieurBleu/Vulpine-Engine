@@ -103,5 +103,15 @@ void main()
 
     // fragNormal = transpose(inverse(mat3(_cameraViewMatrix)))*normalComposed;
 
+    // fragNormal = normalComposed*0.5 + 0.5;
+
+    // fragNormal = (vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb;
+    fragNormal = (vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb;
+    fragNormal = normalize(fragNormal);
+    fragNormal = fragNormal*0.5 + 0.5;
+
     fragNormal = normalComposed*0.5 + 0.5;
+
+    NRM.xy = NRM.xy * 2.0 - 1.0;
+    fragNormal = vec3(NRM.xy, sqrt( 1. - dot( NRM.xy, NRM.xy ) ))*0.5 + 0.5;
 }

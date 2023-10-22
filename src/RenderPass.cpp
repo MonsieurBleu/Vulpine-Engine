@@ -105,6 +105,7 @@ void SSAOPass::render(Camera &camera)
         cameraProjMatrix.activate();
         ShaderUniform(inverse(camera.getViewMatrix()), 3).activate();
         ShaderUniform(camera.getViewMatrix(), 4).activate();
+        ShaderUniform(normalize(camera.getDirection()), 6).activate();
         ssaoNoiseTexture.bind(3);
         globals.drawFullscreenQuad();
         FBO.deactivate();

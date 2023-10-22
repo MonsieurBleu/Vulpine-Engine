@@ -13,5 +13,6 @@ out vec2 uvScreen;
 void main()
 {
     uvScreen = vertexPosition*0.5 + 0.5;
+
     gl_Position = vec4(vertexPosition.x, vertexPosition.y, 0.99999, 1.0);
 }

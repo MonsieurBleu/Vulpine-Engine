@@ -164,21 +164,39 @@ vec3 blur(sampler2D screenTexture, vec2 texCoords)
 
 void main()
 {
+    vec2 uv = uvScreen;
+    float aspectRatio = float(iResolution.y)/float(iResolution.x);
+
+    // Pixel art effect 
+        // float pixelSize = 0.003;
+
+        // /* Additionnal depth based resolution change */
+        // float d = texture(bDepth, uv).r*2.0;
+        // d = min(d, 0.05);
+        // d = d - mod(d, 0.005);
+        // pixelSize = 0.001 + pow(d, 2.0);
+
+        // uv = uv * vec2(1.0, aspectRatio);
+        // uv = uv - mod(uv, vec2(pixelSize)) + pixelSize*0.5;
+        // uv = uv / vec2(1.0, aspectRatio);
+    //////////////////
+
     vec3 BackgroundColor = vec3(0.2, 0.3, 0.3);
-    vec4 color = texture(bColor, uvScreen);
+    vec4 color = texture(bColor, uv);
     // _fragColor.rgb = mix(BackgroundColor, color.rgb, color.a);
 
     float chromaticAberation = 0.0 / float(iResolution.y);
-    vec2 rUv = max(uvScreen - chromaticAberation, 0.0);
-    vec2 gUv = min(uvScreen + chromaticAberation, 1.0);
-    vec2 bUv = uvScreen ;
+    vec2 rUv = max(uv - chromaticAberation, 0.0);
+    vec2 gUv = min(uv + chromaticAberation, 1.0);
+    vec2 bUv = uv;
     _fragColor.r = texture(bColor, rUv).r;
     _fragColor.g = texture(bColor, gUv).g;
     _fragColor.b = texture(bColor, bUv).b;
 
-    vec4 AO = getBlurAO(uvScreen);
+    vec4 AO = getBlurAO(uv);
     // _fragColor.rgb *= pow(1.0 - AO.rgb, vec3(1.0));
-    _fragColor.rgb = vec3(pow(AO.a, 5.0));
+    _fragColor.rgb *= vec3(1.0 - AO.a);
+    // _fragColor.rgb = pow(1.0 - AO.rgb, vec3(10.0));
 
     // vec3 bloom = blur(bEmmisive, uvScreen);
     // _fragColor.rgb += bloom;
@@ -186,7 +204,7 @@ void main()
     // _fragColor.rgb = texture(bAO, uvScreen).rgb;
 
     if(bloomEnable != 0) 
-        _fragColor.rgb += 0.125*texture(bEmmisive, uvScreen).rgb; 
+        _fragColor.rgb += 0.125*texture(bEmmisive, uv).rgb; 
 
     float exposure = 1.0;
     float gamma = 3.0;
@@ -199,7 +217,7 @@ void main()
     mapped = pow(mapped, vec3(1.0 / gamma));
     _fragColor.rgb = mapped;
 
-    // _fragColor.rgb = texture(bNormal, uvScreen).rgb;
+    _fragColor.rgb = texture(bNormal, uvScreen).rgb;
 
     _fragColor.a = 1.0;
 }
