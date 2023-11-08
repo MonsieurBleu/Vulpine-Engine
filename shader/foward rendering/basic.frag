@@ -9,5 +9,6 @@
 void main()
 {
     fragColor = vec4(color, 1.0);
-    #include code/SetFragment3DOutputs.glsl
+    fragNormal = vec3(1.f);
+    fragEmmisive.rgb = fragColor.rgb;
 };

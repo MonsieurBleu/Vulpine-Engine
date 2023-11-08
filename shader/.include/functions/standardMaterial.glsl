@@ -143,7 +143,36 @@ Material getMultiLightStandard()
                 vec3 direction = normalize(position - light.position.xyz);
                 
                 lightResult = getDSF(direction, light.color.rgb);
-                factor = distFactor*light.color.a;
+                factor = distFactor*distFactor*light.color.a;
+            }
+                break;
+
+            case 3 : 
+            {
+                vec3 sPos = light.position.xyz;
+
+                // A = cos * H 
+                vec3 pos1 = light.position.xyz;
+                vec3 pos2 = light.direction.xyz;
+                vec3 H = position-pos1;
+                float cosinus = dot(normalize(H), normalize(pos1-pos2));
+                float A = cosinus * length(H);
+                sPos = pos1+normalize(pos1-pos2)*A;
+                if(length(sPos-pos2) > length(pos1-pos2))
+                    sPos = pos1;
+                if(length(sPos-pos1) > length(pos1-pos2))
+                    sPos = pos2;
+
+                float maxDist = max(light.direction.a, 0.0001);
+                // float distFactor = max(maxDist - distance(position, sPos), 0.f)/maxDist;
+                float distFactor = max(maxDist - distance(sPos, position), 0.f)/maxDist;
+                vec3 direction = normalize(position - sPos);
+                // vec3 direction = -normalComposed;
+                // vec3 direction = vec3(0, -1, 0);
+                
+                // lightResult = getDSF(direction, light.color.rgb);
+                lightResult = getDSF(direction, light.color.rgb);
+                factor = distFactor*distFactor*light.color.a;
             }
                 break;
 

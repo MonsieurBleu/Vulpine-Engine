@@ -65,11 +65,14 @@ void main()
     vec4 NRM = texture(bMaterial, uv);
 
     mSpecular = 0.9;
-    mMetallic = 1.0 - NRM.a;
-    mRoughness = NRM.b;
+    // mMetallic = 1.0 - NRM.a;
+    mMetallic = 0.0;
+    // mRoughness = NRM.b;
+    mRoughness = 0.0;
     mEmmisive = 1.0 - CE.a;
     color = CE.rgb;
-    normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
+    // normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
+    normalComposed = normal;
     colorVCorrection = 1.0-pow(rgb2v(color), 5.0);
 
     viewDir = normalize(_cameraPosition - position);
@@ -95,23 +98,8 @@ void main()
     
     fragColor.rgb = mix(fragColor.rgb, color / pow(ambientLight+0.5, vec3(0.3)), mEmmisive);
 
-    fragEmmisive = 2.0 * fragColor.rgb *(rgb2v(fragColor.rgb) - ambientLight*0.5);
+    fragEmmisive = (mEmmisive*25.0) * 2.0 * fragColor.rgb *(rgb2v(fragColor.rgb) - ambientLight*0.5);
+    fragEmmisive += 0.5 * fragColor.rgb * (rgb2v(material.specular) - ambientLight);
 
-    // vec3 viewSpaceVector = (inverse(_cameraViewMatrix) * vec4(position, 1.0)).rgb;
-    // vec3 viewSpaceVector = transpose(inverse(mat3(_cameraViewMatrix)))*position;
-    // fragNormal = perturbNormal(viewNormal, viewSpaceVector, NRM.xy, uv);
-
-    // fragNormal = transpose(inverse(mat3(_cameraViewMatrix)))*normalComposed;
-
-    // fragNormal = normalComposed*0.5 + 0.5;
-
-    // fragNormal = (vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb;
-    fragNormal = (vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb;
-    fragNormal = normalize(fragNormal);
-    fragNormal = fragNormal*0.5 + 0.5;
-
-    fragNormal = normalComposed*0.5 + 0.5;
-
-    NRM.xy = NRM.xy * 2.0 - 1.0;
-    fragNormal = vec3(NRM.xy, sqrt( 1. - dot( NRM.xy, NRM.xy ) ))*0.5 + 0.5;
+    fragNormal = normalize((vec4(normal, 0.0) * inverse(_cameraViewMatrix)).rgb)*0.5 + 0.5;
 }

@@ -80,6 +80,7 @@ void main()
     vec3 fragColor = texture(bColor, uvScreen).rgb;
 
     vec3 normal = texture(gNormal, uvScreen).rgb * 2.0 - 1.0;
+    if(normal.x == normal.y && normal.y == normal.z && normal.y == 1.0) discard;
     // normal = (_cameraViewInverse * vec4(normal, 0.0)).rgb; 
     normal = normalize(normal);
 

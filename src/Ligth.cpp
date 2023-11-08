@@ -169,3 +169,48 @@ void PointLight::applyModifier(const ModelState3D& state)
     vec3 colx = vec3(state.modelMatrix[0][0], state.modelMatrix[1][0], state.modelMatrix[2][0]);
     infos._direction.x = tmpRadius * glm::length(colx);
 }
+
+TubeLight::TubeLight()
+{
+    infos._infos.a = TUBE_LIGHT;
+}
+
+TubeLight& TubeLight::setPos(vec3 p1, vec3 p2)
+{
+    infos._position = vec4(p1, infos._position.a);
+    infos._direction = vec4(p2, infos._direction.a);
+    tmpPos1 = p1;
+    tmpPos2 = p2;
+    return *this;
+}
+
+TubeLight& TubeLight::setColor(vec3 color)
+{
+    infos._color = vec4(color, infos._color.a);
+    return *this;
+}
+
+TubeLight& TubeLight::setRadius(float radius)
+{
+    infos._direction.a = radius;
+    tmpRadius = radius;
+    return *this;
+}
+
+TubeLight& TubeLight::setIntensity(float intensity)
+{
+    infos._color.a = intensity;
+    return *this;
+}
+
+// TODO : complete
+void TubeLight::applyModifier(const ModelState3D& state)
+{
+
+}
+
+vec3 TubeLight::position1() const {return vec3(infos._position.x, infos._position.y, infos._position.z);};
+vec3 TubeLight::position2() const {return vec3(infos._direction.x, infos._direction.y, infos._direction.z);};
+vec3 TubeLight::color() const {return vec3(infos._color.x, infos._color.y, infos._color.z);};
+float TubeLight::intensity() const {return infos._color.a;};
+float TubeLight::radius() const {return infos._direction.a;};

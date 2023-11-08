@@ -15,7 +15,8 @@ enum lightTypes
 {
     NO_LIGHT,
     DIRECTIONAL_LIGHT,
-    POINT_LIGHT
+    POINT_LIGHT,
+    TUBE_LIGHT
 };
 
 struct LightInfos
@@ -91,6 +92,7 @@ class TubeLight : public Light
     private : 
         vec3 tmpPos1 = vec3(0);
         vec3 tmpPos2 = vec3(0);
+        float tmpRadius = 1.0;
     
     public : 
         TubeLight();
@@ -99,16 +101,23 @@ class TubeLight : public Light
         TubeLight& setRadius(float radius);
         TubeLight& setIntensity(float intensity);
 
+        vec3 position1() const;
+        vec3 position2() const;
+        vec3 color() const;
+        float radius() const;
+        float intensity() const;
+
         void applyModifier(const ModelState3D& state) override;
 };
 
 typedef std::shared_ptr<Light> SceneLight;
 typedef std::shared_ptr<DirectionLight> SceneDirectionalLight;
 typedef std::shared_ptr<PointLight> ScenePointLight;
+typedef std::shared_ptr<TubeLight> SceneTubeLight;
 #define newLight std::make_shared<Light>
 #define newDirectionLight std::make_shared<DirectionLight>
 #define newPointLight std::make_shared<PointLight>
-
+#define newTubetLight std::make_shared<TubeLight>
 
 class LightBuffer
 {

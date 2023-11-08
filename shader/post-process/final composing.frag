@@ -204,10 +204,11 @@ void main()
     // _fragColor.rgb = texture(bAO, uvScreen).rgb;
 
     if(bloomEnable != 0) 
-        _fragColor.rgb += 0.125*texture(bEmmisive, uv).rgb; 
+        // _fragColor.rgb += 0.125*texture(bEmmisive, uv).rgb; 
+        _fragColor.rgb += 2.0*texture(bEmmisive, uv).rgb; 
 
     float exposure = 1.0;
-    float gamma = 3.0;
+    float gamma = 1.25;
     // float exposure = 1.0;
     // float gamma = 2.75;
 
@@ -217,7 +218,7 @@ void main()
     mapped = pow(mapped, vec3(1.0 / gamma));
     _fragColor.rgb = mapped;
 
-    //_fragColor.rgb = texture(bNormal, uvScreen).rgb;
+    // _fragColor.rgb = texture(bNormal, uvScreen).rgb;
 
     _fragColor.a = 1.0;
 }

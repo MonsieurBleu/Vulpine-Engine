@@ -183,3 +183,54 @@ void DirectionalLightHelper::update(bool forceUpdate)
 
     this->ObjectGroup::update(forceUpdate);
 }
+
+TubeLightHelper::TubeLightHelper(SceneTubeLight light) : light(light)
+{
+    GenericSharedBuffer pointsb(new char[sizeof(vec3)*2]);
+    vec3* points = (vec3*)pointsb.get();
+    points[0] = light->position1();
+    points[1] = light->position2();
+
+    GenericSharedBuffer colorsb(new char[sizeof(vec3)*2]);
+    vec3* colors = (vec3*)colorsb.get();
+    colors[0] = light->color();
+    colors[1] = light->color();
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(pointsb, 0, 2, 3, GL_FLOAT, false),
+            VertexAttribute(colorsb, 1, 2, 3, GL_FLOAT, false),
+            VertexAttribute(colorsb, 2, 2, 3, GL_FLOAT, false)
+        })
+    );
+
+    vao->generate();
+
+    static MeshMaterial material = 
+    MeshMaterial(
+        new ShaderProgram(
+            "shader/foward rendering/basic.frag", 
+            "shader/foward rendering/basic.vert", 
+            "", 
+            globals.standartShaderUniform3D()
+            )
+        );
+
+    ModelRef helper = newModel(
+        material,
+        vao,
+        ModelState3D().scaleScalar(1.0)
+    );
+
+    helper->defaultMode = GL_LINES;
+
+    add(helper);
+}
+
+/*
+    TODO : complete
+*/
+void TubeLightHelper::update(bool forceUpdate)
+{
+    this->ObjectGroup::update(forceUpdate);
+}

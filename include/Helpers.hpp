@@ -43,6 +43,18 @@ class DirectionalLightHelper : public ObjectGroup
         void update(bool forceUpdate = false) override;
 };
 
+class TubeLightHelper : public ObjectGroup
+{
+    private : 
+
+        const SceneTubeLight light;
+
+    public :
+
+        TubeLightHelper(SceneTubeLight light);
+        void update(bool forceUpdate = false) override;
+};
+
 
 
 #endif

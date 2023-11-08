@@ -316,11 +316,11 @@ void App::mainloop()
     
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
-            .setColor(vec3(1.0, 0.85, 0.75))
+            .setColor(vec3(71, 107, 143)/vec3(255))
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0)
             );
-    // scene.add(sun);
+    scene.add(sun);
     
 
 
@@ -331,6 +331,8 @@ void App::mainloop()
         readOBJ("ressources/material demo/d20.obj"),
         readOBJ("ressources/material demo/cube.obj"),
     };
+
+    glLineWidth(15.0);
 
     #ifdef MATERIAL_TEST
         #define TEST_KTX
@@ -426,17 +428,16 @@ void App::mainloop()
 
         materialTesters->update(true);
         scene.add(materialTesters);
-        glLineWidth(5.0);
     #else
         ModelRef ground = newModel();
         ground->setMaterial(uvPhong);
         ground->setVao(mtGeometry[2]);
 
         Texture2D color;        
-        color.loadFromFileKTX("ressources/material demo/ktx/0CE.ktx");
+        color.loadFromFileKTX("ressources/material demo/ktx/1CE.ktx");
 
         Texture2D matmap;
-        matmap.loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx");
+        matmap.loadFromFileKTX("ressources/material demo/ktx/1NRM.ktx");
 
         ground->setMap(color, 0);
         ground->setMap(matmap, 1);
@@ -445,10 +446,13 @@ void App::mainloop()
         scene.add(ground);
 
 
-        ScenePointLight test = newPointLight();
-        test->setColor(vec3(0, 0.5, 1.0)).setIntensity(1000).setRadius(2.0);
+        SceneTubeLight test = newTubetLight();
+        test->setColor(vec3(0, 0.5, 1.0))
+            .setIntensity(1.0)
+            .setRadius(3.0)
+            .setPos(vec3(-2, 0, -2), vec3(2, 0, 2));
         scene.add(test);
-        scene.add(std::make_shared<PointLightHelper>(test));
+        scene.add(std::make_shared<TubeLightHelper>(test));
     
     #endif
 
