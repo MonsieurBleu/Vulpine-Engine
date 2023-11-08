@@ -17,7 +17,7 @@ float mEmmisive = 0.0;
 
 vec3 normalComposed;
 vec3 viewDir;
-vec3 ambientLight = vec3(0.2);
+vec3 ambientLight = vec3(0.1);
 float colorVCorrection;
 
 struct Material

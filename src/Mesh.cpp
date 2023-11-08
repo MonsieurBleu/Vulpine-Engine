@@ -276,3 +276,12 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
 
     return newVao;
 }
+
+
+ModelRef  MeshModel3D::copyWithSharedMesh()
+{
+    ModelRef m = newModel(material, vao);
+    m->maps = maps;
+    m->mapsLocation = mapsLocation;
+    return m;
+}

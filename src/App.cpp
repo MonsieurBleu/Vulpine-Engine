@@ -270,7 +270,7 @@ void App::mainloop()
     skybox->setMap(skyTexture, 0);
     skybox->invertFaces = true;
     skybox->depthWrite = false;
-    scene.add(skybox);
+    // scene.add(skybox);
     
     {
     // ModelRef jug = newModel(
@@ -320,7 +320,7 @@ void App::mainloop()
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0)
             );
-    scene.add(sun);
+    // scene.add(sun);
     
 
 
@@ -332,101 +332,127 @@ void App::mainloop()
         readOBJ("ressources/material demo/cube.obj"),
     };
 
-    #define TEST_KTX
-
-    #ifndef TEST_KTX
-    std::vector<std::string> mtTextureName
-    {
-        "ressources/material demo/png/0",
-        "ressources/material demo/png/1",
-        "ressources/material demo/png/2",
-        "ressources/material demo/png/3",
-        "ressources/material demo/png/4",
-        "ressources/material demo/png/5",
-        "ressources/material demo/png/6",
-        "ressources/material demo/png/7",
-        "ressources/material demo/png/8",
-        "ressources/material demo/png/9",
-        "ressources/material demo/png/10",
-        "ressources/material demo/png/11",
-        "ressources/material demo/ktx/12"
-    };
-    #else
-    std::vector<std::string> mtTextureName
-    {
-        "ressources/material demo/ktx/0",
-        "ressources/material demo/ktx/1",
-        "ressources/material demo/ktx/2",
-        "ressources/material demo/ktx/3",
-        "ressources/material demo/ktx/4",
-        "ressources/material demo/ktx/5",
-        "ressources/material demo/ktx/6",
-        "ressources/material demo/ktx/7",
-        "ressources/material demo/ktx/8",
-        "ressources/material demo/ktx/9",
-        "ressources/material demo/ktx/10",
-        "ressources/material demo/ktx/11",
-        "ressources/material demo/ktx/12"
-    };
-    #endif
-
-    // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
-
-    BenchTimer mtTimer;
-    mtTimer.start();
-    for(size_t t = 0; t < mtTextureName.size(); t++)
-    {
-        Texture2D color;
-        Texture2D material;
+    #ifdef MATERIAL_TEST
+        #define TEST_KTX
 
         #ifndef TEST_KTX
-        std::string namec = mtTextureName[t] + "CE.png";
-        color.loadFromFile(namec.c_str())
-            .setFormat(GL_RGBA)
-            .setInternalFormat(GL_SRGB8_ALPHA8)
-            .generate();
-
-        std::string namem = mtTextureName[t] + "NRM.png";
-        material.loadFromFile(namem.c_str())
-            .setFormat(GL_RGBA)
-            .setInternalFormat(GL_SRGB8_ALPHA8)
-            .generate();
+        std::vector<std::string> mtTextureName
+        {
+            "ressources/material demo/png/0",
+            "ressources/material demo/png/1",
+            "ressources/material demo/png/2",
+            "ressources/material demo/png/3",
+            "ressources/material demo/png/4",
+            "ressources/material demo/png/5",
+            "ressources/material demo/png/6",
+            "ressources/material demo/png/7",
+            "ressources/material demo/png/8",
+            "ressources/material demo/png/9",
+            "ressources/material demo/png/10",
+            "ressources/material demo/png/11",
+            "ressources/material demo/ktx/12"
+        };
         #else
-        std::string namec = mtTextureName[t] + "CE.ktx";
-        color.loadFromFileKTX(namec.c_str());
-        std::string namem = mtTextureName[t] + "NRM.ktx";
-        material.loadFromFileKTX(namem.c_str());
+        std::vector<std::string> mtTextureName
+        {
+            "ressources/material demo/ktx/0",
+            "ressources/material demo/ktx/1",
+            "ressources/material demo/ktx/2",
+            "ressources/material demo/ktx/3",
+            "ressources/material demo/ktx/4",
+            "ressources/material demo/ktx/5",
+            "ressources/material demo/ktx/6",
+            "ressources/material demo/ktx/7",
+            "ressources/material demo/ktx/8",
+            "ressources/material demo/ktx/9",
+            "ressources/material demo/ktx/10",
+            "ressources/material demo/ktx/11",
+            "ressources/material demo/ktx/12"
+        };
         #endif
 
-        for(size_t g = 0; g < mtGeometry.size(); g++)
+        // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
+
+        BenchTimer mtTimer;
+        mtTimer.start();
+        for(size_t t = 0; t < mtTextureName.size(); t++)
         {
-            std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
-            helper->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-            helper->state.scaleScalar(2.0);
-            materialTesters->add(helper);
+            Texture2D color;
+            Texture2D material;
 
-            ModelRef model = newModel();
-            model->setMaterial(uvPhong);
-            model->setVao(mtGeometry[g]);
+            #ifndef TEST_KTX
+            std::string namec = mtTextureName[t] + "CE.png";
+            color.loadFromFile(namec.c_str())
+                .setFormat(GL_RGBA)
+                .setInternalFormat(GL_SRGB8_ALPHA8)
+                .generate();
 
-            model->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-            model->setMap(color, 0);
-            model->setMap(material, 1);
+            std::string namem = mtTextureName[t] + "NRM.png";
+            material.loadFromFile(namem.c_str())
+                .setFormat(GL_RGBA)
+                .setInternalFormat(GL_SRGB8_ALPHA8)
+                .generate();
+            #else
+            std::string namec = mtTextureName[t] + "CE.ktx";
+            color.loadFromFileKTX(namec.c_str());
+            std::string namem = mtTextureName[t] + "NRM.ktx";
+            material.loadFromFileKTX(namem.c_str());
+            #endif
 
-            materialTesters->add(model);
-            scene.add(model);
+            for(size_t g = 0; g < mtGeometry.size(); g++)
+            {
+                std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
+                helper->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
+                helper->state.scaleScalar(2.0);
+                materialTesters->add(helper);
+
+                ModelRef model = newModel();
+                model->setMaterial(uvPhong);
+                model->setVao(mtGeometry[g]);
+
+                model->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
+                model->setMap(color, 0);
+                model->setMap(material, 1);
+
+                materialTesters->add(model);
+                scene.add(model);
+            }
         }
-    }
-    mtTimer.end();
-    std::cout 
-    << TERMINAL_OK << "Loaded all model images in "
-    << TERMINAL_TIMER << mtTimer.getElapsedTime()
-    << TERMINAL_OK << " s\n" << TERMINAL_RESET;
+        mtTimer.end();
+        std::cout 
+        << TERMINAL_OK << "Loaded all model images in "
+        << TERMINAL_TIMER << mtTimer.getElapsedTime()
+        << TERMINAL_OK << " s\n" << TERMINAL_RESET;
 
-    materialTesters->update(true);
-    scene.add(materialTesters);
+        materialTesters->update(true);
+        scene.add(materialTesters);
+        glLineWidth(5.0);
+    #else
+        ModelRef ground = newModel();
+        ground->setMaterial(uvPhong);
+        ground->setVao(mtGeometry[2]);
 
-    glLineWidth(5.0);
+        Texture2D color;        
+        color.loadFromFileKTX("ressources/material demo/ktx/0CE.ktx");
+
+        Texture2D matmap;
+        matmap.loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx");
+
+        ground->setMap(color, 0);
+        ground->setMap(matmap, 1);
+        ground->state.setScale(vec3(10, 0.5, 10)).setPosition(vec3(0, -0.5, 0));
+
+        scene.add(ground);
+
+
+        ScenePointLight test = newPointLight();
+        test->setColor(vec3(0, 0.5, 1.0)).setIntensity(1000).setRadius(2.0);
+        scene.add(test);
+        scene.add(std::make_shared<PointLightHelper>(test));
+    
+    #endif
+
+
 
     while(state != quit)
     {

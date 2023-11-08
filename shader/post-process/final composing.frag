@@ -217,7 +217,7 @@ void main()
     mapped = pow(mapped, vec3(1.0 / gamma));
     _fragColor.rgb = mapped;
 
-    _fragColor.rgb = texture(bNormal, uvScreen).rgb;
+    //_fragColor.rgb = texture(bNormal, uvScreen).rgb;
 
     _fragColor.a = 1.0;
 }

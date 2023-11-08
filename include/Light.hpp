@@ -86,6 +86,22 @@ class PointLight : public Light
         void applyModifier(const ModelState3D& state) override;
 };
 
+class TubeLight : public Light
+{
+    private : 
+        vec3 tmpPos1 = vec3(0);
+        vec3 tmpPos2 = vec3(0);
+    
+    public : 
+        TubeLight();
+        TubeLight& setPos(vec3 p1, vec3 p2);
+        TubeLight& setColor(vec3 color);
+        TubeLight& setRadius(float radius);
+        TubeLight& setIntensity(float intensity);
+
+        void applyModifier(const ModelState3D& state) override;
+};
+
 typedef std::shared_ptr<Light> SceneLight;
 typedef std::shared_ptr<DirectionLight> SceneDirectionalLight;
 typedef std::shared_ptr<PointLight> ScenePointLight;
@@ -114,5 +130,8 @@ class LightBuffer
 };
 
 std::ostream& operator<<(std::ostream& os, const Light &l);
+
+
+
 
 #endif

@@ -69,9 +69,6 @@ class Mesh
 class MeshModel3D : public Mesh
 {
     protected :
-
-        ShaderUniformGroup uniforms;
-
         void createUniforms();
 
     public :
@@ -89,7 +86,11 @@ class MeshModel3D : public Mesh
             : Mesh(material, vao), state(state)
             {createUniforms();};
 
+
+        ModelRef copyWithSharedMesh();
+
         ModelState3D state;
+        ShaderUniformGroup uniforms;
 
         MeshModel3D& loadFromFolder(
             const std::string folderPath, 

@@ -29,6 +29,13 @@ class ModelState3D
         return *this;
     }
 
+    ModelState3D& setScale(vec3 newScale)
+    {
+        scale = newScale;
+        needUpdate = true;
+        return *this;
+    }
+
     ModelState3D& setPosition(vec3 newPosition)
     {
         position = newPosition;
