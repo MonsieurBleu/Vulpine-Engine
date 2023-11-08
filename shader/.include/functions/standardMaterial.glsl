@@ -76,7 +76,9 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
 
     #ifdef BLINN
         float specularExponent = 36.0 - 32.0*pow(mRoughness, 0.5);
+        // specularExponent *= 10.0;
         specular = pow(max(dot(normal, halfwayDir), 0.0), specularExponent);
+        specular *= diffuse;
     #else
         float specularExponent = 9.0 - 8.0*pow(mRoughness, 0.5);
         vec3 reflectDir = reflect(lightDirection, nNormal); 
@@ -149,30 +151,33 @@ Material getMultiLightStandard()
 
             case 3 : 
             {
-                vec3 sPos = light.position.xyz;
-
-                // A = cos * H 
+                vec3 sPos;
                 vec3 pos1 = light.position.xyz;
                 vec3 pos2 = light.direction.xyz;
                 vec3 H = position-pos1;
                 float cosinus = dot(normalize(H), normalize(pos1-pos2));
                 float A = cosinus * length(H);
                 sPos = pos1+normalize(pos1-pos2)*A;
-                if(length(sPos-pos2) > length(pos1-pos2))
-                    sPos = pos1;
-                if(length(sPos-pos1) > length(pos1-pos2))
-                    sPos = pos2;
+
+                float segL = length(pos1-pos2);
+                sPos = mix(sPos, pos1, step(segL, length(sPos-pos2)));
+                sPos = mix(sPos, pos2, step(segL, length(sPos-pos1)));
+
+                // if(light.direction.a < distance(position, sPos))
+
+                bool invertDir = 0.2*light.direction.a > distance(position, sPos);
+                sPos += 0.2*light.direction.a*normalize(position-sPos);
 
                 float maxDist = max(light.direction.a, 0.0001);
-                // float distFactor = max(maxDist - distance(position, sPos), 0.f)/maxDist;
                 float distFactor = max(maxDist - distance(sPos, position), 0.f)/maxDist;
                 vec3 direction = normalize(position - sPos);
-                // vec3 direction = -normalComposed;
-                // vec3 direction = vec3(0, -1, 0);
+                direction = invertDir ? -direction : direction;
+                // direction = -direction;
                 
-                // lightResult = getDSF(direction, light.color.rgb);
+                // vec3 direction = -normalComposed;
+                
                 lightResult = getDSF(direction, light.color.rgb);
-                factor = distFactor*distFactor*light.color.a;
+                factor = distFactor*light.color.a;
             }
                 break;
 
