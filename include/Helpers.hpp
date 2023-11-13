@@ -48,6 +48,7 @@ class TubeLightHelper : public ObjectGroup
     private : 
 
         const SceneTubeLight light;
+        ModelRef helper;
 
     public :
 

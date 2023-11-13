@@ -46,6 +46,7 @@ class VertexAttribute
         void genBuffer();
         void sendAllToGPU();
         void setFormat();
+        char* getBufferAddr();
 
         GLuint getLocation() const {return location;};
         GLuint getHandle() const {return handle;};

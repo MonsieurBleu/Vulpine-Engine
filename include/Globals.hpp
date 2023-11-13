@@ -50,7 +50,7 @@ class Globals
         const glm::vec2 mousePosition() const;
 
         BenchTimer appTime;
-        BenchTimer unposedTime;
+        BenchTimer unpausedTime;
 
         std::vector<ShaderUniform> standartShaderUniform2D() const;
         std::vector<ShaderUniform> standartShaderUniform3D() const;

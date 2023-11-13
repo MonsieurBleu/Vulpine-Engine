@@ -79,6 +79,24 @@ void Scene::addGroupElement(ObjectGroupRef group)
     }
 }
 
+void Scene::removeGroupElement(ObjectGroupRef group)
+{
+    for(auto i = group->meshes.begin(); i != group->meshes.end(); i++)
+    {
+        remove(*i);
+    }
+
+    for(auto i = group->lights.begin(); i != group->lights.end(); i++)
+    {
+        remove(*i);
+    }
+
+    for(auto i = group->children.begin(); i != group->children.end(); i++)
+    {
+        removeGroupElement(*i);
+    }
+}
+
 void Scene::add(ObjectGroupRef group)
 {
     addGroupElement(group);
@@ -118,4 +136,49 @@ void Scene::draw()
     }
 
     ligthBuffer.reset();
+}
+
+void Scene::remove(ModelRef mesh)
+{
+    for(auto i = meshes.begin(); i != meshes.end(); i++)
+    {
+        if(i->material.get() == mesh->getMaterial().get())
+            for(auto j = i->meshes.begin(); j != i->meshes.end(); j++)
+                if(j->get() == mesh.get())
+                {
+                    i->meshes.erase(j);
+                    return;
+                }
+    }
+
+    for(auto i = unsortedMeshes.begin(); i != unsortedMeshes.end(); i++)
+    {
+        if(i->get() == mesh.get())
+        {
+            unsortedMeshes.erase(i);
+            return;
+        }
+    }
+}
+
+void Scene::remove(SceneLight light)
+{
+    for(auto i = lights.begin(); i != lights.end(); i++)
+        if(i->get() == light.get())
+        {
+            lights.erase(i);
+            return;
+        }
+}
+
+void Scene::remove(ObjectGroupRef group)
+{
+    removeGroupElement(group);
+
+    for(auto i = groups.begin(); i != groups.end(); i++)
+        if(i->get() == group.get())
+        {
+            groups.erase(i);
+            return;
+        }
 }

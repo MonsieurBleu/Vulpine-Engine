@@ -75,6 +75,8 @@ void VertexAttribute::setFormat()
     glVertexAttribFormat(location, perVertexSize, type, GL_FALSE, 0);
 }
 
+char* VertexAttribute::getBufferAddr(){return buffer.get();};
+
 
 VertexAttributeGroup::VertexAttributeGroup(std::vector<VertexAttribute> &newAttributes)
 {

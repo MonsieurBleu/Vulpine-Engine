@@ -8,6 +8,9 @@ vec3 color;
 #include uniform/Model3D.glsl
 #include uniform/Ligths.glsl
 
+layout (location = 32) uniform vec3 _mageColor;
+layout (location = 33) uniform float _mageHP;
+
 layout (binding = 0) uniform sampler2D bColor;
 layout (binding = 1) uniform sampler2D bMaterial;
 
@@ -67,8 +70,11 @@ void main()
     mSpecular = 0.9;
     mMetallic = 1.0 - NRM.a;
     mRoughness = NRM.b;
-    mEmmisive = 1.0 - CE.a;
-    color = CE.rgb;
+    // mEmmisive = 1.0 - CE.a;
+    // color = CE.rgb;
+    color = _mageColor;
+    color = mix(color*0.25, color, _mageHP/100.0);
+    // mEmmisive = 0.35*(1.0 - rgb2v(color));
     normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
 
     colorVCorrection = 1.0-pow(rgb2v(color), 5.0);

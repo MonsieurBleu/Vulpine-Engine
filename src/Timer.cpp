@@ -12,14 +12,45 @@ float BenchTimer::getElapsedTime() const {return elapsedTime;};
 
 const float* BenchTimer::getElapsedTimeAddr() const {return &elapsedTime;};
 
+void BenchTimer::toggle()
+{
+    if(paused)
+        resume();
+    else
+        pause();
+}
+
+void BenchTimer::resume()
+{
+    resumePending = true;
+}
+
+void BenchTimer::pause()
+{
+    resumePending = false;
+    paused = true;
+}
+
+bool BenchTimer::isPaused(){return paused;};
 
 void BenchTimer::start()
 {
+    if(paused)
+    {
+        if(resumePending)
+        {
+            paused = false;
+            resumePending = false;
+        }
+        else return;
+    }
     lastStartTime = clockmicro::now();
 }
 
 void BenchTimer::end()
 {
+    if(paused) return;
+
     clockmicro::time_point now = clockmicro::now();
     delta = now-lastStartTime;
     lastTimeUpdate = now;

@@ -33,6 +33,7 @@ class Scene
         std::list<ObjectGroupRef> groups;
 
         void addGroupElement(ObjectGroupRef group);
+        void removeGroupElement(ObjectGroupRef group);
 
     public :
         Scene();
@@ -40,6 +41,10 @@ class Scene
         void add(SceneLight light);
         void add(ObjectGroupRef group);
         void draw();
+
+        void remove(ModelRef mesh);
+        void remove(SceneLight light);
+        void remove(ObjectGroupRef group);
 };
 
 

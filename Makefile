@@ -6,14 +6,17 @@ LINKFLAGS = libglfw3.a libglfw3dll.a
 # OBJ = $(wildcard obj/*.cpp)
 INCLUDE = -Iinclude 
 EXEC = GameEngine.exe
-DEL_win = del /Q /F
+DEL_win = del /Q /F /S
 
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
 ODIR=obj
 IDIR=include
 SDIR=src
 
-SOURCES := $(wildcard $(SDIR)/*.cpp)
+# rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
+# SOURCES := $(call rwildcard,$(SDIR),*.cpp)
+SOURCES := $(call rwildcard,$(SDIR),*.cpp)
 OBJ := $(ODIR)/main.o
 OBJ += $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
 

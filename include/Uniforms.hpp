@@ -205,7 +205,7 @@ class ShaderUniform
         // ============| FLOATS 3D
 
         ShaderUniform(const vec3 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
+            : data(additionalData), 
               dataState(copiedInAdditionalData),
               location(location),
               type(_3fv)

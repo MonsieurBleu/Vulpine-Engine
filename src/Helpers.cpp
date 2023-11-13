@@ -216,7 +216,7 @@ TubeLightHelper::TubeLightHelper(SceneTubeLight light) : light(light)
             )
         );
 
-    ModelRef helper = newModel(
+    helper = newModel(
         material,
         vao,
         ModelState3D().scaleScalar(1.0)
@@ -232,5 +232,13 @@ TubeLightHelper::TubeLightHelper(SceneTubeLight light) : light(light)
 */
 void TubeLightHelper::update(bool forceUpdate)
 {
+    MeshVao vao = helper->getVao();
+
+    vec3* points = (vec3*)vao->attributes[0].getBufferAddr();
+    points[0] = light->position1();
+    points[1] = light->position2();
+
+    vao->attributes[0].sendAllToGPU();
+
     this->ObjectGroup::update(forceUpdate);
 }

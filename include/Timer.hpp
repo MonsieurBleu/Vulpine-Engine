@@ -16,6 +16,9 @@ class BenchTimer
 
     private : 
 
+        bool paused = false;
+        bool resumePending = false;
+
         duration delta;
         duration min;
         duration max;
@@ -44,6 +47,11 @@ class BenchTimer
 
         void end();
         void start();
+
+        void toggle();
+        void resume();
+        void pause();
+        bool isPaused();
 
         void setAvgLengthMS(int64_t newLength);
 

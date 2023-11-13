@@ -52,6 +52,7 @@ class Texture2D
         GLuint getHandle(){return handle;};
         GLenum getAttachement(){return _attachement;};
         ivec2 getResolution(){return _resolution;};
+        const ivec2* getResolutionAddr() const {return &_resolution;};
 };
 
 #endif

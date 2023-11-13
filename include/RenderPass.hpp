@@ -60,4 +60,17 @@ class BloomPass : public RenderPass
         void render(Camera &camera);
 };
 
+class SkyboxPass : public RenderPass
+{
+    private : 
+        FrameBuffer inputs;
+        Texture2D skybox;
+        std::string shaderFileName;
+
+    public : 
+        SkyboxPass(Texture2D &skybox, std::string shaderFileName);
+        void setup();
+        void render(Camera &camera);
+};
+
 #endif

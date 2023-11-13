@@ -25,6 +25,10 @@
 #include <Helpers.hpp>
 
 
+#ifdef DEMO_MAGE_BATTLE
+    #include <demos/Mage_Battle/Team.hpp>
+#endif
+
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
@@ -151,6 +155,7 @@ void App::mainInput(double deltatime)
 void App::mainloopStartRoutine()
 {
     globals.appTime.start();
+    globals.unpausedTime.start();
 }
 
 void App::mainloopPreRenderRoutine()
@@ -162,6 +167,7 @@ void App::mainloopEndRoutine()
 {
     glfwSwapBuffers(window);
     globals.appTime.end();
+    globals.unpausedTime.end();
 }
 
 void App::mainloop()
@@ -260,17 +266,33 @@ void App::mainloop()
         uvBasic, 
         readOBJ("ressources/test/skybox/skybox.obj", false),
         ModelState3D()
-            .scaleScalar(10.0)
+            .scaleScalar(10000000.0)
             .setPosition(vec3(0.0, 0.0, 0.0)));
 
-    Texture2D skyTexture =Texture2D()
-            .loadFromFile("ressources/test/skybox/puresky2.png")
+    Texture2D skyTexture = Texture2D();
+    
+    #define GENERATED_SKYBOX
+
+    #ifdef GENERATED_SKYBOX
+        skyTexture
+            .setResolution(globals.screenResolution())
+            .setInternalFormat(GL_SRGB)
+            .setFormat(GL_RGB)
+            .setPixelType(GL_FLOAT)
+            .setFilter(GL_LINEAR)
+            .setWrapMode(GL_CLAMP_TO_EDGE)
             .generate();
+
+        SkyboxPass skyboxPass(skyTexture, "nightPixelArt.frag");
+        skyboxPass.setup();
+    #else
+        skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
+    #endif
 
     skybox->setMap(skyTexture, 0);
     skybox->invertFaces = true;
     skybox->depthWrite = false;
-    // scene.add(skybox);
+    scene.add(skybox);
     
     {
     // ModelRef jug = newModel(
@@ -316,7 +338,7 @@ void App::mainloop()
     
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
-            .setColor(vec3(71, 107, 143)/vec3(255))
+            .setColor(vec3(143, 107, 71)/vec3(255))
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0)
             );
@@ -429,30 +451,78 @@ void App::mainloop()
         materialTesters->update(true);
         scene.add(materialTesters);
     #else
-        ModelRef ground = newModel();
-        ground->setMaterial(uvPhong);
-        ground->setVao(mtGeometry[2]);
-
-        Texture2D color;        
-        color.loadFromFileKTX("ressources/material demo/ktx/1CE.ktx");
-
-        Texture2D matmap;
-        matmap.loadFromFileKTX("ressources/material demo/ktx/1NRM.ktx");
-
-        ground->setMap(color, 0);
-        ground->setMap(matmap, 1);
-        ground->state.setScale(vec3(10, 0.5, 10)).setPosition(vec3(0, -0.5, 0));
-
+    
+    #ifdef DEMO_MAGE_BATTLE
+        ModelRef ground = newModel(uvPhong, mtGeometry[2]);
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2CE.ktx"), 0);
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2NRM.ktx"), 1);
+        ground->state.setScale(vec3(ARENA_RADIUS*2.0, 0.5, ARENA_RADIUS*2.0)).setPosition(vec3(0, -0.5, 0));
         scene.add(ground);
+        
+ 
+        // SceneTubeLight test = newTubetLight();
+        // test->setColor(vec3(0, 0.5, 1.0))
+        //     .setIntensity(1.0)
+        //     .setRadius(3.0)
+        //     .setPos(vec3(-2, 0, -2), vec3(2, 0, 2));
+        // scene.add(test);
+        // scene.add(std::make_shared<TubeLightHelper>(test));
 
 
-        SceneTubeLight test = newTubetLight();
-        test->setColor(vec3(0, 0.5, 1.0))
-            .setIntensity(1.0)
-            .setRadius(3.0)
-            .setPos(vec3(-2, 0, -2), vec3(2, 0, 2));
-        scene.add(test);
-        scene.add(std::make_shared<TubeLightHelper>(test));
+        MeshMaterial MageMaterial(
+                new ShaderProgram(
+                    "shader/demos/Mage_Battle/Mage.frag", 
+                    "shader/demos/Mage_Battle/Mage.vert", 
+                    "", 
+                    globals.standartShaderUniform3D() 
+                ));
+
+        ModelRef MageTestModelAttack = newModel(MageMaterial, mtGeometry[1]);
+        MageTestModelAttack->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
+            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+        MageTestModelAttack->state.scaleScalar(0.5);
+
+        ModelRef MageTestModelHeal = newModel(MageMaterial, mtGeometry[0]);
+        MageTestModelHeal->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
+            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+        MageTestModelHeal->state.scaleScalar(0.35);
+
+        ModelRef MageTestModelTank = newModel(MageMaterial, mtGeometry[2]);
+        MageTestModelTank->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
+            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+        MageTestModelTank->state.scaleScalar(0.5);
+
+        // MageRef MageTest = SpawnNewMage(MageTestModel, vec3(0), vec3(0), DEBUG);
+        // scene.add(MageTest->getModel());
+
+        Team::healModel = MageTestModelHeal;
+        Team::attackModel = MageTestModelAttack;
+        Team::tankModel = MageTestModelTank; 
+
+        int unitsNB = 2000;
+        int healNB = unitsNB*0.2f;
+        int attackNB = unitsNB*0.7f;
+        int tankNB = unitsNB*0.1f;
+
+        Team red;
+        red.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xCE, 0x20, 0x29)/vec3(255.f));
+
+        Team blue;
+        blue.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x28, 0x32, 0xC2)/vec3(255.f));
+
+        Team yellow;
+        yellow.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xFD, 0xD0, 0x17)/vec3(255.f));
+
+        Team green;
+        green.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x3C, 0xB0, 0x43)/vec3(255.f));
+
+        Team magenta;
+        // magenta.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(0, 0, 0), ARENA_RADIUS*0.3, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
+
+
+        glLineWidth(3.0);
+        globals.unpausedTime.pause();
+    #endif
     
     #endif
 
@@ -486,6 +556,15 @@ void App::mainloop()
                 PostProcessing.reset();
                 uvPhong->reset();
                 skybox->getMaterial()->reset();
+
+                #ifdef GENERATED_SKYBOX
+                    skyboxPass.getShader().reset();
+                #endif
+
+                #ifdef DEMO_MAGE_BATTLE
+                    MageMaterial->reset();
+                #endif
+
                 break;
             
             case GLFW_KEY_F2:
@@ -517,6 +596,10 @@ void App::mainloop()
                 vsync = !vsync;
                 glfwSwapInterval(vsync ? 1 : 0);
                 break;
+            
+            case GLFW_KEY_TAB :
+                globals.unpausedTime.toggle();
+                break;
 
             default:
                 break;
@@ -528,10 +611,25 @@ void App::mainloop()
         // materialTesters->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime(), 0.0));
 
         mainloopPreRenderRoutine();
+
+        #ifdef GENERATED_SKYBOX
+            skyboxPass.render(camera);
+        #endif
+
         if(wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+
+        #ifdef DEMO_MAGE_BATTLE
+            red.tick();
+            blue.tick();
+            yellow.tick();
+            green.tick();
+            magenta.tick();
+        #endif
+
 
         renderBuffer.activate();
         // ligthBuffer.activate(0);

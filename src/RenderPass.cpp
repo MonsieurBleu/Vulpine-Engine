@@ -167,3 +167,32 @@ void BloomPass::render(Camera &camera)
         shader.deactivate();
     }
 }
+
+SkyboxPass::SkyboxPass(Texture2D &skybox, std::string shaderFileName) : shaderFileName(shaderFileName)
+{
+    this->skybox = skybox; 
+    this->skybox.setAttachement(GL_COLOR_ATTACHMENT0);
+}
+
+void SkyboxPass::setup()
+{
+    shader = ShaderProgram(
+        "shader/skybox/" + shaderFileName, 
+        "shader/post-process/basic.vert", 
+        "",
+        globals.standartShaderUniform2D());
+
+    FBO = FrameBuffer().addTexture(skybox).generate();
+}
+
+void SkyboxPass::render(Camera &camera)
+{
+    if(isEnable)
+    {
+        FBO.activate();
+        shader.activate();
+        globals.drawFullscreenQuad();
+        shader.deactivate();
+        FBO.deactivate();
+    }
+}
