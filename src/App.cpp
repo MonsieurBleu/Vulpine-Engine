@@ -284,6 +284,7 @@ void App::mainloop()
             .generate();
 
         SkyboxPass skyboxPass(skyTexture, "nightPixelArt.frag");
+        // SkyboxPass skyboxPass(skyTexture, "basic.frag");
         skyboxPass.setup();
     #else
         skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
@@ -499,7 +500,7 @@ void App::mainloop()
         Team::attackModel = MageTestModelAttack;
         Team::tankModel = MageTestModelTank; 
 
-        int unitsNB = 2000;
+        int unitsNB = 10;
         int healNB = unitsNB*0.2f;
         int attackNB = unitsNB*0.7f;
         int tankNB = unitsNB*0.1f;
@@ -525,8 +526,6 @@ void App::mainloop()
     #endif
     
     #endif
-
-
 
     while(state != quit)
     {
@@ -607,8 +606,6 @@ void App::mainloop()
         }
 
         mainInput(globals.appTime.getDelta());
-
-        // materialTesters->state.setRotation(vec3(0.0, globals.appTime.getElapsedTime(), 0.0));
 
         mainloopPreRenderRoutine();
 

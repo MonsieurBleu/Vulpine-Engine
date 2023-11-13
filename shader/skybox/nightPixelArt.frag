@@ -43,7 +43,7 @@ void draw_auroras(inout vec3 color, vec2 uv) {
 void draw_stars(inout vec3 color, vec3 uv) {
     float t = sin(iTime * 2.0 * gold_noise3(-uv, 1)) * 0.5 + 0.5;
     //color += step(0.99, stars) * t;
-    color += smoothstep(0.975, 1.0, gold_noise3(uv, 10)) * t;
+    color += smoothstep(0.975, 1.0, gold_noise3(uv, 10.f)) * t;
 }
 
 

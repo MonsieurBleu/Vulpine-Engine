@@ -182,13 +182,15 @@ void SkyboxPass::setup()
         "",
         globals.standartShaderUniform2D());
 
-    FBO = FrameBuffer().addTexture(skybox).generate();
+    FBO = FrameBuffer().addTexture(skybox.setAttachement(0)).generate();
 }
 
 void SkyboxPass::render(Camera &camera)
 {
     if(isEnable)
     {
+        // std::cout << FBO.getTexture(0).getHandle() << " " << FBO.getTexture(0).getAttachement() << "\n";
+        // std::cout << shader.getProgram() << "\n";
         FBO.activate();
         shader.activate();
         globals.drawFullscreenQuad();

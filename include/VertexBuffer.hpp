@@ -61,6 +61,8 @@ class VertexAttributeGroup
 
         bool handleCreated = false;
 
+        bool generated = false;
+
     public : 
 
         std::vector<VertexAttribute> attributes;
