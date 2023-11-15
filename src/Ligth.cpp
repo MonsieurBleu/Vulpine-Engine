@@ -16,6 +16,27 @@ std::ostream& operator<<(std::ostream& os, const Light &l)
     return os;
 }
 
+void Light::activateShadows()
+{
+    if(shadowMap.getHandle() != 0) return;
+
+    infos._infos.b |= LIGHT_SHADOW_ACTIVATED;
+    shadowMap.addTexture(
+        Texture2D()
+            .setFilter(GL_LINEAR)
+            .setResolution(cameraResolution)
+            .setInternalFormat(GL_DEPTH_COMPONENT32F)
+            .setFormat(GL_DEPTH_COMPONENT)
+            .setPixelType(GL_FLOAT)
+            .setAttachement(GL_DEPTH_ATTACHMENT)
+            .generate()
+    ).generate();
+}
+
+void Light::updateShadowCamera()
+{
+}
+
 const void* Light::getAttribAddr() const
 {
     return &infos._position;
@@ -121,6 +142,21 @@ void DirectionLight::applyModifier(const ModelState3D& state)
     // infos._direction = vec4(normalize(vec3(newDirection)), infos._direction.a);
 }
 
+void DirectionLight::updateShadowCamera()
+{
+    vec3 position = shadowCamera.getPosition();
+    shadowCamera = Camera(ORTHOGRAPHIC);
+    shadowCamera.init(0.f, shadowCameraSize.x, shadowCameraSize.y, 0.1, 10E3);
+    shadowCamera.setDirection(direction());
+    // shadowCamera.setPosition(position);
+
+    shadowCamera.setPosition(-direction()*vec3(1E3));
+
+    shadowCamera.updateProjectionViewMatrix();
+
+    // infos._rShadowMatrix = inverse(shadowCamera.getProjectionViewMatrix());
+    infos._rShadowMatrix = shadowCamera.getProjectionViewMatrix();
+}
 
 PointLight::PointLight()
 {

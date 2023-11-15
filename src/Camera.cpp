@@ -23,6 +23,10 @@ glm::mat4 MakeInfReversedZProjRH(float fovY_radians, float aspectWbyH, float zNe
                   0.0f, 0.0f, zNear,  0.0f);
 }
 
+Camera::Camera(CameraType type) : type(type)
+{
+}
+
 void Camera::init(float _FOV, float _width, float _height, float _nearPlane, float _farPlane)
 { 
     state.FOV = _FOV;
@@ -36,7 +40,7 @@ void Camera::init(float _FOV, float _width, float _height, float _nearPlane, flo
     state.lookpoint = vec3(0.0);
 } 
  
-void Camera::setCameraPosition(vec3 _position)
+void Camera::setPosition(vec3 _position)
 { 
    state.position = _position; 
 } 
@@ -56,11 +60,28 @@ void Camera::updateViewMatrix()
 
 void Camera::updateProjectionMatrix()
 {
-    #ifdef INVERTED_Z
-    projectionMatrix = MakeInfReversedZProjRH(state.FOV, width / height, state.nearPlane);
-    #else
-    projectionMatrix = perspective(state.FOV, width / height, state.nearPlane, state.farPlane);
-    #endif
+    switch (type)
+    {
+    case PERSPECTIVE : 
+        #ifdef INVERTED_Z
+        projectionMatrix = MakeInfReversedZProjRH(state.FOV, width / height, state.nearPlane);
+        #else
+        projectionMatrix = perspective(state.FOV, width / height, state.nearPlane, state.farPlane);
+        #endif
+        break;
+    
+    case ORTHOGRAPHIC :
+        #ifdef INVERTED_Z
+        projectionMatrix = glm::ortho<float>(-width/2, width/2, -height/2, height/2, state.farPlane, state.nearPlane);
+        #else
+        projectionMatrix = glm::ortho<float>(-width/2, width/2, -height/2, height/2, state.nearPlane, state.farPlane);
+        #endif
+        break;
+    
+    default:
+        break;
+    }
+
 }
 
 const mat4 Camera::updateProjectionViewMatrix()

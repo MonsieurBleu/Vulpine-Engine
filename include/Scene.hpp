@@ -2,18 +2,19 @@
 #define SCENE_HPP
 
 #include <ObjectGroup.hpp>
+#include <Camera.hpp>
 
 struct MeshGroup
 {
     MeshMaterial material;
-    std::list<std::shared_ptr<Mesh>> meshes;
+    std::list<ModelRef> meshes;
 
     MeshGroup(MeshMaterial _material)
     {
         material = _material;
     }
 
-    MeshGroup& add(std::shared_ptr<Mesh> mesh)
+    MeshGroup& add(ModelRef mesh)
     {
         meshes.push_back(mesh);
         return *this;
@@ -35,16 +36,23 @@ class Scene
         void addGroupElement(ObjectGroupRef group);
         void removeGroupElement(ObjectGroupRef group);
 
+        void depthOnlyDraw(Camera &camera);
+
     public :
         Scene();
         void add(ModelRef mesh, bool sort = true);
         void add(SceneLight light);
         void add(ObjectGroupRef group);
+
+        void updateAllObjects();
+        void generateShadowMaps();
         void draw();
 
         void remove(ModelRef mesh);
         void remove(SceneLight light);
         void remove(ObjectGroupRef group);
+
+        MeshMaterial depthOnlyMaterial;
 };
 
 

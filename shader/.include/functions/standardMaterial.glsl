@@ -56,6 +56,7 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
 #ifdef DIFFUSE
     // diffuse = pow(nDotL, 0.5);
     diffuse = nDotL;
+    // diffuse = 1.0; // tmp for shadow testing
 
     #ifdef TOON
         float dstep = 0.1;
@@ -116,6 +117,51 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     return result;
 }
 
+// https://www.shadertoy.com/view/wtsSW4
+#define PHI 1.61803398874989484820459 // Golden Ratio   
+#define PI_  3.14159265358979323846264 // PI
+#define SQ2 1.41421356237309504880169 // Square Root of Two
+#define E   2.71828182846
+float gold_noise3(in vec3 coordinate, in float seed){
+    return fract(tan(distance(coordinate*(seed+PHI*00000.1), vec3(PHI*00000.1, PI_*00000.1, E)))*SQ2*10000.0);
+}
+
+// https://github.com/tt6746690/computer-graphics-shader-pipeline/blob/master/src/random2.glsl
+vec2 random2(vec3 st){
+  vec2 S = vec2( dot(st,vec3(127.1,311.7,783.089)),
+             dot(st,vec3(269.5,183.3,173.542)) );
+  return fract(sin(S)*43758.5453123);
+}
+
+float getShadow(sampler2D shadowmap, mat4 rMatrix)
+{
+    vec4 mapPosition = rMatrix * vec4(position, 1.0);
+    mapPosition.xyz /= mapPosition.w;
+    mapPosition.xy = mapPosition.xy*0.5 + 0.5;    
+
+    float res = 0.f;
+    float bias = 0.00002;
+    float radius = 0.001;
+    float noise = 0.f;
+
+    res += texture(shadowmap, mapPosition.xy).r - bias < mapPosition.z ? 1.0 : 0.0;
+
+    int it = 8;
+    for(int i = 0; i < it; i++)
+    {
+        noise = gold_noise3(position, float(i));
+        res += texture(shadowmap, mapPosition.xy + radius*vec2(sin(noise), cos(noise))).r - bias < mapPosition.z ? 1.0 : 0.0;
+    }
+    res /= float(it+1);
+
+    // return 1.0;
+    // depth = pow(depth, 4000.f);
+    // return mapPosition.x;
+    // return depth <= 0.f ? 1.f : 0.f;
+    return res;
+    // return 1.0 - min(1.f, distance(depth, mapPosition.z)*50000.0);
+}
+
 Material getMultiLightStandard()
 {
     int id = 0;
@@ -135,6 +181,7 @@ Material getMultiLightStandard()
 
                 lightResult = getDSF(light.direction.xyz, light.color.rgb);
                 factor = light.color.a;
+                factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bSunShadowMap, light._rShadowMatrix);
                 break;
 
             case 2 : 

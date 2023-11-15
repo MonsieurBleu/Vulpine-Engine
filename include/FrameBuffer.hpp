@@ -12,7 +12,7 @@ class FrameBuffer
     protected : 
         std::vector<Texture2D> textures;
 
-        GLuint handle;
+        GLuint handle = 0;
 
     public : 
 

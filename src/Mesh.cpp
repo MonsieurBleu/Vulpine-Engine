@@ -13,6 +13,11 @@ using namespace glm;
 //     vao = mesh.vao;
 // }
 
+MeshMaterial::MeshMaterial(ShaderProgram* material, ShaderProgram* depthOnlyMaterial)
+    : std::shared_ptr<ShaderProgram>(material), depthOnly(depthOnlyMaterial)
+{    
+}
+
 void Mesh::drawVAO(GLenum mode)
 {
     glBindVertexArray(vao->getHandle());
@@ -53,9 +58,9 @@ void MeshModel3D::preDrawRoutine(){}
 
 void MeshModel3D::drawVAO(GLenum mode)
 {
-    preDrawRoutine();
+    // preDrawRoutine();
 
-    state.update();
+    state.update(); // can be removed if the scene arleady do the update
     uniforms.update();
 
     for(size_t i = 0; i < maps.size(); i ++)

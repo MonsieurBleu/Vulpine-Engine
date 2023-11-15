@@ -13,6 +13,12 @@
 
 using namespace glm;
 
+enum CameraType
+{
+    PERSPECTIVE,
+    ORTHOGRAPHIC
+};
+
 struct CameraState
 {
         float FOV = 1.0f;
@@ -38,11 +44,15 @@ class Camera
         mat4 viewMatrix; 
         mat4 projectionViewMatrix;
 
+        CameraType type = PERSPECTIVE;
+
     public: 
         
-        void init(float FOV, float width, float height, float nearplane, float farPlane); 
-        
-        void setCameraPosition(vec3 _position); 
+        Camera(CameraType type = PERSPECTIVE);
+
+        void init(float FOV, float width, float height, float nearplane, float farPlane);
+
+        void setPosition(vec3 _position); 
         void lookAt(vec3 _position);
 
         const vec3 getPosition() {return state.position;};
@@ -70,6 +80,8 @@ class Camera
 
         void toggleMouseFollow(){state.followMouse = !state.followMouse;};
         void setMouseFollow(bool enable){state.followMouse = enable;};
+
+        void setDirection(vec3 direction){state.direction = direction;};
 
         void toggleForceLookAtPoint(){state.forceLookAtpoint = !state.forceLookAtpoint;};
         void setForceLookAtPoint(bool enable){state.forceLookAtpoint = enable;};

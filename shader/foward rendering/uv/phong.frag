@@ -19,7 +19,9 @@ layout (binding = 1) uniform sampler2D bMaterial;
 in vec3 viewPos;
 in vec3 viewVector;
 
+#ifndef PI
 #define PI 3.1415926538
+#endif
 #define SKYBOX_REFLECTION
 
 ////////////////http://www.thetenthplanet.de/archives/1180

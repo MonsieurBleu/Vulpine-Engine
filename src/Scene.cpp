@@ -79,6 +79,7 @@ void Scene::addGroupElement(ObjectGroupRef group)
     }
 }
 
+// TODO : test
 void Scene::removeGroupElement(ObjectGroupRef group)
 {
     for(auto i = group->meshes.begin(); i != group->meshes.end(); i++)
@@ -114,14 +115,21 @@ void MeshGroup::draw()
     material->deactivate();
 }
 
-void Scene::draw()
+void Scene::updateAllObjects()
 {
     for(auto i = groups.begin(); i != groups.end(); i++)
         (*i)->update();
+}
+
+void Scene::draw()
+{
+    // updateAllObjects();
+
+    // generateShadowMaps();
 
     for(auto i = lights.begin(); i != lights.end(); i++)
         ligthBuffer.add(**i);
-
+    
     ligthBuffer.update();
     ligthBuffer.activate(0);
 
@@ -136,6 +144,64 @@ void Scene::draw()
     }
 
     ligthBuffer.reset();
+}
+
+// TODO : Add a way to have custom depth vertex shader to some object
+// NOTE : If an object have a non trivial vertex shader, maybe the vertices
+//        should be calculated just once in a compute/cpu prepass. But this 
+//        woulnd't be compatible with tesselation.
+
+void Scene::depthOnlyDraw(Camera &camera)
+{
+    if(depthOnlyMaterial != NULL)
+    {
+        for(auto i = meshes.begin(); i != meshes.end(); i++)
+        {
+            if(i->material.depthOnly)
+                i->material.depthOnly->activate();
+            else
+                depthOnlyMaterial->activate();
+            
+            ShaderProgram *dom = i->material.depthOnly ? i->material.depthOnly.get() : depthOnlyMaterial.get();
+            dom->activate();
+
+            // camera.updateProjectionViewMatrix();
+            ShaderUniform(camera.getProjectionViewMatrixAddr(), 2).activate();
+            ShaderUniform(camera.getViewMatrixAddr(), 3).activate();
+            ShaderUniform(camera.getProjectionMatrixAddr(), 4).activate();
+            ShaderUniform(camera.getPositionAddr(), 5).activate();
+            ShaderUniform(camera.getDirectionAddr(), 6).activate();
+
+            for(auto j : i->meshes)
+                j->drawVAO();
+            
+            dom->deactivate();
+        }
+
+        depthOnlyMaterial->deactivate();
+    }
+    
+    /*
+    We consider that unsorted meshes have special materials, like transparents ones,
+    that cannot be used on depthOnlyDraw.
+
+    for(auto i = unsortedMeshes.begin(); i != unsortedMeshes.end(); i++)
+    {
+        (*i)->drawVAO();
+    }
+    */
+}
+
+void Scene::generateShadowMaps()
+{
+    for(auto i : lights)
+        if(i->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
+        {
+            i->shadowMap.activate();
+            i->updateShadowCamera();
+            depthOnlyDraw(i->shadowCamera);
+            i->shadowMap.deactivate();
+        }
 }
 
 void Scene::remove(ModelRef mesh)

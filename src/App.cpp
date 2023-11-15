@@ -180,7 +180,7 @@ void App::mainloop()
 
     /// SETTING UP THE CAMERA 
     camera.init(radians(50.0f), globals.windowWidth(), globals.windowHeight(), 0.1f, 1000.0f);
-    // camera.init(radians(50.0f), globals.windowWidth(), globals.windowHeight(), 1000.0f, 0.1f);
+    // camera.init(radians(50.0f), 1920*0.05, 1080*0.05, 0.1f, 1000.0f);
 
     glEnable(GL_DEPTH_TEST);
 
@@ -262,6 +262,16 @@ void App::mainloop()
                 globals.standartShaderUniform3D() 
             ));
 
+    MeshMaterial uvDepthOnly(
+            new ShaderProgram(
+                "shader/depthOnly.frag", 
+                "shader/foward rendering/uv/phong.vert", 
+                "", 
+                globals.standartShaderUniform3D() 
+            ));
+    
+    scene.depthOnlyMaterial = uvDepthOnly;
+
     ModelRef skybox = newModel(
         uvBasic, 
         readOBJ("ressources/test/skybox/skybox.obj", false),
@@ -271,7 +281,7 @@ void App::mainloop()
 
     Texture2D skyTexture = Texture2D();
     
-    #define GENERATED_SKYBOX
+    // #define GENERATED_SKYBOX
 
     #ifdef GENERATED_SKYBOX
         skyTexture
@@ -343,6 +353,10 @@ void App::mainloop()
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0)
             );
+    // sun->cameraResolution = vec2(2048);
+    sun->cameraResolution = vec2(8192);
+    sun->shadowCameraSize = vec2(90, 90);
+    sun->activateShadows();
     scene.add(sun);
     
 
@@ -476,7 +490,14 @@ void App::mainloop()
                     "shader/demos/Mage_Battle/Mage.vert", 
                     "", 
                     globals.standartShaderUniform3D() 
-                ));
+                ),
+                new ShaderProgram(
+                    "shader/demos/Mage_Battle/MageDepthOnly.frag", 
+                    "shader/demos/Mage_Battle/Mage.vert", 
+                    ""
+                    , globals.standartShaderUniform3D() 
+                )     
+                );
 
         ModelRef MageTestModelAttack = newModel(MageMaterial, mtGeometry[1]);
         MageTestModelAttack->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
@@ -500,7 +521,7 @@ void App::mainloop()
         Team::attackModel = MageTestModelAttack;
         Team::tankModel = MageTestModelTank; 
 
-        int unitsNB = 10;
+        int unitsNB = 1000;
         int healNB = unitsNB*0.2f;
         int attackNB = unitsNB*0.7f;
         int tankNB = unitsNB*0.1f;
@@ -605,6 +626,9 @@ void App::mainloop()
             }
         }
 
+        float time = globals.unpausedTime.getElapsedTime()*0.25;
+        sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
+
         mainInput(globals.appTime.getDelta());
 
         mainloopPreRenderRoutine();
@@ -620,17 +644,18 @@ void App::mainloop()
 
 
         #ifdef DEMO_MAGE_BATTLE
-            red.tick();
-            blue.tick();
-            yellow.tick();
-            green.tick();
-            magenta.tick();
+            // red.tick();
+            // blue.tick();
+            // yellow.tick();
+            // green.tick();
+            // magenta.tick();
         #endif
 
-
+        scene.updateAllObjects();
+        scene.generateShadowMaps();
         renderBuffer.activate();
-        // ligthBuffer.activate(0);
         skyTexture.bind(4);
+        sun->shadowMap.bindTexture(0, 2);
         scene.draw();
         renderBuffer.deactivate();
         renderBuffer.bindTextures();
@@ -641,6 +666,7 @@ void App::mainloop()
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
+        sun->shadowMap.bindTexture(0, 6);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
  

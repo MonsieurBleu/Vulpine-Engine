@@ -12,7 +12,16 @@
 
 #define MESH_BASE_UNIFORM_LOCATION_MODEL_MATRIX 3
 
-typedef std::shared_ptr<ShaderProgram> MeshMaterial;
+// typedef std::shared_ptr<ShaderProgram> MeshMaterial;
+
+class MeshMaterial : public std::shared_ptr<ShaderProgram>
+{
+    public : 
+        MeshMaterial(ShaderProgram* material = NULL, ShaderProgram* depthOnlyMaterial = NULL);
+        std::shared_ptr<ShaderProgram> depthOnly;
+};
+
+
 typedef std::shared_ptr<VertexAttributeGroup> MeshVao;
 
 class Mesh

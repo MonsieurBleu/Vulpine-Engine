@@ -182,7 +182,8 @@ void SkyboxPass::setup()
         "",
         globals.standartShaderUniform2D());
 
-    FBO = FrameBuffer().addTexture(skybox.setAttachement(0)).generate();
+    // FBO = FrameBuffer().addTexture(skybox.setAttachement(0)).generate();
+    FBO = FrameBuffer().addTexture(skybox).generate();
 }
 
 void SkyboxPass::render(Camera &camera)

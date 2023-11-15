@@ -67,10 +67,10 @@ vec3 calculateViewPosition(vec2 textureCoordinate, float depth)
 // tile noise texture over screen, based on screen dimensions divided by noise size
 vec2 noiseScale = vec2(float(iResolution.x)/4.0, float(iResolution.y)/4.0);
 
-int kernelSize = 64;
-float radius = 5.0; // 5.0
-float bias = 0.5; // 0.5
-float colorBias = 1.0;
+int kernelSize = 16; // 64
+float radius = 20.0; // 5.0
+float bias = 0.1; // 0.5
+float colorBias = 0.1;
 
 void main()
 {
@@ -124,7 +124,9 @@ void main()
         occlusion.a += (-sampleDepth <= -samplePos.z - bias ? 1.0 : 0.0) * rangeCheck;  
 
         vec3 sampleColor = texture(bColor, offset.xy).rgb;
-        occlusion.rgb += (-sampleDepth <= -samplePos.z - bias ? vec3(1.0 - sampleColor) : vec3(0.0)) * rangeCheck;  
+        occlusion.rgb += (-sampleDepth <= -samplePos.z - colorBias ? vec3(1.0 - sampleColor) : vec3(0.0)) * rangeCheck;  
+
+
 
         // if(sampleDepth >= samplePos.z + bias)
         //     occlusion.a += rangeCheck;
@@ -147,8 +149,8 @@ void main()
     // occlusion = 1.0 - occlusion;
     // occlusion.rgb *= 5.0 * pow(1.0 - rgb2hsv(occlusion.rgb).b, lumDiscriminationExp);
 
-    _AO.rgb = 1.0 - pow(1.0 - occlusion.rgb/float(kernelSize), vec3(7.0));
-    _AO.a = 1.0 - pow(1.0 - (occlusion.a/float(kernelSize)), 15.0); //6
+    // _AO.rgb = 1.0 - pow(1.0 - occlusion.rgb/float(kernelSize), vec3(7.0));
+    // _AO.a = 1.0 - pow(1.0 - (occlusion.a/float(kernelSize)), 15.0); //6
     // _AO.a = -fragPos.z > 90000.0 ? 1.0 : _AO.a;
 
     // if(occlusion == 1.0)
@@ -157,4 +159,7 @@ void main()
     // _AO.rgb = calculateViewPosition(uvScreen, texture(bDepth, uvScreen).x);
 
     // _AO.a = fragPos.z;
+
+    _AO.rgb = pow((occlusion.rgb/float(kernelSize)), vec3(1.5))*4.0;
+    _AO.a = (occlusion.a/float(kernelSize));
 }

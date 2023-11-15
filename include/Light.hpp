@@ -4,10 +4,13 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <Matrix.hpp>
+#include <FrameBuffer.hpp>
+#include <Camera.hpp>
 
 using namespace glm;
 
 #define MAX_LIGHT_COUNTER 0xff
+#define LIGHT_SHADOW_ACTIVATED 1
 
 class ObjectGroup;
 
@@ -24,7 +27,8 @@ struct LightInfos
     vec4 _position = vec4(0);
     vec4 _color = vec4(1);
     vec4 _direction = vec4(0);
-    ivec4 _infos = vec4(0);
+    ivec4 _infos = vec4(0); // a : type, b : shadows
+    mat4 _rShadowMatrix = mat4(0); 
 };
 
 class Light
@@ -45,6 +49,12 @@ class Light
         const void* getAttribAddr() const;
         LightInfos getInfos() const;
         virtual void applyModifier(const ModelState3D& state);
+        
+        Camera shadowCamera;
+        FrameBuffer shadowMap; 
+        ivec2 cameraResolution = vec2(1024);
+        void activateShadows();
+        virtual void updateShadowCamera();
 };  
 
 class DirectionLight : public Light
@@ -63,6 +73,9 @@ class DirectionLight : public Light
         vec3 direction();
 
         void applyModifier(const ModelState3D& state) override;
+
+        void updateShadowCamera();
+        vec2 shadowCameraSize;
 };
 
 class PointLight : public Light

@@ -12,6 +12,7 @@ layout (binding = 2) uniform sampler2D bNormal;
 layout (binding = 3) uniform sampler2D bAO;
 layout (binding = 4) uniform sampler2D bEmmisive;
 layout (binding = 5) uniform sampler2D texNoise;
+layout (binding = 6) uniform sampler2D bSunMap;
 
 in vec2 uvScreen;
 in vec2 ViewRay;
@@ -168,13 +169,13 @@ void main()
     float aspectRatio = float(iResolution.y)/float(iResolution.x);
 
     // Pixel art effect 
-        // float pixelSize = 0.003;
+        // float pixelSize = 0.0075;
 
         // /* Additionnal depth based resolution change */
         // float d = texture(bDepth, uv).r*2.0;
         // d = min(d, 0.05);
         // d = d - mod(d, 0.005);
-        // pixelSize = 0.001 + pow(d, 2.0);
+        // pixelSize = 300.0 * pixelSize * (0.001 + pow(d, 2.0));
 
         // uv = uv * vec2(1.0, aspectRatio);
         // uv = uv - mod(uv, vec2(pixelSize)) + pixelSize*0.5;
@@ -194,14 +195,13 @@ void main()
     _fragColor.b = texture(bColor, bUv).b;
 
     vec4 AO = getBlurAO(uv);
-    // _fragColor.rgb *= pow(1.0 - AO.rgb, vec3(1.0));
     _fragColor.rgb *= vec3(1.0 - AO.a);
-    // _fragColor.rgb = pow(1.0 - AO.rgb, vec3(10.0));
+    // _fragColor.rgb *= vec3(1.0) - AO.rgb;
 
     // vec3 bloom = blur(bEmmisive, uvScreen);
     // _fragColor.rgb += bloom;
     // _fragColor.rgb += texture(bNormal, uvScreen).rgb;
-    // _fragColor.rgb = texture(bAO, uvScreen).rgb;
+    // _fragColor.rgb = 1.0 - texture(bAO, uvScreen).rgb;
 
     if(bloomEnable != 0) 
         // _fragColor.rgb += 0.125*texture(bEmmisive, uv).rgb; 
@@ -218,7 +218,26 @@ void main()
     mapped = pow(mapped, vec3(1.0 / gamma));
     _fragColor.rgb = mapped;
 
-    // _fragColor.rgb = texture(bNormal, uvScreen).rgb;
+    
+    /// DEPTH 
+        // float depth = texture(bDepth, uvScreen).r;
+        // _fragColor.rgb = vec3(1.0 - pow(1.0 - depth, 50.0));
+    ////////
+
+    /// SUN SHADOW MAP
+        vec2 SSMuv = uvScreen * vec2(iResolution);
+        SSMuv *= 1/512.0; 
+
+        if(SSMuv.x >= 0.f && SSMuv.x <= 1.0 && SSMuv.y >= 0.f && SSMuv.y <= 1.0)
+        {
+            float depth = texture(bSunMap, SSMuv).r;    
+            // _fragColor.rgb = vec3(1.0 - pow(1.0 - depth, 50.0));
+            // depth = 1.0 - pow(1.0 - depth, 50.0);
+            // depth = pow(depth, 50.0*(1.0 - distance(depth, 0.1)));
+            _fragColor.rgb = vec3(depth);
+        }
+
+    ///////
 
     _fragColor.a = 1.0;
 }
