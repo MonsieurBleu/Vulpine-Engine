@@ -123,7 +123,15 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
 #define SQ2 1.41421356237309504880169 // Square Root of Two
 #define E   2.71828182846
 float gold_noise3(in vec3 coordinate, in float seed){
-    return fract(tan(distance(coordinate*(seed+PHI*00000.1), vec3(PHI*00000.1, PI_*00000.1, E)))*SQ2*10000.0);
+    return 0.5 - fract(tan(distance(coordinate*(seed+PHI*00000.1), vec3(PHI*00000.1, PI_*00000.1, E)))*SQ2*10000.0);
+}
+
+vec2 goldNoiseCustom(in vec3 coordinate, in float seed)
+{
+    return vec2(
+        fract(tan(distance(coordinate.xy*PHI, coordinate.xy)*seed)*coordinate.x),
+        fract(tan(distance(coordinate.zx*PHI, coordinate.zx)*seed)*coordinate.z)
+        );
 }
 
 // https://github.com/tt6746690/computer-graphics-shader-pipeline/blob/master/src/random2.glsl
@@ -133,6 +141,12 @@ vec2 random2(vec3 st){
   return fract(sin(S)*43758.5453123);
 }
 
+/*
+    Efficient soft-shadow with percentage-closer filtering
+
+    link : https://developer.nvidia.com/gpugems/gpugems2/part-ii-shading-lighting-and-shadows/chapter-17-efficient-soft-edged-shadows-using
+*/
+#define EFFICIENT_SMOOTH_SHADOW
 float getShadow(sampler2D shadowmap, mat4 rMatrix)
 {
     vec4 mapPosition = rMatrix * vec4(position, 1.0);
@@ -140,26 +154,27 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
     mapPosition.xy = mapPosition.xy*0.5 + 0.5;    
 
     float res = 0.f;
-    float bias = 0.00002;
-    float radius = 0.001;
-    float noise = 0.f;
+    float bias = 0.000003;
+    float radius = 0.0009;
 
-    res += texture(shadowmap, mapPosition.xy).r - bias < mapPosition.z ? 1.0 : 0.0;
+    #ifdef EFFICIENT_SMOOTH_SHADOW
+        int it = 8;
+        int itPenumbra = 64;
+        int i;
 
-    int it = 8;
-    for(int i = 0; i < it; i++)
-    {
-        noise = gold_noise3(position, float(i));
-        res += texture(shadowmap, mapPosition.xy + radius*vec2(sin(noise), cos(noise))).r - bias < mapPosition.z ? 1.0 : 0.0;
-    }
-    res /= float(it+1);
+        for(i = 0; i < it; i++)
+            res += texture(shadowmap, mapPosition.xy + 2.0*radius*vec2(gold_noise3(position, i), gold_noise3(position, i*0.2))).r - bias < mapPosition.z ? 1.0 : 0.0;
 
-    // return 1.0;
-    // depth = pow(depth, 4000.f);
-    // return mapPosition.x;
-    // return depth <= 0.f ? 1.f : 0.f;
+        if(res < float(it) && res > 0.f)
+            for(i = 0; i < itPenumbra; i++)
+                res += texture(shadowmap, mapPosition.xy + radius*vec2(gold_noise3(position, i), gold_noise3(position, i*0.2))).r - bias < mapPosition.z ? 1.0 : 0.0;
+        
+        res /= float(i);
+    #else
+        res = texture(shadowmap, mapPosition.xy).r - bias < mapPosition.z ? 1.0 : 0.0;
+    #endif
+
     return res;
-    // return 1.0 - min(1.f, distance(depth, mapPosition.z)*50000.0);
 }
 
 Material getMultiLightStandard()

@@ -94,15 +94,15 @@ const mat4 Camera::updateProjectionViewMatrix()
 
 void Camera::updateMouseFollow(GLFWwindow *window)
 {
-    if(!state.followMouse) return;
+    // if(!state.followMouse) return;
 
-    vec<2, double, glm::packed_highp> Mouse_uv;
-    glfwGetCursorPos(window, &Mouse_uv.x, &Mouse_uv.y);
+    // vec<2, double, glm::packed_highp> Mouse_uv;
+    // glfwGetCursorPos(window, &Mouse_uv.x, &Mouse_uv.y);
 
-    float th = state.sensitivity*Mouse_uv.y*PI*(1.0/height); // polar theta of direction
-    float ph = state.sensitivity*Mouse_uv.x*PI*(1.0/width); // polar phi of direction
+    // float th = state.sensitivity*Mouse_uv.y*PI*(1.0/height); // polar theta of direction
+    // float ph = state.sensitivity*Mouse_uv.x*PI*(1.0/width); // polar phi of direction
 
-    state.direction = normalize(vec3(sin(th)*cos(ph), cos(th), sin(th)*sin(ph)));
+    // state.direction = normalize(vec3(sin(th)*cos(ph), cos(th), sin(th)*sin(ph)));
 }
 
 void Camera::move(vec3 velocity, double deltatime)

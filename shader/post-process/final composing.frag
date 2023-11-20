@@ -13,6 +13,7 @@ layout (binding = 3) uniform sampler2D bAO;
 layout (binding = 4) uniform sampler2D bEmmisive;
 layout (binding = 5) uniform sampler2D texNoise;
 layout (binding = 6) uniform sampler2D bSunMap;
+layout (binding = 7) uniform sampler2D bUI;
 
 in vec2 uvScreen;
 in vec2 ViewRay;
@@ -224,20 +225,11 @@ void main()
         // _fragColor.rgb = vec3(1.0 - pow(1.0 - depth, 50.0));
     ////////
 
-    /// SUN SHADOW MAP
-        vec2 SSMuv = uvScreen * vec2(iResolution);
-        SSMuv *= 1/512.0; 
-
+    #ifdef SHOW_SHADOWMAP
+        vec2 SSMuv = uvScreen * vec2(iResolution) * 1/512.0;
         if(SSMuv.x >= 0.f && SSMuv.x <= 1.0 && SSMuv.y >= 0.f && SSMuv.y <= 1.0)
-        {
-            float depth = texture(bSunMap, SSMuv).r;    
-            // _fragColor.rgb = vec3(1.0 - pow(1.0 - depth, 50.0));
-            // depth = 1.0 - pow(1.0 - depth, 50.0);
-            // depth = pow(depth, 50.0*(1.0 - distance(depth, 0.1)));
-            _fragColor.rgb = vec3(depth);
-        }
-
-    ///////
+            _fragColor.rgb = vec3(texture(bSunMap, SSMuv).r);
+    #endif
 
     _fragColor.a = 1.0;
 }

@@ -23,7 +23,7 @@ void Light::activateShadows()
     infos._infos.b |= LIGHT_SHADOW_ACTIVATED;
     shadowMap.addTexture(
         Texture2D()
-            .setFilter(GL_LINEAR)
+            .setFilter(GL_NEAREST)
             .setResolution(cameraResolution)
             .setInternalFormat(GL_DEPTH_COMPONENT32F)
             .setFormat(GL_DEPTH_COMPONENT)

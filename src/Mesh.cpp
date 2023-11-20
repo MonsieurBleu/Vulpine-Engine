@@ -269,6 +269,8 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
 
     }
 
+    delete data;
+
     MeshVao newVao(new VertexAttributeGroup(
         {
             VertexAttribute(positions, 0, faceCounter*3, 3, GL_FLOAT, false),

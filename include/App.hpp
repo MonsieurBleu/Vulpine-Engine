@@ -31,6 +31,7 @@ class App
         void mainInput(double deltatime);
 
         RenderBuffer renderBuffer;
+        FrameBuffer screenBuffer2D;
         SSAOPass SSAO;
         BloomPass Bloom;
 

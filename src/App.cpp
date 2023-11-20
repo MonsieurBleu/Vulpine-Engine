@@ -24,6 +24,7 @@
 
 #include <Helpers.hpp>
 
+#include <Fonts.hpp>
 
 #ifdef DEMO_MAGE_BATTLE
     #include <demos/Mage_Battle/Team.hpp>
@@ -96,6 +97,56 @@ App::App(GLFWwindow* window) :
     renderBuffer.generate();
     SSAO.setup();
     Bloom.setup();
+
+    screenBuffer2D
+        .addTexture(
+            Texture2D().
+                setResolution(globals.windowSize())
+                .setInternalFormat(GL_SRGB8_ALPHA8)
+                .setFormat(GL_RGBA)
+                .setPixelType(GL_UNSIGNED_BYTE)
+                .setFilter(GL_LINEAR)
+                .setWrapMode(GL_CLAMP_TO_EDGE)
+                .setAttachement(GL_COLOR_ATTACHMENT0))
+        // .addTexture(
+        //     Texture2D() 
+        //         .setResolution(globals.windowSize())
+        //         .setInternalFormat(GL_DEPTH_COMPONENT)
+        //         .setFormat(GL_DEPTH_COMPONENT)
+        //         .setPixelType(GL_UNSIGNED_BYTE)
+        //         .setFilter(GL_LINEAR)
+        //         .setWrapMode(GL_CLAMP_TO_EDGE)
+        //         .setAttachement(GL_DEPTH_ATTACHMENT))
+        .generate();
+
+    globals.currentCamera = &camera;
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    
+    glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
+    {
+        if(globals.currentCamera->getMouseFollow())
+        {
+            vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
+            vec2 sensibility(50.0);
+            vec2 dir = sensibility * (vec2(dx, dy)-center)/center;
+
+            float yaw = radians(-dir.x);
+            float pitch = radians(-dir.y);
+
+            vec3 up = vec3(0,1,0);
+            vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
+            front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
+            front = normalize(front);
+
+            front.y = clamp(front.y, -0.9f, 0.9f);
+            globals.currentCamera->setDirection(front);
+
+            glfwSetCursorPos(window, center.x, center.y);
+        }
+    });
 }
 
 void App::mainInput(double deltatime)
@@ -194,6 +245,7 @@ void App::mainloop()
     }
 
     Scene scene;
+    Scene scene2D;
 
     bool wireframe = false;
     bool vsync = true;
@@ -521,7 +573,7 @@ void App::mainloop()
         Team::attackModel = MageTestModelAttack;
         Team::tankModel = MageTestModelTank; 
 
-        int unitsNB = 1000;
+        int unitsNB = 100;
         int healNB = unitsNB*0.2f;
         int attackNB = unitsNB*0.7f;
         int tankNB = unitsNB*0.1f;
@@ -547,6 +599,26 @@ void App::mainloop()
     #endif
     
     #endif
+
+    FontRef font(new FontUFT8);
+    font->readCSV("ressources/fonts/test/out.csv");
+    std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
+    ssb->font = font;
+    ssb->setMaterial(
+        MeshMaterial(new ShaderProgram(
+            "shader/2D/sprite.frag",
+            "shader/2D/sprite.vert",
+            "",
+            globals.standartShaderUniform3D()
+        ))
+    );
+    ssb->text = U"Salut à tous les amis!\nAjourd'hui on se retrouve pour une petite vidéo!";
+    ssb->batchText();
+    ssb->state.setPosition(vec3(-0.5, 0.5, 0.f));
+    ssb->setMap(Texture2D().loadFromFileKTX("ressources/fonts/test/out.ktx"), 0);
+    // ssb->setMap(Texture2D().loadFromFile("ressources/fonts/test/out.png"), 0);
+    scene2D.add(ssb, false);
+    // std::cout << (int)(u8'à') << "\n";
 
     while(state != quit)
     {
@@ -576,6 +648,7 @@ void App::mainloop()
                 PostProcessing.reset();
                 uvPhong->reset();
                 skybox->getMaterial()->reset();
+                ssb->getMaterial()->reset();
 
                 #ifdef GENERATED_SKYBOX
                     skyboxPass.getShader().reset();
@@ -589,6 +662,11 @@ void App::mainloop()
             
             case GLFW_KEY_F2:
                 camera.toggleMouseFollow();
+                if(camera.getMouseFollow())
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                else 
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
                 break;
             
             case GLFW_KEY_F8:
@@ -656,10 +734,17 @@ void App::mainloop()
         renderBuffer.activate();
         skyTexture.bind(4);
         sun->shadowMap.bindTexture(0, 2);
+        scene.genLightBuffer();
         scene.draw();
         renderBuffer.deactivate();
-        renderBuffer.bindTextures();
 
+        scene2D.updateAllObjects();
+        screenBuffer2D.activate();
+        // scene2D.draw();
+        screenBuffer2D.deactivate();
+
+        renderBuffer.bindTextures();
+        
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         SSAO.render(camera);
@@ -667,6 +752,7 @@ void App::mainloop()
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
         sun->shadowMap.bindTexture(0, 6);
+        screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
  

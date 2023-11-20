@@ -40,6 +40,7 @@ class Globals
          */
         // void operator=(const Globals&) = delete;
 
+        Camera *currentCamera;
 
         const AppState state() const;
 

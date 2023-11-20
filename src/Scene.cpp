@@ -121,18 +121,17 @@ void Scene::updateAllObjects()
         (*i)->update();
 }
 
-void Scene::draw()
+void Scene::genLightBuffer()
 {
-    // updateAllObjects();
-
-    // generateShadowMaps();
-
     for(auto i = lights.begin(); i != lights.end(); i++)
         ligthBuffer.add(**i);
     
     ligthBuffer.update();
     ligthBuffer.activate(0);
+}
 
+void Scene::draw()
+{
     for(auto i = meshes.begin(); i != meshes.end(); i++)
     {
         i->draw();
