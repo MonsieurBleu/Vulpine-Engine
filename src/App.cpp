@@ -98,26 +98,26 @@ App::App(GLFWwindow* window) :
     SSAO.setup();
     Bloom.setup();
 
-    screenBuffer2D
-        .addTexture(
-            Texture2D().
-                setResolution(globals.windowSize())
-                .setInternalFormat(GL_SRGB8_ALPHA8)
-                .setFormat(GL_RGBA)
-                .setPixelType(GL_UNSIGNED_BYTE)
-                .setFilter(GL_LINEAR)
-                .setWrapMode(GL_CLAMP_TO_EDGE)
-                .setAttachement(GL_COLOR_ATTACHMENT0))
-        // .addTexture(
-        //     Texture2D() 
-        //         .setResolution(globals.windowSize())
-        //         .setInternalFormat(GL_DEPTH_COMPONENT)
-        //         .setFormat(GL_DEPTH_COMPONENT)
-        //         .setPixelType(GL_UNSIGNED_BYTE)
-        //         .setFilter(GL_LINEAR)
-        //         .setWrapMode(GL_CLAMP_TO_EDGE)
-        //         .setAttachement(GL_DEPTH_ATTACHMENT))
-        .generate();
+    // screenBuffer2D
+    //     .addTexture(
+    //         Texture2D().
+    //             setResolution(globals.windowSize())
+    //             .setInternalFormat(GL_SRGB8_ALPHA8)
+    //             .setFormat(GL_RGBA)
+    //             .setPixelType(GL_UNSIGNED_BYTE)
+    //             .setFilter(GL_LINEAR)
+    //             .setWrapMode(GL_CLAMP_TO_EDGE)
+    //             .setAttachement(GL_COLOR_ATTACHMENT0))
+    //     // .addTexture(
+    //     //     Texture2D() 
+    //     //         .setResolution(globals.windowSize())
+    //     //         .setInternalFormat(GL_DEPTH_COMPONENT)
+    //     //         .setFormat(GL_DEPTH_COMPONENT)
+    //     //         .setPixelType(GL_UNSIGNED_BYTE)
+    //     //         .setFilter(GL_LINEAR)
+    //     //         .setWrapMode(GL_CLAMP_TO_EDGE)
+    //     //         .setAttachement(GL_DEPTH_ATTACHMENT))
+    //     .generate();
 
     globals.currentCamera = &camera;
 
@@ -219,6 +219,236 @@ void App::mainloopEndRoutine()
     glfwSwapBuffers(window);
     globals.appTime.end();
     globals.unpausedTime.end();
+}
+
+
+struct VoxelInfos
+{
+    vec3 position;
+    float scale;
+};
+
+
+
+vec3 v[8] =
+{
+    vec3(0.500000, 0.500000, -0.500000),
+    vec3(0.500000, -0.500000, -0.500000),
+    vec3(0.500000, 0.500000, 0.500000),
+    vec3(0.500000, -0.500000, 0.500000),
+    vec3(-0.500000, 0.500000, -0.500000),
+    vec3(-0.500000, -0.500000, -0.500000),
+    vec3(-0.500000, 0.500000, 0.500000),
+    vec3(-0.500000, -0.500000, 0.500000),
+};
+
+vec3 vn[6]
+{
+    vec3(-0.0000, 1.0000, -0.0000),
+    vec3(-0.0000, -0.0000, 1.0000),
+    vec3(-1.0000, -0.0000, -0.0000),
+    vec3(-0.0000, -1.0000, -0.0000),
+    vec3(1.0000, -0.0000, -0.0000),
+    vec3(-0.0000, -0.0000, -1.0000)
+};
+
+vec3 voxelModelPositions[36] = 
+{
+    v[4], v[2], v[0],
+    v[2], v[7], v[3],
+    v[6], v[5], v[7],
+    v[1], v[7], v[5],
+    v[0], v[3], v[1],
+    v[4], v[1], v[5],
+    v[4], v[6], v[2],
+    v[2], v[6], v[7],
+    v[6], v[4], v[5],
+    v[1], v[3], v[7],
+    v[0], v[2], v[3],
+    v[4], v[0], v[1]
+};
+
+vec3 voxelModelNormales[36] = 
+{
+    vn[0], vn[0], vn[0],
+    vn[1], vn[1], vn[1],
+    vn[2], vn[2], vn[2],
+    vn[3], vn[3], vn[3],
+    vn[4], vn[4], vn[4],
+    vn[5], vn[5], vn[5],
+    vn[0], vn[0], vn[0],
+    vn[1], vn[1], vn[1],
+    vn[2], vn[2], vn[2],
+    vn[3], vn[3], vn[3],
+    vn[4], vn[4], vn[4],
+    vn[5], vn[5], vn[5]
+};
+
+MeshVao genVaoFromVoxels(std::vector<VoxelInfos> vox)
+{
+    const int vertexPerVoxel = 36;
+    int size = vox.size();
+    GenericSharedBuffer pos(new char[sizeof(vec3)*vertexPerVoxel*size]);
+    GenericSharedBuffer nor(new char[sizeof(vec3)*vertexPerVoxel*size]);
+    GenericSharedBuffer uvs(new char[sizeof(vec2)*vertexPerVoxel*size]);
+    vec3 *p = (vec3*) pos.get();
+    vec3 *n = (vec3*) nor.get();
+    vec2 *u = (vec2*) uvs.get();  
+    
+    for(int i = 0; i < size; i++)
+    {
+        int id = i*vertexPerVoxel;
+
+        for(int j = 0; j < vertexPerVoxel; j++)
+        {
+            p[id+j] = (voxelModelPositions[j]*vox[i].scale) + vox[i].position;
+            n[id+j] = voxelModelNormales[j];
+            u[id+j] = vec2(0);
+        }
+    }
+
+    MeshVao res(
+        new VertexAttributeGroup({
+            VertexAttribute(pos, 0, size*vertexPerVoxel, 3, GL_FLOAT, false),
+            VertexAttribute(nor, 1, size*vertexPerVoxel, 3, GL_FLOAT, false),
+            VertexAttribute(uvs, 2, size*vertexPerVoxel, 2, GL_FLOAT, false)
+        })
+    );
+
+    res->generate();
+
+    return res;
+}
+
+void VoxelAddSimpleCube(std::vector<VoxelInfos> &v, vec3 pos, float scale)
+{
+    v.push_back(VoxelInfos{vec3(0), 1});
+}
+
+void VoxelAddSphereSP(std::vector<VoxelInfos> &v, vec3 pos, float radius, int precision = 32)
+{
+    float voxelScale = (radius*2.f)/precision;
+    for(int i = 0; i < precision; i++)
+    for(int j = 0; j < precision; j++)
+    for(int k = 0; k < precision; k++)
+    {
+        vec3 p = vec3(1.0) - vec3((float)i, (float)j, (float)k)/vec3(precision*0.5);
+
+        if(dot(p, p) <= 1.f)
+            v.push_back(VoxelInfos{(p*radius)+pos, voxelScale*0.5f});
+    }
+}
+
+void VoxelAddTubeSP(std::vector<VoxelInfos> &v, vec3 pos, vec3 dir, float radius, int precision = 32)
+{
+    float voxelScale = (radius*2.f)/precision;
+    for(int i = 0; i < precision; i++)
+    for(int j = 0; j < precision; j++)
+    for(int k = 0; k < precision; k++)
+    {
+        vec3 p = vec3(1.0) - vec3((float)i, (float)j, (float)k)/vec3(precision*0.5);
+        vec3 tmp = cross(p, dir);
+
+        if(dot(tmp, tmp) <= 1.f)
+            v.push_back(VoxelInfos{(p*radius)+pos, voxelScale*0.5f});
+    }
+}
+
+enum CombinaisonType
+{
+    SUBSTRACTION,
+    UNION,
+    INTERSECTION
+};
+
+void VoxelAddTubeSphereCombinaison(
+    std::vector<VoxelInfos> &v, 
+    vec3 TubePos, vec3 TubeDir, float TubeRadius, 
+    vec3 SpherePos, float SphereRadius, 
+    float scale,
+    int precision,
+    CombinaisonType type)
+{
+    float voxelScale = (scale*2.f)/precision;
+    for(int i = 0; i < precision; i++)
+    for(int j = 0; j < precision; j++)
+    for(int k = 0; k < precision; k++)
+    {
+        vec3 p = vec3(1.0) - vec3((float)i, (float)j, (float)k)/vec3(precision*0.5);
+        p *= scale;
+
+        bool sphere = distance(p, SpherePos) <= SphereRadius;
+
+        bool tube = length(cross(p-TubePos, TubeDir)) <= TubeRadius;
+
+        bool b = false;
+
+        switch (type)
+        {
+        case UNION : b = sphere || tube; break;
+        case INTERSECTION : b = sphere && tube; break;
+        case SUBSTRACTION : b = sphere && !tube; break;
+        
+        default:
+            break;
+        }
+
+        if(b)
+            v.push_back(VoxelInfos{p, voxelScale});
+    }
+}
+
+
+struct OctreeInfo
+{
+    vec3 position;
+    float scale;
+    int depth = 0;
+};
+
+void VoxelAddSphereOctree(std::vector<VoxelInfos> &v, vec3 pos, float radius, int maxDepth, int minDepth)
+{
+    std::list<OctreeInfo> o;
+
+    o.push_back(OctreeInfo{vec3(0), 1, 0});
+
+    while(!o.empty())
+    {
+        OctreeInfo node = o.front();
+        o.pop_front();
+
+        int nbPushed = 0;
+
+        for(int i = -1; i < 2; i+=2)
+        for(int j = -1; j < 2; j+=2)
+        for(int k = -1; k < 2; k+=2)
+        {
+            vec3 p = node.position + (vec3(i, j, k)*vec3(node.scale*0.5));
+            
+            if(length(p) <= 1.0 || node.depth < minDepth)
+            {
+                if(node.depth < maxDepth)
+                {
+                    o.push_back(OctreeInfo{p, node.scale*0.5f, node.depth+1});
+                    nbPushed++;
+                }
+                else if(node.depth == maxDepth)
+                {
+                    v.push_back(VoxelInfos{(p*radius) + pos, 0.01f * (radius/node.scale)});
+                }
+            }
+        }
+
+        if(nbPushed == 8 &&  node.depth >= minDepth)
+        {
+            for(int i = 0; i < 8; i++)
+                o.pop_back();
+
+            v.push_back(VoxelInfos{(node.position*radius) + pos, 0.01f * 2.f*(radius/node.scale)});
+        }
+    }
+
+    std::cout << v.size() << "\n";
 }
 
 void App::mainloop()
@@ -357,48 +587,6 @@ void App::mainloop()
     skybox->depthWrite = false;
     scene.add(skybox);
     
-    {
-    // ModelRef jug = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/jug.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(5.0)
-    //         .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    // ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
-    // barberShopChair
-    //     ->loadFromFolder("ressources/test/chair/")
-    //     .state.setPosition(vec3(2.0, 0.0, 0.0));
-
-    // ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
-    // guitar
-    //     ->loadFromFolder("ressources/test/guitar/")
-    //     .state.setPosition(vec3(4.0, 0.0, 0.0));
-
-    // ModelRef woman = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/woman/woman.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(1.0)
-    //         .setPosition(vec3(-2.0, 0.0, 0.0)));
-
-    // ModelRef plane = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/plane.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(0.25)
-    //         .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    // plane->setMap(
-    //     Texture2D()
-    //         .loadFromFile("ressources/test/sphere/floor.jpg")
-    //         .generate(),
-    //         0);
-    
-    // scene.add(guitar);
-    // scene.add(barberShopChair);
-    }
-    
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
             .setColor(vec3(143, 107, 71)/vec3(255))
@@ -423,202 +611,52 @@ void App::mainloop()
 
     glLineWidth(15.0);
 
-    #ifdef MATERIAL_TEST
-        #define TEST_KTX
 
-        #ifndef TEST_KTX
-        std::vector<std::string> mtTextureName
-        {
-            "ressources/material demo/png/0",
-            "ressources/material demo/png/1",
-            "ressources/material demo/png/2",
-            "ressources/material demo/png/3",
-            "ressources/material demo/png/4",
-            "ressources/material demo/png/5",
-            "ressources/material demo/png/6",
-            "ressources/material demo/png/7",
-            "ressources/material demo/png/8",
-            "ressources/material demo/png/9",
-            "ressources/material demo/png/10",
-            "ressources/material demo/png/11",
-            "ressources/material demo/ktx/12"
-        };
-        #else
-        std::vector<std::string> mtTextureName
-        {
-            "ressources/material demo/ktx/0",
-            "ressources/material demo/ktx/1",
-            "ressources/material demo/ktx/2",
-            "ressources/material demo/ktx/3",
-            "ressources/material demo/ktx/4",
-            "ressources/material demo/ktx/5",
-            "ressources/material demo/ktx/6",
-            "ressources/material demo/ktx/7",
-            "ressources/material demo/ktx/8",
-            "ressources/material demo/ktx/9",
-            "ressources/material demo/ktx/10",
-            "ressources/material demo/ktx/11",
-            "ressources/material demo/ktx/12"
-        };
-        #endif
+    // MeshVao cube = readOBJ("ressources/material demo/cube.obj");
+    // vec3 cube->attributes[0].buffer.get();
 
-        // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
+    ModelRef surface(new MeshModel3D);
 
-        BenchTimer mtTimer;
-        mtTimer.start();
-        for(size_t t = 0; t < mtTextureName.size(); t++)
-        {
-            Texture2D color;
-            Texture2D material;
+    surface->setMaterial(uvPhong);
+    surface->setMap(
+        Texture2D()
+            .loadFromFile("ressources/voxel/color.png")
+            .setFormat(GL_RGBA)
+            .setInternalFormat(GL_SRGB8_ALPHA8)
+            .generate(),
+        0);
 
-            #ifndef TEST_KTX
-            std::string namec = mtTextureName[t] + "CE.png";
-            color.loadFromFile(namec.c_str())
-                .setFormat(GL_RGBA)
-                .setInternalFormat(GL_SRGB8_ALPHA8)
-                .generate();
-
-            std::string namem = mtTextureName[t] + "NRM.png";
-            material.loadFromFile(namem.c_str())
-                .setFormat(GL_RGBA)
-                .setInternalFormat(GL_SRGB8_ALPHA8)
-                .generate();
-            #else
-            std::string namec = mtTextureName[t] + "CE.ktx";
-            color.loadFromFileKTX(namec.c_str());
-            std::string namem = mtTextureName[t] + "NRM.ktx";
-            material.loadFromFileKTX(namem.c_str());
-            #endif
-
-            for(size_t g = 0; g < mtGeometry.size(); g++)
-            {
-                std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
-                helper->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-                helper->state.scaleScalar(2.0);
-                materialTesters->add(helper);
-
-                ModelRef model = newModel();
-                model->setMaterial(uvPhong);
-                model->setVao(mtGeometry[g]);
-
-                model->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-                model->setMap(color, 0);
-                model->setMap(material, 1);
-
-                materialTesters->add(model);
-                scene.add(model);
-            }
-        }
-        mtTimer.end();
-        std::cout 
-        << TERMINAL_OK << "Loaded all model images in "
-        << TERMINAL_TIMER << mtTimer.getElapsedTime()
-        << TERMINAL_OK << " s\n" << TERMINAL_RESET;
-
-        materialTesters->update(true);
-        scene.add(materialTesters);
-    #else
+    surface->setMap(
+        Texture2D()
+            .loadFromFile("ressources/voxel/NRM.png")
+            .setFormat(GL_RGBA)
+            .setInternalFormat(GL_SRGB8_ALPHA8)
+            .generate(),
+        1);
     
-    #ifdef DEMO_MAGE_BATTLE
-        ModelRef ground = newModel(uvPhong, mtGeometry[2]);
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2CE.ktx"), 0);
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2NRM.ktx"), 1);
-        ground->state.setScale(vec3(ARENA_RADIUS*2.0, 0.5, ARENA_RADIUS*2.0)).setPosition(vec3(0, -0.5, 0));
-        scene.add(ground);
-        
- 
-        // SceneTubeLight test = newTubetLight();
-        // test->setColor(vec3(0, 0.5, 1.0))
-        //     .setIntensity(1.0)
-        //     .setRadius(3.0)
-        //     .setPos(vec3(-2, 0, -2), vec3(2, 0, 2));
-        // scene.add(test);
-        // scene.add(std::make_shared<TubeLightHelper>(test));
+    std::vector<VoxelInfos> v;
+
+    // VoxelAddSphereSP(v, vec3(0), 5.f, 18);
+    VoxelAddSphereOctree(v, vec3(0), 5.f, 3, 1);
+
+    // VoxelAddTubeSP(v, vec3(0), vec3(0, 1, 0), 5.f, 16);
+
+    // VoxelAddTubeSphereCombinaison(
+    //     v, 
+    //     vec3(0), normalize(vec3(0, 1.0, 1.0)), 3.0f,
+    //     vec3(0), 5.0f,
+    //     5.f,
+    //     16,
+    //     INTERSECTION
+    // );
+
+    surface->setVao(genVaoFromVoxels(v));
+
+    // surface->defaultMode = GL_LINES;
+
+    scene.add(surface);
 
 
-        MeshMaterial MageMaterial(
-                new ShaderProgram(
-                    "shader/demos/Mage_Battle/Mage.frag", 
-                    "shader/demos/Mage_Battle/Mage.vert", 
-                    "", 
-                    globals.standartShaderUniform3D() 
-                ),
-                new ShaderProgram(
-                    "shader/demos/Mage_Battle/MageDepthOnly.frag", 
-                    "shader/demos/Mage_Battle/Mage.vert", 
-                    ""
-                    , globals.standartShaderUniform3D() 
-                )     
-                );
-
-        ModelRef MageTestModelAttack = newModel(MageMaterial, mtGeometry[1]);
-        MageTestModelAttack->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelAttack->state.scaleScalar(0.5);
-
-        ModelRef MageTestModelHeal = newModel(MageMaterial, mtGeometry[0]);
-        MageTestModelHeal->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelHeal->state.scaleScalar(0.35);
-
-        ModelRef MageTestModelTank = newModel(MageMaterial, mtGeometry[2]);
-        MageTestModelTank->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelTank->state.scaleScalar(0.5);
-
-        // MageRef MageTest = SpawnNewMage(MageTestModel, vec3(0), vec3(0), DEBUG);
-        // scene.add(MageTest->getModel());
-
-        Team::healModel = MageTestModelHeal;
-        Team::attackModel = MageTestModelAttack;
-        Team::tankModel = MageTestModelTank; 
-
-        int unitsNB = 100;
-        int healNB = unitsNB*0.2f;
-        int attackNB = unitsNB*0.7f;
-        int tankNB = unitsNB*0.1f;
-
-        Team red;
-        red.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xCE, 0x20, 0x29)/vec3(255.f));
-
-        Team blue;
-        blue.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x28, 0x32, 0xC2)/vec3(255.f));
-
-        Team yellow;
-        yellow.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xFD, 0xD0, 0x17)/vec3(255.f));
-
-        Team green;
-        green.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x3C, 0xB0, 0x43)/vec3(255.f));
-
-        Team magenta;
-        // magenta.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(0, 0, 0), ARENA_RADIUS*0.3, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
-
-
-        glLineWidth(3.0);
-        globals.unpausedTime.pause();
-    #endif
-    
-    #endif
-
-    FontRef font(new FontUFT8);
-    font->readCSV("ressources/fonts/test/out.csv");
-    std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
-    ssb->font = font;
-    ssb->setMaterial(
-        MeshMaterial(new ShaderProgram(
-            "shader/2D/sprite.frag",
-            "shader/2D/sprite.vert",
-            "",
-            globals.standartShaderUniform3D()
-        ))
-    );
-    ssb->text = U"Salut à tous les amis!\nAjourd'hui on se retrouve pour une petite vidéo!";
-    ssb->batchText();
-    ssb->state.setPosition(vec3(-0.5, 0.5, 0.f));
-    ssb->setMap(Texture2D().loadFromFileKTX("ressources/fonts/test/out.ktx"), 0);
-    // ssb->setMap(Texture2D().loadFromFile("ressources/fonts/test/out.png"), 0);
-    scene2D.add(ssb, false);
-    // std::cout << (int)(u8'à') << "\n";
 
     while(state != quit)
     {
@@ -648,7 +686,6 @@ void App::mainloop()
                 PostProcessing.reset();
                 uvPhong->reset();
                 skybox->getMaterial()->reset();
-                ssb->getMaterial()->reset();
 
                 #ifdef GENERATED_SKYBOX
                     skyboxPass.getShader().reset();
@@ -738,11 +775,6 @@ void App::mainloop()
         scene.draw();
         renderBuffer.deactivate();
 
-        scene2D.updateAllObjects();
-        screenBuffer2D.activate();
-        // scene2D.draw();
-        screenBuffer2D.deactivate();
-
         renderBuffer.bindTextures();
         
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -752,10 +784,13 @@ void App::mainloop()
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
         sun->shadowMap.bindTexture(0, 6);
-        screenBuffer2D.bindTexture(0, 7);
+        // screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
  
         mainloopEndRoutine();
+
+        Bloom.disable();
+        SSAO.disable();
     }
 }

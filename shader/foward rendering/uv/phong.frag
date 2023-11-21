@@ -71,7 +71,8 @@ void main()
     mRoughness = NRM.b;
     mEmmisive = 1.0 - CE.a;
     color = CE.rgb;
-    normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
+    // normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
+    normalComposed = normal;
 
     colorVCorrection = 1.0-pow(rgb2v(color), 5.0);
 
