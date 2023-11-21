@@ -13,7 +13,7 @@ out vec3 position;
 
 void main()
 {
-    atlasUV = _atlasUV/1024.0;
+    atlasUV = _atlasUV/2048.0;
     atlasUV = vec2(atlasUV.x, 1.f - atlasUV.y);
     position = (_modelMatrix * vec4(_position, 1.0)).rgb;
     position.xy *= vec2(_iResolution.yx)/float(_iResolution.y);

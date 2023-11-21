@@ -108,15 +108,15 @@ App::App(GLFWwindow* window) :
                 .setFilter(GL_LINEAR)
                 .setWrapMode(GL_CLAMP_TO_EDGE)
                 .setAttachement(GL_COLOR_ATTACHMENT0))
-        // .addTexture(
-        //     Texture2D() 
-        //         .setResolution(globals.windowSize())
-        //         .setInternalFormat(GL_DEPTH_COMPONENT)
-        //         .setFormat(GL_DEPTH_COMPONENT)
-        //         .setPixelType(GL_UNSIGNED_BYTE)
-        //         .setFilter(GL_LINEAR)
-        //         .setWrapMode(GL_CLAMP_TO_EDGE)
-        //         .setAttachement(GL_DEPTH_ATTACHMENT))
+        .addTexture(
+            Texture2D() 
+                .setResolution(globals.windowSize())
+                .setInternalFormat(GL_DEPTH_COMPONENT)
+                .setFormat(GL_DEPTH_COMPONENT)
+                .setPixelType(GL_UNSIGNED_BYTE)
+                .setFilter(GL_LINEAR)
+                .setWrapMode(GL_CLAMP_TO_EDGE)
+                .setAttachement(GL_DEPTH_ATTACHMENT))
         .generate();
 
     globals.currentCamera = &camera;
@@ -601,7 +601,7 @@ void App::mainloop()
     #endif
 
     FontRef font(new FontUFT8);
-    font->readCSV("ressources/fonts/test/out.csv");
+    font->readCSV("ressources/fonts/MorkDungeon/out.csv");
     std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
     ssb->font = font;
     ssb->setMaterial(
@@ -614,10 +614,11 @@ void App::mainloop()
     );
     ssb->text = U"Salut à tous les amis!\nAjourd'hui on se retrouve pour une petite vidéo!";
     ssb->batchText();
-    ssb->state.setPosition(vec3(-0.5, 0.5, 0.f));
-    ssb->setMap(Texture2D().loadFromFileKTX("ressources/fonts/test/out.ktx"), 0);
+    ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
+    ssb->state.scaleScalar(1.0);
+    ssb->setMap(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"), 0);
     // ssb->setMap(Texture2D().loadFromFile("ressources/fonts/test/out.png"), 0);
-    scene2D.add(ssb, false);
+    scene2D.add(ssb);
     // std::cout << (int)(u8'à') << "\n";
 
     while(state != quit)
@@ -729,6 +730,13 @@ void App::mainloop()
             // magenta.tick();
         #endif
 
+        scene2D.updateAllObjects();
+        glEnable(GL_FRAMEBUFFER_SRGB);
+        screenBuffer2D.activate();
+        scene2D.draw();
+        screenBuffer2D.deactivate();
+        glDisable(GL_FRAMEBUFFER_SRGB);
+
         scene.updateAllObjects();
         scene.generateShadowMaps();
         renderBuffer.activate();
@@ -737,11 +745,6 @@ void App::mainloop()
         scene.genLightBuffer();
         scene.draw();
         renderBuffer.deactivate();
-
-        scene2D.updateAllObjects();
-        screenBuffer2D.activate();
-        // scene2D.draw();
-        screenBuffer2D.deactivate();
 
         renderBuffer.bindTextures();
         
