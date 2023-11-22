@@ -3,7 +3,7 @@
 
 using namespace glm;
 
-VertexAttribute::VertexAttribute(std::shared_ptr<char []> _src, 
+VertexAttribute::VertexAttribute(GenericSharedBuffer _src, 
                            GLuint _location,
                            uint64 _vertexCount, 
                            uint8  _perVertexSize = 3, 
@@ -56,6 +56,14 @@ VertexAttribute::VertexAttribute(std::shared_ptr<char []> _src,
     }
     else
         buffer = _src;
+}
+
+void VertexAttribute::updateData(GenericSharedBuffer _src, uint64 _vertexCount)
+{
+    buffer = _src;
+    vertexCount = _vertexCount;
+    bufferSize = perValuesSize*perVertexSize*vertexCount;
+    sendAllToGPU();
 }
 
 void VertexAttribute::genBuffer()

@@ -27,7 +27,7 @@ class VertexAttribute
 
         GLuint handle = 0;
         GLuint location = 0;
-        std::shared_ptr<char []> buffer;
+        GenericSharedBuffer buffer;
 
         GLenum type = GL_FLOAT;
 
@@ -36,12 +36,14 @@ class VertexAttribute
         /*
             TODO : test if the src is correctly copied
         */
-        VertexAttribute(std::shared_ptr<char []> _src, 
+        VertexAttribute(GenericSharedBuffer _src, 
                    GLuint _location,
                    uint64 _vertexCount,
                    uint8  _perVertexSize,
                    GLenum _type,
                    bool   _copySource);
+
+        void updateData(GenericSharedBuffer _src, uint64 _vertexCount);
 
         void genBuffer();
         void sendAllToGPU();

@@ -30,6 +30,10 @@
     #include <demos/Mage_Battle/Team.hpp>
 #endif
 
+#include <sstream>
+#include <iomanip>
+#include <codecvt>
+
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
@@ -729,6 +733,21 @@ void App::mainloop()
             // green.tick();
             // magenta.tick();
         #endif
+
+        // ssb->text = std::codecvt_utf <char>("");
+        
+        // std::stringstream stream;
+        // std::string test;
+        // ssb->text = U"time : " + std::u32string(test.begin(), test.end());
+
+        std::basic_ostringstream<char32_t> stream;
+        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
+        // std::basic_istream<char32_t> stream(std::u32string());
+        stream << U"time : ";
+        stream << converter.from_bytes(std::to_string(globals.unpausedTime.getElapsedTime()));
+        ssb->text = stream.str();
+        ssb->batchText();
+
 
         scene2D.updateAllObjects();
         glEnable(GL_FRAMEBUFFER_SRGB);

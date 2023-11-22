@@ -135,9 +135,8 @@ void SingleStringBatch::batchText()
     }
     else
     {
-        /*
-            TODO : complete
-        */
+        vao->attributes[0].updateData(positions, usedChar*6);
+        vao->attributes[1].updateData(uvs, usedChar*6);
     }
 }
 
