@@ -709,8 +709,8 @@ void App::mainloop()
             }
         }
 
-        float time = globals.unpausedTime.getElapsedTime()*0.25;
-        sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
+        // float time = globals.unpausedTime.getElapsedTime()*0.25;
+        // sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
 
         mainInput(globals.appTime.getDelta());
 
@@ -727,11 +727,11 @@ void App::mainloop()
 
 
         #ifdef DEMO_MAGE_BATTLE
-            // red.tick();
-            // blue.tick();
-            // yellow.tick();
-            // green.tick();
-            // magenta.tick();
+            red.tick();
+            blue.tick();
+            yellow.tick();
+            green.tick();
+            magenta.tick();
         #endif
 
         // ssb->text = std::codecvt_utf <char>("");
