@@ -30,6 +30,8 @@
     #include <demos/Mage_Battle/Team.hpp>
 #endif
 
+#include <CubeMap.hpp>
+
 #include <sstream>
 #include <iomanip>
 #include <codecvt>
@@ -328,80 +330,49 @@ void App::mainloop()
     
     scene.depthOnlyMaterial = uvDepthOnly;
 
-    ModelRef skybox = newModel(
-        uvBasic, 
-        readOBJ("ressources/test/skybox/skybox.obj", false),
-        ModelState3D()
-            .scaleScalar(10000000.0)
-            .setPosition(vec3(0.0, 0.0, 0.0)));
+    ModelRef skybox(new MeshModel3D);
+    skybox->setVao(readOBJ("ressources/test/skybox/skybox.obj", false));
+    skybox->state.scaleScalar(1E6);
 
-    Texture2D skyTexture = Texture2D();
-    
-    // #define GENERATED_SKYBOX
+    #ifdef CUBEMAP_SKYBOX
+        CubeMap skyboxCubeMap;
+        skyboxCubeMap.loadAndGenerate("ressources/test/cubemap/");
 
-    #ifdef GENERATED_SKYBOX
-        skyTexture
-            .setResolution(globals.screenResolution())
-            .setInternalFormat(GL_SRGB)
-            .setFormat(GL_RGB)
-            .setPixelType(GL_FLOAT)
-            .setFilter(GL_LINEAR)
-            .setWrapMode(GL_CLAMP_TO_EDGE)
-            .generate();
+        skybox->setMaterial(MeshMaterial((
+            new ShaderProgram(
+                "shader/foward rendering/uv/cubeMap.frag", 
+                "shader/foward rendering/uv/phong.vert", 
+                "", 
+                globals.standartShaderUniform3D() 
+            ))
+        ));
 
-        SkyboxPass skyboxPass(skyTexture, "nightPixelArt.frag");
-        // SkyboxPass skyboxPass(skyTexture, "basic.frag");
-        skyboxPass.setup();
-    #else
-        skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
+    #else 
+        Texture2D skyTexture = Texture2D();
+        skybox->setMaterial(uvBasic);
+
+        #ifdef GENERATED_SKYBOX
+            skyTexture
+                .setResolution(globals.screenResolution())
+                .setInternalFormat(GL_SRGB)
+                .setFormat(GL_RGB)
+                .setPixelType(GL_FLOAT)
+                .setFilter(GL_LINEAR)
+                .setWrapMode(GL_CLAMP_TO_EDGE)
+                .generate();
+
+            SkyboxPass skyboxPass(skyTexture, "nightPixelArt.frag");
+            // SkyboxPass skyboxPass(skyTexture, "basic.frag");
+            skyboxPass.setup();
+        #else
+            skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
+        #endif
+
+        skybox->setMap(skyTexture, 0);
     #endif
-
-    skybox->setMap(skyTexture, 0);
     skybox->invertFaces = true;
     skybox->depthWrite = false;
     scene.add(skybox);
-    
-    {
-    // ModelRef jug = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/jug.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(5.0)
-    //         .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    // ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
-    // barberShopChair
-    //     ->loadFromFolder("ressources/test/chair/")
-    //     .state.setPosition(vec3(2.0, 0.0, 0.0));
-
-    // ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
-    // guitar
-    //     ->loadFromFolder("ressources/test/guitar/")
-    //     .state.setPosition(vec3(4.0, 0.0, 0.0));
-
-    // ModelRef woman = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/woman/woman.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(1.0)
-    //         .setPosition(vec3(-2.0, 0.0, 0.0)));
-
-    // ModelRef plane = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/plane.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(0.25)
-    //         .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    // plane->setMap(
-    //     Texture2D()
-    //         .loadFromFile("ressources/test/sphere/floor.jpg")
-    //         .generate(),
-    //         0);
-    
-    // scene.add(guitar);
-    // scene.add(barberShopChair);
-    }
     
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
@@ -412,7 +383,7 @@ void App::mainloop()
     // sun->cameraResolution = vec2(2048);
     sun->cameraResolution = vec2(8192);
     sun->shadowCameraSize = vec2(90, 90);
-    // sun->activateShadows();
+    sun->activateShadows();
     scene.add(sun);
     
 
@@ -453,16 +424,16 @@ void App::mainloop()
             "ressources/material demo/ktx/0",
             "ressources/material demo/ktx/1",
             "ressources/material demo/ktx/2",
-            "ressources/material demo/ktx/3",
-            "ressources/material demo/ktx/4",
-            "ressources/material demo/ktx/5",
-            "ressources/material demo/ktx/6",
-            "ressources/material demo/ktx/7",
-            "ressources/material demo/ktx/8",
-            "ressources/material demo/ktx/9",
-            "ressources/material demo/ktx/10",
-            "ressources/material demo/ktx/11",
-            "ressources/material demo/ktx/12"
+            // "ressources/material demo/ktx/3",
+            // "ressources/material demo/ktx/4",
+            // "ressources/material demo/ktx/5",
+            // "ressources/material demo/ktx/6",
+            // "ressources/material demo/ktx/7",
+            // "ressources/material demo/ktx/8",
+            // "ressources/material demo/ktx/9",
+            // "ressources/material demo/ktx/10",
+            // "ressources/material demo/ktx/11",
+            // "ressources/material demo/ktx/12"
         };
         #endif
 
@@ -713,8 +684,8 @@ void App::mainloop()
             }
         }
 
-        // float time = globals.unpausedTime.getElapsedTime()*0.25;
-        // sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
+        float time = globals.unpausedTime.getElapsedTime();
+        sun->setDirection(normalize(vec3(0.5, -abs(cos(time)*0.25), sin(time)*0.25)));
 
         mainInput(globals.appTime.getDelta());
 
@@ -750,33 +721,35 @@ void App::mainloop()
         ssb->batchText();
 
 
-
-
-        scene2D.updateAllObjects();
-        glEnable(GL_FRAMEBUFFER_SRGB);
-        screenBuffer2D.activate();
-        scene2D.draw();
-        screenBuffer2D.deactivate();
-        glDisable(GL_FRAMEBUFFER_SRGB);
+        // scene2D.updateAllObjects();
+        // glEnable(GL_FRAMEBUFFER_SRGB);
+        // screenBuffer2D.activate();
+        // scene2D.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
+        // screenBuffer2D.deactivate();
+        // glDisable(GL_FRAMEBUFFER_SRGB);
 
         scene.updateAllObjects();
-        scene.generateShadowMaps();
+        scene.generateShadowMaps(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         renderBuffer.activate();
-        skyTexture.bind(4);
-        //sun->shadowMap.bindTexture(0, 2);
+        #ifdef CUBEMAP_SKYBOX
+            skyboxCubeMap.bind();
+        #else
+            skyTexture.bind(4);
+        #endif
+        sun->shadowMap.bindTexture(0, 2);
         scene.genLightBuffer();
-        scene.draw();
+        scene.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         renderBuffer.deactivate();
 
         renderBuffer.bindTextures();
         
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        SSAO.render(camera);
+        SSAO.render(camera); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
-        // sun->shadowMap.bindTexture(0, 6);
+        sun->shadowMap.bindTexture(0, 6);
         screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();

@@ -148,7 +148,7 @@ void BloomPass::render(Camera &camera)
 {
     if(isEnable)
     {
-        shader.activate();
+        shader.activate(); 
 
         FBO.activate();
         glUniform1i(3, 1);

@@ -1,6 +1,10 @@
 #include functions/HSV.glsl
 
-layout (binding = 4) uniform sampler2D bSkyTexture;
+#ifdef CUBEMAP_SKYBOX
+    uniform samplerCube bSkyTexture; 
+#else
+    layout (binding = 4) uniform sampler2D bSkyTexture;
+#endif
 
 #define DIFFUSE
 #define SPECULAR
