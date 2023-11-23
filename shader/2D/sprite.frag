@@ -3,6 +3,8 @@
 layout (location = 0) out vec4 fragColor;
 layout (binding = 0) uniform sampler2D bAtlas;
 
+layout (location = 32) uniform vec3 _textColor;
+
 in vec2 atlasUV;
 in vec3 position;
 
@@ -12,7 +14,7 @@ float median(float r, float g, float b) {
 
 void main()
 {
-    vec3 bodyColor = vec3(1.f);
+    vec3 bodyColor = _textColor;
     vec3 outlineColor = vec3(0.f);
 
     vec4 texel = texture(bAtlas, atlasUV);
@@ -25,7 +27,7 @@ void main()
   	float pxDist = pxRange * (dist - 0.2);
 	// float opacity = clamp(pxDist + 0.5, 0.0, 1.0);
     float opacity = pxDist;
-    fragColor = vec4(1.0, 1.0, 1.0, opacity);
+    fragColor = vec4(bodyColor, opacity);
 
 
     // float BpxRange = 10.0;

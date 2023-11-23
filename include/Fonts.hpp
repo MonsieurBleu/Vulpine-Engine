@@ -37,7 +37,9 @@ class FontUFT8
     public :
         FontUFT8& readCSV(const std::string filename);
         FontUFT8& setAtlas(Texture2D newAtlas);
-        FontCharInfo &getInfo(unsigned char uft8);
+        FontCharInfo &getInfo(int uft8);
+        
+        Texture2D getAtlas();
 };
 
 typedef std::shared_ptr<FontUFT8> FontRef;
@@ -45,10 +47,10 @@ typedef std::shared_ptr<FontUFT8> FontRef;
 class SingleStringBatch : public MeshModel3D
 {
     private : 
-        
+        FontRef font;
 
     public : 
-        FontRef font;
+        void setFont(FontRef newFont);
         std::u32string text;
         void batchText();
         void genVao(); // maybe useless

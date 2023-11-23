@@ -5,6 +5,8 @@
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl
 
+layout (location = 32) uniform vec3 _textColor;
+
 layout (location = 0) in vec3 _position;
 layout (location = 1) in vec2 _atlasUV;
 

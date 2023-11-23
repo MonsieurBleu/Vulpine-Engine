@@ -412,7 +412,7 @@ void App::mainloop()
     // sun->cameraResolution = vec2(2048);
     sun->cameraResolution = vec2(8192);
     sun->shadowCameraSize = vec2(90, 90);
-    sun->activateShadows();
+    // sun->activateShadows();
     scene.add(sun);
     
 
@@ -577,7 +577,7 @@ void App::mainloop()
         Team::attackModel = MageTestModelAttack;
         Team::tankModel = MageTestModelTank; 
 
-        int unitsNB = 100;
+        int unitsNB = 10;
         int healNB = unitsNB*0.2f;
         int attackNB = unitsNB*0.7f;
         int tankNB = unitsNB*0.1f;
@@ -606,8 +606,11 @@ void App::mainloop()
 
     FontRef font(new FontUFT8);
     font->readCSV("ressources/fonts/MorkDungeon/out.csv");
+    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
+
+
     std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
-    ssb->font = font;
+    ssb->setFont(font);;
     ssb->setMaterial(
         MeshMaterial(new ShaderProgram(
             "shader/2D/sprite.frag",
@@ -616,11 +619,12 @@ void App::mainloop()
             globals.standartShaderUniform3D()
         ))
     );
-    ssb->text = U"Salut à tous les amis!\nAjourd'hui on se retrouve pour une petite vidéo!";
+    // ssb->text = U"Salut à tous les amis!\nAjourd'hui on se retrouve pour une petite vidéo!";
     ssb->batchText();
     ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
-    ssb->state.scaleScalar(1.0);
-    ssb->setMap(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"), 0);
+    // ssb->setMap(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"), 0);
+    vec3 timerColor = vec3(0x9A, 0x7B, 0x4F)/vec3(256.f);
+    ssb->uniforms.add(ShaderUniform(&timerColor, 32));
     // ssb->setMap(Texture2D().loadFromFile("ressources/fonts/test/out.png"), 0);
     scene2D.add(ssb);
     // std::cout << (int)(u8'à') << "\n";
@@ -740,13 +744,12 @@ void App::mainloop()
         // std::string test;
         // ssb->text = U"time : " + std::u32string(test.begin(), test.end());
 
-        std::basic_ostringstream<char32_t> stream;
+        // std::basic_ostringstream<char32_t> stream;
         std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-        // std::basic_istream<char32_t> stream(std::u32string());
-        stream << U"time : ";
-        stream << converter.from_bytes(std::to_string(globals.unpausedTime.getElapsedTime()));
-        ssb->text = stream.str();
+        ssb->text = U"time : " + converter.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
         ssb->batchText();
+
+
 
 
         scene2D.updateAllObjects();
@@ -760,7 +763,7 @@ void App::mainloop()
         scene.generateShadowMaps();
         renderBuffer.activate();
         skyTexture.bind(4);
-        sun->shadowMap.bindTexture(0, 2);
+        //sun->shadowMap.bindTexture(0, 2);
         scene.genLightBuffer();
         scene.draw();
         renderBuffer.deactivate();
@@ -773,7 +776,7 @@ void App::mainloop()
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
-        sun->shadowMap.bindTexture(0, 6);
+        // sun->shadowMap.bindTexture(0, 6);
         screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();

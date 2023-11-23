@@ -60,11 +60,15 @@ FontUFT8& FontUFT8::setAtlas(Texture2D newAtlas)
     return *this;
 }
 
-FontCharInfo& FontUFT8::getInfo(unsigned char uft8)
+FontCharInfo& FontUFT8::getInfo(int uft8)
 {
     return characters[uft8];
 }
 
+Texture2D FontUFT8::getAtlas()
+{
+    return atlas;
+}
 
 void SingleStringBatch::batchText()
 {
@@ -138,6 +142,13 @@ void SingleStringBatch::batchText()
         vao->attributes[0].updateData(positions, usedChar*6);
         vao->attributes[1].updateData(uvs, usedChar*6);
     }
+}
+
+void SingleStringBatch::setFont(FontRef newFont)
+{
+    font = newFont;
+    removeMap(0);
+    setMap(font->getAtlas(), 0);
 }
 
 void SingleStringBatch::genVao()
