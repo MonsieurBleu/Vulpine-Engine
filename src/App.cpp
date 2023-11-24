@@ -30,9 +30,9 @@
     #include <demos/Mage_Battle/Team.hpp>
 #endif
 
-#include <sstream>
-#include <iomanip>
-#include <codecvt>
+// #include <sstream>
+// #include <iomanip>
+// #include <codecvt>
 
 //https://antongerdelan.net/opengl/hellotriangle.html
 
@@ -608,26 +608,22 @@ void App::mainloop()
     font->readCSV("ressources/fonts/MorkDungeon/out.csv");
     font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
 
-
-    std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
-    ssb->setFont(font);;
-    ssb->setMaterial(
-        MeshMaterial(new ShaderProgram(
+    MeshMaterial defaultFontMaterial(
+        new ShaderProgram(
             "shader/2D/sprite.frag",
             "shader/2D/sprite.vert",
             "",
             globals.standartShaderUniform3D()
-        ))
-    );
-    // ssb->text = U"Salut à tous les amis!\nAjourd'hui on se retrouve pour une petite vidéo!";
-    ssb->batchText();
+        ));
+
+    std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
+    ssb->setFont(font);;
+    ssb->setMaterial(defaultFontMaterial);
+
     ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
-    // ssb->setMap(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"), 0);
     vec3 timerColor = vec3(0x9A, 0x7B, 0x4F)/vec3(256.f);
     ssb->uniforms.add(ShaderUniform(&timerColor, 32));
-    // ssb->setMap(Texture2D().loadFromFile("ressources/fonts/test/out.png"), 0);
     scene2D.add(ssb);
-    // std::cout << (int)(u8'à') << "\n";
 
     while(state != quit)
     {
@@ -713,8 +709,8 @@ void App::mainloop()
             }
         }
 
-        // float time = globals.unpausedTime.getElapsedTime()*0.25;
-        // sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
+        float time = globals.unpausedTime.getElapsedTime();
+        // sun->setDirection(normalize(vec3(0.5, -abs(cos(time*0.25)), sin(time*0.25))));
 
         mainInput(globals.appTime.getDelta());
 
@@ -738,18 +734,8 @@ void App::mainloop()
             magenta.tick();
         #endif
 
-        // ssb->text = std::codecvt_utf <char>("");
-        
-        // std::stringstream stream;
-        // std::string test;
-        // ssb->text = U"time : " + std::u32string(test.begin(), test.end());
-
-        // std::basic_ostringstream<char32_t> stream;
-        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-        ssb->text = U"time : " + converter.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
+        ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
         ssb->batchText();
-
-
 
 
         scene2D.updateAllObjects();

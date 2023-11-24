@@ -12,6 +12,10 @@ typedef unsigned int UFT8;
         https://github.com/Chlumsky/msdf-atlas-gen#atlas-types
 */
 
+#include <codecvt>
+#include <iomanip>
+std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
+
 struct FontCharInfo
 {
     UFT8 unicode = 0;
