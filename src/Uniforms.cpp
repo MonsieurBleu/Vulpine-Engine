@@ -69,9 +69,9 @@ void ShaderUniform::activate() const
         case _3uiv : glUniform3uiv(location, count, (uint32 *) data); break;
         case _4uiv : glUniform4uiv(location, count, (uint32 *) data); break;
 
-        case Matrix2fv : glUniformMatrix2fv(location, count, false, (float*)data);
-        case Matrix3fv : glUniformMatrix3fv(location, count, false, (float*)data);
-        case Matrix4fv : glUniformMatrix4fv(location, count, false, (float*)data);
+        case Matrix2fv : glUniformMatrix2fv(location, count, false, (float*)data); break;
+        case Matrix3fv : glUniformMatrix3fv(location, count, false, (float*)data); break;
+        case Matrix4fv : glUniformMatrix4fv(location, count, false, (float*)data); break;
 
         default: break;
     }
