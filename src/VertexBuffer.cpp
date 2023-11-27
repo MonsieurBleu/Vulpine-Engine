@@ -1,7 +1,61 @@
 #include <iostream>
 #include <VertexBuffer.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 using namespace glm;
+
+std::ostream& operator<<(std::ostream& os, const VertexAttribute &l)
+{
+    switch (l.type)
+    {
+    case GL_FLOAT :
+        switch (l.perVertexSize)
+        {
+        case 4 :
+        {
+            vec4 *d = (vec4 *)l.buffer.get();
+            for(uint64 i = 0; i < l.vertexCount; i++)
+                os << to_string(d[i]) << "\n";
+        }
+            break;
+
+        case 3 :
+        {
+            vec3 *d = (vec3 *)l.buffer.get();
+            for(uint64 i = 0; i < l.vertexCount; i++)
+                os << to_string(d[i]) << "\n";
+        }
+            break;
+
+        case 2 :
+        {
+            vec2 *d = (vec2 *)l.buffer.get();
+            for(uint64 i = 0; i < l.vertexCount; i++)
+                os << to_string(d[i]) << "\n";
+        }
+            break;
+
+        case 1 :
+        {
+            vec1 *d = (vec1 *)l.buffer.get();
+            for(uint64 i = 0; i < l.vertexCount; i++)
+                os << to_string(d[i]) << "\n";
+        }
+            break;
+
+        default:
+            break;
+        }
+        break;
+    
+    default:
+        break;
+    }
+
+
+
+    return os;
+}
 
 VertexAttribute::VertexAttribute(GenericSharedBuffer _src, 
                            GLuint _location,

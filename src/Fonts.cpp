@@ -76,7 +76,7 @@ void SingleStringBatch::batchText()
     int usedChar = 0;
     if(!size) return;
     depthWrite = false;
-    invertFaces = true;
+    // invertFaces = true;
 
     GenericSharedBuffer positions(new char[sizeof(vec3)*6*size]);
     GenericSharedBuffer uvs(new char[sizeof(vec2)*6*size]);
@@ -150,9 +150,3 @@ void SingleStringBatch::setFont(FontRef newFont)
     removeMap(0);
     setMap(font->getAtlas(), 0);
 }
-
-void SingleStringBatch::genVao()
-{
-
-
-};

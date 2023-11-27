@@ -25,6 +25,7 @@
 #include <Helpers.hpp>
 
 #include <Fonts.hpp>
+#include <FastUI.hpp>
 
 #ifdef DEMO_MAGE_BATTLE
     #include <demos/Mage_Battle/Team.hpp>
@@ -42,6 +43,8 @@ std::mutex inputMutex;
 InputBuffer inputs;
 
 Globals globals;
+
+std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
 App::App(GLFWwindow* window) : 
     window(window), 
@@ -380,8 +383,8 @@ void App::mainloop()
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0)
             );
-    // sun->cameraResolution = vec2(2048);
-    sun->cameraResolution = vec2(8192);
+    sun->cameraResolution = vec2(2048);
+    // sun->cameraResolution = vec2(8192);
     sun->shadowCameraSize = vec2(90, 90);
     sun->activateShadows();
     scene.add(sun);
@@ -591,10 +594,32 @@ void App::mainloop()
     ssb->setFont(font);;
     ssb->setMaterial(defaultFontMaterial);
 
+    MeshMaterial defaultSUIMaterial(
+        new ShaderProgram(
+            "shader/2D/fastui.frag",
+            "shader/2D/fastui.vert",
+            "",
+            globals.standartShaderUniform3D()
+        ));
+
     ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
     vec3 timerColor = vec3(0x9A, 0x7B, 0x4F)/vec3(256.f);
     ssb->uniforms.add(ShaderUniform(&timerColor, 32));
     scene2D.add(ssb);
+
+    SimpleUiTileBatchRef suitb(new SimpleUiTileBatch);
+    
+    suitb->add(SimpleUiTileRef(new SimpleUiTile(
+        ModelState3D()
+            .setPosition(vec3(-0.25, 0.5, 1))
+            .setScale(vec3(0.5, 1.0, 1)), 
+        UiTileType::CIRCLE, 
+        vec4(0.55, 0.25, 0.85, 0.5))));
+    
+    suitb->setMaterial(defaultSUIMaterial);
+    suitb->batch();
+    scene2D.add(suitb);
+
 
     while(state != quit)
     {
@@ -625,6 +650,7 @@ void App::mainloop()
                 uvPhong->reset();
                 skybox->getMaterial()->reset();
                 ssb->getMaterial()->reset();
+                defaultSUIMaterial->reset();
 
                 #ifdef GENERATED_SKYBOX
                     skyboxPass.getShader().reset();
@@ -709,12 +735,12 @@ void App::mainloop()
         ssb->batchText();
 
 
-        // scene2D.updateAllObjects();
-        // glEnable(GL_FRAMEBUFFER_SRGB);
-        // screenBuffer2D.activate();
-        // scene2D.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
-        // screenBuffer2D.deactivate();
-        // glDisable(GL_FRAMEBUFFER_SRGB);
+        scene2D.updateAllObjects();
+        glEnable(GL_FRAMEBUFFER_SRGB);
+        screenBuffer2D.activate();
+        scene2D.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
+        screenBuffer2D.deactivate();
+        glDisable(GL_FRAMEBUFFER_SRGB);
 
         scene.updateAllObjects();
         scene.generateShadowMaps(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)

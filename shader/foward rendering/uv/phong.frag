@@ -84,8 +84,8 @@ void main()
     normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
 
     // test 
-        mMetallic = 1.f;
-        mRoughness = 0.f;
+        // mMetallic = 1.f;
+        // mRoughness = 0.f;
         // color = vec3(0.85);
 
     //

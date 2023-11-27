@@ -19,6 +19,8 @@ typedef std::shared_ptr<char []> GenericSharedBuffer;
 
 class VertexAttribute
 {
+    friend std::ostream& operator<<(std::ostream&, const VertexAttribute&);
+
     private :
         uint8  perValuesSize = 0;
         uint8  perVertexSize = 3;
@@ -54,6 +56,8 @@ class VertexAttribute
         GLuint getHandle() const {return handle;};
         GLuint getVertexCount() const {return vertexCount;};
 };
+
+std::ostream& operator<<(std::ostream& os, const VertexAttribute &l);
 
 class VertexAttributeGroup
 {

@@ -14,7 +14,7 @@ typedef unsigned int UFT8;
 
 #include <codecvt>
 #include <iomanip>
-std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
+extern std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
 struct FontCharInfo
 {
@@ -56,8 +56,12 @@ class SingleStringBatch : public MeshModel3D
     public : 
         void setFont(FontRef newFont);
         std::u32string text;
+
+        /*
+            TODO : add inteligent buffer overwrite (the whole thing is not re-allocated if the place is arleady here)
+        */
         void batchText();
-        void genVao(); // maybe useless
+        // void genVao(); // maybe useless
 };
 
 
