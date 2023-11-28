@@ -30,3 +30,5 @@ obj/*.obj
 *.exe
 *.out
 *.app
+
+./.vscode/**

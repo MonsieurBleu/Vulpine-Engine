@@ -24,74 +24,70 @@
 
 #include <Helpers.hpp>
 
+#include "GameObject.hpp"
 
-#ifdef DEMO_MAGE_BATTLE
-    #include <demos/Mage_Battle/Team.hpp>
+#ifdef FPS_DEMO
+#include "demos/FPS/FPSController.hpp"
 #endif
 
-//https://antongerdelan.net/opengl/hellotriangle.html
+#ifdef DEMO_MAGE_BATTLE
+#include <demos/Mage_Battle/Team.hpp>
+#endif
+
+// https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
 InputBuffer inputs;
 
 Globals globals;
 
-App::App(GLFWwindow* window) : 
-    window(window), 
-    renderBuffer(globals.renderSizeAddr()),
-    SSAO(renderBuffer),
-    Bloom(renderBuffer)
+App::App(GLFWwindow *window) : window(window),
+                               renderBuffer(globals.renderSizeAddr()),
+                               SSAO(renderBuffer),
+                               Bloom(renderBuffer)
 {
     timestart = GetTimeMs();
 
-    glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-    {
-        giveCallbackToApp(GLFWKeyInfo{window, key, scancode, action, mods});
-    });
+    glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
+                       { giveCallbackToApp(GLFWKeyInfo{window, key, scancode, action, mods}); });
 
     /*
-        TODO : 
+        TODO :
             Test if the videoMode automaticlly update
     */
     globals._videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
 
     glfwGetWindowSize(window, &globals._windowSize.x, &globals._windowSize.y);
-    globals._renderSize = ivec2(globals._windowSize.x*globals._renderScale, globals._windowSize.y*globals._renderScale);
+    globals._renderSize = ivec2(globals._windowSize.x * globals._renderScale, globals._windowSize.y * globals._renderScale);
 
     globals._standartShaderUniform2D =
-    {
-        ShaderUniform(globals.windowSizeAddr(), 0),
-        ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
+        {
+            ShaderUniform(globals.windowSizeAddr(), 0),
+            ShaderUniform(globals.appTime.getElapsedTimeAddr(), 1),
 
-    };
+        };
 
     globals._standartShaderUniform3D =
-    {
-        ShaderUniform(globals.windowSizeAddr(),               0),
-        ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
-        ShaderUniform(camera.getProjectionViewMatrixAddr(),   2),
-        ShaderUniform(camera.getViewMatrixAddr(),             3),
-        ShaderUniform(camera.getProjectionMatrixAddr(),       4),
-        ShaderUniform(camera.getPositionAddr(),               5),
-        ShaderUniform(camera.getDirectionAddr(),              6)
-    };
+        {
+            ShaderUniform(globals.windowSizeAddr(), 0),
+            ShaderUniform(globals.appTime.getElapsedTimeAddr(), 1),
+            ShaderUniform(camera.getProjectionViewMatrixAddr(), 2),
+            ShaderUniform(camera.getViewMatrixAddr(), 3),
+            ShaderUniform(camera.getProjectionMatrixAddr(), 4),
+            ShaderUniform(camera.getPositionAddr(), 5),
+            ShaderUniform(camera.getDirectionAddr(), 6)};
 
     globals._fullscreenQuad.setVao(
         MeshVao(new VertexAttributeGroup(
-            {
-                VertexAttribute(
-                    GenericSharedBuffer(
-                        (char *)new float[12]{-1.0f,  1.0f, 1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f, 1.0f, -1.0f, -1.0f}
-                        ),
-                    0, 
-                    6, 
-                    2, 
-                    GL_FLOAT, 
-                    false
-                )
-            }
-        )));
-    
+            {VertexAttribute(
+                GenericSharedBuffer(
+                    (char *)new float[12]{-1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f}),
+                0,
+                6,
+                2,
+                GL_FLOAT,
+                false)})));
+
     globals._fullscreenQuad.getVao()->generate();
     renderBuffer.generate();
     SSAO.setup();
@@ -100,41 +96,43 @@ App::App(GLFWwindow* window) :
 
 void App::mainInput(double deltatime)
 {
-    if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
-    
+
     float camspeed = 2.0;
-    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camspeed *= 5.0;
 
     vec3 velocity(0.0);
 
-    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     {
         velocity.x += camspeed;
     }
-    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
     {
         velocity.x -= camspeed;
     }
-    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     {
         velocity.z -= camspeed;
     }
-    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
     {
         velocity.z += camspeed;
     }
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
     {
         velocity.y += camspeed;
     }
-    if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
     {
         velocity.y -= camspeed;
     }
 
+#ifndef FPS_DEMO
     camera.move(velocity, deltatime);
+#endif
 
     // if(glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
     // {
@@ -171,24 +169,24 @@ void App::mainloopEndRoutine()
 }
 
 void App::mainloop()
-{   
+{
     /// CENTER WINDOW
     glfwSetWindowPos(
-        window, 
-        (globals.screenResolution().x - globals.windowWidth())/2, 
-        (globals.screenResolution().y - globals.windowHeight())/2);
+        window,
+        (globals.screenResolution().x - globals.windowWidth()) / 2,
+        (globals.screenResolution().y - globals.windowHeight()) / 2);
 
-    /// SETTING UP THE CAMERA 
+    /// SETTING UP THE CAMERA
     camera.init(radians(50.0f), globals.windowWidth(), globals.windowHeight(), 0.1f, 1000.0f);
     // camera.init(radians(50.0f), 1920*0.05, 1080*0.05, 0.1f, 1000.0f);
 
     glEnable(GL_DEPTH_TEST);
 
     auto myfile = std::fstream("saves/cameraState.bin", std::ios::in | std::ios::binary);
-    if(myfile)
+    if (myfile)
     {
         CameraState buff;
-        myfile.read((char*)&buff, sizeof(CameraState));
+        myfile.read((char *)&buff, sizeof(CameraState));
         myfile.close();
         camera.setState(buff);
     }
@@ -200,32 +198,32 @@ void App::mainloop()
     glfwSwapInterval(1);
 
     ShaderProgram PostProcessing = ShaderProgram(
-        "shader/post-process/final composing.frag", 
-        "shader/post-process/basic.vert", 
-        "", 
+        "shader/post-process/final composing.frag",
+        "shader/post-process/basic.vert",
+        "",
         globals.standartShaderUniform2D());
-    
+
     PostProcessing.addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10));
 
-    #ifdef INVERTED_Z
+#ifdef INVERTED_Z
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
-    #endif
+#endif
 
     ScenePointLight redLight = newPointLight(
         PointLight()
-        .setColor(vec3(1, 0, 0))
-        .setPosition(vec3(1, 0.5, 0.0))
-        .setIntensity(0.75)
-        .setRadius(15.0));
+            .setColor(vec3(1, 0, 0))
+            .setPosition(vec3(1, 0.5, 0.0))
+            .setIntensity(0.75)
+            .setRadius(15.0));
 
     ScenePointLight blueLight = newPointLight(
         PointLight()
-        .setColor(vec3(0, 0.5, 1.0))
-        .setPosition(vec3(-1, 0.5, 0.0))
-        .setIntensity(1.0)
-        .setRadius(10.0));
+            .setColor(vec3(0, 0.5, 1.0))
+            .setPosition(vec3(-1, 0.5, 0.0))
+            .setIntensity(1.0)
+            .setRadius(10.0));
 
-    /*    
+    /*
     scene.add(redLight);
     scene.add(blueLight);
 
@@ -247,409 +245,604 @@ void App::mainloop()
     */
 
     MeshMaterial uvPhong(
-            new ShaderProgram(
-                "shader/foward rendering/uv/phong.frag", 
-                "shader/foward rendering/uv/phong.vert", 
-                "", 
-                globals.standartShaderUniform3D() 
-            ));
+        new ShaderProgram(
+            "shader/foward rendering/uv/phong.frag",
+            "shader/foward rendering/uv/phong.vert",
+            "",
+            globals.standartShaderUniform3D()));
 
     MeshMaterial uvBasic(
-            new ShaderProgram(
-                "shader/foward rendering/uv/basic.frag", 
-                "shader/foward rendering/uv/phong.vert", 
-                "", 
-                globals.standartShaderUniform3D() 
-            ));
+        new ShaderProgram(
+            "shader/foward rendering/uv/basic.frag",
+            "shader/foward rendering/uv/phong.vert",
+            "",
+            globals.standartShaderUniform3D()));
 
     MeshMaterial uvDepthOnly(
-            new ShaderProgram(
-                "shader/depthOnly.frag", 
-                "shader/foward rendering/uv/phong.vert", 
-                "", 
-                globals.standartShaderUniform3D() 
-            ));
-    
+        new ShaderProgram(
+            "shader/depthOnly.frag",
+            "shader/foward rendering/uv/phong.vert",
+            "",
+            globals.standartShaderUniform3D()));
+
     scene.depthOnlyMaterial = uvDepthOnly;
 
     ModelRef skybox = newModel(
-        uvBasic, 
+        uvBasic,
         readOBJ("ressources/test/skybox/skybox.obj", false),
         ModelState3D()
             .scaleScalar(10000000.0)
             .setPosition(vec3(0.0, 0.0, 0.0)));
 
     Texture2D skyTexture = Texture2D();
-    
+
     // #define GENERATED_SKYBOX
 
-    #ifdef GENERATED_SKYBOX
-        skyTexture
-            .setResolution(globals.screenResolution())
-            .setInternalFormat(GL_SRGB)
-            .setFormat(GL_RGB)
-            .setPixelType(GL_FLOAT)
-            .setFilter(GL_LINEAR)
-            .setWrapMode(GL_CLAMP_TO_EDGE)
-            .generate();
+#ifdef GENERATED_SKYBOX
+    skyTexture
+        .setResolution(globals.screenResolution())
+        .setInternalFormat(GL_SRGB)
+        .setFormat(GL_RGB)
+        .setPixelType(GL_FLOAT)
+        .setFilter(GL_LINEAR)
+        .setWrapMode(GL_CLAMP_TO_EDGE)
+        .generate();
 
-        SkyboxPass skyboxPass(skyTexture, "nightPixelArt.frag");
-        // SkyboxPass skyboxPass(skyTexture, "basic.frag");
-        skyboxPass.setup();
-    #else
-        skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
-    #endif
+    SkyboxPass skyboxPass(skyTexture, "nightPixelArt.frag");
+    // SkyboxPass skyboxPass(skyTexture, "basic.frag");
+    skyboxPass.setup();
+#else
+    skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
+#endif
 
     skybox->setMap(skyTexture, 0);
     skybox->invertFaces = true;
     skybox->depthWrite = false;
     scene.add(skybox);
-    
+
     {
-    // ModelRef jug = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/jug.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(5.0)
-    //         .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    // ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
-    // barberShopChair
-    //     ->loadFromFolder("ressources/test/chair/")
-    //     .state.setPosition(vec3(2.0, 0.0, 0.0));
+        // ModelRef jug = newModel(
+        //     uvPhong,
+        //     readOBJ("ressources/test/jug.obj", false),
+        //     ModelState3D()
+        //         .scaleScalar(5.0)
+        //         .setPosition(vec3(0.0, 0.0, 0.0)));
 
-    // ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
-    // guitar
-    //     ->loadFromFolder("ressources/test/guitar/")
-    //     .state.setPosition(vec3(4.0, 0.0, 0.0));
+        // ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
+        // barberShopChair
+        //     ->loadFromFolder("ressources/test/chair/")
+        //     .state.setPosition(vec3(2.0, 0.0, 0.0));
 
-    // ModelRef woman = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/test/woman/woman.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(1.0)
-    //         .setPosition(vec3(-2.0, 0.0, 0.0)));
+        // ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
+        // guitar
+        //     ->loadFromFolder("ressources/test/guitar/")
+        //     .state.setPosition(vec3(4.0, 0.0, 0.0));
 
-    // ModelRef plane = newModel(
-    //     uvPhong, 
-    //     readOBJ("ressources/plane.obj", false),
-    //     ModelState3D()
-    //         .scaleScalar(0.25)
-    //         .setPosition(vec3(0.0, 0.0, 0.0)));
-    
-    // plane->setMap(
-    //     Texture2D()
-    //         .loadFromFile("ressources/test/sphere/floor.jpg")
-    //         .generate(),
-    //         0);
-    
-    // scene.add(guitar);
-    // scene.add(barberShopChair);
+        // ModelRef woman = newModel(
+        //     uvPhong,
+        //     readOBJ("ressources/test/woman/woman.obj", false),
+        //     ModelState3D()
+        //         .scaleScalar(1.0)
+        //         .setPosition(vec3(-2.0, 0.0, 0.0)));
+
+        // ModelRef plane = newModel(
+        //     uvPhong,
+        //     readOBJ("ressources/plane.obj", false),
+        //     ModelState3D()
+        //         .scaleScalar(0.25)
+        //         .setPosition(vec3(0.0, 0.0, 0.0)));
+
+        // plane->setMap(
+        //     Texture2D()
+        //         .loadFromFile("ressources/test/sphere/floor.jpg")
+        //         .generate(),
+        //         0);
+
+        // scene.add(guitar);
+        // scene.add(barberShopChair);
     }
-    
+
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
-            .setColor(vec3(143, 107, 71)/vec3(255))
+            .setColor(vec3(143, 107, 71) / vec3(255))
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
-            .setIntensity(1.0)
-            );
+            .setIntensity(1.0));
     // sun->cameraResolution = vec2(2048);
     sun->cameraResolution = vec2(8192);
     sun->shadowCameraSize = vec2(90, 90);
     sun->activateShadows();
     scene.add(sun);
-    
-
 
     ObjectGroupRef materialTesters = newObjectGroup();
-    std::vector<MeshVao> mtGeometry = 
-    {
-        readOBJ("ressources/material demo/sphere.obj"),
-        readOBJ("ressources/material demo/d20.obj"),
-        readOBJ("ressources/material demo/cube.obj"),
-    };
+    std::vector<MeshVao> mtGeometry =
+        {
+            readOBJ("ressources/material demo/sphere.obj"),
+            readOBJ("ressources/material demo/d20.obj"),
+            readOBJ("ressources/material demo/cube.obj"),
+        };
 
     glLineWidth(15.0);
 
-    #ifdef MATERIAL_TEST
-        #define TEST_KTX
+#ifdef MATERIAL_TEST
+#define TEST_KTX
 
-        #ifndef TEST_KTX
-        std::vector<std::string> mtTextureName
+#ifndef TEST_KTX
+    std::vector<std::string> mtTextureName{
+        "ressources/material demo/png/0",
+        "ressources/material demo/png/1",
+        "ressources/material demo/png/2",
+        "ressources/material demo/png/3",
+        "ressources/material demo/png/4",
+        "ressources/material demo/png/5",
+        "ressources/material demo/png/6",
+        "ressources/material demo/png/7",
+        "ressources/material demo/png/8",
+        "ressources/material demo/png/9",
+        "ressources/material demo/png/10",
+        "ressources/material demo/png/11",
+        "ressources/material demo/ktx/12"};
+#else
+    std::vector<std::string> mtTextureName{
+        "ressources/material demo/ktx/0",
+        "ressources/material demo/ktx/1",
+        "ressources/material demo/ktx/2",
+        "ressources/material demo/ktx/3",
+        "ressources/material demo/ktx/4",
+        "ressources/material demo/ktx/5",
+        "ressources/material demo/ktx/6",
+        "ressources/material demo/ktx/7",
+        "ressources/material demo/ktx/8",
+        "ressources/material demo/ktx/9",
+        "ressources/material demo/ktx/10",
+        "ressources/material demo/ktx/11",
+        "ressources/material demo/ktx/12"};
+#endif
+
+    // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
+
+    BenchTimer mtTimer;
+    mtTimer.start();
+    for (size_t t = 0; t < mtTextureName.size(); t++)
+    {
+        Texture2D color;
+        Texture2D material;
+
+#ifndef TEST_KTX
+        std::string namec = mtTextureName[t] + "CE.png";
+        color.loadFromFile(namec.c_str())
+            .setFormat(GL_RGBA)
+            .setInternalFormat(GL_SRGB8_ALPHA8)
+            .generate();
+
+        std::string namem = mtTextureName[t] + "NRM.png";
+        material.loadFromFile(namem.c_str())
+            .setFormat(GL_RGBA)
+            .setInternalFormat(GL_SRGB8_ALPHA8)
+            .generate();
+#else
+        std::string namec = mtTextureName[t] + "CE.ktx";
+        color.loadFromFileKTX(namec.c_str());
+        std::string namem = mtTextureName[t] + "NRM.ktx";
+        material.loadFromFileKTX(namem.c_str());
+#endif
+
+        for (size_t g = 0; g < mtGeometry.size(); g++)
         {
-            "ressources/material demo/png/0",
-            "ressources/material demo/png/1",
-            "ressources/material demo/png/2",
-            "ressources/material demo/png/3",
-            "ressources/material demo/png/4",
-            "ressources/material demo/png/5",
-            "ressources/material demo/png/6",
-            "ressources/material demo/png/7",
-            "ressources/material demo/png/8",
-            "ressources/material demo/png/9",
-            "ressources/material demo/png/10",
-            "ressources/material demo/png/11",
-            "ressources/material demo/ktx/12"
-        };
-        #else
-        std::vector<std::string> mtTextureName
-        {
-            "ressources/material demo/ktx/0",
-            "ressources/material demo/ktx/1",
-            "ressources/material demo/ktx/2",
-            "ressources/material demo/ktx/3",
-            "ressources/material demo/ktx/4",
-            "ressources/material demo/ktx/5",
-            "ressources/material demo/ktx/6",
-            "ressources/material demo/ktx/7",
-            "ressources/material demo/ktx/8",
-            "ressources/material demo/ktx/9",
-            "ressources/material demo/ktx/10",
-            "ressources/material demo/ktx/11",
-            "ressources/material demo/ktx/12"
-        };
-        #endif
+            std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
+            helper->state.setPosition(vec3(2.5 * g, 0.0, 2.5 * t));
+            helper->state.scaleScalar(2.0);
+            materialTesters->add(helper);
 
-        // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
+            ModelRef model = newModel();
+            model->setMaterial(uvPhong);
+            model->setVao(mtGeometry[g]);
 
-        BenchTimer mtTimer;
-        mtTimer.start();
-        for(size_t t = 0; t < mtTextureName.size(); t++)
-        {
-            Texture2D color;
-            Texture2D material;
+            model->state.setPosition(vec3(2.5 * g, 0.0, 2.5 * t));
+            model->setMap(color, 0);
+            model->setMap(material, 1);
 
-            #ifndef TEST_KTX
-            std::string namec = mtTextureName[t] + "CE.png";
-            color.loadFromFile(namec.c_str())
-                .setFormat(GL_RGBA)
-                .setInternalFormat(GL_SRGB8_ALPHA8)
-                .generate();
-
-            std::string namem = mtTextureName[t] + "NRM.png";
-            material.loadFromFile(namem.c_str())
-                .setFormat(GL_RGBA)
-                .setInternalFormat(GL_SRGB8_ALPHA8)
-                .generate();
-            #else
-            std::string namec = mtTextureName[t] + "CE.ktx";
-            color.loadFromFileKTX(namec.c_str());
-            std::string namem = mtTextureName[t] + "NRM.ktx";
-            material.loadFromFileKTX(namem.c_str());
-            #endif
-
-            for(size_t g = 0; g < mtGeometry.size(); g++)
-            {
-                std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
-                helper->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-                helper->state.scaleScalar(2.0);
-                materialTesters->add(helper);
-
-                ModelRef model = newModel();
-                model->setMaterial(uvPhong);
-                model->setVao(mtGeometry[g]);
-
-                model->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
-                model->setMap(color, 0);
-                model->setMap(material, 1);
-
-                materialTesters->add(model);
-                scene.add(model);
-            }
+            materialTesters->add(model);
+            scene.add(model);
         }
-        mtTimer.end();
-        std::cout 
+    }
+    mtTimer.end();
+    std::cout
         << TERMINAL_OK << "Loaded all model images in "
         << TERMINAL_TIMER << mtTimer.getElapsedTime()
-        << TERMINAL_OK << " s\n" << TERMINAL_RESET;
+        << TERMINAL_OK << " s\n"
+        << TERMINAL_RESET;
 
-        materialTesters->update(true);
-        scene.add(materialTesters);
-    #else
-    
-    #ifdef DEMO_MAGE_BATTLE
-        ModelRef ground = newModel(uvPhong, mtGeometry[2]);
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2CE.ktx"), 0);
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2NRM.ktx"), 1);
-        ground->state.setScale(vec3(ARENA_RADIUS*2.0, 0.5, ARENA_RADIUS*2.0)).setPosition(vec3(0, -0.5, 0));
-        scene.add(ground);
-        
- 
-        // SceneTubeLight test = newTubetLight();
-        // test->setColor(vec3(0, 0.5, 1.0))
-        //     .setIntensity(1.0)
-        //     .setRadius(3.0)
-        //     .setPos(vec3(-2, 0, -2), vec3(2, 0, 2));
-        // scene.add(test);
-        // scene.add(std::make_shared<TubeLightHelper>(test));
+    materialTesters->update(true);
+    scene.add(materialTesters);
+#else
 
+#ifdef DEMO_MAGE_BATTLE
+    ModelRef ground = newModel(uvPhong, mtGeometry[2]);
+    ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2CE.ktx"), 0);
+    ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2NRM.ktx"), 1);
+    ground->state.setScale(vec3(ARENA_RADIUS * 2.0, 0.5, ARENA_RADIUS * 2.0)).setPosition(vec3(0, -0.5, 0));
+    scene.add(ground);
 
-        MeshMaterial MageMaterial(
-                new ShaderProgram(
-                    "shader/demos/Mage_Battle/Mage.frag", 
-                    "shader/demos/Mage_Battle/Mage.vert", 
-                    "", 
-                    globals.standartShaderUniform3D() 
-                ),
-                new ShaderProgram(
-                    "shader/demos/Mage_Battle/MageDepthOnly.frag", 
-                    "shader/demos/Mage_Battle/Mage.vert", 
-                    ""
-                    , globals.standartShaderUniform3D() 
-                )     
-                );
+    // SceneTubeLight test = newTubetLight();
+    // test->setColor(vec3(0, 0.5, 1.0))
+    //     .setIntensity(1.0)
+    //     .setRadius(3.0)
+    //     .setPos(vec3(-2, 0, -2), vec3(2, 0, 2));
+    // scene.add(test);
+    // scene.add(std::make_shared<TubeLightHelper>(test));
 
-        ModelRef MageTestModelAttack = newModel(MageMaterial, mtGeometry[1]);
-        MageTestModelAttack->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelAttack->state.scaleScalar(0.5);
+    MeshMaterial MageMaterial(
+        new ShaderProgram(
+            "shader/demos/Mage_Battle/Mage.frag",
+            "shader/demos/Mage_Battle/Mage.vert",
+            "",
+            globals.standartShaderUniform3D()),
+        new ShaderProgram(
+            "shader/demos/Mage_Battle/MageDepthOnly.frag",
+            "shader/demos/Mage_Battle/Mage.vert",
+            "", globals.standartShaderUniform3D()));
 
-        ModelRef MageTestModelHeal = newModel(MageMaterial, mtGeometry[0]);
-        MageTestModelHeal->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelHeal->state.scaleScalar(0.35);
+    ModelRef MageTestModelAttack = newModel(MageMaterial, mtGeometry[1]);
+    MageTestModelAttack->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
+        .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+    MageTestModelAttack->state.scaleScalar(0.5);
 
-        ModelRef MageTestModelTank = newModel(MageMaterial, mtGeometry[2]);
-        MageTestModelTank->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelTank->state.scaleScalar(0.5);
+    ModelRef MageTestModelHeal = newModel(MageMaterial, mtGeometry[0]);
+    MageTestModelHeal->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
+        .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+    MageTestModelHeal->state.scaleScalar(0.35);
 
-        // MageRef MageTest = SpawnNewMage(MageTestModel, vec3(0), vec3(0), DEBUG);
-        // scene.add(MageTest->getModel());
+    ModelRef MageTestModelTank = newModel(MageMaterial, mtGeometry[2]);
+    MageTestModelTank->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
+        .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+    MageTestModelTank->state.scaleScalar(0.5);
 
-        Team::healModel = MageTestModelHeal;
-        Team::attackModel = MageTestModelAttack;
-        Team::tankModel = MageTestModelTank; 
+    // MageRef MageTest = SpawnNewMage(MageTestModel, vec3(0), vec3(0), DEBUG);
+    // scene.add(MageTest->getModel());
 
-        int unitsNB = 1000;
-        int healNB = unitsNB*0.2f;
-        int attackNB = unitsNB*0.7f;
-        int tankNB = unitsNB*0.1f;
+    Team::healModel = MageTestModelHeal;
+    Team::attackModel = MageTestModelAttack;
+    Team::tankModel = MageTestModelTank;
 
-        Team red;
-        red.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xCE, 0x20, 0x29)/vec3(255.f));
+    int unitsNB = 2;
+    int healNB = unitsNB * 0.2f;
+    int attackNB = unitsNB * 0.7f;
+    int tankNB = unitsNB * 0.1f;
 
-        Team blue;
-        blue.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x28, 0x32, 0xC2)/vec3(255.f));
+    Team red;
+    red.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS * 0.5, 0, ARENA_RADIUS * 0.5), ARENA_RADIUS * 0.4, vec3(0xCE, 0x20, 0x29) / vec3(255.f));
 
-        Team yellow;
-        yellow.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xFD, 0xD0, 0x17)/vec3(255.f));
+    Team blue;
+    blue.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS * 0.5, 0, -ARENA_RADIUS * 0.5), ARENA_RADIUS * 0.4, vec3(0x28, 0x32, 0xC2) / vec3(255.f));
 
-        Team green;
-        green.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x3C, 0xB0, 0x43)/vec3(255.f));
+    Team yellow;
+    yellow.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS * 0.5, 0, ARENA_RADIUS * 0.5), ARENA_RADIUS * 0.4, vec3(0xFD, 0xD0, 0x17) / vec3(255.f));
 
-        Team magenta;
-        // magenta.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(0, 0, 0), ARENA_RADIUS*0.3, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
+    Team green;
+    green.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS * 0.5, 0, -ARENA_RADIUS * 0.5), ARENA_RADIUS * 0.4, vec3(0x3C, 0xB0, 0x43) / vec3(255.f));
 
+    Team magenta;
+    // magenta.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(0, 0, 0), ARENA_RADIUS*0.3, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
 
-        glLineWidth(3.0);
-        globals.unpausedTime.pause();
-    #endif
-    
-    #endif
+    glLineWidth(3.0);
+    globals.unpausedTime.pause();
+#endif
 
-    while(state != quit)
+#ifdef PHYSICS_DEMO
+    PhysicsEngine physicsEngine(&globals);
+
+    bool stepByStep = false;
+    bool step = false;
+
+    ModelRef Ball = newModel(
+        uvPhong,
+        readOBJ("ressources/test/sphere/sphere.obj", false),
+        ModelState3D()
+            .scaleScalar(1.0)
+            .setPosition(vec3(0.0, 0.0, 0.0)));
+
+    ModelRef Ball2 = newModel(
+        uvPhong,
+        readOBJ("ressources/test/sphere/sphere.obj", false),
+        ModelState3D()
+            .scaleScalar(1.0)
+            .setPosition(vec3(0.0, 0.0, 0.0)));
+
+    ModelRef Floor = newModel(
+        uvPhong,
+        readOBJ("./ressources/test/5x5x1 box.obj", false),
+        ModelState3D()
+            .setPosition(vec3(0.0, 0.0, 0.0)));
+
+    ModelRef object = newModel(
+        uvPhong,
+        readOBJ("./ressources/test/5x5x1 box.obj", false),
+        ModelState3D()
+            .setScale(vec3(0.5, .5, 0.5))
+            .setPosition(vec3(0.0, 0.0, 0.0)));
+
+    SphereCollider sphereCollider = SphereCollider(1.0);
+    AABBCollider aabbCollider = AABBCollider(vec3(-5, -.5, -5), vec3(5, .5, 5));
+    AABBCollider aabbCollider2 = AABBCollider(vec3(-2.5, -.25, -2.5), vec3(2.5, .25, 2.5));
+
+    RigidBodyRef BallBody = newRigidBody(
+        vec3(1.0, 0.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &sphereCollider); // we need to find a way to solve this, this is cursed
+
+    RigidBodyRef BallBody2 = newRigidBody(
+        vec3(0.0, -4.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &sphereCollider,
+        PhysicsMaterial(),
+        1.0,
+        true);
+
+    RigidBodyRef FloorBody = newRigidBody(
+        vec3(0.0, -9.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &aabbCollider,
+        PhysicsMaterial(),
+        0.0,
+        false);
+
+    RigidBodyRef objectBody = newRigidBody(
+        vec3(0.0, 0.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &aabbCollider2,
+        PhysicsMaterial(),
+        1.0,
+        true);
+
+    // FloorBody->setIsStatic(true);
+
+    // physicsEngine.addObject(BallBody);
+    // physicsEngine.addObject(BallBody2);
+    physicsEngine.addObject(FloorBody);
+    physicsEngine.addObject(objectBody);
+
+    ObjectGroupRef BallObject = newObjectGroup();
+    BallObject->add(Ball);
+
+    ObjectGroupRef BallObject2 = newObjectGroup();
+    BallObject2->add(Ball2);
+
+    ObjectGroupRef FloorObject = newObjectGroup();
+    FloorObject->add(Floor);
+
+    ObjectGroupRef objectObject = newObjectGroup();
+    objectObject->add(object);
+
+    GameObject BallGameObject(BallObject, BallBody);
+    GameObject BallGameObject2(BallObject2, BallBody2);
+    GameObject FloorGameObject(FloorObject, FloorBody);
+    GameObject objectGameObject(objectObject, objectBody);
+
+    // scene.add(BallObject);
+    // scene.add(BallObject2);
+    scene.add(FloorObject);
+    scene.add(objectObject);
+
+    ScenePointLight light = newPointLight(
+        PointLight()
+            .setColor(vec3(1, 1, 1))
+            .setPosition(vec3(3, 0, -5))
+            .setIntensity(100.0)
+            .setRadius(1000.0));
+
+    scene.add(light);
+
+    // test raycast
+    float t;
+    RigidBodyRef body;
+    std::vector<RigidBodyRef> bodies;
+    bodies.push_back(FloorBody);
+    bool test = raycast(Ray{vec3(0, -10, 0), vec3(0, -1, 0)}, bodies, 1.0f, t, body);
+    std::cout << "test: " << test << " t: " << t << std::endl;
+#endif
+
+#ifdef FPS_DEMO
+    RigidBody::gravity = vec3(0.0, -80, 0.0);
+    PhysicsEngine physicsEngine(&globals);
+
+    ModelRef floor = newModel(
+        uvPhong,
+        readOBJ("ressources/test/5x5x1 box.obj", false),
+        ModelState3D()
+            .setScale(vec3(32, 0.2, 32)));
+
+    AABBCollider aabbCollider = AABBCollider(vec3(-32 * 5, -.1, -32 * 5), vec3(32 * 5, .1, 32 * 5));
+
+    RigidBodyRef FloorBody = newRigidBody(
+        vec3(0.0, -9.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &aabbCollider,
+        PhysicsMaterial(),
+        0.0,
+        false);
+
+    physicsEngine.addObject(FloorBody);
+
+    ObjectGroupRef FloorObject = newObjectGroup();
+    FloorObject->add(floor);
+
+    GameObject FloorGameObject(FloorObject, FloorBody);
+
+    scene.add(FloorObject);
+
+    SphereCollider playerCollider = SphereCollider(2.0);
+
+    RigidBodyRef playerBody = newRigidBody(
+        vec3(0.0, 8.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &playerCollider,
+        PhysicsMaterial(0.0f, 0.0f, 0.0f, 0.0f),
+        1.0,
+        true);
+
+    physicsEngine.addObject(playerBody);
+
+    FPSController player(window, playerBody, &camera, &inputs);
+
+    FPSVariables::thingsYouCanStandOn.push_back(FloorBody);
+#endif
+
+#endif
+
+    while (state != quit)
     {
         mainloopStartRoutine();
-        
+
         glfwPollEvents();
 
         camera.updateMouseFollow(window);
 
+#ifndef FPS_DEMO
         GLFWKeyInfo input;
-        while(inputs.pull(input))
+        while (inputs.pull(input))
         {
-            if(input.action != GLFW_PRESS)
+            if (input.action != GLFW_PRESS)
                 continue;
 
             switch (input.key)
             {
-            case GLFW_KEY_F3 :
-                std::cout 
-                << globals.appTime << "\n";
+            case GLFW_KEY_F3:
+                std::cout
+                    << globals.appTime << "\n";
                 break;
 
             case GLFW_KEY_F5:
+#ifdef _WIN32
                 system("cls");
+#else
+                system("clear");
+#endif
+
                 SSAO.getShader().reset();
                 Bloom.getShader().reset();
                 PostProcessing.reset();
                 uvPhong->reset();
                 skybox->getMaterial()->reset();
 
-                #ifdef GENERATED_SKYBOX
-                    skyboxPass.getShader().reset();
-                #endif
+#ifdef GENERATED_SKYBOX
+                skyboxPass.getShader().reset();
+#endif
 
-                #ifdef DEMO_MAGE_BATTLE
-                    MageMaterial->reset();
-                #endif
+#ifdef DEMO_MAGE_BATTLE
+                MageMaterial->reset();
+#endif
+
+#ifdef PHYSICS_DEMO
+                BallBody->setPosition(vec3(0.0, 0.0, 0.0));
+                BallBody->setVelocity(vec3(0.0, 0.0, 0.0));
+#endif
 
                 break;
-            
+
             case GLFW_KEY_F2:
                 camera.toggleMouseFollow();
                 break;
-            
+
             case GLFW_KEY_F8:
             {
                 auto myfile = std::fstream("saves/cameraState.bin", std::ios::out | std::ios::binary);
-                myfile.write((char*)&camera.getState(), sizeof(CameraState));
+                myfile.write((char *)&camera.getState(), sizeof(CameraState));
                 myfile.close();
             }
-                break;
-            
-            case GLFW_KEY_F1 :
+            break;
+
+            case GLFW_KEY_F1:
                 wireframe = !wireframe;
                 break;
-            
 
-            case GLFW_KEY_1 :
+            case GLFW_KEY_1:
                 SSAO.toggle();
                 break;
-            
-            case GLFW_KEY_2 :
+
+            case GLFW_KEY_2:
                 Bloom.toggle();
                 break;
 
-            case GLFW_KEY_F9 : 
+            case GLFW_KEY_F9:
                 vsync = !vsync;
                 glfwSwapInterval(vsync ? 1 : 0);
                 break;
-            
-            case GLFW_KEY_TAB :
+
+            case GLFW_KEY_TAB:
                 globals.unpausedTime.toggle();
                 break;
 
+            case GLFW_KEY_SPACE:
+                globals.enablePhysics = !globals.enablePhysics;
+                break;
+
+            case GLFW_KEY_M:
+                // std::cout << "step: " << step << std::endl;
+                step = true;
+                break;
+
+            case GLFW_KEY_COMMA:
+                // std::cout << "stepByStep: " << stepByStep << std::endl;
+                stepByStep = !stepByStep;
+                break;
+
             default:
+                // std::cout << "key: " << input.key << std::endl;
                 break;
             }
         }
 
-        float time = globals.unpausedTime.getElapsedTime()*0.25;
+#else
+        physicsEngine.update(globals.appTime.getDelta());
+        player.update(globals.appTime.getDelta());
+        FloorGameObject.update(globals.appTime.getDelta());
+#endif
+        float time = globals.unpausedTime.getElapsedTime() * 0.25;
         sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
 
         mainInput(globals.appTime.getDelta());
-
         mainloopPreRenderRoutine();
 
-        #ifdef GENERATED_SKYBOX
-            skyboxPass.render(camera);
-        #endif
+#ifdef GENERATED_SKYBOX
+        skyboxPass.render(camera);
+#endif
 
-        if(wireframe)
+        if (wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-
-        #ifdef DEMO_MAGE_BATTLE
+#ifdef DEMO_MAGE_BATTLE
             // red.tick();
             // blue.tick();
             // yellow.tick();
             // green.tick();
             // magenta.tick();
-        #endif
+#endif
+
+#ifdef PHYSICS_DEMO
+        if (!stepByStep || step)
+        {
+            physicsEngine.update(globals.appTime.getDelta());
+            // BallGameObject.update(globals.appTime.getDelta());
+            // BallGameObject2.update(globals.appTime.getDelta());
+            FloorGameObject.update(globals.appTime.getDelta());
+            objectGameObject.update(globals.appTime.getDelta());
+            step = false;
+        }
+#endif
 
         scene.updateAllObjects();
         scene.generateShadowMaps();
@@ -669,7 +862,7 @@ void App::mainloop()
         sun->shadowMap.bindTexture(0, 6);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
- 
+
         mainloopEndRoutine();
     }
 }
