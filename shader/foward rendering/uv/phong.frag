@@ -67,8 +67,10 @@ void main()
     vec4 NRM = texture(bMaterial, uv);
 
     mSpecular = 0.9;
-    mMetallic = 1.0 - NRM.a;
-    mRoughness = NRM.b;
+    // mMetallic = 1.0 - NRM.a;
+    // mRoughness = NRM.b;
+    mRoughness = 0.0;
+    mMetallic = 0.0;
     mEmmisive = 1.0 - CE.a;
     color = CE.rgb;
     // normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);

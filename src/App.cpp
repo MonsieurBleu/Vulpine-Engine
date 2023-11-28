@@ -228,8 +228,6 @@ struct VoxelInfos
     float scale;
 };
 
-
-
 vec3 v[8] =
 {
     vec3(0.500000, 0.500000, -0.500000),
@@ -322,7 +320,7 @@ MeshVao genVaoFromVoxels(std::vector<VoxelInfos> vox)
 
 void VoxelAddSimpleCube(std::vector<VoxelInfos> &v, vec3 pos, float scale)
 {
-    v.push_back(VoxelInfos{vec3(0), 1});
+    v.push_back(VoxelInfos{pos, scale});
 }
 
 void VoxelAddSphereSP(std::vector<VoxelInfos> &v, vec3 pos, float radius, int precision = 32)
@@ -350,7 +348,7 @@ void VoxelAddTubeSP(std::vector<VoxelInfos> &v, vec3 pos, vec3 dir, float radius
         vec3 tmp = cross(p, dir);
 
         if(dot(tmp, tmp) <= 1.f)
-            v.push_back(VoxelInfos{(p*radius)+pos, voxelScale*0.5f});
+            v.push_back(VoxelInfos{(p*radius)+pos, voxelScale});
     }
 }
 
@@ -406,6 +404,20 @@ struct OctreeInfo
     int depth = 0;
 };
 
+int countCornerInSphere(OctreeInfo node)
+{
+    int c = 0;
+    for(int i = -1; i < 2; i+=2)
+    for(int j = -1; j < 2; j+=2)
+    for(int k = -1; k < 2; k+=2)
+    {
+        vec3 p = node.position + (vec3(i, j, k)*vec3(node.scale));
+        if(dot(p, p) <= 1.0)
+            c++;
+    }
+    return c;
+}
+
 void VoxelAddSphereOctree(std::vector<VoxelInfos> &v, vec3 pos, float radius, int maxDepth, int minDepth)
 {
     std::list<OctreeInfo> o;
@@ -418,34 +430,33 @@ void VoxelAddSphereOctree(std::vector<VoxelInfos> &v, vec3 pos, float radius, in
         o.pop_front();
 
         int nbPushed = 0;
-
-        for(int i = -1; i < 2; i+=2)
-        for(int j = -1; j < 2; j+=2)
-        for(int k = -1; k < 2; k+=2)
-        {
-            vec3 p = node.position + (vec3(i, j, k)*vec3(node.scale*0.5));
-            
-            if(length(p) <= 1.0 || node.depth < minDepth)
+        
+        if(countCornerInSphere(node) == 8 && node.depth >= minDepth)
+            v.push_back(VoxelInfos{(node.position*radius) + pos, 0.3f*2.f*radius*node.scale});
+        else
+            for(int i = -1; i < 2; i+=2)
+            for(int j = -1; j < 2; j+=2)
+            for(int k = -1; k < 2; k+=2)
             {
-                if(node.depth < maxDepth)
+                vec3 p = node.position + (vec3(i, j, k)*vec3(node.scale*0.5));
+                OctreeInfo newInfo = OctreeInfo{p, node.scale*0.5f, node.depth+1};
+                
+                // if(length(p) <= 1.0 || node.depth < minDepth)
+                if(countCornerInSphere(newInfo))
                 {
-                    o.push_back(OctreeInfo{p, node.scale*0.5f, node.depth+1});
-                    nbPushed++;
+                    if(node.depth < maxDepth)
+                    {
+                        o.push_back(OctreeInfo{newInfo});
+                        nbPushed++;
+                    }
+                    else if(node.depth == maxDepth)
+                    {
+                        v.push_back(VoxelInfos{(p*radius) + pos, radius*node.scale});
+                    }
                 }
-                else if(node.depth == maxDepth)
-                {
-                    v.push_back(VoxelInfos{(p*radius) + pos, 0.01f * (radius/node.scale)});
-                }
-            }
         }
 
-        if(nbPushed == 8 &&  node.depth >= minDepth)
-        {
-            for(int i = 0; i < 8; i++)
-                o.pop_back();
 
-            v.push_back(VoxelInfos{(node.position*radius) + pos, 0.01f * 2.f*(radius/node.scale)});
-        }
     }
 
     std::cout << v.size() << "\n";
@@ -615,10 +626,10 @@ void App::mainloop()
     // MeshVao cube = readOBJ("ressources/material demo/cube.obj");
     // vec3 cube->attributes[0].buffer.get();
 
-    ModelRef surface(new MeshModel3D);
+    ModelRef volume(new MeshModel3D);
 
-    surface->setMaterial(uvPhong);
-    surface->setMap(
+    volume->setMaterial(uvPhong);
+    volume->setMap(
         Texture2D()
             .loadFromFile("ressources/voxel/color.png")
             .setFormat(GL_RGBA)
@@ -626,7 +637,7 @@ void App::mainloop()
             .generate(),
         0);
 
-    surface->setMap(
+    volume->setMap(
         Texture2D()
             .loadFromFile("ressources/voxel/NRM.png")
             .setFormat(GL_RGBA)
@@ -636,25 +647,25 @@ void App::mainloop()
     
     std::vector<VoxelInfos> v;
 
-    // VoxelAddSphereSP(v, vec3(0), 5.f, 18);
-    VoxelAddSphereOctree(v, vec3(0), 5.f, 3, 1);
+    // VoxelAddSphereSP(v, vec3(0), 5.f, pow(2, 5));
+    // VoxelAddSphereOctree(v, vec3(15, 0, 0), 5.f, 5, 1);
 
-    // VoxelAddTubeSP(v, vec3(0), vec3(0, 1, 0), 5.f, 16);
+    // VoxelAddTubeSP(v, vec3(0), normalize(vec3(0, 1, 1)), 5.f, 32);
 
-    // VoxelAddTubeSphereCombinaison(
-    //     v, 
-    //     vec3(0), normalize(vec3(0, 1.0, 1.0)), 3.0f,
-    //     vec3(0), 5.0f,
-    //     5.f,
-    //     16,
-    //     INTERSECTION
-    // );
+    VoxelAddTubeSphereCombinaison(
+        v, 
+        vec3(0), normalize(vec3(0, 1.0, 1.0)), 3.0f,
+        vec3(0), 5.0f,
+        5.f,
+        32,
+        INTERSECTION
+    );
 
-    surface->setVao(genVaoFromVoxels(v));
+    volume->setVao(genVaoFromVoxels(v));
 
-    // surface->defaultMode = GL_LINES;
+    // volume->defaultMode = GL_LINES;
 
-    scene.add(surface);
+    scene.add(volume);
 
 
 
@@ -741,8 +752,8 @@ void App::mainloop()
             }
         }
 
-        float time = globals.unpausedTime.getElapsedTime()*0.25;
-        sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
+        // float time = globals.unpausedTime.getElapsedTime()*0.25;
+        // sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
 
         mainInput(globals.appTime.getDelta());
 
@@ -789,8 +800,5 @@ void App::mainloop()
         globals.drawFullscreenQuad();
  
         mainloopEndRoutine();
-
-        Bloom.disable();
-        SSAO.disable();
     }
 }

@@ -208,7 +208,7 @@ void main()
         // _fragColor.rgb += 0.125*texture(bEmmisive, uv).rgb; 
         _fragColor.rgb += 2.0*texture(bEmmisive, uv).rgb; 
 
-    float exposure = 1.0;
+    float exposure = 2.0;
     float gamma = 1.75;
     // float exposure = 1.0;
     // float gamma = 2.75;
