@@ -550,6 +550,47 @@ void App::mainloop()
 
     glLineWidth(3.0);
     globals.unpausedTime.pause();
+
+    FontRef font(new FontUFT8);
+    font->readCSV("ressources/fonts/MorkDungeon/out.csv");
+    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
+
+    MeshMaterial defaultFontMaterial(
+        new ShaderProgram(
+            "shader/2D/sprite.frag",
+            "shader/2D/sprite.vert",
+            "",
+            globals.standartShaderUniform3D()));
+
+    std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
+    ssb->setFont(font);
+    ;
+    ssb->setMaterial(defaultFontMaterial);
+
+    MeshMaterial defaultSUIMaterial(
+        new ShaderProgram(
+            "shader/2D/fastui.frag",
+            "shader/2D/fastui.vert",
+            "",
+            globals.standartShaderUniform3D()));
+
+    ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
+    vec3 timerColor = vec3(0x9A, 0x7B, 0x4F) / vec3(256.f);
+    ssb->uniforms.add(ShaderUniform(&timerColor, 32));
+    scene2D.add(ssb);
+
+    SimpleUiTileBatchRef suitb(new SimpleUiTileBatch);
+
+    suitb->add(SimpleUiTileRef(new SimpleUiTile(
+        ModelState3D()
+            .setPosition(vec3(-0.25, 0.5, 1))
+            .setScale(vec3(0.5, 1.0, 1)),
+        UiTileType::CIRCLE,
+        vec4(0.55, 0.25, 0.85, 0.5))));
+
+    suitb->setMaterial(defaultSUIMaterial);
+    suitb->batch();
+    scene2D.add(suitb);
 #endif
 
 #ifdef PHYSICS_DEMO
@@ -683,6 +724,27 @@ void App::mainloop()
         ModelState3D()
             .setScale(vec3(32, 0.2, 32)));
 
+    Texture2D color;
+    Texture2D normal;
+
+    std::string namec = "ressources/material demo/ktx/0CE.ktx";
+    color.loadFromFileKTX(namec.c_str())
+        .setFormat(GL_RGBA)
+        .setInternalFormat(GL_SRGB8_ALPHA8)
+        .generate();
+
+    std::string namem = "ressources/material demo/ktx/0NRM.ktx";
+    normal.loadFromFileKTX(namem.c_str())
+        .setFormat(GL_RGBA)
+        .setInternalFormat(GL_SRGB8_ALPHA8)
+        .generate();
+
+    floor->setMap(color, 0);
+    floor->setMap(normal, 1);
+
+    const float texScale = 30.0f;
+    uvPhong->addUniform(ShaderUniform(&texScale, 7));
+
     AABBCollider aabbCollider = AABBCollider(vec3(-32 * 5, -.1, -32 * 5), vec3(32 * 5, .1, 32 * 5));
 
     RigidBodyRef FloorBody = newRigidBody(
@@ -721,9 +783,7 @@ void App::mainloop()
     FPSController player(window, playerBody, &camera, &inputs);
 
     FPSVariables::thingsYouCanStandOn.push_back(FloorBody);
-#endif
 
-#endif
     FontRef font(new FontUFT8);
     font->readCSV("ressources/fonts/MorkDungeon/out.csv");
     font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
@@ -740,30 +800,16 @@ void App::mainloop()
     ;
     ssb->setMaterial(defaultFontMaterial);
 
-    MeshMaterial defaultSUIMaterial(
-        new ShaderProgram(
-            "shader/2D/fastui.frag",
-            "shader/2D/fastui.vert",
-            "",
-            globals.standartShaderUniform3D()));
+    ssb->state.setPosition(vec3(-0.95f, .5f, .0f));
 
-    ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
-    vec3 timerColor = vec3(0x9A, 0x7B, 0x4F) / vec3(256.f);
-    ssb->uniforms.add(ShaderUniform(&timerColor, 32));
+    vec3 textColor = vec3(0x00, 0x00, 0x00) / vec3(256.f);
+    ssb->uniforms.add(ShaderUniform(&textColor, 32));
+
     scene2D.add(ssb);
 
-    SimpleUiTileBatchRef suitb(new SimpleUiTileBatch);
+#endif
 
-    suitb->add(SimpleUiTileRef(new SimpleUiTile(
-        ModelState3D()
-            .setPosition(vec3(-0.25, 0.5, 1))
-            .setScale(vec3(0.5, 1.0, 1)),
-        UiTileType::CIRCLE,
-        vec4(0.55, 0.25, 0.85, 0.5))));
-
-    suitb->setMaterial(defaultSUIMaterial);
-    suitb->batch();
-    scene2D.add(suitb);
+#endif
 
     while (state != quit)
     {
@@ -799,8 +845,10 @@ void App::mainloop()
                 PostProcessing.reset();
                 uvPhong->reset();
                 skybox->getMaterial()->reset();
+#ifdef DEMO_MAGE_BATTLE
                 ssb->getMaterial()->reset();
                 defaultSUIMaterial->reset();
+#endif
 
 #ifdef GENERATED_SKYBOX
                 skyboxPass.getShader().reset();
@@ -880,8 +928,6 @@ void App::mainloop()
         player.update(globals.appTime.getDelta());
         FloorGameObject.update(globals.appTime.getDelta());
 #endif
-        float time = globals.unpausedTime.getElapsedTime() * 0.25;
-        sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
         float time = globals.unpausedTime.getElapsedTime();
         // sun->setDirection(normalize(vec3(0.5, -abs(cos(time*0.25)), sin(time*0.25))));
 
@@ -915,10 +961,13 @@ void App::mainloop()
         yellow.tick();
         green.tick();
         magenta.tick();
-#endif
-
         ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
         ssb->batchText();
+#endif
+#ifdef FPS_DEMO
+        ssb->text = U"xz Velocity : " + UFTconvert.from_bytes(std::to_string(length(vec2(playerBody->getVelocity().x, playerBody->getVelocity().z))));
+        ssb->batchText();
+#endif
 
         scene2D.updateAllObjects();
         glEnable(GL_FRAMEBUFFER_SRGB);

@@ -14,6 +14,7 @@ bool FPSVariables::S = false;
 bool FPSVariables::D = false;
 
 bool FPSVariables::grounded = false;
+bool FPSVariables::lockJump = false;
 
 std::vector<RigidBodyRef> FPSVariables::thingsYouCanStandOn;
 
@@ -92,6 +93,7 @@ void FPSController::update(float deltaTime)
             case GLFW_KEY_D:
                 FPSVariables::D = false;
                 break;
+
             default:
                 // std::cout << "Key: " << input.key << "\n";
                 break;
@@ -117,10 +119,12 @@ void FPSController::update(float deltaTime)
     }
 
     // grounded test
-    Ray ray{body->getPosition() + vec3(0, -2, 0), vec3(0.0f, -1.0f, 0.0f)};
+    Ray ray{body->getPosition() + vec3(0, -1.95, 0), vec3(0.0f, -1.0f, 0.0f)};
     float t;
     RigidBodyRef bodyIntersect;
     FPSVariables::grounded = raycast(ray, FPSVariables::thingsYouCanStandOn, 0.2f, t, bodyIntersect);
+    if (!FPSVariables::grounded)
+        FPSVariables::lockJump = false;
 
     // std::cout << "grounded: " << FPSVariables::grounded << "\n";
     // std::cout << "ray: " << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z << "\n";
@@ -130,7 +134,7 @@ void FPSController::update(float deltaTime)
 
     this->friction(deltaTime);
 
-    if (jump)
+    if (jump && !FPSVariables::lockJump)
     {
         this->jump(deltaTime);
     }
@@ -139,9 +143,14 @@ void FPSController::update(float deltaTime)
 
     vec3 pos = body->getPosition();
 
+    // head bobbing
+    float bob = sin(glfwGetTime() * 10.0f) * 0.1f;
+    float speed = length(vec2(body->getVelocity().x, body->getVelocity().z));
+    if (speed > 0)
+        pos.y += bob;
     camera->setPosition(pos);
 
-    std::cout << "\r" << length(vec2(body->getVelocity().x, body->getVelocity().z)) << " m/s   " << std::flush;
+    std::cout << "\r" << speed << " m/s   " << std::flush;
     // std::cout << "\r" << body->getVelocity().x << ", " << body->getVelocity().y << ", " << body->getVelocity().z << " m/s   " << std::flush;
 
     mouseLook();
@@ -288,6 +297,7 @@ void FPSController::jump(float deltaTime)
     body->setVelocity(vel);
 
     FPSVariables::grounded = false;
+    FPSVariables::lockJump = true;
 }
 
 #define YAW 0

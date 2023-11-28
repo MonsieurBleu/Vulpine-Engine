@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "*.c": "c",
+    "*.h": "c",
+    "*.asm": "asm-intel-x86-generic",
+    "*.y": "yacc",
+    "*.rmd": "markdown",
+    "cmath": "cpp"
+  }
+}

@@ -80,9 +80,6 @@ public:
     void setMouseFollow(bool enable) { state.followMouse = enable; };
     bool getMouseFollow() { return state.followMouse; };
 
-    void toggleMouseFollow() { state.followMouse = !state.followMouse; };
-    void setMouseFollow(bool enable) { state.followMouse = enable; };
-
     void setDirection(vec3 direction) { state.direction = direction; };
 
     void toggleForceLookAtPoint() { state.forceLookAtpoint = !state.forceLookAtpoint; };

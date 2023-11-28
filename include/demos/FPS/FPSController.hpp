@@ -10,10 +10,10 @@ using namespace glm;
 struct FPSVariables
 {
     static constexpr float maxSpeed = 32.0f;
-    static constexpr float stopSpeed = 10.0f;
+    static constexpr float stopSpeed = 20.0f;
     static constexpr float acceleration = 2.0f;
     static constexpr float airAcceleration = 0.07f;
-    static constexpr float friction = 10.0f;
+    static constexpr float friction = 20.0f;
     static constexpr float jumpForce = 60.0f;
     static constexpr float sensitivity = 0.01f;
 
@@ -33,6 +33,7 @@ struct FPSVariables
     static bool D;
 
     static bool grounded;
+    static bool lockJump;
 
     // probably should have a better name
     static std::vector<RigidBodyRef> thingsYouCanStandOn;
