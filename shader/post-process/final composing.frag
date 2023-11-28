@@ -13,11 +13,14 @@ layout(binding = 3) uniform sampler2D bAO;
 layout(binding = 4) uniform sampler2D bEmmisive;
 layout(binding = 5) uniform sampler2D texNoise;
 layout(binding = 6) uniform sampler2D bSunMap;
+layout(binding = 7) uniform sampler2D bUI;
 
 in vec2 uvScreen;
 in vec2 ViewRay;
 
 out vec4 _fragColor;
+
+// #define SHOW_SHADOWMAP
 
 vec3 rgb2hsv(vec3 c) {
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -186,7 +189,7 @@ void main() {
 
     if(bloomEnable != 0) 
         // _fragColor.rgb += 0.125*texture(bEmmisive, uv).rgb; 
-        _fragColor.rgb += 2.0 * texture(bEmmisive, uv).rgb;
+        _fragColor.rgb += texture(bEmmisive, uv).rgb;
 
     float exposure = 1.0;
     float gamma = 1.75;
@@ -204,20 +207,13 @@ void main() {
         // _fragColor.rgb = vec3(1.0 - pow(1.0 - depth, 50.0));
     ////////
 
-    /// SUN SHADOW MAP
-        // vec2 SSMuv = uvScreen * vec2(iResolution);
-        // SSMuv *= 1/512.0; 
+    #ifdef SHOW_SHADOWMAP
+    vec2 SSMuv = uvScreen * vec2(iResolution) * 1 / 512.0;
+    if(SSMuv.x >= 0. && SSMuv.x <= 1.0 && SSMuv.y >= 0. && SSMuv.y <= 1.0)
+        _fragColor.rgb = vec3(texture(bSunMap, SSMuv).r);
+    #endif
 
-        // if(SSMuv.x >= 0.f && SSMuv.x <= 1.0 && SSMuv.y >= 0.f && SSMuv.y <= 1.0)
-        // {
-        //     float depth = texture(bSunMap, SSMuv).r;    
-        //     // _fragColor.rgb = vec3(1.0 - pow(1.0 - depth, 50.0));
-        //     // depth = 1.0 - pow(1.0 - depth, 50.0);
-        //     // depth = pow(depth, 50.0*(1.0 - distance(depth, 0.1)));
-        //     _fragColor.rgb = vec3(depth);
-        // }
-
-    ///////
-
+    vec4 ui = texture(bUI, uvScreen);
+    _fragColor.rgb = mix(_fragColor.rgb, ui.rgb, ui.a);
     _fragColor.a = 1.0;
 }

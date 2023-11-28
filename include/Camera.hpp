@@ -76,6 +76,9 @@ public:
     const mat4 *getProjectionViewMatrixAddr() const { return &projectionViewMatrix; };
 
     void updateMouseFollow(GLFWwindow *window);
+    void toggleMouseFollow() { state.followMouse = !state.followMouse; };
+    void setMouseFollow(bool enable) { state.followMouse = enable; };
+    bool getMouseFollow() { return state.followMouse; };
 
     void toggleMouseFollow() { state.followMouse = !state.followMouse; };
     void setMouseFollow(bool enable) { state.followMouse = enable; };

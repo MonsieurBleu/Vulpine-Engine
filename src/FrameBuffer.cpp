@@ -32,6 +32,7 @@ FrameBuffer& FrameBuffer::bindTextures()
 {
     for(uint64 i = 0; i < textures.size(); i++)
     {
+        textures[i].generate();
         if(textures[i].getAttachement())
         {
             glFramebufferTexture2D(

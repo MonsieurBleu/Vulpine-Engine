@@ -10,7 +10,7 @@ endif
 
 # OBJ = obj/main.o obj/App.o obj/Utils.o obj/Shader.o obj/Camera.o obj/Uniforms.o obj/VertexBuffer.o obj/Mesh.o obj/Scene.o obj/Inputs.o obj/FrameBuffer.o obj/Textures.o obj/RenderPass.o obj/Timer.o obj/Globals.o
 # OBJ = $(wildcard obj/*.cpp)
-INCLUDE = -Iinclude 
+INCLUDE = -Iinclude -IexternalLibs
 ifeq ($(OS),Windows_NT)
 	EXEC = GameEngine.exe
 	RM = del /Q /F /S

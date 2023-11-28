@@ -1,0 +1,1 @@
+msdf-atlas-gen.exe -charset charset.txt -font ./fonts/MorkDungeon.ttf -type msdf -format png -dimensions 2048 2048 -imageout out.png -csv out.csv -pxrange 16

@@ -43,6 +43,7 @@ public:
     glm::ivec2 screenResolution() const;
     const int *screenResolutionAddr() const;
     const glm::vec2 mousePosition() const;
+    Camera *currentCamera;
 
     BenchTimer appTime;
     BenchTimer unpausedTime;

@@ -46,6 +46,7 @@ class Scene
 
         void updateAllObjects();
         void generateShadowMaps();
+        void genLightBuffer();
         void draw();
 
         void remove(ModelRef mesh);

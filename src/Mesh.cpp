@@ -54,6 +54,24 @@ Mesh& Mesh::setMap(Texture2D texture, int location)
     return (*this);
 }
 
+Mesh& Mesh::removeMap(int location)
+{
+    int size = maps.size();
+    std::vector<Texture2D> newMaps;
+    std::vector<int> newMapsLocation;
+    for(auto i = 0; i < size; i++)
+        if(i != location)
+        {
+            newMaps.push_back(maps[i]);
+            newMapsLocation.push_back(mapsLocation[i]);
+        }
+
+    maps = newMaps;
+    mapsLocation = newMapsLocation;
+
+    return *this;
+}
+
 void MeshModel3D::preDrawRoutine(){}
 
 void MeshModel3D::drawVAO(GLenum mode)
@@ -268,6 +286,8 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
         }
 
     }
+
+    delete data;
 
     MeshVao newVao(new VertexAttributeGroup(
         {

@@ -19,6 +19,8 @@ typedef std::shared_ptr<char []> GenericSharedBuffer;
 
 class VertexAttribute
 {
+    friend std::ostream& operator<<(std::ostream&, const VertexAttribute&);
+
     private :
         uint8  perValuesSize = 0;
         uint8  perVertexSize = 3;
@@ -27,7 +29,7 @@ class VertexAttribute
 
         GLuint handle = 0;
         GLuint location = 0;
-        std::shared_ptr<char []> buffer;
+        GenericSharedBuffer buffer;
 
         GLenum type = GL_FLOAT;
 
@@ -36,12 +38,14 @@ class VertexAttribute
         /*
             TODO : test if the src is correctly copied
         */
-        VertexAttribute(std::shared_ptr<char []> _src, 
+        VertexAttribute(GenericSharedBuffer _src, 
                    GLuint _location,
                    uint64 _vertexCount,
                    uint8  _perVertexSize,
                    GLenum _type,
                    bool   _copySource);
+
+        void updateData(GenericSharedBuffer _src, uint64 _vertexCount);
 
         void genBuffer();
         void sendAllToGPU();
@@ -52,6 +56,8 @@ class VertexAttribute
         GLuint getHandle() const {return handle;};
         GLuint getVertexCount() const {return vertexCount;};
 };
+
+std::ostream& operator<<(std::ostream& os, const VertexAttribute &l);
 
 class VertexAttributeGroup
 {

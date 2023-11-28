@@ -68,8 +68,9 @@ void main()
     vec4 NRM = texture(bMaterial, uv);
 
     mSpecular = 0.9;
-    mMetallic = 1.0 - NRM.a;
-    mRoughness = NRM.b;
+    // mMetallic = 1.0 - NRM.a;
+    // mRoughness = NRM.b;
+
     // mEmmisive = 1.0 - CE.a;
     // color = CE.rgb;
     color = _mageColor;

@@ -26,6 +26,9 @@
 
 #include "GameObject.hpp"
 
+#include <Fonts.hpp>
+#include <FastUI.hpp>
+
 #ifdef FPS_DEMO
 #include "demos/FPS/FPSController.hpp"
 #endif
@@ -35,11 +38,20 @@
 #endif
 
 // https://antongerdelan.net/opengl/hellotriangle.html
+#include <CubeMap.hpp>
+
+#include <sstream>
+#include <iomanip>
+#include <codecvt>
+
+// https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
 InputBuffer inputs;
 
 Globals globals;
+
+std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
 App::App(GLFWwindow *window) : window(window),
                                renderBuffer(globals.renderSizeAddr()),
@@ -92,6 +104,48 @@ App::App(GLFWwindow *window) : window(window),
     renderBuffer.generate();
     SSAO.setup();
     Bloom.setup();
+
+    screenBuffer2D
+        .addTexture(
+            Texture2D().setResolution(globals.windowSize()).setInternalFormat(GL_SRGB8_ALPHA8).setFormat(GL_RGBA).setPixelType(GL_UNSIGNED_BYTE).setFilter(GL_LINEAR).setWrapMode(GL_CLAMP_TO_EDGE).setAttachement(GL_COLOR_ATTACHMENT0))
+        .addTexture(
+            Texture2D()
+                .setResolution(globals.windowSize())
+                .setInternalFormat(GL_DEPTH_COMPONENT)
+                .setFormat(GL_DEPTH_COMPONENT)
+                .setPixelType(GL_UNSIGNED_BYTE)
+                .setFilter(GL_LINEAR)
+                .setWrapMode(GL_CLAMP_TO_EDGE)
+                .setAttachement(GL_DEPTH_ATTACHMENT))
+        .generate();
+
+    globals.currentCamera = &camera;
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+    glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+
+    glfwSetCursorPosCallback(window, [](GLFWwindow *window, double dx, double dy)
+                             {
+        if(globals.currentCamera->getMouseFollow())
+        {
+            vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
+            vec2 sensibility(50.0);
+            vec2 dir = sensibility * (vec2(dx, dy)-center)/center;
+
+            float yaw = radians(-dir.x);
+            float pitch = radians(-dir.y);
+
+            vec3 up = vec3(0,1,0);
+            vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
+            front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
+            front = normalize(front);
+
+            front.y = clamp(front.y, -0.9f, 0.9f);
+            globals.currentCamera->setDirection(front);
+
+            glfwSetCursorPos(window, center.x, center.y);
+        } });
 }
 
 void App::mainInput(double deltatime)
@@ -192,6 +246,7 @@ void App::mainloop()
     }
 
     Scene scene;
+    Scene scene2D;
 
     bool wireframe = false;
     bool vsync = true;
@@ -267,16 +322,24 @@ void App::mainloop()
 
     scene.depthOnlyMaterial = uvDepthOnly;
 
-    ModelRef skybox = newModel(
-        uvBasic,
-        readOBJ("ressources/test/skybox/skybox.obj", false),
-        ModelState3D()
-            .scaleScalar(10000000.0)
-            .setPosition(vec3(0.0, 0.0, 0.0)));
+    ModelRef skybox(new MeshModel3D);
+    skybox->setVao(readOBJ("ressources/test/skybox/skybox.obj", false));
+    skybox->state.scaleScalar(1E6);
 
+#ifdef CUBEMAP_SKYBOX
+    CubeMap skyboxCubeMap;
+    skyboxCubeMap.loadAndGenerate("ressources/test/cubemap/");
+
+    skybox->setMaterial(MeshMaterial((
+        new ShaderProgram(
+            "shader/foward rendering/uv/cubeMap.frag",
+            "shader/foward rendering/uv/phong.vert",
+            "",
+            globals.standartShaderUniform3D()))));
+
+#else
     Texture2D skyTexture = Texture2D();
-
-    // #define GENERATED_SKYBOX
+    skybox->setMaterial(uvBasic);
 
 #ifdef GENERATED_SKYBOX
     skyTexture
@@ -296,59 +359,18 @@ void App::mainloop()
 #endif
 
     skybox->setMap(skyTexture, 0);
+#endif
     skybox->invertFaces = true;
     skybox->depthWrite = false;
     scene.add(skybox);
-
-    {
-        // ModelRef jug = newModel(
-        //     uvPhong,
-        //     readOBJ("ressources/test/jug.obj", false),
-        //     ModelState3D()
-        //         .scaleScalar(5.0)
-        //         .setPosition(vec3(0.0, 0.0, 0.0)));
-
-        // ModelRef barberShopChair = newModel(Mesh().setMaterial(uvPhong));
-        // barberShopChair
-        //     ->loadFromFolder("ressources/test/chair/")
-        //     .state.setPosition(vec3(2.0, 0.0, 0.0));
-
-        // ModelRef guitar = newModel(Mesh().setMaterial(uvPhong));
-        // guitar
-        //     ->loadFromFolder("ressources/test/guitar/")
-        //     .state.setPosition(vec3(4.0, 0.0, 0.0));
-
-        // ModelRef woman = newModel(
-        //     uvPhong,
-        //     readOBJ("ressources/test/woman/woman.obj", false),
-        //     ModelState3D()
-        //         .scaleScalar(1.0)
-        //         .setPosition(vec3(-2.0, 0.0, 0.0)));
-
-        // ModelRef plane = newModel(
-        //     uvPhong,
-        //     readOBJ("ressources/plane.obj", false),
-        //     ModelState3D()
-        //         .scaleScalar(0.25)
-        //         .setPosition(vec3(0.0, 0.0, 0.0)));
-
-        // plane->setMap(
-        //     Texture2D()
-        //         .loadFromFile("ressources/test/sphere/floor.jpg")
-        //         .generate(),
-        //         0);
-
-        // scene.add(guitar);
-        // scene.add(barberShopChair);
-    }
 
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
             .setColor(vec3(143, 107, 71) / vec3(255))
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
             .setIntensity(1.0));
-    // sun->cameraResolution = vec2(2048);
-    sun->cameraResolution = vec2(8192);
+    sun->cameraResolution = vec2(2048);
+    // sun->cameraResolution = vec2(8192);
     sun->shadowCameraSize = vec2(90, 90);
     sun->activateShadows();
     scene.add(sun);
@@ -386,16 +408,17 @@ void App::mainloop()
         "ressources/material demo/ktx/0",
         "ressources/material demo/ktx/1",
         "ressources/material demo/ktx/2",
-        "ressources/material demo/ktx/3",
-        "ressources/material demo/ktx/4",
-        "ressources/material demo/ktx/5",
-        "ressources/material demo/ktx/6",
-        "ressources/material demo/ktx/7",
-        "ressources/material demo/ktx/8",
-        "ressources/material demo/ktx/9",
-        "ressources/material demo/ktx/10",
-        "ressources/material demo/ktx/11",
-        "ressources/material demo/ktx/12"};
+        // "ressources/material demo/ktx/3",
+        // "ressources/material demo/ktx/4",
+        // "ressources/material demo/ktx/5",
+        // "ressources/material demo/ktx/6",
+        // "ressources/material demo/ktx/7",
+        // "ressources/material demo/ktx/8",
+        // "ressources/material demo/ktx/9",
+        // "ressources/material demo/ktx/10",
+        // "ressources/material demo/ktx/11",
+        // "ressources/material demo/ktx/12"
+    };
 #endif
 
     // banger site for textures : https://ambientcg.com/list?type=Material,Atlas,Decal
@@ -500,9 +523,10 @@ void App::mainloop()
     // MageRef MageTest = SpawnNewMage(MageTestModel, vec3(0), vec3(0), DEBUG);
     // scene.add(MageTest->getModel());
 
-    Team::healModel = MageTestModelHeal;
-    Team::attackModel = MageTestModelAttack;
-    Team::tankModel = MageTestModelTank;
+    int unitsNB = 10;
+    int healNB = unitsNB * 0.2f;
+    int attackNB = unitsNB * 0.7f;
+    int tankNB = unitsNB * 0.1f;
 
     int unitsNB = 2;
     int healNB = unitsNB * 0.2f;
@@ -700,6 +724,46 @@ void App::mainloop()
 #endif
 
 #endif
+    FontRef font(new FontUFT8);
+    font->readCSV("ressources/fonts/MorkDungeon/out.csv");
+    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
+
+    MeshMaterial defaultFontMaterial(
+        new ShaderProgram(
+            "shader/2D/sprite.frag",
+            "shader/2D/sprite.vert",
+            "",
+            globals.standartShaderUniform3D()));
+
+    std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
+    ssb->setFont(font);
+    ;
+    ssb->setMaterial(defaultFontMaterial);
+
+    MeshMaterial defaultSUIMaterial(
+        new ShaderProgram(
+            "shader/2D/fastui.frag",
+            "shader/2D/fastui.vert",
+            "",
+            globals.standartShaderUniform3D()));
+
+    ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
+    vec3 timerColor = vec3(0x9A, 0x7B, 0x4F) / vec3(256.f);
+    ssb->uniforms.add(ShaderUniform(&timerColor, 32));
+    scene2D.add(ssb);
+
+    SimpleUiTileBatchRef suitb(new SimpleUiTileBatch);
+
+    suitb->add(SimpleUiTileRef(new SimpleUiTile(
+        ModelState3D()
+            .setPosition(vec3(-0.25, 0.5, 1))
+            .setScale(vec3(0.5, 1.0, 1)),
+        UiTileType::CIRCLE,
+        vec4(0.55, 0.25, 0.85, 0.5))));
+
+    suitb->setMaterial(defaultSUIMaterial);
+    suitb->batch();
+    scene2D.add(suitb);
 
     while (state != quit)
     {
@@ -735,6 +799,8 @@ void App::mainloop()
                 PostProcessing.reset();
                 uvPhong->reset();
                 skybox->getMaterial()->reset();
+                ssb->getMaterial()->reset();
+                defaultSUIMaterial->reset();
 
 #ifdef GENERATED_SKYBOX
                 skyboxPass.getShader().reset();
@@ -753,6 +819,11 @@ void App::mainloop()
 
             case GLFW_KEY_F2:
                 camera.toggleMouseFollow();
+                if (camera.getMouseFollow())
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                else
+                    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
                 break;
 
             case GLFW_KEY_F8:
@@ -811,6 +882,8 @@ void App::mainloop()
 #endif
         float time = globals.unpausedTime.getElapsedTime() * 0.25;
         sun->setDirection(normalize(vec3(0.5, -abs(cos(time)), sin(time))));
+        float time = globals.unpausedTime.getElapsedTime();
+        // sun->setDirection(normalize(vec3(0.5, -abs(cos(time*0.25)), sin(time*0.25))));
 
         mainInput(globals.appTime.getDelta());
         mainloopPreRenderRoutine();
@@ -824,14 +897,6 @@ void App::mainloop()
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-#ifdef DEMO_MAGE_BATTLE
-            // red.tick();
-            // blue.tick();
-            // yellow.tick();
-            // green.tick();
-            // magenta.tick();
-#endif
-
 #ifdef PHYSICS_DEMO
         if (!stepByStep || step)
         {
@@ -844,22 +909,47 @@ void App::mainloop()
         }
 #endif
 
+#ifdef DEMO_MAGE_BATTLE
+        red.tick();
+        blue.tick();
+        yellow.tick();
+        green.tick();
+        magenta.tick();
+#endif
+
+        ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
+        ssb->batchText();
+
+        scene2D.updateAllObjects();
+        glEnable(GL_FRAMEBUFFER_SRGB);
+        screenBuffer2D.activate();
+        scene2D.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
+        screenBuffer2D.deactivate();
+        glDisable(GL_FRAMEBUFFER_SRGB);
+
         scene.updateAllObjects();
-        scene.generateShadowMaps();
+        scene.generateShadowMaps(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         renderBuffer.activate();
+#ifdef CUBEMAP_SKYBOX
+        skyboxCubeMap.bind();
+#else
         skyTexture.bind(4);
+#endif
         sun->shadowMap.bindTexture(0, 2);
-        scene.draw();
+        scene.genLightBuffer();
+        scene.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         renderBuffer.deactivate();
+
         renderBuffer.bindTextures();
 
         glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        SSAO.render(camera);
+        SSAO.render(camera); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
         sun->shadowMap.bindTexture(0, 6);
+        screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
 

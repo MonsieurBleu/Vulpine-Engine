@@ -78,6 +78,7 @@ int main()
     glewInit();
 
     glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(MessageCallback, 0);
 
     // get version info
