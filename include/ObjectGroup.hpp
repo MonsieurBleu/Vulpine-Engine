@@ -18,6 +18,7 @@ class ObjectGroup
     protected :
         ObjectGroup* parent = NULL;
 
+        std::list<ModelStateRef> states;
         std::list<ObjectGroupRef> children;
         std::list<ModelRef> meshes;
         std::list<SceneLight> lights;
@@ -29,6 +30,7 @@ class ObjectGroup
         void add(ModelRef meshe);
         void add(SceneLight light);
         void add(ObjectGroupRef group);
+        void add(ModelStateRef state);
 
 };
 

@@ -34,6 +34,7 @@ struct LightInfos
 class Light
 {
     friend std::ostream& operator<<(std::ostream&, const Light &);
+    friend std::basic_ostringstream<char32_t>& operator<<(std::basic_ostringstream<char32_t>& os, const Light &l);
     // friend LightBuffer;
     friend ObjectGroup;
 
@@ -152,7 +153,7 @@ class LightBuffer
 };
 
 std::ostream& operator<<(std::ostream& os, const Light &l);
-
+std::basic_ostringstream<char32_t>& operator<<(std::basic_ostringstream<char32_t>& os, const Light &l);
 
 
 

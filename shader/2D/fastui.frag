@@ -43,6 +43,14 @@ float drawSquareRounded(float cornerSize, vec2 inUv)
     return mix(b, b2, 1.0-inBorder);;
 }
 
+float drawSquare(vec2 inUv)
+{
+    inUv = abs(inUv*arCorrection);
+    vec2 bUv = arCorrection-inUv;
+    float b = smoothstep(borderSize+SMOOTHSTEP_BORDER, borderSize, min(bUv.x, bUv.y));
+    return b;
+}
+
 void main()
 {
     fragColor = color;
@@ -50,13 +58,12 @@ void main()
     vec2 uvAR = uv;
     arCorrection = aspectRatio > 1.f ? vec2(aspectRatio, 1.0) : vec2(1.0, 1.0/aspectRatio);
 
-    // switch(type)
-    // {
-    //     case 1 : border = drawSquareRounded(0.1, uv); break;
-    //     case 2 : border = drawCircle(uv); break;
-    // }
-
-    border = drawSquareRounded(0.5, uv);
+    switch(type)
+    {
+        case 0 : border = drawSquare(uv); break;
+        case 1 : border = drawSquareRounded(0.5, uv); break;
+        case 2 : border = drawCircle(uv); break;
+    }
 
     fragColor.rgb *= (1.0-border)*0.5 + 0.5;
 }

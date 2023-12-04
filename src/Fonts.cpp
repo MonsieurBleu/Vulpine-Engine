@@ -1,6 +1,25 @@
 #include <Fonts.hpp>
 #include <Utils.hpp>
 
+UFT32Stream& operator<<(UFT32Stream& os, const float f)
+{
+    os << UFTconvert.from_bytes(std::to_string(f));
+    return os;
+}
+
+UFT32Stream& operator<<(UFT32Stream& os, const std::string& str)
+{
+    os << UFTconvert.from_bytes(str);
+    return os;
+}
+
+UFT32Stream& operator<<(UFT32Stream& os, const int i)
+{
+    os << UFTconvert.from_bytes(std::to_string(i));
+    return os;
+}
+
+
 FontUFT8& FontUFT8::readCSV(const std::string filename)
 {
     FILE *csv = fopen(filename.c_str(), "r");
@@ -41,6 +60,9 @@ FontUFT8& FontUFT8::readCSV(const std::string filename)
             &info.atlasRight,
             &info.atlasTop
         );
+
+        info.planeBottom -= 1.0;
+        info.planeTop -= 1.0;
 
         if(info.unicode < 256)
             characters[info.unicode] = info;
@@ -85,15 +107,25 @@ void SingleStringBatch::batchText()
 
     vec2 b = vec2(0);
     vec3 c = vec3(b, 0.f);
-    const float charSize = 0.05;
+
+    textSize = vec2(0);
 
     for(size_t i = 0; i < size; i++)
     {
-        if(text[i] == '\n')
+        switch (text[i])
         {
+        case U'\n':
             c.x = b.x;
             c.y -= charSize;
             continue;
+            break;
+        
+        case U'\t':
+            c.x += charSize*2.0;
+            continue;
+            break;
+
+        default: break;
         }
 
         size_t id = usedChar*6;
@@ -118,12 +150,21 @@ void SingleStringBatch::batchText()
             u[id+4] = u[id+2];
             u[id+5] = u[id+1];
 
+            // float maxy = abs(info.planeBottom)*charSize;
+            // if(maxy > textSize.y)
+            //     textSize.y = maxy;
+            
+            c.x += charSize*info.advance;
+            textSize = max(textSize, abs(vec2(c.x, info.planeBottom*charSize)));
+
             usedChar ++;
         }
-
-        c.x += charSize*info.advance*1.f;
+        else
+            c.x += charSize*info.advance;
     }
 
+    textSize = vec2(textSize.x, -c.y + textSize.y);
+    
     if(!vao.get() || !vao->getHandle())
     {
         setVao(
@@ -149,4 +190,9 @@ void SingleStringBatch::setFont(FontRef newFont)
     font = newFont;
     removeMap(0);
     setMap(font->getAtlas(), 0);
+}
+
+vec2 SingleStringBatch::getSize()
+{
+    return textSize;
 }

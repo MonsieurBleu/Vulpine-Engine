@@ -1,7 +1,7 @@
 #include <Light.hpp>
+#include <Fonts.hpp>
 
 #include <GL/glew.h>
-
 #include <Utils.hpp>
 
 std::ostream& operator<<(std::ostream& os, const Light &l)
@@ -13,6 +13,39 @@ std::ostream& operator<<(std::ostream& os, const Light &l)
         "\n\tDirection : (" << l.infos._direction.x << " " << l.infos._direction.y << " " << l.infos._direction.z << "), " <<
         "\n\tIntensity :" << l.infos._color.a << ", " <<
     "\n}";
+    return os;
+}
+
+std::basic_ostringstream<char32_t>& operator<<(std::basic_ostringstream<char32_t>& os, const Light &l)
+{
+    os << U"Light : ";
+        os << U"\n\tPosition : (";
+        os << l.infos._position.x;
+        os << U" ";
+        os << l.infos._position.y;
+        os << U" ";
+        os << l.infos._position.z;
+        os << U"), ";
+        
+        os << U"\n\tColor : (";
+        os << l.infos._color.x;
+        os  << U" ";
+        os  << l.infos._color.y;
+        os  << U" ";
+        os  << l.infos._color.z;
+        os  << U"), ";
+        
+        os  << U"\n\tDirection : (";
+        os  << l.infos._direction.x;
+        os  << U" ";
+        os  << l.infos._direction.y;
+        os  << U" ";
+        os  << l.infos._direction.z;
+        os  << U"), ";
+
+        os  << U"\n\tIntensity :";
+        os  << l.infos._color.a;
+
     return os;
 }
 

@@ -22,7 +22,6 @@ std::string readFile(const std::string& filePath) // Mights just use a C approac
     return content;
 }
 
-
 std::string getFileExtension(const std::string &fileName)
 {
     std::string result;

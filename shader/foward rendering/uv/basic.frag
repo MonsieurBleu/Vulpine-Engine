@@ -27,7 +27,9 @@ void main()
     // color = pow(vec3(1.0) - exp(-color*exposure), vec3(1.0/gamma));
 
     fragColor.rgb = color;
-    fragEmmisive = getStandardEmmisive(fragColor.rgb, ambientLight);
+    // fragEmmisive = getStandardEmmisive(fragColor.rgb, ambientLight);
+
+    fragEmmisive = 0.65*fragColor.rgb*(rgb2v(fragColor.rgb) - ambientLight);
 
     // fragColor.rgb = vec3(uv, 1.0);
     // fragColor.rgb = vec3(uv.x-mod(uv.x, 0.1), 0.1, 0.0);

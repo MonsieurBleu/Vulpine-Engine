@@ -212,6 +212,10 @@ void main()
 
     float exposure = 1.0;
     float gamma = 1.75;
+    
+    // float exposure = 1.0;
+    // float gamma = 1.75;
+
     // float exposure = 1.0;
     // float gamma = 2.75;
 

@@ -11,6 +11,7 @@ void ObjectGroup::update(bool forceUpdate)
         if(globalUpdate || (*i)->state.update())
         {
             (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
+            (*i)->state.hide |= state.hide;
         }
     }
 
@@ -31,12 +32,22 @@ void ObjectGroup::update(bool forceUpdate)
     for(auto i = lights.begin(); i != lights.end(); i++)
         (*i)->applyModifier(state);
 
+    for(auto i : states)
+    {
+        if(globalUpdate || i->update())
+        {
+            i->modelMatrix = state.modelMatrix * i->forceUpdate().modelMatrix;
+        }
+        i->hide |= state.hide;
+    }
+
     for(auto i = children.begin(); i != children.end(); i++)
     {
         if(globalUpdate || (*i)->state.update())
             (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
 
         (*i)->update(true);
+        (*i)->state.hide |= state.hide;
     }
 }
 
@@ -56,4 +67,9 @@ void ObjectGroup::add(SceneLight light)
 void ObjectGroup::add(ObjectGroupRef group)
 {
     children.push_back(group);
+}
+
+void ObjectGroup::add(ModelStateRef state)
+{
+    states.push_back(state);
 }

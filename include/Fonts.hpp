@@ -16,6 +16,13 @@ typedef unsigned int UFT8;
 #include <iomanip>
 extern std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
+typedef std::basic_ostringstream<char32_t> UFT32Stream;
+
+UFT32Stream& operator<<(UFT32Stream& os, const float f);
+UFT32Stream& operator<<(UFT32Stream& os, const int i);
+UFT32Stream& operator<<(UFT32Stream& os, const std::string& str);
+
+
 struct FontCharInfo
 {
     UFT8 unicode = 0;
@@ -52,8 +59,10 @@ class SingleStringBatch : public MeshModel3D
 {
     private : 
         FontRef font;
+        vec2 textSize;
 
     public : 
+        const float charSize = 0.05;
         void setFont(FontRef newFont);
         std::u32string text;
 
@@ -61,8 +70,9 @@ class SingleStringBatch : public MeshModel3D
             TODO : add inteligent buffer overwrite (the whole thing is not re-allocated if the place is arleady here)
         */
         void batchText();
-        // void genVao(); // maybe useless
+        vec2 getSize();
 };
 
+typedef std::shared_ptr<SingleStringBatch> SingleStringBatchRef;
 
 #endif

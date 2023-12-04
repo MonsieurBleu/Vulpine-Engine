@@ -158,11 +158,12 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
     mapPosition.xy = mapPosition.xy*0.5 + 0.5;    
 
     float res = 0.f;
-    float bias = 0.000003;
+    float bias = 0.00002;
+    // float bias = 0.00005;
     float radius = 0.0009;
 
     #ifdef EFFICIENT_SMOOTH_SHADOW
-        int it = 8;
+        int it = 6;
         int itPenumbra = 64;
         int i;
 

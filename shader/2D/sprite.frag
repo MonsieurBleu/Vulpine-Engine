@@ -23,11 +23,16 @@ void main()
 
     float dist = median(texel.r, texel.g, texel.b);
 
-    float pxRange = 10.0;
-  	float pxDist = pxRange * (dist - 0.2);
-	// float opacity = clamp(pxDist + 0.5, 0.0, 1.0);
-    float opacity = pxDist;
-    fragColor = vec4(bodyColor, opacity);
+    float pxRange = 1.2;
+    float pxDist = pxRange * (dist - 0.5);
+	float opacity = clamp(pxDist + 0.5, 0.0, 1.0);
+    fragColor = vec4(bodyColor, opacity*2.0);
+    
+    
+    // float pxRange = 10.0;
+  	// float pxDist = pxRange * (dist - 0.2);
+    // float opacity = pxDist;
+    // fragColor = vec4(bodyColor, opacity);
 
 
     // float BpxRange = 10.0;

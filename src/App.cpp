@@ -216,6 +216,15 @@ void App::mainloopStartRoutine()
 {
     globals.appTime.start();
     globals.unpausedTime.start();
+
+    // const float limit = 1000.f/60.f;
+    // float d = globals.appTime.getDeltaMS();
+    // BenchTimer dummy;
+    // while(dummy.getElapsedTime()*1000.f < limit-d)
+    // {
+    //     dummy.start();
+    //     dummy.end();
+    // }
 }
 
 void App::mainloopPreRenderRoutine()
@@ -579,8 +588,8 @@ void App::mainloop()
     #endif
 
     FontRef font(new FontUFT8);
-    font->readCSV("ressources/fonts/MorkDungeon/out.csv");
-    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
+    font->readCSV("ressources/fonts/Roboto/out.csv");
+    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/Roboto/out.ktx"));
 
     MeshMaterial defaultFontMaterial(
         new ShaderProgram(
@@ -605,20 +614,57 @@ void App::mainloop()
     ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
     vec3 timerColor = vec3(0x9A, 0x7B, 0x4F)/vec3(256.f);
     ssb->uniforms.add(ShaderUniform(&timerColor, 32));
-    scene2D.add(ssb);
+    // scene2D.add(ssb);
 
-    SimpleUiTileBatchRef suitb(new SimpleUiTileBatch);
+    SimpleUiTileBatchRef uiBatch(new SimpleUiTileBatch);
     
-    suitb->add(SimpleUiTileRef(new SimpleUiTile(
-        ModelState3D()
-            .setPosition(vec3(-0.25, 0.5, 1))
-            .setScale(vec3(0.5, 1.0, 1)), 
-        UiTileType::CIRCLE, 
-        vec4(0.55, 0.25, 0.85, 0.5))));
+    // suitb->add(SimpleUiTileRef(new SimpleUiTile(
+    //     ModelState3D()
+    //         .setPosition(vec3(-0.25, 0.5, 1))
+    //         .setScale(vec3(0.5, 1.0, 1)), 
+    //     UiTileType::CIRCLE, 
+    //     vec4(0.55, 0.25, 0.85, 0.5))));
     
-    suitb->setMaterial(defaultSUIMaterial);
-    suitb->batch();
-    scene2D.add(suitb);
+    uiBatch->setMaterial(defaultSUIMaterial);
+    uiBatch->state.position.z = 0.0;
+    uiBatch->state.forceUpdate();
+
+    FastUI_context ui(uiBatch, font, scene2D, defaultFontMaterial);
+
+    // std::basic_ostringstream<char32_t> u32OverloadTest;
+    // u32OverloadTest << 1.f;
+    // FastUI_valuePrinter<float> vp(globals.appTime.getElapsedTimeAddr(), U"Time : ", U" ms");
+    // vp.toString(u32OverloadTest);
+
+    float test = 9.5191564988E9;
+    // FastUI_value(&test, U"Time : ", U" ms ").toString(u32OverloadTest);
+    // FastUI_value((const float*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
+    // FastUI_value((int*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
+    // FastUI_value((const int*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
+
+
+    FastUI_valueTab valueTab(ui, 
+    {
+        FastUI_value(&test, U"Time : ", U" ms "),
+        FastUI_value((const float*)&test, U"Time : ", U" ms "),
+        FastUI_value((int*)&test, U"Time : ", U" ms "),
+        FastUI_value((const int*)&test, U"Time : ", U" ms ")
+    });
+
+    valueTab.batch();
+
+    FastUI_menuTitle UiTitleTest(ui, U"Titre 1");
+    // FastUI_menuTitle UiTitleTest2(ui, U"Menu1\nImportant");
+    // UiTitleTest->state.setPosition(vec3(-0.5, -0.1, 0.0));
+    UiTitleTest->state.scaleScalar(1.0);
+
+    valueTab->state.scaleScalar(0.5).setPosition(vec3(0, -UiTitleTest.getSize().y, 0));
+
+    scene2D.updateAllObjects();
+
+    uiBatch->batch();
+    // scene2D.add(uiBatch);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
 
     while(state != quit)
@@ -706,7 +752,7 @@ void App::mainloop()
             }
         }
 
-        float time = globals.unpausedTime.getElapsedTime();
+        // float time = globals.unpausedTime.getElapsedTime();
         // sun->setDirection(normalize(vec3(0.5, -abs(cos(time*0.25)), sin(time*0.25))));
 
         mainInput(globals.appTime.getDelta());
@@ -731,16 +777,18 @@ void App::mainloop()
             magenta.tick();
         #endif
 
-        ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
-        ssb->batchText();
+        // ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
+        // ssb->batchText();
 
-
+        glEnable(GL_BLEND); 
         scene2D.updateAllObjects();
         glEnable(GL_FRAMEBUFFER_SRGB);
         screenBuffer2D.activate();
+        uiBatch->draw();
         scene2D.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         screenBuffer2D.deactivate();
         glDisable(GL_FRAMEBUFFER_SRGB);
+        glDisable(GL_BLEND);
 
         scene.updateAllObjects();
         scene.generateShadowMaps(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)

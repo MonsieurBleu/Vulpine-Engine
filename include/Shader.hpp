@@ -19,8 +19,6 @@ enum ShaderError
     ShaderLinkingError
 };
 
-GLuint LoadShader(const char *vertex_path, const char *fragment_path);
-
 class Shader
 {
     private :

@@ -419,20 +419,20 @@ class ShaderUniform
               location(location),
               type(Matrix4fv) {};
 
-        ShaderUniform(const ModelMatrix3D data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
-              location(location),
-              type(Matrix4fv)
-            {
-                memcpy(additionalData, (void*)&data, sizeof(mat4));
-            };
+        // ShaderUniform(const ModelMatrix3D data, int location = UNIFORM_NO_LOCATION) 
+        //     : data(&additionalData), 
+        //       dataState(copiedInAdditionalData),
+        //       location(location),
+        //       type(Matrix4fv)
+        //     {
+        //         memcpy(additionalData, (void*)&data, sizeof(mat4));
+        //     };
 
-        ShaderUniform(const ModelMatrix3D *data, int location = UNIFORM_NO_LOCATION) 
-            : data(data), 
-              dataState(reference),
-              location(location),
-              type(Matrix4fv) {};
+        // ShaderUniform(const ModelMatrix3D *data, int location = UNIFORM_NO_LOCATION) 
+        //     : data(data), 
+        //       dataState(reference),
+        //       location(location),
+        //       type(Matrix4fv) {};
 
 
 

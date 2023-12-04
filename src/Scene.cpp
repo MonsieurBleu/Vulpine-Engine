@@ -109,8 +109,9 @@ void MeshGroup::draw()
 {
     material->activate();
 
-    for(auto i = meshes.begin(); i != meshes.end(); i++)
-        (*i)->drawVAO();
+    for(auto i : meshes)
+        if(!i->state.hide)
+            i->drawVAO();
 
     material->deactivate();
 }
@@ -133,14 +134,11 @@ void Scene::genLightBuffer()
 void Scene::draw()
 {
     for(auto i = meshes.begin(); i != meshes.end(); i++)
-    {
         i->draw();
-    }
     
-    for(auto i = unsortedMeshes.begin(); i != unsortedMeshes.end(); i++)
-    {
-        (*i)->draw();
-    }
+    for(auto i : unsortedMeshes)
+        if(!i->state.hide)
+            i->draw();
 
     ligthBuffer.reset();
 }

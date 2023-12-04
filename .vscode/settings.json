@@ -66,6 +66,8 @@
         "thread": "cpp",
         "any": "cpp",
         "codecvt": "cpp",
-        "iomanip": "cpp"
-    }
+        "iomanip": "cpp",
+        "set": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
 }

@@ -18,9 +18,10 @@ class ModelState3D
         vec3 scale         = vec3(1.f);
         vec3 rotation      = vec3(0.f);
         vec3 lookAtPoint   = vec3(0.f);
-        float depth        = 0.f;
+        float depth        = 0.f; // useless
         mat4 rotationMatrix = mat4(1.0);
         mat4 modelMatrix = mat4(1.0);
+        bool hide = false;
 
     ModelState3D& scaleScalar(float newScale)
     {
@@ -108,32 +109,35 @@ class ModelState3D
     }
 };
 
-class ModelMatrix3D : mat4
-{
+#include <memory>
+typedef std::shared_ptr<ModelState3D> ModelStateRef;
 
-    public : 
+// class ModelMatrix3D : mat4
+// {
+
+//     public : 
     
-    ModelMatrix3D(ModelState3D state)
-    {
-        this->update(state);
-    }
+//     ModelMatrix3D(ModelState3D state)
+//     {
+//         this->update(state);
+//     }
 
-    ModelMatrix3D& update(ModelState3D state)
-    {
+//     ModelMatrix3D& update(ModelState3D state)
+//     {
 
-        // float mat[16] = 
-        // {
-        //     state.scale.x   ,  0.f             ,  0.f             ,  0.f,
-        //     0.f             ,  state.scale.y   ,  0.f             ,  0.f,
-        //     0.f             ,  0.f             ,  state.scale.z   ,  0.f,
-        //     state.position.x,  state.position.y,  state.position.z,  0.f
-        // };
+//         // float mat[16] = 
+//         // {
+//         //     state.scale.x   ,  0.f             ,  0.f             ,  0.f,
+//         //     0.f             ,  state.scale.y   ,  0.f             ,  0.f,
+//         //     0.f             ,  0.f             ,  state.scale.z   ,  0.f,
+//         //     state.position.x,  state.position.y,  state.position.z,  0.f
+//         // };
 
-        // memcpy((void*)this, mat, sizeof(mat4));
+//         // memcpy((void*)this, mat, sizeof(mat4));
 
-        return *this;
-    }
-};
+//         return *this;
+//     }
+// };
 
 
 #endif
