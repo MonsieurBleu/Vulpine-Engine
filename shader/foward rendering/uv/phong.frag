@@ -87,7 +87,6 @@ void main()
         // mMetallic = 1.f;
         // mRoughness = 0.f;
         // color = vec3(0.85);
-
     //
 
     colorVCorrection = 1.0-pow(rgb2v(color), 5.0);
@@ -111,10 +110,10 @@ void main()
     vec3 materialColor = ambientLight + material.diffuse + material.specular + material.fresnel;
 
     #ifdef SKYBOX_REFLECTION
-        // fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*materialColor;        
-        // fragColor.rgb *= mix(vec3(1.0), rColor, max(mMetallic*0.9, 0.0));
+        fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*materialColor;        
+        fragColor.rgb *= mix(vec3(1.0), rColor, max(mMetallic*0.9, 0.0));
 
-        fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*mix(materialColor, vec3(1.f) + material.specular, max(mMetallic*0.9, 0.0));
+        // fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*mix(materialColor, vec3(1.f) + material.specular, max(mMetallic*0.9, 0.0));
 
     #else
          fragColor.rgb = color*materialColor;

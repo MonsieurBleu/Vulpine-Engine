@@ -52,6 +52,7 @@ CubeMap& CubeMap::loadAndGenerate(const std::string& folderPath)
 
 CubeMap& CubeMap::bind()
 {
+    glActiveTexture(GL_TEXTURE_BINDING_CUBE_MAP);
     glBindTexture(GL_TEXTURE_CUBE_MAP, handle);
     return *this;
 }

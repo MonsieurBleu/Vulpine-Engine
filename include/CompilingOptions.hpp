@@ -1,8 +1,7 @@
 
 #define INVERTED_Z
 
-#define DEMO_MAGE_BATTLE
-
 // #define CUBEMAP_SKYBOX
 
+#define DEMO_MAGE_BATTLE
 // #define MATERIAL_TEST

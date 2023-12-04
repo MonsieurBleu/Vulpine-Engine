@@ -1,7 +1,7 @@
 #include functions/HSV.glsl
 
 #ifdef CUBEMAP_SKYBOX
-    uniform samplerCube bSkyTexture; 
+    layout (binding = 4) uniform samplerCube bSkyTexture; 
 #else
     layout (binding = 4) uniform sampler2D bSkyTexture;
 #endif
