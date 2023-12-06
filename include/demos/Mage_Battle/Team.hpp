@@ -2,6 +2,7 @@
 #define TEAM_HPP
 
 #include <demos/Mage_Battle/Mage.hpp>
+#include <FastUI.hpp>
 
 class Team : private std::list<MageRef>
 {
@@ -10,6 +11,7 @@ class Team : private std::list<MageRef>
         uint attackNB = 0;
         uint tankNB = 0;
         vec3 color;
+        Scene *scenePTR;
 
     public : 
 
@@ -28,6 +30,8 @@ class Team : private std::list<MageRef>
             vec3 color);
 
         void tick();
+
+        void setMenu(FastUI_valueMenu &menu, std::u32string name);
 };
 
 #endif

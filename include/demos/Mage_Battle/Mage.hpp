@@ -66,7 +66,7 @@ class Mage{
 		void tick();		
 		bool isDead();
 
-
+        MageType getType();
         ModelRef getModel();
 };
 

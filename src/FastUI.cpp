@@ -213,7 +213,9 @@ void FastUI_menuTitle::changeBackgroundColor(vec4 color)
 }
 
 FastUI_valueMenu::FastUI_valueMenu(FastUI_context& ui, const std::vector<FastUI_titledValueTab> &values)
-    : FastUI_element(ui), elements(values)
+    : FastUI_element(ui), 
+    std::vector<FastUI_titledValueTab>(values), 
+    elements(*this)
 {
 
 }
@@ -315,3 +317,12 @@ void FastUI_valueMenu::trackCursor()
     }  
 }
 
+void FastUI_valueMenu::updateText()
+{
+    int size = elements.size();
+    for(int i = 0; i < size; i++)
+    {
+        FastUI_titledValueTab &e = elements[i];
+        e.tab.batch();
+    }
+}

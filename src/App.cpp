@@ -518,10 +518,12 @@ void App::mainloop()
     #else
     
     #ifdef DEMO_MAGE_BATTLE
-        ModelRef ground = newModel(uvPhong, mtGeometry[2]);
+        // ModelRef ground = newModel(uvPhong, mtGeometry[2]); 
+        ModelRef ground = newModel(uvPhong, readOBJ("ressources/demos/Mage_Battle/arena.obj"));
         ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2CE.ktx"), 0);
         ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2NRM.ktx"), 1);
-        ground->state.setScale(vec3(ARENA_RADIUS*2.0, 0.5, ARENA_RADIUS*2.0)).setPosition(vec3(0, -0.5, 0));
+        // ground->state.setScale(vec3(ARENA_RADIUS*2.0, 0.5, ARENA_RADIUS*2.0)).setPosition(vec3(0, -0.5, 0));
+        ground->state.setPosition(vec3(0, -0.25, 0)).scaleScalar(0.2);
         scene.add(ground);
         
  
@@ -548,18 +550,20 @@ void App::mainloop()
                     , globals.standartShaderUniform3D() 
                 )     
                 );
+        
+        MeshVao mageVao = readOBJ("ressources/demos/Mage_Battle/wizard.obj");
 
-        ModelRef MageTestModelAttack = newModel(MageMaterial, mtGeometry[1]);
+        ModelRef MageTestModelAttack = newModel(MageMaterial, mageVao);
         MageTestModelAttack->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
             .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelAttack->state.scaleScalar(0.5);
+        MageTestModelAttack->state.scaleScalar(0.35);
 
-        ModelRef MageTestModelHeal = newModel(MageMaterial, mtGeometry[0]);
+        ModelRef MageTestModelHeal = newModel(MageMaterial, mageVao);
         MageTestModelHeal->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
             .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
-        MageTestModelHeal->state.scaleScalar(0.35);
+        MageTestModelHeal->state.scaleScalar(0.25);
 
-        ModelRef MageTestModelTank = newModel(MageMaterial, mtGeometry[2]);
+        ModelRef MageTestModelTank = newModel(MageMaterial, mageVao);
         MageTestModelTank->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
             .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
         MageTestModelTank->state.scaleScalar(0.5);
@@ -571,7 +575,7 @@ void App::mainloop()
         Team::attackModel = MageTestModelAttack;
         Team::tankModel = MageTestModelTank; 
 
-        int unitsNB = 10;
+        int unitsNB = 15;
         int healNB = unitsNB*0.2f;
         int attackNB = unitsNB*0.7f;
         int tankNB = unitsNB*0.1f;
@@ -588,7 +592,7 @@ void App::mainloop()
         Team green;
         green.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x3C, 0xB0, 0x43)/vec3(255.f));
 
-        Team magenta;
+        // Team magenta;
         // magenta.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(0, 0, 0), ARENA_RADIUS*0.3, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
 
 
@@ -622,19 +626,7 @@ void App::mainloop()
             globals.standartShaderUniform3D()
         ));
 
-    ssb->state.setPosition(vec3(-0.95, 0.0, 0.f));
-    vec3 timerColor = vec3(0x9A, 0x7B, 0x4F)/vec3(256.f);
-    ssb->uniforms.add(ShaderUniform(&timerColor, 32));
-    // scene2D.add(ssb);
-
     SimpleUiTileBatchRef uiBatch(new SimpleUiTileBatch);
-    
-    // suitb->add(SimpleUiTileRef(new SimpleUiTile(
-    //     ModelState3D()
-    //         .setPosition(vec3(-0.25, 0.5, 1))
-    //         .setScale(vec3(0.5, 1.0, 1)), 
-    //     UiTileType::CIRCLE, 
-    //     vec4(0.55, 0.25, 0.85, 0.5))));
     
     uiBatch->setMaterial(defaultSUIMaterial);
     uiBatch->state.position.z = 0.0;
@@ -642,64 +634,32 @@ void App::mainloop()
 
     FastUI_context ui(uiBatch, font, scene2D, defaultFontMaterial);
 
-    // std::basic_ostringstream<char32_t> u32OverloadTest;
-    // u32OverloadTest << 1.f;
-    // FastUI_valuePrinter<float> vp(globals.appTime.getElapsedTimeAddr(), U"Time : ", U" ms");
-    // vp.toString(u32OverloadTest);
-
-    float test = 9.5191564988E9;
-    float test2 = 3.1418;
-    // FastUI_value(&test, U"Time : ", U" ms ").toString(u32OverloadTest);
-    // FastUI_value((const float*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
-    // FastUI_value((int*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
-    // FastUI_value((const int*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
-
-
-
-
-    // FastUI_valueTab valueTab(ui, 
-    // {
-    //     FastUI_value(&test, U"Time : ", U" ms "),
-    //     FastUI_value((const float*)&test, U"Time : ", U" ms "),
-    //     FastUI_value((int*)&test, U"Time : ", U" ms "),
-    //     FastUI_value((const int*)&test, U"Time : ", U" ms ")
-    // });
-
-    // valueTab.batch();
-
-    // FastUI_menuTitle UiTitleTest(ui, U"Titre 1");
-    // UiTitleTest->state.scaleScalar(1.0);
-
-    // valueTab->state.scaleScalar(0.5).setPosition(vec3(0, -UiTitleTest.getSize().y, 0));
-
-
-
     FastUI_valueMenu menu(ui, {
-        {FastUI_menuTitle(ui, U"Titre 1"), FastUI_valueTab(ui, {
-            FastUI_value(&test, U"value1 : ", U" ms "),
-            FastUI_value(&test, U"value2 : ", U" s "),
-            FastUI_value(&test, U"value3 : ", U" m/s "),
+        {FastUI_menuTitle(ui, U"Infos"), FastUI_valueTab(ui, {
+            FastUI_value(globals.appTime.getElapsedTimeAddr(), U"App Time\t", U" s"),
+            FastUI_value(globals.unpausedTime.getElapsedTimeAddr(), U"Simulation Time\t", U" s"),
         })}, 
-        {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
-            FastUI_value(&test2, U"value4 : ", U" ms "),
-            FastUI_value(&test2, U"value5 : ", U" s "),
-            FastUI_value(&test2, U"value6 : ", U" m/s "),
-        })}  
+        // {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
+        //     FastUI_value(&test2, U"value4 : ", U" ms "),
+        //     FastUI_value(&test2, U"value5 : ", U" s "),
+        //     FastUI_value(&test2, U"value6 : ", U" m/s "),
+        // })}  
     });
+
     menu->state.setPosition(vec3(-0.9, 0.5, 0));
-    // menu->state.scaleScalar(2.0);
-    // menu->state.setRotation(vec3(0, 0, -1.0));
+
+    #ifdef DEMO_MAGE_BATTLE
+        red.setMenu(menu, U"Red Team");
+        blue.setMenu(menu, U"Blue Team");
+        green.setMenu(menu, U"Green Team");
+        yellow.setMenu(menu, U"Yellow Team");
+        // magenta.setMenu(menu, U"Magenta Team");
+    #endif
+
     menu.batch();
-
-    // menu.setCurrentTab(0);
-    // menu.setCurrentTab(0);
-    // menu.setCurrentTab(1);
-    // menu.setCurrentTab(1);
-
     scene2D.updateAllObjects();
-
     uiBatch->batch();
-    // scene2D.add(uiBatch);
+    
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
 
@@ -807,11 +767,14 @@ void App::mainloop()
 
 
         #ifdef DEMO_MAGE_BATTLE
-            red.tick();
-            blue.tick();
-            yellow.tick();
-            green.tick();
-            magenta.tick();
+            if(!globals.unpausedTime.isPaused())
+            {
+                red.tick();
+                blue.tick();
+                yellow.tick();
+                green.tick();
+                // magenta.tick();
+            }
         #endif
 
         // ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
@@ -822,6 +785,7 @@ void App::mainloop()
         // std::cout << id;
 
         menu.trackCursor();
+        menu.updateText();
 
         glEnable(GL_BLEND); 
         scene2D.updateAllObjects();

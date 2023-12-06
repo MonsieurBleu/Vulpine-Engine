@@ -74,9 +74,10 @@ struct FastUI_element : public ObjectGroupRef
 {
     protected : 
         vec2 size = vec2(0);
-        FastUI_context& ui;
 
     public : 
+        FastUI_context& ui;
+
         FastUI_element(FastUI_context& ui);
         vec2 getSize();
 };
@@ -150,10 +151,10 @@ struct FastUI_titledValueTab
     FastUI_valueTab tab;
 };
 
-class FastUI_valueMenu : public FastUI_element
+class FastUI_valueMenu : public FastUI_element, public std::vector<FastUI_titledValueTab>
 {
     private : 
-        std::vector<FastUI_titledValueTab> elements;
+        std::vector<FastUI_titledValueTab> &elements;
         int currentTab = -1;
         int highlighted = -1;
         void currentHighlighted(int id);
@@ -161,6 +162,8 @@ class FastUI_valueMenu : public FastUI_element
     public : 
         FastUI_valueMenu(FastUI_context& ui, const std::vector<FastUI_titledValueTab> &values);
         void batch();
+        void updateText();
+
         void setCurrentTab(int id);
 
         void trackCursor();

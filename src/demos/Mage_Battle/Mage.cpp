@@ -45,6 +45,7 @@ Mage::Mage(
 
     this->model->uniforms.add(ShaderUniform(&this->color, 32));
     this->model->uniforms.add(ShaderUniform(&this->HP, 33));
+    this->model->uniforms.add(ShaderUniform((int *)&this->type, 34));
 
     scene.add(this->model);
 
@@ -58,6 +59,19 @@ Mage::Mage(
 
     hue = getHue(color.r, color.g, color.b);
     hue = -0.1 + hue*0.2;
+
+    std::cout << model->state.scale.x << "\n";
+
+    // this->model->state.setPosition(
+    //     this->model->state.position + 
+    //     vec3(0, 1.91*model->state.scale.x, 0));
+
+    vec2 pdir = normalize(vec2(-position.x, -position.z));
+    this->model->state.setRotation(vec3(
+        0, 
+        atan2(pdir.x, pdir.y), 
+        0
+    ));
 }
 
 void Mage::dead(){
@@ -197,19 +211,33 @@ void Mage::heal(Mage *mage)
 
 vec3 Mage::fleeFromMenace(vec3 currentDir)
 {
-    float menaceMemory = 1;
+    float menaceMemory = 0.1;
 
-    if(timeSinceLastMenace)
+    // if(timeSinceLastMenace)
     // std::cout << timeSinceLastMenace << " " << globals.unpausedTime.getElapsedTime() << "\n";
 
-    if(globals.unpausedTime.getElapsedTime() - timeSinceLastMenace < menaceMemory)
+    if(timeSinceLastMenace && globals.unpausedTime.getElapsedTime() - timeSinceLastMenace < menaceMemory)
     {
         vec3 dirToMenace = normalize(menacePosition - model->state.position);
+        normalize(currentDir);
+        vec3 result = currentDir;
 
-        return -dirToMenace;
+        double d = dot(dirToMenace, currentDir);
+
+        if(d < 0.0) {
+            result = currentDir;
+        } else {
+            result = -dirToMenace;
+        }
+
+        return result;
     }
 
     return currentDir;
+}
+
+MageType Mage::getType(){
+    return this->type;
 }
 
 void Mage::tick()
@@ -246,8 +274,7 @@ void Mage::tick()
 
     const float speedMpS  = 1.0; 
     float speed = speedMpS*deltaTime;
-
-            vec3 deplacementDir(0);
+    vec3 deplacementDir(0);
 
 	switch(type)
     {
@@ -278,6 +305,7 @@ void Mage::tick()
 
         case HEAL : 
         {
+            speed *= 1.5;
             const float rayRange = 3.0;
             const float minDistFromEnemy = rayRange*0.8;
 
@@ -295,8 +323,9 @@ void Mage::tick()
                     deplacementDir = dist < minDistFromEnemy ? -deplacementDir : deplacementDir;
                 }
             }
+
+            deplacementDir = fleeFromMenace(deplacementDir);
         }
-            // deplacementDir = fleeFromMenace(deplacementDir);
         break;
 
         case TANK :
@@ -344,8 +373,18 @@ void Mage::tick()
             break;
 	}
 
+    deplacementDir.y = 0.f;
+
     model->state.setPosition(model->state.position + (deplacementDir * speed));
 
-    model->state.setPosition(clamp(model->state.position, vec3(-ARENA_RADIUS, 0, -ARENA_RADIUS), vec3(ARENA_RADIUS, 0, ARENA_RADIUS)));
+    model->state.setPosition(
+        clamp(model->state.position, 
+        vec3(-ARENA_RADIUS, -1E6, -ARENA_RADIUS), vec3(ARENA_RADIUS, 1E6, ARENA_RADIUS)));
+    
+    model->state.setRotation(vec3(
+        0, 
+        atan2(deplacementDir.x, deplacementDir.z), 
+        0
+    ));
  
 }

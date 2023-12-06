@@ -10,6 +10,7 @@ vec3 color;
 
 layout (location = 32) uniform vec3 _mageColor;
 layout (location = 33) uniform float _mageHP;
+layout (location = 34) uniform int _mageType;
 
 layout (binding = 0) uniform sampler2D bColor;
 layout (binding = 1) uniform sampler2D bMaterial;
@@ -62,6 +63,24 @@ vec3 perturbNormal( vec3 N, vec3 V, vec2 tNormal, vec2 texcoord)
 }
 ////////////////////////////////////////////////////////////
 
+// vec3 rgb2hsv(vec3 c)
+// {
+//     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+//     vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+//     vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+//     float d = q.x - min(q.w, q.y);
+//     float e = 1.0e-10;
+//     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+// }
+
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
 void main()
 {
     vec4 CE = texture(bColor, uv);
@@ -71,10 +90,24 @@ void main()
     // mMetallic = 1.0 - NRM.a;
     // mRoughness = NRM.b;
 
+    // mMetallic = float(_mageType)/5.0;
+
     // mEmmisive = 1.0 - CE.a;
     // color = CE.rgb;
-    color = _mageColor;
-    color = mix(color*0.25, color, _mageHP/100.0);
+    vec3 mageColor = _mageColor;
+
+    mageColor = rgb2hsv(mageColor);
+    mageColor.g += _mageType == 2 ? 0.5 : 0.0;
+    mageColor.b += _mageType == 2 ? 0.3 : 0.0;
+
+    mageColor.g += _mageType == 4 ? -0.1 : 0.0;
+    mageColor.b += _mageType == 4 ? -0.5 : 0.0;
+
+    mageColor = hsv2rgb(mageColor);
+
+    // color = mix(mageColor*0.25, mageColor, _mageHP/100.0);
+    color = mageColor;
+
     // mEmmisive = 0.35*(1.0 - rgb2v(color));
     normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
 
