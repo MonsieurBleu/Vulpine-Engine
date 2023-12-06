@@ -27,7 +27,7 @@ class Globals
 
         Mesh _fullscreenQuad;
 
-        
+        bool _mouseLeftClick = false;
 
     public :
 
@@ -66,6 +66,8 @@ class Globals
         const ivec2* renderSizeAddr() const;
 
         void drawFullscreenQuad();
+
+        bool mouseLeftClick();
 };
 
 extern Globals globals;

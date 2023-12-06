@@ -237,6 +237,11 @@ void main()
             _fragColor.rgb = vec3(texture(bSunMap, SSMuv).r);
     #endif
 
+    //// CURSOR
+        _fragColor.rgb = mix(_fragColor.rgb, vec3(0.0, 1.0, 0.0), step(abs(uvScreen.x-0.5), 0.0005));
+        _fragColor.rgb = mix(_fragColor.rgb, vec3(0.0, 1.0, 0.0), step(abs(uvScreen.y-0.5), 0.001));
+    ////
+
     vec4 ui = texture(bUI, uvScreen);
     _fragColor.rgb = mix(_fragColor.rgb, ui.rgb, ui.a);
     _fragColor.a = 1.0;

@@ -26,7 +26,6 @@ class SimpleUiTile : public ModelState3D
         SimpleUiTile(ModelState3D state, UiTileType tileType, vec4 color = vec4(0.85));
         UiTileType tileType;
         vec4 color;
-        bool hide = false;
 };
 
 typedef std::shared_ptr<SimpleUiTile> SimpleUiTileRef;
@@ -63,6 +62,8 @@ struct FastUI_context
     bool batchNeedUpdate = false;
 
     vec4 colorTitleBackground = vec4(0, 0.4, 0.8, 0.75);
+    vec4 colorCurrentTitleBackground = vec4(0, 0.3, 0.95, 0.75);
+    vec4 colorHighlightedTitleBackground = vec4(0.3, 0.5, 0.9, 0.75);
     vec3 colorTitleFont = vec3(1.0);
 
     vec4 colorBackground = vec4(0, 0.1, 0.2, 0.8);
@@ -88,6 +89,7 @@ class FastUI_menuTitle : public FastUI_element
 
     public : 
         FastUI_menuTitle(FastUI_context& ui, std::u32string name);
+        void changeBackgroundColor(vec4 color);
 };
 
 enum FastUi_supportedValueType
@@ -132,13 +134,36 @@ class FastUI_valueTab : public FastUI_element, public std::vector<FastUI_value>
     private :
         SingleStringBatchRef text;
         SimpleUiTileRef background;
-        vec2 padding = vec2(0.05);
+        vec2 padding;
 
     public : 
-        FastUI_valueTab(FastUI_context& ui, std::vector<FastUI_value> values);
+        FastUI_valueTab(FastUI_context& ui, const std::vector<FastUI_value> &values);
         // FastUI_valueTab& add(FastUI_value v);
         
         FastUI_valueTab& batch();
+        void changeBackgroundColor(vec4 color);
+};
+
+struct FastUI_titledValueTab
+{
+    FastUI_menuTitle title;
+    FastUI_valueTab tab;
+};
+
+class FastUI_valueMenu : public FastUI_element
+{
+    private : 
+        std::vector<FastUI_titledValueTab> elements;
+        int currentTab = -1;
+        int highlighted = -1;
+        void currentHighlighted(int id);
+
+    public : 
+        FastUI_valueMenu(FastUI_context& ui, const std::vector<FastUI_titledValueTab> &values);
+        void batch();
+        void setCurrentTab(int id);
+
+        void trackCursor();
 };
 
 

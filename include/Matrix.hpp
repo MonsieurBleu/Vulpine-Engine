@@ -5,6 +5,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+enum ModelStateHideStatus
+{
+    HIDE,
+    SHOW,
+    UNDEFINED
+};
+
+
 using namespace glm;
 // TODO : FIX LOOKAT
 class ModelState3D
@@ -21,7 +29,7 @@ class ModelState3D
         float depth        = 0.f; // useless
         mat4 rotationMatrix = mat4(1.0);
         mat4 modelMatrix = mat4(1.0);
-        bool hide = false;
+        ModelStateHideStatus hide = ModelStateHideStatus::UNDEFINED;
 
     ModelState3D& scaleScalar(float newScale)
     {

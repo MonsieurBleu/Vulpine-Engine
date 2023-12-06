@@ -110,7 +110,7 @@ void MeshGroup::draw()
     material->activate();
 
     for(auto i : meshes)
-        if(!i->state.hide)
+        if(i->state.hide != ModelStateHideStatus::HIDE)
             i->drawVAO();
 
     material->deactivate();
@@ -137,7 +137,7 @@ void Scene::draw()
         i->draw();
     
     for(auto i : unsortedMeshes)
-        if(!i->state.hide)
+        if(i->state.hide != ModelStateHideStatus::HIDE)
             i->draw();
 
     ligthBuffer.reset();

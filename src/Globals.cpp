@@ -21,3 +21,5 @@ ivec2 Globals::renderSize() const {return _renderSize;};
 const ivec2* Globals::renderSizeAddr() const {return &_renderSize;};
 
 void Globals::drawFullscreenQuad() {_fullscreenQuad.drawVAO();};
+
+bool Globals::mouseLeftClick(){return _mouseLeftClick;};

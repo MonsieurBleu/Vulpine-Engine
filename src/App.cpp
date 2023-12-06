@@ -59,6 +59,12 @@ App::App(GLFWwindow* window) :
         giveCallbackToApp(GLFWKeyInfo{window, key, scancode, action, mods});
     });
 
+    // GLFWwindow* window, int button, int action, int mods
+
+    glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods){
+        giveCallbackToApp(GLFWKeyInfo{window, button, button, action, mods});
+    });
+
     /*
         TODO : 
             Test if the videoMode automaticlly update
@@ -130,7 +136,7 @@ App::App(GLFWwindow* window) :
 
     globals.currentCamera = &camera;
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
     glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     
@@ -160,6 +166,10 @@ App::App(GLFWwindow* window) :
 
 void App::mainInput(double deltatime)
 {
+    double mpx, mpy;
+    glfwGetCursorPos(window, &mpx, &mpy);
+    globals._mousePosition = vec2(mpx, mpy);
+
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
     
@@ -216,6 +226,7 @@ void App::mainloopStartRoutine()
 {
     globals.appTime.start();
     globals.unpausedTime.start();
+    globals._mouseLeftClick = false;
 
     // const float limit = 1000.f/60.f;
     // float d = globals.appTime.getDeltaMS();
@@ -637,28 +648,53 @@ void App::mainloop()
     // vp.toString(u32OverloadTest);
 
     float test = 9.5191564988E9;
+    float test2 = 3.1418;
     // FastUI_value(&test, U"Time : ", U" ms ").toString(u32OverloadTest);
     // FastUI_value((const float*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
     // FastUI_value((int*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
     // FastUI_value((const int*)&test, U"Time : ", U" ms ").toString(u32OverloadTest);
 
 
-    FastUI_valueTab valueTab(ui, 
-    {
-        FastUI_value(&test, U"Time : ", U" ms "),
-        FastUI_value((const float*)&test, U"Time : ", U" ms "),
-        FastUI_value((int*)&test, U"Time : ", U" ms "),
-        FastUI_value((const int*)&test, U"Time : ", U" ms ")
+
+
+    // FastUI_valueTab valueTab(ui, 
+    // {
+    //     FastUI_value(&test, U"Time : ", U" ms "),
+    //     FastUI_value((const float*)&test, U"Time : ", U" ms "),
+    //     FastUI_value((int*)&test, U"Time : ", U" ms "),
+    //     FastUI_value((const int*)&test, U"Time : ", U" ms ")
+    // });
+
+    // valueTab.batch();
+
+    // FastUI_menuTitle UiTitleTest(ui, U"Titre 1");
+    // UiTitleTest->state.scaleScalar(1.0);
+
+    // valueTab->state.scaleScalar(0.5).setPosition(vec3(0, -UiTitleTest.getSize().y, 0));
+
+
+
+    FastUI_valueMenu menu(ui, {
+        {FastUI_menuTitle(ui, U"Titre 1"), FastUI_valueTab(ui, {
+            FastUI_value(&test, U"value1 : ", U" ms "),
+            FastUI_value(&test, U"value2 : ", U" s "),
+            FastUI_value(&test, U"value3 : ", U" m/s "),
+        })}, 
+        {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
+            FastUI_value(&test2, U"value4 : ", U" ms "),
+            FastUI_value(&test2, U"value5 : ", U" s "),
+            FastUI_value(&test2, U"value6 : ", U" m/s "),
+        })}  
     });
+    menu->state.setPosition(vec3(-0.9, 0.5, 0));
+    // menu->state.scaleScalar(2.0);
+    // menu->state.setRotation(vec3(0, 0, -1.0));
+    menu.batch();
 
-    valueTab.batch();
-
-    FastUI_menuTitle UiTitleTest(ui, U"Titre 1");
-    // FastUI_menuTitle UiTitleTest2(ui, U"Menu1\nImportant");
-    // UiTitleTest->state.setPosition(vec3(-0.5, -0.1, 0.0));
-    UiTitleTest->state.scaleScalar(1.0);
-
-    valueTab->state.scaleScalar(0.5).setPosition(vec3(0, -UiTitleTest.getSize().y, 0));
+    // menu.setCurrentTab(0);
+    // menu.setCurrentTab(0);
+    // menu.setCurrentTab(1);
+    // menu.setCurrentTab(1);
 
     scene2D.updateAllObjects();
 
@@ -747,12 +783,13 @@ void App::mainloop()
                 globals.unpausedTime.toggle();
                 break;
 
-            default:
+            case GLFW_MOUSE_BUTTON_LEFT :
+                globals._mouseLeftClick = true;
                 break;
             }
         }
 
-        // float time = globals.unpausedTime.getElapsedTime();
+        float time = globals.unpausedTime.getElapsedTime();
         // sun->setDirection(normalize(vec3(0.5, -abs(cos(time*0.25)), sin(time*0.25))));
 
         mainInput(globals.appTime.getDelta());
@@ -780,8 +817,15 @@ void App::mainloop()
         // ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
         // ssb->batchText();
 
+        // int id = (int)(time)%2;
+        // menu.setCurrentTab(id);
+        // std::cout << id;
+
+        menu.trackCursor();
+
         glEnable(GL_BLEND); 
         scene2D.updateAllObjects();
+        uiBatch->batch();
         glEnable(GL_FRAMEBUFFER_SRGB);
         screenBuffer2D.activate();
         uiBatch->draw();

@@ -1,6 +1,26 @@
 #include <ObjectGroup.hpp>
 #include <iostream>
 
+void ManageHideStatus(ModelStateHideStatus &children, ModelStateHideStatus parent)
+{
+    switch (children)
+    {
+    case ModelStateHideStatus::UNDEFINED :
+        children = parent;
+        break;
+    
+    case ModelStateHideStatus::SHOW :
+        children = parent == ModelStateHideStatus::HIDE ? parent : children;
+        break;
+
+    case ModelStateHideStatus::HIDE :
+        children = parent == ModelStateHideStatus::SHOW ? parent : children;
+        break;
+
+    default: break;
+    }
+}
+
 void ObjectGroup::update(bool forceUpdate)
 {
     bool globalUpdate = state.update();
@@ -9,10 +29,9 @@ void ObjectGroup::update(bool forceUpdate)
     for(auto i = meshes.begin(); i != meshes.end(); i++)
     {
         if(globalUpdate || (*i)->state.update())
-        {
             (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
-            (*i)->state.hide |= state.hide;
-        }
+        
+        ManageHideStatus((*i)->state.hide, state.hide);
     }
 
     // auto j = lightsDummys.begin();
@@ -35,10 +54,9 @@ void ObjectGroup::update(bool forceUpdate)
     for(auto i : states)
     {
         if(globalUpdate || i->update())
-        {
             i->modelMatrix = state.modelMatrix * i->forceUpdate().modelMatrix;
-        }
-        i->hide |= state.hide;
+        
+        ManageHideStatus(i->hide, state.hide);
     }
 
     for(auto i = children.begin(); i != children.end(); i++)
@@ -46,8 +64,8 @@ void ObjectGroup::update(bool forceUpdate)
         if(globalUpdate || (*i)->state.update())
             (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
 
+        ManageHideStatus((*i)->state.hide, state.hide);
         (*i)->update(true);
-        (*i)->state.hide |= state.hide;
     }
 }
 

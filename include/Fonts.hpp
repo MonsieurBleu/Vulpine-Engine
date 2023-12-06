@@ -60,9 +60,10 @@ class SingleStringBatch : public MeshModel3D
     private : 
         FontRef font;
         vec2 textSize;
+        int currentTab = 0;
 
     public : 
-        const float charSize = 0.05;
+        const float charSize = 0.025;
         void setFont(FontRef newFont);
         std::u32string text;
 
@@ -71,6 +72,8 @@ class SingleStringBatch : public MeshModel3D
         */
         void batchText();
         vec2 getSize();
+
+        void setCurrentTab(int id);
 };
 
 typedef std::shared_ptr<SingleStringBatch> SingleStringBatchRef;
