@@ -83,10 +83,11 @@ void main()
     color = CE.rgb;
     normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
 
+
     // test 
-        // mMetallic = 1.f;
-        // mRoughness = 0.f;
-        // color = vec3(0.85);
+        mMetallic = 1.f;
+        mRoughness = 0.f;
+        color = vec3(0.85);
     //
 
     colorVCorrection = 1.0-pow(rgb2v(color), 5.0);
