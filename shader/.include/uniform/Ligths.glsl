@@ -7,17 +7,11 @@ struct Light
     mat4 _rShadowMatrix;
 };
 
-// 0, 0, 0
-// 2, 3, 4
-// 6, 7, 0
-
-/// 0, 0, 0, 1
-/// 2, 3, 4, 5
-/// 6, 7, 0, 0
-
 layout (location = 10) uniform uint lightCounter;
 
 layout (binding = 2) uniform sampler2D bSunShadowMap;
+
+layout (binding = 16) uniform sampler2D bShadowMaps[16];
 
 layout (std430, binding = 0) readonly buffer lightsBuffer 
 {

@@ -125,7 +125,10 @@ void Scene::updateAllObjects()
 void Scene::genLightBuffer()
 {
     for(auto i = lights.begin(); i != lights.end(); i++)
+    {
         ligthBuffer.add(**i);
+        (*i)->bindShadowMap();
+    }
     
     ligthBuffer.update();
     ligthBuffer.activate(0);

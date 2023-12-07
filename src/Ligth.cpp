@@ -4,6 +4,13 @@
 #include <GL/glew.h>
 #include <Utils.hpp>
 
+bool Light::freeShadowMapBinds[Light::maxShadowMap] = {
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true,
+    true, true, true, true
+    };
+
 std::ostream& operator<<(std::ostream& os, const Light &l)
 {
     os << TERMINAL_INFO <<
@@ -53,7 +60,23 @@ void Light::activateShadows()
 {
     if(shadowMap.getHandle() != 0) return;
 
+    for(int i = 0; i < maxShadowMap; i++)
+    {
+        std::cout << freeShadowMapBinds[i] << "\n";
+        if(freeShadowMapBinds[i])
+        {
+            shadowMapBindId = i;
+            freeShadowMapBinds[i] = false;
+            break;
+        }
+    }
+
+    if(shadowMapBindId == -1) return;
+
     infos._infos.b |= LIGHT_SHADOW_ACTIVATED;
+    infos._infos.r = shadowMapBindId;
+    std::cout << this << "\t" << infos._infos.r << "\n";
+
     shadowMap.addTexture(
         Texture2D()
             .setFilter(GL_NEAREST)
@@ -68,6 +91,12 @@ void Light::activateShadows()
 
 void Light::updateShadowCamera()
 {
+}
+
+void Light::bindShadowMap()
+{
+    if(shadowMapBindId != -1)
+        shadowMap.bindTexture(0, shadowMapBaseBind + shadowMapBindId);
 }
 
 const void* Light::getAttribAddr() const

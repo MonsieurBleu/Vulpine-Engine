@@ -201,7 +201,9 @@ Material getMultiLightStandard()
 
                 lightResult = getDSF(light.direction.xyz, light.color.rgb);
                 factor = light.color.a;
-                factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bSunShadowMap, light._rShadowMatrix);
+                // factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bSunShadowMap, light._rShadowMatrix);
+                factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bShadowMaps[light.stencil.r], light._rShadowMatrix);
+                // factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bShadowMaps[int(_iTime)%2], light._rShadowMatrix);
                 break;
 
             case 2 : 

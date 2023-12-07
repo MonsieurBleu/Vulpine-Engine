@@ -35,16 +35,16 @@ class Light
 {
     friend std::ostream& operator<<(std::ostream&, const Light &);
     friend std::basic_ostringstream<char32_t>& operator<<(std::basic_ostringstream<char32_t>& os, const Light &l);
-    // friend LightBuffer;
     friend ObjectGroup;
 
     protected :
-        // vec4 _position = vec4(0);
-        // vec4 _color = vec4(1);
-        // vec4 _direction = vec4(0);
-        // ivec4 _infos = vec4(0);
 
         LightInfos infos;
+
+        int shadowMapBindId = -1;
+        static const int maxShadowMap = 16;
+        static const int shadowMapBaseBind = 16;
+        static bool freeShadowMapBinds[maxShadowMap];
     
     public :
         const void* getAttribAddr() const;
@@ -55,6 +55,7 @@ class Light
         FrameBuffer shadowMap; 
         ivec2 cameraResolution = vec2(1024);
         void activateShadows();
+        void bindShadowMap();
         virtual void updateShadowCamera();
 };  
 

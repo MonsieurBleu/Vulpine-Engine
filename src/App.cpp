@@ -347,8 +347,9 @@ void App::mainloop()
             new ShaderProgram(
                 "shader/depthOnly.frag", 
                 "shader/foward rendering/uv/phong.vert", 
-                "", 
-                globals.standartShaderUniform3D() 
+                ""
+                // , 
+                // globals.standartShaderUniform3D() 
             ));
     
     scene.depthOnlyMaterial = uvDepthOnly;
@@ -401,15 +402,27 @@ void App::mainloop()
         DirectionLight()
             .setColor(vec3(143, 107, 71)/vec3(255))
             .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
-            .setIntensity(1.0)
+            .setIntensity(5.0)
             );
     sun->cameraResolution = vec2(2048);
     // sun->cameraResolution = vec2(8192);
     sun->shadowCameraSize = vec2(90, 90);
     sun->activateShadows();
-    scene.add(sun);
     
+    
+    SceneDirectionalLight sun2 = newDirectionLight(
+        DirectionLight()
+            .setColor(vec3(71, 107, 143)/vec3(255))
+            .setDirection(normalize(vec3(0.5, -1.0, -1.0)))
+            .setIntensity(5.0)
+            );
+    sun2->cameraResolution = vec2(2048);
+    sun2->shadowCameraSize = vec2(90, 90);
+    sun2->activateShadows();
 
+
+    scene.add(sun);
+    scene.add(sun2);
 
     ObjectGroupRef materialTesters = newObjectGroup();
     std::vector<MeshVao> mtGeometry = 
@@ -813,7 +826,8 @@ void App::mainloop()
         #else
             skyTexture.bind(4);
         #endif
-        sun->shadowMap.bindTexture(0, 2);
+        // sun->shadowMap.bindTexture(0, 2);
+        // sun->shadowMap.bindTexture(0, 16);
         scene.genLightBuffer();
         scene.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         renderBuffer.deactivate();
@@ -826,7 +840,7 @@ void App::mainloop()
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
-        sun->shadowMap.bindTexture(0, 6);
+        sun2->shadowMap.bindTexture(0, 6);
         screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();

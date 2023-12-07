@@ -20,7 +20,7 @@ in vec2 ViewRay;
 
 out vec4 _fragColor;
 
-// #define SHOW_SHADOWMAP
+#define SHOW_SHADOWMAP
 
 vec3 rgb2hsv(vec3 c)
 {
