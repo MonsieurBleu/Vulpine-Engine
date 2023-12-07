@@ -515,6 +515,13 @@ void App::mainloop()
 
         materialTesters->update(true);
         scene.add(materialTesters);
+
+        ModelRef ground = newModel(uvPhong, readOBJ("ressources/material demo/plane.obj"));
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/groundCE.ktx"), 0);
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/groundNRM.ktx"), 1);
+        ground->state.scaleScalar(10.0).setPosition(vec3(0.5*2.5*(mtGeometry.size()-1), -2, 0.5*2.5*(mtTextureName.size()-1)));
+        scene.add(ground);
+
     #else
     
     #ifdef DEMO_MAGE_BATTLE

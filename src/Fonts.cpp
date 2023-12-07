@@ -110,6 +110,8 @@ void SingleStringBatch::batchText()
 
     textSize = vec2(0);
 
+    const float tabulationSize = 16.f*charSize;
+
     for(size_t i = 0; i < size; i++)
     {
         switch (text[i])
@@ -121,7 +123,8 @@ void SingleStringBatch::batchText()
             break;
         
         case U'\t':
-            c.x += charSize*2.0;
+            // c.x += charSize*2.0;
+            c.x = (c.x-mod(c.x, tabulationSize))+tabulationSize;
             continue;
             break;
 

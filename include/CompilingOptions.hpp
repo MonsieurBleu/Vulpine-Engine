@@ -3,5 +3,5 @@
 
 // #define CUBEMAP_SKYBOX
 
-#define DEMO_MAGE_BATTLE
-// #define MATERIAL_TEST
+// #define DEMO_MAGE_BATTLE
+#define MATERIAL_TEST
