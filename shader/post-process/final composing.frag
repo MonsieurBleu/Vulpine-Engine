@@ -237,10 +237,18 @@ void main()
             _fragColor.rgb = vec3(texture(bSunMap, SSMuv).r);
     #endif
 
-    //// CURSOR
+    //// REPERE
         // _fragColor.rgb = mix(_fragColor.rgb, vec3(0.0, 1.0, 0.0), step(abs(uvScreen.x-0.5), 0.0005));
         // _fragColor.rgb = mix(_fragColor.rgb, vec3(0.0, 1.0, 0.0), step(abs(uvScreen.y-0.5), 0.001));
     ////
+
+    //// DEPTH BASED FOG
+        // float d = texture(bDepth, uv).r*2.0;
+        // float base = 0.001;
+        // d = smoothstep(base + 0.05, base, d)*0.99;
+        // _fragColor.rgb = mix(_fragColor.rgb, vec3(0.85), d);
+    ////
+
 
     vec4 ui = texture(bUI, uvScreen);
     _fragColor.rgb = mix(_fragColor.rgb, ui.rgb, ui.a);
