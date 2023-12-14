@@ -23,3 +23,45 @@ const ivec2* Globals::renderSizeAddr() const {return &_renderSize;};
 void Globals::drawFullscreenQuad() {_fullscreenQuad.drawVAO();};
 
 bool Globals::mouseLeftClick(){return _mouseLeftClick;};
+bool Globals::mouseLeftClickDown(){return _mouseLeftClickDown;};
+
+bool Globals::useTextInputs(void* user)
+{
+    textInputString.clear();
+    bool ret = currentTextInputUser == nullptr;
+    currentTextInputUser = user;
+    return ret;
+}
+
+bool Globals::endTextInputs(void* user)
+{
+    if(currentTextInputUser == user)
+    {
+        currentTextInputUser = nullptr;
+        textInputString.clear();
+        return true;
+    }
+    return false;
+}
+
+bool Globals::canUseTextInputs(void* user)
+{
+    return currentTextInputUser == user;
+}
+
+bool Globals::isTextInputsActive()
+{
+    return currentTextInputUser != nullptr;
+}
+
+bool Globals::getTextInputs(void* user, std::u32string& buff)
+{
+    if(currentTextInputUser == user)
+    {
+        buff.clear();
+        buff += textInputString;
+        return true;
+    }
+
+    return false;
+}

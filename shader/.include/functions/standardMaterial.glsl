@@ -1,149 +1,53 @@
 #include functions/HSV.glsl
 
-#ifdef CUBEMAP_SKYBOX
-    layout (binding = 4) uniform samplerCube bSkyTexture; 
-#else
-    layout (binding = 4) uniform sampler2D bSkyTexture;
-#endif
+#include globals/Constants.glsl
+#include functions/Noise.glsl
 
-#define DIFFUSE
-#define SPECULAR
-#define FRESNEL
-
-#define BLINN
-
-//////
-float mSpecular = 0.5;
 float mRoughness = 0.5;
+float mRoughness2 = 0.5;
 float mMetallic = 0.4;
 float mEmmisive = 0.0;
-//////
 
+vec3 ambientLight = vec3(0.2);
 vec3 normalComposed;
 vec3 viewDir;
-vec3 ambientLight = vec3(0.2);
-// vec3 ambientLight = vec3(1.0);
-float colorVCorrection;
+vec3 color;
 
 struct Material
 {
-    vec3 diffuse;
-    vec3 specular;
-    vec3 fresnel;
+    vec3 result;
 };
 
-Material getDSF(vec3 lightDirection, vec3 lightColor)
+Material getBRDF(vec3 lightDirection, vec3 lightColor)
 {
-    float diffuseIntensity = 1.0;
-    float specularIntensity = 2.0*colorVCorrection + mMetallic*5.0;
-    
-    float fresnelIntensity = 2.0 + mMetallic;
+    vec3 F0 = mix(vec3(0.04), color, mMetallic);
 
-    vec3 diffuseColor = lightColor;
-    vec3 specularColor = lightColor;
-    vec3 fresnelColor = lightColor;
-
-    /*
-        UTILS
-    */
-    vec3 nNormal = normalize(normalComposed);
-    float nDotL = max(dot(-lightDirection, nNormal), 0.f);
-
-#ifdef BLINN
     vec3 halfwayDir = normalize(-lightDirection+viewDir);
-#endif
+    float nDotH = max(dot(normalComposed, halfwayDir), 0.0);
+    float nDotH2 = nDotH*nDotH;
+    float nDotL = max(dot(normalComposed, -lightDirection), 0.0);
+    float nDotV = max(dot(normalComposed, viewDir), 0.0);
 
-    /*
-        DIFFUSE 
-    */
-    float diffuse = 0.0;
-#ifdef DIFFUSE
-    // diffuse = pow(nDotL, 0.5);
-    diffuse = nDotL;
-    // diffuse = 1.0; // tmp for shadow testing
+    vec3 fresnelSchlick = F0 + (1.0 - F0) * pow(1.0 - nDotH, 5.0);
 
-    #ifdef TOON
-        float dstep = 0.1;
-        float dsmooth = 0.05;
-        diffuse = smoothstep(dstep, dstep+dsmooth, diffuse);
-    #endif
+    float nDenom = (nDotH2 * (mRoughness2 - 1.0) + 1.0);
+    float normalDistrib = mRoughness2 / (PI * nDenom * nDenom);
 
-#endif
-    vec3 diffuseResult = diffuse*diffuseIntensity*diffuseColor;
+    float gK = mRoughness*mRoughness*0.5;
+    float gKi = 1.0 - gK;
+    float geometry = (nDotL*nDotV)/((nDotV*gKi + gK)*(nDotL*gKi + gK));
 
+    vec3 specular = fresnelSchlick*normalDistrib*geometry/max((4.f*nDotV*nDotL), 0.00000000001);
 
-    /*
-        SPECULAR
-    */
-    float specular = 0.0;
-#ifdef SPECULAR
-
-    #ifdef BLINN
-        float specularExponent = 36.0 - 32.0*pow(mRoughness, 0.5);
-        // specularExponent *= 10.0;
-        specular = pow(max(dot(normal, halfwayDir), 0.0), specularExponent);
-        specular *= diffuse;
-    #else
-        float specularExponent = 9.0 - 8.0*pow(mRoughness, 0.5);
-        vec3 reflectDir = reflect(lightDirection, nNormal); 
-        specular = pow(max(dot(reflectDir, viewDir), 0.0), specularExponent);
-    #endif
-
-    #ifdef TOON
-        float sstep = 0.1;
-        float ssmooth = 0.05;
-        specular = smoothstep(sstep, sstep+ssmooth, specular);
-    #endif
-#endif
-    vec3 specularResult = specular*specularIntensity*specularColor;
-
-    /*
-        FRESNEL
-    */
-    float fresnel = 0.0;
-#ifdef FRESNEL 
-    fresnel = (1.0 - dot(normal, viewDir))*diffuse, 2.0;
-    fresnel *= fresnel;
-
-    #ifdef TOON
-        float rstep = 0.75;
-        float rsmooth = 0.05;
-        fresnel = smoothstep(rstep, rstep+rsmooth, fresnel);
-    #endif
-
-#endif
-    vec3 fresnelResult = fresnel*fresnelIntensity*fresnelColor;
+    vec3 kD = (vec3(1.0) - fresnelSchlick)*(1.0 - mMetallic);
+    vec3 diffuse = kD*color/PI;
 
     Material result;
-    result.diffuse = diffuseResult;
-    result.specular = specularResult;
-    result.fresnel = fresnelResult;
+    result.result = (specular + diffuse) * lightColor * nDotL * 4.0;
+
     return result;
 }
 
-// https://www.shadertoy.com/view/wtsSW4
-#define PHI 1.61803398874989484820459 // Golden Ratio   
-#define PI_  3.14159265358979323846264 // PI
-#define SQ2 1.41421356237309504880169 // Square Root of Two
-#define E   2.71828182846
-float gold_noise3(in vec3 coordinate, in float seed){
-    return 0.5 - fract(tan(distance(coordinate*(seed+PHI*00000.1), vec3(PHI*00000.1, PI_*00000.1, E)))*SQ2*10000.0);
-}
-
-vec2 goldNoiseCustom(in vec3 coordinate, in float seed)
-{
-    return vec2(
-        fract(tan(distance(coordinate.xy*PHI, coordinate.xy)*seed)*coordinate.x),
-        fract(tan(distance(coordinate.zx*PHI, coordinate.zx)*seed)*coordinate.z)
-        );
-}
-
-// https://github.com/tt6746690/computer-graphics-shader-pipeline/blob/master/src/random2.glsl
-vec2 random2(vec3 st){
-  vec2 S = vec2( dot(st,vec3(127.1,311.7,783.089)),
-             dot(st,vec3(269.5,183.3,173.542)) );
-  return fract(sin(S)*43758.5453123);
-}
 
 /*
     Efficient soft-shadow with percentage-closer filtering
@@ -159,20 +63,33 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
 
     float res = 0.f;
     float bias = 0.00002;
-    // float bias = 0.00005;
-    float radius = 0.0009;
+    float radius = 0.0015;
 
     #ifdef EFFICIENT_SMOOTH_SHADOW
-        int it = 6;
-        int itPenumbra = 64;
+        int it = 8;
+        int itPenumbra = 32;
         int i;
 
         for(i = 0; i < it; i++)
-            res += texture(shadowmap, mapPosition.xy + 2.0*radius*vec2(gold_noise3(position, i), gold_noise3(position, i*0.2))).r - bias < mapPosition.z ? 1.0 : 0.0;
+            res += texture(
+                shadowmap, 
+                mapPosition.xy + 2.0*radius*vec2(gold_noise3(position, i), 
+                gold_noise3(position, i*0.2))).r 
+            - bias < mapPosition.z ? 1.0 : 0.0;
 
         if(res < float(it) && res > 0.f)
+        {
+            float p = float(it)*0.5;
+            float prct = 0.5 + 0.5*abs(res-p)/p;
+            itPenumbra = int(float(itPenumbra)*prct);
+
             for(i = 0; i < itPenumbra; i++)
-                res += texture(shadowmap, mapPosition.xy + radius*vec2(gold_noise3(position, i), gold_noise3(position, i*0.2))).r - bias < mapPosition.z ? 1.0 : 0.0;
+                res += texture(
+                    shadowmap, 
+                    mapPosition.xy + radius*vec2(gold_noise3(position, i), 
+                    gold_noise3(position, i*0.2))).r 
+                - bias < mapPosition.z ? 1.0 : 0.0;
+        }
         
         res /= float(i);
     #else
@@ -189,8 +106,9 @@ Material getMultiLightStandard()
     while(true)
     {
         Light light = lights[id];
-        Material lightResult = {vec3(0.f), vec3(0.f), vec3(0.f)};
+        Material lightResult = {vec3(0.f)};
         float factor = 1.0;
+        float fresnelFactor = 1.0;
         switch(light.stencil.a)
         {
             case 0 :
@@ -199,11 +117,13 @@ Material getMultiLightStandard()
 
             case 1 :
 
-                lightResult = getDSF(light.direction.xyz, light.color.rgb);
+                lightResult = getBRDF(light.direction.xyz, light.color.rgb);
                 factor = light.color.a;
-                // factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bSunShadowMap, light._rShadowMatrix);
-                factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bShadowMaps[light.stencil.r], light._rShadowMatrix);
-                // factor *= light.stencil.b%2 == 0 ? 1.f : getShadow(bShadowMaps[int(_iTime)%2], light._rShadowMatrix);
+                fresnelFactor = factor;
+                factor *= 
+                    light.stencil.b%2 == 0 ? 
+                        1.f : 
+                        getShadow(bShadowMaps[light.stencil.r], light._rShadowMatrix);
                 break;
 
             case 2 : 
@@ -212,8 +132,9 @@ Material getMultiLightStandard()
                 float distFactor = max(maxDist - distance(position, light.position.xyz), 0.f)/maxDist;
                 vec3 direction = normalize(position - light.position.xyz);
                 
-                lightResult = getDSF(direction, light.color.rgb);
+                lightResult = getBRDF(direction, light.color.rgb);
                 factor = distFactor*distFactor*light.color.a;
+                fresnelFactor = factor;
             }
                 break;
 
@@ -240,18 +161,16 @@ Material getMultiLightStandard()
                 float distFactor = max(maxDist - distance(sPos, position), 0.f)/maxDist;
                 vec3 direction = normalize(position - sPos);
                 
-                lightResult = getDSF(direction, light.color.rgb);
+                lightResult = getBRDF(direction, light.color.rgb);
                 factor = distFactor*distFactor*light.color.a;
+                fresnelFactor = factor;
             }
                 break;
 
             default : break;
         }
         
-        
-        result.diffuse += lightResult.diffuse * factor;
-        result.specular += lightResult.specular * factor;
-        result.fresnel += lightResult.fresnel * factor;
+        result.result += lightResult.result * factor;
 
         id ++;
     }

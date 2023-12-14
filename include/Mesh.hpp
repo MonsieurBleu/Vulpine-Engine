@@ -55,8 +55,8 @@ class Mesh
         Mesh& setMap(Texture2D texture, int location);
         Mesh& removeMap(int location);
 
-        virtual void draw(GLenum mode = 0);
-        virtual void drawVAO(GLenum mode = 0);
+        virtual void draw(GLenum mode = GL_TRIANGLES);
+        virtual void drawVAO(GLenum mode = GL_TRIANGLES);
 };
 
 #define MODEL_UNIFORM_START           16

@@ -21,8 +21,9 @@ MeshMaterial::MeshMaterial(ShaderProgram* material, ShaderProgram* depthOnlyMate
 void Mesh::drawVAO(GLenum mode)
 {
     glBindVertexArray(vao->getHandle());
-    if(!mode)
+    // if(!mode)
         mode = defaultMode;
+
     glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 }
 
@@ -91,8 +92,7 @@ void MeshModel3D::drawVAO(GLenum mode)
         glDisable(GL_DEPTH_TEST);
 
     glBindVertexArray(vao->getHandle());
-    if(!mode)
-        mode = defaultMode;
+    mode = defaultMode;
     glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
     if(invertFaces)

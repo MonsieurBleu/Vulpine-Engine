@@ -55,17 +55,23 @@ class Mage{
         float timeSinceLastMenace = 0;
         bool applyDamageNextTurn = false;
         bool applyHealNextTurn = false;
+        Mage *CurrentTarget = nullptr;
 
         void menace(Mage* mage);
         void heal(Mage* mage);
 
+
+        vec3 deplacementDir = vec3(0);
+        float timeSinceLastDeplacementTick = 0;
+
 	public : 
 
 		Mage(std::list<MageRef> &allMages, Scene &scene, ModelRef model, vec3 color, vec3 position, MageType type);
-		void dead(); 
+		
+        void dead(); 
 		void tick();		
-		bool isDead();
 
+		bool isDead();
         MageType getType();
         ModelRef getModel();
 };

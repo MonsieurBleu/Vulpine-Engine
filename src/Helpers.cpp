@@ -147,7 +147,7 @@ DirectionalLightHelper::DirectionalLightHelper(SceneDirectionalLight light) : li
             )
         );
 
-    ModelRef helper = newModel(
+    helper = newModel(
         material,
         vao,
         ModelState3D().scaleScalar(1.0)
@@ -180,6 +180,12 @@ void DirectionalLightHelper::update(bool forceUpdate)
     //         0, // useless
     //         angle2
     //         ));
+
+    vec3 *points = (vec3*)helper->getVao()->attributes[0].getBufferAddr();
+    points[0] = vec3(0.f);
+    points[1] = -light->direction();
+
+    helper->getVao()->attributes[0].sendAllToGPU();
 
     this->ObjectGroup::update(forceUpdate);
 }
@@ -223,6 +229,7 @@ TubeLightHelper::TubeLightHelper(SceneTubeLight light) : light(light)
     );
 
     helper->defaultMode = GL_LINES;
+    // helper->depthWrite = false;
 
     add(helper);
 }

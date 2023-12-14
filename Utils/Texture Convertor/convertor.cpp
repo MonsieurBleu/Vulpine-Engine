@@ -46,9 +46,14 @@ struct pixelRGB
     uint8 r, g, b;
 };
 
-struct pixelRGBA
+struct pixelRGBA_t
 {
     uint8 r, g, b, a;
+};
+
+union pixelRGBA
+{
+    uint8 c[4];
 };
 
 struct OutImageInfo
@@ -95,10 +100,10 @@ OutImageInfo ProcessColorMap(const char *filename)
             uint8 x = 255*max(0.0, min(1.0, pow(1.-exp(-resizedData[i].x)*exposure, igamma)));
             uint8 y = 255*max(0.0, min(1.0, pow(1.-exp(-resizedData[i].y)*exposure, igamma)));
             uint8 z = 255*max(0.0, min(1.0, pow(1.-exp(-resizedData[i].z)*exposure, igamma)));
-            outData[i].r = x;
-            outData[i].g = y;
-            outData[i].b = z;
-            outData[i].a = 255;
+            outData[i].c[0] = x;
+            outData[i].c[1] = y;
+            outData[i].c[2] = z;
+            outData[i].c[3] = 255;
         }
 
         // for(int i = 0; i < pixelCount; i++)
@@ -185,10 +190,10 @@ OutImageInfo ProcessNormalMap(const char *filename)
             uint8 x = pow(resizedData[i].x, 0.5)*255;
             uint8 y = pow(resizedData[i].y, 0.5)*255;
             // uint8 z = pow(resizedData[i].z, 0.5)*255;
-            outData[i].r = x;
-            outData[i].g = y;
-            outData[i].b = 0.0;
-            outData[i].a = 255;
+            outData[i].c[0] = x;
+            outData[i].c[1] = y;
+            outData[i].c[2] = 0.0;
+            outData[i].c[3]= 255;
         }
 
         delete resizedData;
@@ -221,24 +226,24 @@ OutImageInfo ProcessNormalMap(const char *filename)
                 float x = 1.0 + nDitherAmplitude*((r1%256)-1.0);
                 float y = 1.0 + nDitherAmplitude*((r2%256)-1.0);
                 float z = 1.0 + nDitherAmplitude*((r3%256)-1.0);
-                vec3 p = vec3(resizedData[i].r, resizedData[i].g, resizedData[i].b) * vec3(1.0/128.0) - vec3(1.0);
+                vec3 p = vec3(resizedData[i].c[0], resizedData[i].c[1], resizedData[i].c[2]) * vec3(1.0/128.0) - vec3(1.0);
 
                 p = vec3(0.5) + vec3(0.5)*normalize(p*vec3(x, y, z));
 
-                resizedData[i].r = round(p.x*255.0);
-                resizedData[i].g = round(p.y*255.0);
-                resizedData[i].b = 0;
-                resizedData[i].a = 255;
+                resizedData[i].c[0] = round(p.x*255.0);
+                resizedData[i].c[1] = round(p.y*255.0);
+                resizedData[i].c[2] = 0;
+                resizedData[i].c[3] = 255;
             }
         }
         else
         {
             for(int i = 0; i < pixelCount; i++)
             {
-                resizedData[i].r = resizedData[i].r;
-                resizedData[i].g = resizedData[i].g;
-                resizedData[i].b = 255;
-                resizedData[i].a = 255;
+                resizedData[i].c[0] = resizedData[i].c[0];
+                resizedData[i].c[1] = resizedData[i].c[1];
+                resizedData[i].c[2] = 255;
+                resizedData[i].c[3] = 255;
             }
         }
 
@@ -248,7 +253,10 @@ OutImageInfo ProcessNormalMap(const char *filename)
     return (OutImageInfo){NULL, 0, 0, 0};
 }
 
-OutImageInfo ProcessSingleChannelMap(OutImageInfo NRM, const char *filename, int channel = 0)
+/*
+    TODO : add src channel support to HDR 
+*/
+OutImageInfo ProcessSingleChannelMap(OutImageInfo NRM, const char *filename, int channel = 0, int srcChannel = 0)
 {
     if(stbi_is_hdr(filename))
     {
@@ -266,23 +274,15 @@ OutImageInfo ProcessSingleChannelMap(OutImageInfo NRM, const char *filename, int
         switch (channel)
         {
         case 0 :
-            for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].r = pow(resizedData[i], 0.5)*255;
-            break;
-
         case 1 :
-            for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].g = pow(resizedData[i], 0.5)*255;
-            break;
-
         case 2 :
             for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].b = pow(resizedData[i], 0.5)*255;
+                NRM.data[i].c[channel] = pow(resizedData[i], 0.5)*255;
             break;
 
         case 3 :
             for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].a = 255 - pow(resizedData[i], 0.5)*255;
+                NRM.data[i].c[channel]  = 255 - pow(resizedData[i], 0.5)*255;
             break;
 
         default:
@@ -294,36 +294,28 @@ OutImageInfo ProcessSingleChannelMap(OutImageInfo NRM, const char *filename, int
     else
     {
         int w, h, n;
-        unsigned char *initialData = stbi_load(filename, &w, &h, &n, 1);
+        unsigned char *initialData = stbi_load(filename, &w, &h, &n, 4);
 
         if(!initialData)
             badFilenameExit(filename);
 
         int pixelCount = NRM.w*NRM.h;
-        uint8 *resizedData = new uint8[pixelCount];
-        stbir_resize_uint8(initialData, w, h, 0, resizedData, NRM.w, NRM.h, 0, 1);
+        pixelRGBA *resizedData = new pixelRGBA[pixelCount];
+        stbir_resize_uint8(initialData, w, h, 0, (uint8*)resizedData, NRM.w, NRM.h, 0, 4);
         delete initialData;
 
         switch (channel)
         {
         case 0 :
-            for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].r = resizedData[i];
-            break;
-
         case 1 :
-            for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].g = resizedData[i];
-            break;
-
         case 2 :
             for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].b = resizedData[i];
+                NRM.data[i].c[channel] = resizedData[i].c[srcChannel];
             break;
 
         case 3 :
             for(int i = 0; i < pixelCount; i++)
-                NRM.data[i].a = 255 - resizedData[i];
+                NRM.data[i].c[channel]  = 255 - resizedData[i].c[srcChannel];
             break;
 
         default:
@@ -336,6 +328,8 @@ OutImageInfo ProcessSingleChannelMap(OutImageInfo NRM, const char *filename, int
     return NRM;
 }
 
+
+
 int main(int argc, char *argv[])
 {
     char *color = NULL;
@@ -343,6 +337,7 @@ int main(int argc, char *argv[])
     char *normal = NULL;
     char *roughness = NULL;;
     char *metallic = NULL;
+    char *orm = NULL;
 
     for(int i = 1; i < argc; i++)
     {
@@ -374,6 +369,7 @@ int main(int argc, char *argv[])
         if(!strcmp(argv[i], "-n")) normal = argv[++i];
         if(!strcmp(argv[i], "-r")) roughness = argv[++i];
         if(!strcmp(argv[i], "-m")) metallic = argv[++i];
+        if(!strcmp(argv[i], "-orm")) orm = argv[++i];
     }
 
 
@@ -388,6 +384,8 @@ int main(int argc, char *argv[])
         NRM.n = 4;
         NRM.w = outRes;
         NRM.h = outRes;
+
+        // for(int i = 0; i < outRes*outRes)
     }
 
     if(roughness)
@@ -395,6 +393,12 @@ int main(int argc, char *argv[])
 
     if(metallic)
         ProcessSingleChannelMap(NRM, metallic, 3);
+
+    if(orm)
+    {
+        ProcessSingleChannelMap(NRM, orm, 2, 1);
+        ProcessSingleChannelMap(NRM, orm, 3, 2);
+    }
 
     OutImageInfo CE;
 

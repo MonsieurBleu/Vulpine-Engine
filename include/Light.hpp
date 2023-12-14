@@ -13,6 +13,7 @@ using namespace glm;
 #define LIGHT_SHADOW_ACTIVATED 1
 
 class ObjectGroup;
+class FastUI_valueMenu;
 
 enum lightTypes
 {
@@ -78,6 +79,8 @@ class DirectionLight : public Light
 
         void updateShadowCamera();
         vec2 shadowCameraSize;
+
+        void setMenu(FastUI_valueMenu &menu, std::u32string name);
 };
 
 class PointLight : public Light
@@ -137,9 +140,7 @@ typedef std::shared_ptr<TubeLight> SceneTubeLight;
 class LightBuffer
 {
     private :
-
         uint handle;
-
         std::shared_ptr<LightInfos[]> buffer;
         int currentID = 0;
 

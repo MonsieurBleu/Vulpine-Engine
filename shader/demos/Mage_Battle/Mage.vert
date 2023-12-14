@@ -6,6 +6,8 @@
 #include uniform/Model3D.glsl
 
 layout (location = 32) uniform vec3 _mageColor;
+layout (location = 33) uniform float _mageHP;
+layout (location = 34) uniform int _mageType;
 
 #include globals/Vertex3DInputs.glsl
 #include globals/Vertex3DOutputs.glsl

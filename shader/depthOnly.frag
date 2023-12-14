@@ -2,8 +2,6 @@
 
 #define USING_VERTEX_TEXTURE_UV
 
-vec3 color;
-
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl
 #include uniform/Ligths.glsl

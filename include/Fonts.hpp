@@ -22,6 +22,8 @@ UFT32Stream& operator<<(UFT32Stream& os, const float f);
 UFT32Stream& operator<<(UFT32Stream& os, const int i);
 UFT32Stream& operator<<(UFT32Stream& os, const std::string& str);
 
+bool u32strtof(std::u32string &str, float &f);
+int u32strtoi(std::u32string &str, int base = 10);
 
 struct FontCharInfo
 {

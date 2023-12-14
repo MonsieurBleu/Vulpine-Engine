@@ -6,6 +6,11 @@
 
 #include <Mesh.hpp>
 
+#include <codecvt>
+#include <iomanip>
+
+typedef std::basic_ostringstream<char32_t> UFT32Stream;
+
 class Globals
 {   
     friend App;
@@ -28,6 +33,10 @@ class Globals
         Mesh _fullscreenQuad;
 
         bool _mouseLeftClick = false;
+        bool _mouseLeftClickDown = false;
+
+        std::u32string textInputString;
+        void* currentTextInputUser = nullptr;
 
     public :
 
@@ -50,8 +59,8 @@ class Globals
         const int* screenResolutionAddr() const;
         const glm::vec2 mousePosition() const;
 
-        BenchTimer appTime;
-        BenchTimer unpausedTime;
+        BenchTimer appTime = BenchTimer("App Time");
+        BenchTimer unpausedTime = BenchTimer("Simulation Time");
 
         std::vector<ShaderUniform> standartShaderUniform2D() const;
         std::vector<ShaderUniform> standartShaderUniform3D() const;
@@ -68,6 +77,43 @@ class Globals
         void drawFullscreenQuad();
 
         bool mouseLeftClick();
+        bool mouseLeftClickDown();
+
+        /**
+         * @brief Set the given pointer as text input user
+         * @retval `true` if the text input is arleady used
+         * @retval `false` if the text input is not used
+         */
+        bool useTextInputs(void* user);
+
+        /**
+         * @brief End the given user's right to use the text input buffer
+         * @retval `true` if the given pointer was the current user
+         * @retval `false` if the given pointer was not the current user
+         */
+        bool endTextInputs(void* user);
+
+        /**
+         * @retval `true` if the given pointer is the current user
+         * @retval `false` if the given pointer is not the current user
+         */
+        bool canUseTextInputs(void* user);
+
+        /**
+         * @retval `true` if there is an user for text inputs
+         * @retval `false` if there isn't any user for text inputs
+         */
+        bool isTextInputsActive();
+
+        /**
+         * @brief fill the given string with the current text input.
+         * if the given pointer is not the current user, nothing will
+         * be done.
+         * @retval `true` if the given pointer is the current user
+         * @retval `false` if the given pointer is not the current user
+         */
+        bool getTextInputs(void* user, std::u32string& buff);
+
 };
 
 extern Globals globals;

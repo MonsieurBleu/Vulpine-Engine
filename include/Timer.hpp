@@ -10,6 +10,8 @@ typedef std::chrono::duration<float, std::milli> duration;
 #define NS_TO_S  1000000000; 
 #define MS_TO_S  0.001;
 
+class FastUI_valueMenu;
+
 class BenchTimer
 {
     friend std::ostream& operator<<(std::ostream& os, BenchTimer e);
@@ -70,7 +72,10 @@ class BenchTimer
 
         const float* getElapsedTimeAddr() const;
 
-        std::ostream& operator<<(std::ostream& os);
+        // std::ostream& operator<<(std::ostream& os);
+
+        void setMenu(FastUI_valueMenu &menu);
+        void setMenuConst(FastUI_valueMenu &menu) const;
 };
 
 std::ostream& operator<<(std::ostream& os, BenchTimer e);

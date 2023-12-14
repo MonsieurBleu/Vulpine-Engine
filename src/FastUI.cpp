@@ -1,5 +1,6 @@
 #include <FastUI.hpp>
 #include <Globals.hpp>
+#include <MathsUtils.hpp>
 
 SimpleUiTile::SimpleUiTile(ModelState3D state, UiTileType tileType, vec4 color)
     : ModelState3D(state), tileType(tileType), color(color)
@@ -115,7 +116,8 @@ FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : Fa
     (*this)->add(title);
 
     vec2 padding = vec2(1.0, 0.5)*title->charSize;
-    vec2 bSize = title->getSize() + padding + padding;
+    vec2 bSize = vec2(title->getSize().x, title->charSize*title->state.scale.y*1.6);
+    bSize += padding + padding;
 
     background = SimpleUiTileRef(new SimpleUiTile(
         ModelState3D()
@@ -126,7 +128,8 @@ FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : Fa
     ui.tileBatch->add(background);
 
     // background->setPosition(vec3(vec2(-0.5, 0.5)*title->getSize()*padding,0));
-    title->state.setPosition(vec3(padding.x, -padding.y,0));
+    // title->state.setPosition(vec3(padding.x, -padding.y, 0));
+    title->state.setPosition(vec3(vec2(0.5, -0.5)*(bSize-title->getSize()), 0));
 
     (*this)->add(background);
 
@@ -141,26 +144,143 @@ UFT32Stream& FastUI_value::toString(UFT32Stream& os)
 {
     os << textPrev;
 
-    const void *v = constValue ? constValue : value;
-
-    switch (type)
+    if(constValue || !globals.canUseTextInputs(this))
     {
-        case FUI_float : os << *(const float*)v; break;
-        case FUI_int : os << *(const int*)v; break;
-        default: os << U"[error type]";break;
+        const void *v = constValue ? constValue : value;
+
+        switch (type)
+        {
+            case FUI_float : os << *(const float*)v; break;
+            case FUI_int : os << *(const int*)v; break;
+            case FUI_bool :
+                if(*(const bool*)v)
+                    os << U"true";
+                else
+                    os << U"false";
+            break;
+            case FUI_vec3DirectionPhi :
+                os << degrees(getPhiTheta(*(const vec3*)v).x);
+                break;
+            case FUI_vec3DirectionTheta : 
+                os << -degrees(getPhiTheta(*(const vec3*)v).y); 
+                break;
+
+            case FUI_noValue : break;
+            default: os << U"[error type]";break;
+        }
+
+        os << textAfter;
+    }
+    else
+    {
+        std::u32string ti;
+        globals.getTextInputs(this, ti);
+        if(ti.back() == U'\n')
+        {
+            ti.pop_back();
+            globals.endTextInputs(this);
+
+            float mod = 0.f;
+
+            if(ti.size() > 2)
+            {
+                if(ti[0] == U'+' && ti[1] == U'+')
+                {
+                    mod = 1.0;
+                    ti.erase(0, 2);
+                }
+                if(ti[0] == U'-' && ti[1] == U'-')
+                {
+                    mod = 1.0;
+                    ti.erase(0, 1);
+                }
+            }
+
+            switch (type)
+            {
+            case FUI_float :
+            {
+                float f;
+                float &v = *(float*)value;
+                v = !u32strtof(ti, f) ? v : mod == 0.f ? f : mod*v + f;
+            }
+                break;
+            
+            case FUI_int :
+            {
+                float f;
+                int &v = *(int*)value;
+                v = !u32strtof(ti, f) ? v : mod == 0.f ? f : mod*v + f;
+            }
+                break;
+            
+            case FUI_vec3DirectionPhi :
+            {
+                float f;
+                if(u32strtof(ti, f))
+                {
+                    vec3 &v = *(vec3*)value;
+                    v = setPhi(v, radians(f));
+                }
+            }
+                break;
+
+            case FUI_vec3DirectionTheta :
+            {
+                float f;
+                if(u32strtof(ti, f))
+                {
+                    vec3 &v = *(vec3*)value;
+                    v = setTheta(v, radians(-f));
+                }
+            }
+                break;
+
+            default:
+                break;
+            }
+
+            os << textAfter;
+        }
+        else
+        {
+            float time = globals.appTime.getElapsedTime();
+            time = mod(time, 2.f);
+
+            if(time > 1.0)
+                ti.push_back(U'.');
+            else
+                ti.push_back(U' ');
+                
+            if(time > 1.3)
+                ti.push_back(U'.');
+
+            if(time > 1.6)
+                ti.push_back(U'.');
+
+            ti = U"= " + ti;
+
+            // std::cout << time << "\n";
+        }
+
+        os << ti;
     }
 
-    os << textAfter;
+    
 
     return os;
 }
 
-// FastUI_valueTab& FastUI_valueTab::add(FastUI_value v)
-// {
-//     push_back(v);
-//     return *this;
-// }
-
+ void FastUI_value::getModifiedByTextInput()
+ {
+    if(type == FUI_bool && !constValue)
+    {
+        bool &v = *(bool*)value;
+        v = !v;
+    }
+    else if(type != FUI_noValue)
+        globals.useTextInputs(this);
+ }
 
 FastUI_valueTab::FastUI_valueTab(FastUI_context& ui, const std::vector<FastUI_value> &values) 
     : FastUI_element(ui), std::vector<FastUI_value>(values)
@@ -196,6 +316,8 @@ FastUI_valueTab& FastUI_valueTab::batch()
     background->setScale(vec3(text->getSize() + padding + padding, 1));
 
     ui.batchNeedUpdate = true;
+
+    this->FastUI_element::size = vec2(background->scale);
 
     return *this;
 }
@@ -252,7 +374,7 @@ void FastUI_valueMenu::batch()
         // );
 
         e.tab.batch();
-        e.tab->state.scaleScalar(0.8);
+        e.tab->state.scaleScalar(0.85);
         e.tab->state.setPosition(vec3(0, -titleOffset.y, 0));
         e.tab->state.hide = ModelStateHideStatus::HIDE;
         g->add(dynamic_cast<ObjectGroupRef&>(e.tab));
@@ -281,11 +403,10 @@ void FastUI_valueMenu::setCurrentTab(int id)
         currentTab = -1;
 }
 
-/*
-    TODO : test the matrix transformation
-*/
 void FastUI_valueMenu::trackCursor()
 {
+    currentTab = currentTab < (int)elements.size() ? currentTab : -1;
+
     vec2 mpos = globals.mousePosition()/vec2(globals.windowSize());
     float iaspectRatio = (float)(globals.windowHeight())/(float)(globals.windowWidth());
     // mpos = mpos*vec2(2.0) - vec2(1.0);
@@ -315,6 +436,23 @@ void FastUI_valueMenu::trackCursor()
         else if(i != currentTab)
             e.title.changeBackgroundColor(ui.colorTitleBackground);
     }  
+
+    if(globals.mouseLeftClick() && currentTab >= 0)
+    {
+        FastUI_titledValueTab &e = elements[currentTab];
+        vec2 boundmin = vec2(e.tab->state.position)*vec2(1, -1);
+        vec2 bound = boundmin + e.tab.getSize() * vec2(e.tab->state.scale);
+
+        // std::cout << boundmin.x << " " << boundmin.y << "\t";
+        // std::cout << bound.x << " " << bound.y << "\t";
+        // std::cout << mpos.x << " " << mpos.y << "\t";
+
+        if(mpos.x >= boundmin.x && mpos.y >= boundmin.y && mpos.x <= bound.x && mpos.y <= bound.y)
+        {
+            int line = (mpos.y-boundmin.y)/(bound.y-boundmin.y)*e.tab.std::vector<FastUI_value>::size();
+            e.tab[line].getModifiedByTextInput();
+        }
+    }
 }
 
 void FastUI_valueMenu::updateText()
@@ -325,4 +463,51 @@ void FastUI_valueMenu::updateText()
         FastUI_titledValueTab &e = elements[i];
         e.tab.batch();
     }
+}
+
+void BenchTimer::setMenu(FastUI_valueMenu &menu)
+{
+    std::u32string name32 = name.size() ? UFTconvert.from_bytes(name) : U"untitled";
+
+    menu.push_back(
+        // {FastUI_menuTitle(menu.ui, UFTconvert.from_bytes(name)), FastUI_valueTab(menu.ui, {
+        {FastUI_menuTitle(menu.ui, U"[BenchTimer] "+name32), FastUI_valueTab(menu.ui, {
+            FastUI_value((const float*)&avgTotal,   U"avg\t", U" ms"),
+            FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
+            FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),
+            FastUI_value((const float*)&elapsedTime,   U"elapsed time\t", U" s"),
+            FastUI_value((bool*)&paused,   U"paused\t", U""),
+            FastUI_value((const float*)&min,   U"min\t", U" ms"),
+            FastUI_value((const float*)&max,   U"max\t", U" ms")
+        })}
+    );
+}
+
+void BenchTimer::setMenuConst(FastUI_valueMenu &menu) const
+{
+    std::u32string name32 = name.size() ? UFTconvert.from_bytes(name) : U"untitled";
+
+    menu.push_back(
+        {FastUI_menuTitle(menu.ui, U"[BenchTimer] "+name32), FastUI_valueTab(menu.ui, {
+            FastUI_value((const float*)&avgTotal,   U"avg\t", U" ms"),
+            FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
+            FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),
+            FastUI_value((const float*)&elapsedTime,   U"elapsed time\t", U" s"),
+            FastUI_value((const bool*)&paused,   U"paused\t", U""),
+            FastUI_value((const float*)&min,   U"min\t", U" ms"),
+            FastUI_value((const float*)&max,   U"max\t", U" ms")
+        })}
+    );
+}
+
+void DirectionLight::setMenu(FastUI_valueMenu &menu, std::u32string name)
+{
+    menu.push_back(
+        {FastUI_menuTitle(menu.ui, name), FastUI_valueTab(menu.ui, {
+            FastUI_value(&infos._color.a, U"intensity\t"),
+            FastUI_value(U"Direction"),
+            FastUI_value((vec3*)&infos._direction,  U"\fphi\t", U"°", FUI_vec3DirectionPhi),
+            FastUI_value((vec3*)&infos._direction,  U"\ftheta\t", U"°", FUI_vec3DirectionTheta)
+        })}
+    );
 }

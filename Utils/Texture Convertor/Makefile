@@ -23,5 +23,5 @@ install : $(IMG)
 reinstall : clean install
 
 out_ktx/%.ktx : out/%.png
-	toktx $@ $<
+	toktx --assign_oetf linear $@ $< 
 

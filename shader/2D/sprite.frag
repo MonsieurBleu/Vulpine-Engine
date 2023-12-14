@@ -26,7 +26,7 @@ void main()
     float pxRange = 1.0;
     float pxDist = pxRange * (dist - 0.5);
 	// float opacity = clamp(pxDist + 0.5, 0.0, 1.0);
-    float opacity = smoothstep(-0.5, 0.0, pxDist);
+    float opacity = smoothstep(-0.5, 0.25, pxDist);
     fragColor = vec4(bodyColor, opacity*2.0);
     
     

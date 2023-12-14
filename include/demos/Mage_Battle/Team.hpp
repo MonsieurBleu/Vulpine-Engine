@@ -7,9 +7,7 @@
 class Team : private std::list<MageRef>
 {
     private : 
-        uint healNB = 0;
-        uint attackNB = 0;
-        uint tankNB = 0;
+        uint healNB = 0; uint attackNB = 0; uint tankNB = 0;
         vec3 color;
         Scene *scenePTR;
 
@@ -22,11 +20,8 @@ class Team : private std::list<MageRef>
 
         void SpawnUnits(
             Scene& scene, 
-            uint healNB, 
-            uint attackNB, 
-            uint tankNB, 
-            vec3 spawnPoint,
-            float spawnRadius, 
+            uint healNB, uint attackNB, uint tankNB, 
+            vec3 spawnPoint,float spawnRadius, 
             vec3 color);
 
         void tick();

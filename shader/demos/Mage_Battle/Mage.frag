@@ -1,19 +1,20 @@
 #version 460
 
 #define USING_VERTEX_TEXTURE_UV
-
+#define SKYBOX_REFLECTION
+// #define CUBEMAP_SKYBOX
 vec3 color;
 
 #include uniform/Base3D.glsl
 #include uniform/Model3D.glsl
 #include uniform/Ligths.glsl
 
+layout (binding = 0) uniform sampler2D bColor;
+layout (binding = 1) uniform sampler2D bMaterial;
+
 layout (location = 32) uniform vec3 _mageColor;
 layout (location = 33) uniform float _mageHP;
 layout (location = 34) uniform int _mageType;
-
-layout (binding = 0) uniform sampler2D bColor;
-layout (binding = 1) uniform sampler2D bMaterial;
 
 #include globals/Fragment3DInputs.glsl
 #include globals/Fragment3DOutputs.glsl
@@ -23,8 +24,18 @@ layout (binding = 1) uniform sampler2D bMaterial;
 in vec3 viewPos;
 in vec3 viewVector;
 
+#ifndef PI
 #define PI 3.1415926538
-#define SKYBOX_REFLECTION
+#endif
+
+float fastinverseSqrt(float x) {
+    float xhalf = 0.5 * x;
+    int i = floatBitsToInt(x);
+    i = 0x5f3759df - (i >> 1);
+    x = intBitsToFloat(i);
+    x = x * (1.5 - xhalf * x * x);
+    return x;
+}
 
 ////////////////http://www.thetenthplanet.de/archives/1180
 mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
@@ -40,7 +51,8 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
     vec3 T = dp2perp * duv1.x + dp1perp * duv2.x; 
     vec3 B = dp2perp * duv1.y + dp1perp * duv2.y;   
     // construct a scale-invariant frame 
-    float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) ); 
+    // float invmax = inversesqrt( max( dot(T,T), dot(B,B) ) ); 
+    float invmax = fastinverseSqrt( max( dot(T,T), dot(B,B) ) );
     return mat3( T * invmax, B * invmax, N );
 }
 
@@ -63,17 +75,6 @@ vec3 perturbNormal( vec3 N, vec3 V, vec2 tNormal, vec2 texcoord)
 }
 ////////////////////////////////////////////////////////////
 
-// vec3 rgb2hsv(vec3 c)
-// {
-//     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-//     vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-//     vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-
-//     float d = q.x - min(q.w, q.y);
-//     float e = 1.0e-10;
-//     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-// }
-
 vec3 hsv2rgb(vec3 c)
 {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -89,27 +90,34 @@ void main()
     mSpecular = 0.9;
     // mMetallic = 1.0 - NRM.a;
     // mRoughness = NRM.b;
+    mRoughness = 0.5;
+    mMetallic = 0.2;
+    mEmmisive = 1.0 - CE.a;
+    color = CE.rgb;
+    // normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
+    normalComposed = normal;
 
-    // mMetallic = float(_mageType)/5.0;
 
-    // mEmmisive = 1.0 - CE.a;
-    // color = CE.rgb;
     vec3 mageColor = _mageColor;
-
     mageColor = rgb2hsv(mageColor);
-    mageColor.g += _mageType == 2 ? 0.5 : 0.0;
-    mageColor.b += _mageType == 2 ? 0.3 : 0.0;
 
-    mageColor.g += _mageType == 4 ? -0.1 : 0.0;
-    mageColor.b += _mageType == 4 ? -0.5 : 0.0;
+    mageColor.g += _mageType == 2 ? 0.1 : 0.0;
+    // mageColor.b += _mageType == 2 ? 0.3 : 0.0;
 
+    mageColor.b += _mageType == 4 ? -0.4 : 0.0;
+
+    mageColor = clamp(mageColor, vec3(0.0), vec3(1.0));
     mageColor = hsv2rgb(mageColor);
 
-    // color = mix(mageColor*0.25, mageColor, _mageHP/100.0);
-    color = mageColor;
+    if(color.r == 1.0 && color.g == 0.0 && color.b == 0.0)
+        color = mageColor;
 
-    // mEmmisive = 0.35*(1.0 - rgb2v(color));
-    normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
+    // test 
+        // mMetallic = 1.f;
+        // mRoughness = 0.f;
+        // color = vec3(0.85);
+        // color = vec3(225.0, 215.0, 0.0)/255.0;
+    //
 
     colorVCorrection = 1.0-pow(rgb2v(color), 5.0);
 
@@ -118,18 +126,30 @@ void main()
     // Calculating skybox reflection
     #ifdef SKYBOX_REFLECTION
         vec3 reflectDir = reflect(viewDir, normalComposed); 
-        vec2 uvSky = vec2(0.0);
-        uvSky.x = 0.5 + atan(reflectDir.z, -reflectDir.x) / (2.0*PI);
-        uvSky.y = reflectDir.y*0.5 + 0.5;
-        vec3 rColor = (1.0 - mRoughness)*texture(bSkyTexture, uvSky).rgb; 
+        #ifdef CUBEMAP_SKYBOX
+            vec3 rColor = (1.0 - mRoughness)*texture(bSkyTexture, -reflectDir).rgb;
+        #else
+            vec2 uvSky = vec2(0.0);
+            uvSky.x = 0.5 + atan(reflectDir.z, -reflectDir.x) / (2.0*PI);
+            uvSky.y = reflectDir.y*0.5 + 0.5;
+            vec3 rColor = (1.0 - mRoughness)*texture(bSkyTexture, uvSky).rgb; 
+        #endif
     #endif
 
     Material material = getMultiLightStandard();
     vec3 materialColor = ambientLight + material.diffuse + material.specular + material.fresnel;
 
     #ifdef SKYBOX_REFLECTION
-        fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*materialColor;        
-        fragColor.rgb *= mix(vec3(1.0), rColor, max(mMetallic*0.9, 0.0));
+        // fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*materialColor;        
+        // fragColor.rgb *= mix(vec3(1.0), rColor, max(mMetallic*0.9, 0.0));
+
+        // fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*mix(materialColor, vec3(1.f) + material.specular, max(mMetallic*0.9, 0.0));
+
+        // fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*materialColor;   
+
+        materialColor = mix(materialColor, vec3(1.0), mMetallic*0.25);
+        fragColor.rgb = mix(color*materialColor, rColor, max(mMetallic*0.75, 0.0));
+
     #else
          fragColor.rgb = color*materialColor;
     #endif
@@ -139,5 +159,5 @@ void main()
     fragEmmisive = (mEmmisive*25.0) * 2.0 * fragColor.rgb *(rgb2v(fragColor.rgb) - ambientLight*0.5);
     fragEmmisive += 0.5 * fragColor.rgb * (rgb2v(material.specular) - ambientLight);
 
-    fragNormal = normalize((vec4(normal, 0.0) * inverse(_cameraViewMatrix)).rgb)*0.5 + 0.5;
+    fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb)*0.5 + 0.5;
 }

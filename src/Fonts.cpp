@@ -19,6 +19,27 @@ UFT32Stream& operator<<(UFT32Stream& os, const int i)
     return os;
 }
 
+bool u32strtof(std::u32string &str, float &f)
+{
+    errno = 0;
+    char *endptr = NULL;
+    std::string s = UFTconvert.to_bytes(str);
+    
+    if(!strcmp("nan", s.c_str()))
+        return false;
+
+    f = strtof(s.c_str(), &endptr);
+    return !(errno || s.c_str() == endptr);
+}
+
+int u32strtoi(std::u32string &str, int base)
+{
+    errno = 0;
+    char *endptr = NULL;
+    std::string s = UFTconvert.to_bytes(str);
+    int i = strtol(s.c_str(), &endptr, base);
+    return errno || s.c_str() == endptr ? INT_MAX : i;
+}
 
 FontUFT8& FontUFT8::readCSV(const std::string filename)
 {
@@ -111,6 +132,7 @@ void SingleStringBatch::batchText()
     textSize = vec2(0);
 
     const float tabulationSize = 16.f*charSize;
+    const float smallTabulationSize = 4.f*charSize;
 
     for(size_t i = 0; i < size; i++)
     {
@@ -123,8 +145,12 @@ void SingleStringBatch::batchText()
             break;
         
         case U'\t':
-            // c.x += charSize*2.0;
             c.x = (c.x-mod(c.x, tabulationSize))+tabulationSize;
+            continue;
+            break;
+        
+        case U'\f':
+            c.x = (c.x-mod(c.x, smallTabulationSize))+smallTabulationSize;
             continue;
             break;
 

@@ -20,7 +20,7 @@ in vec2 ViewRay;
 
 out vec4 _fragColor;
 
-#define SHOW_SHADOWMAP
+// #define SHOW_SHADOWMAP
 
 vec3 rgb2hsv(vec3 c)
 {
@@ -33,11 +33,8 @@ vec3 rgb2hsv(vec3 c)
     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
 
-float LinearizeDepth(in vec2 uv)
+float LinearizeDepth(float depth, float zNear, float zFar)
 {
-    float zNear = 0.1;    // TODO: Replace by the zNear of your perspective projection
-    float zFar  = 1000.0; // TODO: Replace by the zFar  of your perspective projection
-    float depth = texture(bDepth, uv).x;
     return (2.0 * zNear) / (zFar + zNear - depth * (zFar - zNear));
 }
 
@@ -208,7 +205,7 @@ void main()
 
     if(bloomEnable != 0) 
         // _fragColor.rgb += 0.125*texture(bEmmisive, uv).rgb; 
-        _fragColor.rgb += texture(bEmmisive, uv).rgb; 
+        _fragColor.rgb += 0.25*texture(bEmmisive, uv).rgb; 
 
     float exposure = 1.0;
     float gamma = 1.75;
@@ -232,9 +229,13 @@ void main()
     ////////
 
     #ifdef SHOW_SHADOWMAP
-        vec2 SSMuv = uvScreen * vec2(iResolution) * 1/512.0;
+        vec2 SSMuv = uvScreen * vec2(iResolution) * 1/900.0;
         if(SSMuv.x >= 0.f && SSMuv.x <= 1.0 && SSMuv.y >= 0.f && SSMuv.y <= 1.0)
-            _fragColor.rgb = vec3(texture(bSunMap, SSMuv).r);
+        {
+            float d = texture(bSunMap, SSMuv).r;
+            d = pow(d, 100.0)*5000000000.0;
+            _fragColor.rgb = vec3(d);
+        }
     #endif
 
     //// REPERE

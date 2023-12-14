@@ -161,6 +161,15 @@ App::App(GLFWwindow* window) :
 
             glfwSetCursorPos(window, center.x, center.y);
         }
+
+
+    });
+    
+    glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codepoint)
+    {
+        // globals.textInputString << (char32_t)codepoint;
+        // globals.textInputString.str().push_back(codepoint);
+        globals.textInputString.push_back(codepoint);
     });
 }
 
@@ -226,6 +235,7 @@ void App::mainloopStartRoutine()
 {
     globals.appTime.start();
     globals.unpausedTime.start();
+
     globals._mouseLeftClick = false;
 
     // const float limit = 1000.f/60.f;
@@ -292,6 +302,7 @@ void App::mainloop()
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
     #endif
 
+    /* 
     ScenePointLight redLight = newPointLight(
         PointLight()
         .setColor(vec3(1, 0, 0))
@@ -306,26 +317,35 @@ void App::mainloop()
         .setIntensity(1.0)
         .setRadius(10.0));
 
-    /*    
+      
     scene.add(redLight);
     scene.add(blueLight);
+    
 
     std::uniform_real_distribution<GLfloat> randomFloats(0.0, 1.0); // generates random floats between 0.0 and 1.0
     std::default_random_engine generator;
-    for(int i = 0; i < 16; i++)
-    for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
+    for(int i = 0; i < 32; i++)
+    // for(int i = 0; i < MAX_LIGHT_COUNTER; i++)
     {
         scene.add(
             newPointLight(
                 PointLight()
                 .setColor(vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
-                .setPosition(vec3(4, 2, 4) * vec3(0.5 - randomFloats(generator), randomFloats(generator), 0.5 - randomFloats(generator)))
-                .setIntensity(1.75)
-                .setRadius(5.0)
+                .setPosition(vec3(10, 2, 15) * vec3(randomFloats(generator), randomFloats(generator), randomFloats(generator)))
+                .setIntensity(0.5)
+                .setRadius(10.0)
                 )
         );
     }
     */
+
+    MeshMaterial uvPBR(
+            new ShaderProgram(
+                "shader/foward rendering/uv/CTBRDF.frag", 
+                "shader/foward rendering/uv/phong.vert", 
+                "", 
+                globals.standartShaderUniform3D() 
+            ));
 
     MeshMaterial uvPhong(
             new ShaderProgram(
@@ -334,6 +354,8 @@ void App::mainloop()
                 "", 
                 globals.standartShaderUniform3D() 
             ));
+    
+    ShaderProgram tmpShaderProg;
 
     MeshMaterial uvBasic(
             new ShaderProgram(
@@ -390,6 +412,7 @@ void App::mainloop()
             skyboxPass.setup();
         #else
             skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
+            // skyTexture.loadFromFile("ressources/test/skybox/shudu_lake_4k.png").generate();
         #endif
 
         skybox->setMap(skyTexture, 0);
@@ -401,28 +424,15 @@ void App::mainloop()
     SceneDirectionalLight sun = newDirectionLight(
         DirectionLight()
             .setColor(vec3(143, 107, 71)/vec3(255))
-            .setDirection(normalize(vec3(-1.0, -1.0, 0.0)))
-            .setIntensity(5.0)
+            .setDirection(normalize(vec3(-0.454528, -0.707103, 0.541673)))
+            .setIntensity(0.5)
             );
     sun->cameraResolution = vec2(2048);
     // sun->cameraResolution = vec2(8192);
     sun->shadowCameraSize = vec2(90, 90);
     sun->activateShadows();
-    
-    
-    SceneDirectionalLight sun2 = newDirectionLight(
-        DirectionLight()
-            .setColor(vec3(71, 107, 143)/vec3(255))
-            .setDirection(normalize(vec3(0.5, -1.0, -1.0)))
-            .setIntensity(5.0)
-            );
-    sun2->cameraResolution = vec2(2048);
-    sun2->shadowCameraSize = vec2(90, 90);
-    sun2->activateShadows();
-
 
     scene.add(sun);
-    scene.add(sun2);
 
     ObjectGroupRef materialTesters = newObjectGroup();
     std::vector<MeshVao> mtGeometry = 
@@ -432,7 +442,7 @@ void App::mainloop()
         readOBJ("ressources/material demo/cube.obj"),
     };
 
-    glLineWidth(15.0);
+    glLineWidth(3.0);
 
     #ifdef MATERIAL_TEST
         #define TEST_KTX
@@ -458,8 +468,17 @@ void App::mainloop()
         std::vector<std::string> mtTextureName
         {
             "ressources/material demo/ktx/0",
+            "ressources/material demo/ktx/",
+            "ressources/material demo/ktx/whiteSandstones",
             "ressources/material demo/ktx/1",
             "ressources/material demo/ktx/2",
+            "ressources/material demo/ktx/Scuffed_Gold",
+            "ressources/material demo/ktx/StreakyMetal",
+            "ressources/material demo/ktx/Aluminum",
+            "ressources/material demo/ktx/WornShinyMetal",
+            // "ressources/material demo/ktx/QuiltedFabric"
+            // "ressources/material demo/ktx/AntiqueGrate",
+            
             // "ressources/material demo/ktx/3",
             // "ressources/material demo/ktx/4",
             // "ressources/material demo/ktx/5",
@@ -492,7 +511,7 @@ void App::mainloop()
             std::string namem = mtTextureName[t] + "NRM.png";
             material.loadFromFile(namem.c_str())
                 .setFormat(GL_RGBA)
-                .setInternalFormat(GL_SRGB8_ALPHA8)
+                .setInternalFormat(GL_RGB)
                 .generate();
             #else
             std::string namec = mtTextureName[t] + "CE.ktx";
@@ -509,7 +528,7 @@ void App::mainloop()
                 materialTesters->add(helper);
 
                 ModelRef model = newModel();
-                model->setMaterial(uvPhong);
+                model->setMaterial(uvPBR);
                 model->setVao(mtGeometry[g]);
 
                 model->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
@@ -526,24 +545,58 @@ void App::mainloop()
         << TERMINAL_TIMER << mtTimer.getElapsedTime()
         << TERMINAL_OK << " s\n" << TERMINAL_RESET;
 
+        materialTesters->state.setPosition(vec3(0, 0, 5));
         materialTesters->update(true);
         scene.add(materialTesters);
 
-        ModelRef ground = newModel(uvPhong, readOBJ("ressources/material demo/plane.obj"));
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/groundCE.ktx"), 0);
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/groundNRM.ktx"), 1);
-        ground->state.scaleScalar(10.0).setPosition(vec3(0.5*2.5*(mtGeometry.size()-1), -2, 0.5*2.5*(mtTextureName.size()-1)));
+        ModelRef ground = newModel(uvPBR, readOBJ("ressources/material demo/plane.obj"));
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/QuiltedFabricCE.ktx"), 0);
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/QuiltedFabricNRM.ktx"), 1);
+        ground->state.scaleScalar(45.0).setPosition(vec3(0, -2, 0));
         scene.add(ground);
+
+        ModelRef cofeeCup = newModel(uvPBR, readOBJ("ressources/material demo/cofeeCup/model.obj"));
+        cofeeCup->setMap(Texture2D().loadFromFileKTX("ressources/material demo/cofeeCup/CE.ktx"), 0);
+        cofeeCup->setMap(Texture2D().loadFromFileKTX("ressources/material demo/cofeeCup/NRM.ktx"), 1);
+        cofeeCup->state.scaleScalar(2.0).setPosition(vec3(0, -1, -15)).setRotation(vec3(0, radians(90.f), 0));
+        scene.add(cofeeCup);
+
+        ModelRef barberChair = newModel(uvPBR, readOBJ("ressources/material demo/barberChair/model.obj"));
+        barberChair->setMap(Texture2D().loadFromFileKTX("ressources/material demo/barberChair/CE.ktx"), 0);
+        barberChair->setMap(Texture2D().loadFromFileKTX("ressources/material demo/barberChair/NRM.ktx"), 1);
+        barberChair->state.scaleScalar(4.0).setPosition(vec3(0, -1, -10)).setRotation(vec3(0, radians(90.f), 0));
+        scene.add(barberChair);
+
+        ModelRef revolver = newModel(uvPBR, readOBJ("ressources/material demo/revolver/model.obj"));
+        revolver->setMap(Texture2D().loadFromFileKTX("ressources/material demo/revolver/CE.ktx"), 0);
+        revolver->setMap(Texture2D().loadFromFileKTX("ressources/material demo/revolver/NRM.ktx"), 1);
+        revolver->state.scaleScalar(15.0).setPosition(vec3(0, 0, -20)).setRotation(vec3(0, 0, 0));
+        scene.add(revolver);
+
+        ModelRef sniper = newModel(uvPBR, readOBJ("ressources/material demo/sniper/model.obj"));
+        sniper->setMap(Texture2D().loadFromFileKTX("ressources/material demo/sniper/CE.ktx"), 0);
+        sniper->setMap(Texture2D().loadFromFileKTX("ressources/material demo/sniper/NRM.ktx"), 1);
+        sniper->state.scaleScalar(0.2).setPosition(vec3(0, 1, -30)).setRotation(vec3(0, 0, 0));
+        scene.add(sniper);
+
+        ModelRef keyboard = newModel(uvPBR, readOBJ("ressources/material demo/keyboard/model.obj"));
+        keyboard->setMap(Texture2D().loadFromFileKTX("ressources/material demo/keyboard/CE.ktx"), 0);
+        keyboard->setMap(Texture2D().loadFromFileKTX("ressources/material demo/keyboard/NRM.ktx"), 1);
+        keyboard->state.scaleScalar(0.1).setPosition(vec3(0, 1, -5)).setRotation(vec3(0, 0, 0));
+        scene.add(keyboard);
 
     #else
     
     #ifdef DEMO_MAGE_BATTLE
-        // ModelRef ground = newModel(uvPhong, mtGeometry[2]); 
-        ModelRef ground = newModel(uvPhong, readOBJ("ressources/demos/Mage_Battle/arena.obj"));
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2CE.ktx"), 0);
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/2NRM.ktx"), 1);
+        // glLineWidth(7.0);
+
+        // ModelRef ground = newModel(uvPBR, mtGeometry[2]); 
+        // ModelRef ground = newModel(uvPBR, readOBJ("ressources/demos/Mage_Battle/arena.obj"));
+        ModelRef ground = newModel(uvPBR, readOBJ("ressources/demos/Mage_Battle/COL.obj"));
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/CE.ktx"), 0);
+        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/NRM.ktx"), 1);
         // ground->state.setScale(vec3(ARENA_RADIUS*2.0, 0.5, ARENA_RADIUS*2.0)).setPosition(vec3(0, -0.5, 0));
-        ground->state.setPosition(vec3(0, -0.25, 0)).scaleScalar(0.2);
+        ground->state.setPosition(vec3(2, 0, -3)).scaleScalar(0.33);
         scene.add(ground);
         
  
@@ -571,21 +624,19 @@ void App::mainloop()
                 )     
                 );
         
-        MeshVao mageVao = readOBJ("ressources/demos/Mage_Battle/wizard.obj");
+        Texture2D mageCE = Texture2D().loadFromFileKTX("ressources/demos/Mage_Battle/CE.ktx");
+        Texture2D mageNRM = Texture2D().loadFromFileKTX("ressources/demos/Mage_Battle/NRM.ktx");
 
-        ModelRef MageTestModelAttack = newModel(MageMaterial, mageVao);
-        MageTestModelAttack->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+        ModelRef MageTestModelAttack = newModel(MageMaterial, readOBJ("ressources/demos/Mage_Battle/mage_attacker.obj"));
+        MageTestModelAttack->setMap(mageCE, 0).setMap(mageNRM, 1);
         MageTestModelAttack->state.scaleScalar(0.35);
 
-        ModelRef MageTestModelHeal = newModel(MageMaterial, mageVao);
-        MageTestModelHeal->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+        ModelRef MageTestModelHeal = newModel(MageMaterial, readOBJ("ressources/demos/Mage_Battle/mage_healer.obj"));
+        MageTestModelHeal->setMap(mageCE, 0).setMap(mageNRM, 1);
         MageTestModelHeal->state.scaleScalar(0.25);
 
-        ModelRef MageTestModelTank = newModel(MageMaterial, mageVao);
-        MageTestModelTank->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0CE.ktx"), 0)
-            .setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/0NRM.ktx"), 1);
+        ModelRef MageTestModelTank = newModel(MageMaterial, readOBJ("ressources/demos/Mage_Battle/mage_tank.obj"));
+        MageTestModelTank->setMap(mageCE, 0).setMap(mageNRM, 1);
         MageTestModelTank->state.scaleScalar(0.5);
 
         // MageRef MageTest = SpawnNewMage(MageTestModel, vec3(0), vec3(0), DEBUG);
@@ -595,7 +646,7 @@ void App::mainloop()
         Team::attackModel = MageTestModelAttack;
         Team::tankModel = MageTestModelTank; 
 
-        int unitsNB = 15;
+        int unitsNB = 200;
         int healNB = unitsNB*0.2f;
         int attackNB = unitsNB*0.7f;
         int tankNB = unitsNB*0.1f;
@@ -612,11 +663,9 @@ void App::mainloop()
         Team green;
         green.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x3C, 0xB0, 0x43)/vec3(255.f));
 
-        // Team magenta;
-        // magenta.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(0, 0, 0), ARENA_RADIUS*0.3, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
+        Team magenta;
+        magenta.SpawnUnits(scene, healNB*3, attackNB*3, tankNB*3, vec3(0, 0, 0), ARENA_RADIUS*0.65, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
 
-
-        glLineWidth(3.0);
         globals.unpausedTime.pause();
     #endif
     
@@ -654,26 +703,61 @@ void App::mainloop()
 
     FastUI_context ui(uiBatch, font, scene2D, defaultFontMaterial);
 
+    float test2 = 0.5;
+    int test3 = 512; 
     FastUI_valueMenu menu(ui, {
-        {FastUI_menuTitle(ui, U"Infos"), FastUI_valueTab(ui, {
-            FastUI_value(globals.appTime.getElapsedTimeAddr(), U"App Time\t", U" s"),
-            FastUI_value(globals.unpausedTime.getElapsedTimeAddr(), U"Simulation Time\t", U" s"),
-        })}, 
-        // {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
-        //     FastUI_value(&test2, U"value4 : ", U" ms "),
-        //     FastUI_value(&test2, U"value5 : ", U" s "),
-        //     FastUI_value(&test2, U"value6 : ", U" m/s "),
-        // })}  
+        // {FastUI_menuTitle(ui, U"Infos"), FastUI_valueTab(ui, {
+        //     FastUI_value(globals.appTime.getElapsedTimeAddr(), U"App Time\t", U" s"),
+        //     FastUI_value(globals.unpausedTime.getElapsedTimeAddr(), U"Simulation Time\t", U" s"),
+        // })}, 
+        {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
+            FastUI_value(&test2, U"value4\t", U" ms "),
+            FastUI_value(&test3, U"value5\t", U" units "),
+            // FastUI_value(&test2, U"value5 : ", U" s "),
+            // FastUI_value(&test2, U"value6 : ", U" m/s "),
+        })}  
     });
 
-    menu->state.setPosition(vec3(-0.9, 0.5, 0));
+    menu->state.setPosition(vec3(-0.9, 0.5, 0)).scaleScalar(0.95); //0.65
+
+    sun->setMenu(menu, U"Sun");
+
+    globals.appTime.setMenuConst(menu);
+    globals.unpausedTime.setMenu(menu);
 
     #ifdef DEMO_MAGE_BATTLE
-        red.setMenu(menu, U"Red Team");
-        blue.setMenu(menu, U"Blue Team");
-        green.setMenu(menu, U"Green Team");
-        yellow.setMenu(menu, U"Yellow Team");
-        // magenta.setMenu(menu, U"Magenta Team");
+        FastUI_valueMenu menured(ui, {});
+        red.setMenu(menured, U"Red Team");
+        
+        FastUI_valueMenu menublue(ui, {});
+        blue.setMenu(menublue, U"Blue Team");
+
+        FastUI_valueMenu menugreen(ui, {});
+        green.setMenu(menugreen, U"Green Team");
+
+        FastUI_valueMenu menuyellow(ui, {});
+        yellow.setMenu(menuyellow, U"Yellow Team");
+
+        FastUI_valueMenu menumagenta(ui, {});
+        magenta.setMenu(menumagenta, U"Magenta Team");
+
+        menured->state.setPosition(vec3(-0.98, 0.5, 0)).scaleScalar(0.85);
+        menublue->state.setPosition(vec3(-0.98, 0.3, 0)).scaleScalar(0.85);
+        menuyellow->state.setPosition(vec3(-0.98, 0.1, 0)).scaleScalar(0.85);
+        menugreen->state.setPosition(vec3(-0.98, -0.1, 0)).scaleScalar(0.85);
+        menumagenta->state.setPosition(vec3(-0.98, -0.3, 0)).scaleScalar(0.85);
+
+        menured.batch();
+        menublue.batch();
+        menuyellow.batch();
+        menugreen.batch();
+        menumagenta.batch();
+
+        menured.setCurrentTab(0);
+        menublue.setCurrentTab(0);
+        menugreen.setCurrentTab(0);
+        menuyellow.setCurrentTab(0);
+        menumagenta.setCurrentTab(0);
     #endif
 
     menu.batch();
@@ -694,9 +778,18 @@ void App::mainloop()
         GLFWKeyInfo input;
         while(inputs.pull(input))
         {
-            if(input.action != GLFW_PRESS)
-                continue;
+            if(input.action == GLFW_RELEASE)
+            switch (input.key)
+            {
+            case GLFW_MOUSE_BUTTON_LEFT:
+                globals._mouseLeftClickDown = false;
+                break;
+            
+            default:
+                break;
+            }
 
+            if(input.action == GLFW_PRESS)
             switch (input.key)
             {
             case GLFW_KEY_F3 :
@@ -709,7 +802,7 @@ void App::mainloop()
                 SSAO.getShader().reset();
                 Bloom.getShader().reset();
                 PostProcessing.reset();
-                uvPhong->reset();
+                uvPBR->reset();
                 skybox->getMaterial()->reset();
                 ssb->getMaterial()->reset();
                 defaultSUIMaterial->reset();
@@ -753,6 +846,12 @@ void App::mainloop()
             case GLFW_KEY_2 :
                 Bloom.toggle();
                 break;
+            
+            case GLFW_KEY_3 : 
+                tmpShaderProg = *(uvPBR.get());
+                *(uvPBR.get()) = *(uvPhong.get());
+                *(uvPhong.get()) = tmpShaderProg;
+                break;
 
             case GLFW_KEY_F9 : 
                 vsync = !vsync;
@@ -765,7 +864,30 @@ void App::mainloop()
 
             case GLFW_MOUSE_BUTTON_LEFT :
                 globals._mouseLeftClick = true;
+                globals._mouseLeftClickDown = true;
                 break;
+            
+            case GLFW_KEY_V :
+                if(input.mods&GLFW_MOD_CONTROL)
+                {
+                    if(globals.isTextInputsActive())
+                        globals.textInputString += UFTconvert.from_bytes(glfwGetClipboardString(window));
+
+                    // std::cout << glfwGetClipboardString(window);
+                }
+                break;
+            
+            case GLFW_KEY_ENTER :
+                if(globals.isTextInputsActive())
+                    globals.textInputString.push_back(U'\n');
+                break;
+
+            case GLFW_KEY_DELETE :
+            case GLFW_KEY_BACKSPACE :
+                if(globals.isTextInputsActive() && !globals.textInputString.empty())
+                    globals.textInputString.pop_back();
+                break;
+
             }
         }
 
@@ -793,8 +915,23 @@ void App::mainloop()
                 blue.tick();
                 yellow.tick();
                 green.tick();
-                // magenta.tick();
+                magenta.tick();
             }
+
+            menured.trackCursor();
+            menured.updateText();
+
+            menublue.trackCursor();
+            menublue.updateText();
+
+            menuyellow.trackCursor();
+            menuyellow.updateText();
+
+            menugreen.trackCursor();
+            menugreen.updateText();
+
+            menumagenta.trackCursor();
+            menumagenta.updateText();
         #endif
 
         // ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
@@ -826,8 +963,6 @@ void App::mainloop()
         #else
             skyTexture.bind(4);
         #endif
-        // sun->shadowMap.bindTexture(0, 2);
-        // sun->shadowMap.bindTexture(0, 16);
         scene.genLightBuffer();
         scene.draw(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
         renderBuffer.deactivate();
@@ -840,11 +975,13 @@ void App::mainloop()
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
-        sun2->shadowMap.bindTexture(0, 6);
+        sun->shadowMap.bindTexture(0, 6);
         screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
  
+        sun->shadowCamera.setPosition(camera.getPosition());
+
         mainloopEndRoutine();
     }
 }

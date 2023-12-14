@@ -96,7 +96,12 @@ class FastUI_menuTitle : public FastUI_element
 enum FastUi_supportedValueType
 {
     FUI_float,
-    FUI_int
+    FUI_int,
+    FUI_bool,
+    FUI_noValue,
+    FUI_vec3,
+    FUI_vec3DirectionPhi,
+    FUI_vec3DirectionTheta
 };
 
 class FastUI_value
@@ -127,7 +132,29 @@ class FastUI_value
         : value(value), type(FUI_int), textPrev(textPrev), textAfter(textAfter)
         {};
 
+        FastUI_value(const bool* value, std::u32string textPrev = U"", std::u32string textAfter = U"")
+        : constValue(value), type(FUI_bool), textPrev(textPrev), textAfter(textAfter)
+        {};
+
+        FastUI_value(bool* value, std::u32string textPrev = U"", std::u32string textAfter = U"")
+        : value(value), type(FUI_bool), textPrev(textPrev), textAfter(textAfter)
+        {};
+
+        FastUI_value(std::u32string textPrev = U"")
+        : type(FUI_noValue), textPrev(textPrev), textAfter(U"")
+        {};
+
+        FastUI_value(vec3* value, std::u32string textPrev = U"", std::u32string textAfter = U"", FastUi_supportedValueType type = FastUi_supportedValueType::FUI_vec3)
+        : value(value), type(type), textPrev(textPrev), textAfter(textAfter)
+        {};
+
+        FastUI_value(const vec3* value, std::u32string textPrev = U"", std::u32string textAfter = U"", FastUi_supportedValueType type = FastUi_supportedValueType::FUI_vec3)
+        : constValue(value), type(type), textPrev(textPrev), textAfter(textAfter)
+        {};
+
         UFT32Stream& toString(UFT32Stream& os);
+
+        void getModifiedByTextInput();
 };
 
 class FastUI_valueTab : public FastUI_element, public std::vector<FastUI_value>

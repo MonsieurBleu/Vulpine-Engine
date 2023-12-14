@@ -200,6 +200,6 @@ VertexAttributeGroup& VertexAttributeGroup::generate()
     }); 
 
     generated = true;
-
+    
     return *this;
 };

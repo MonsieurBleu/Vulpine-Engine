@@ -62,7 +62,6 @@ void Light::activateShadows()
 
     for(int i = 0; i < maxShadowMap; i++)
     {
-        std::cout << freeShadowMapBinds[i] << "\n";
         if(freeShadowMapBinds[i])
         {
             shadowMapBindId = i;
@@ -75,7 +74,6 @@ void Light::activateShadows()
 
     infos._infos.b |= LIGHT_SHADOW_ACTIVATED;
     infos._infos.r = shadowMapBindId;
-    std::cout << this << "\t" << infos._infos.r << "\n";
 
     shadowMap.addTexture(
         Texture2D()
@@ -210,13 +208,10 @@ void DirectionLight::updateShadowCamera()
     shadowCamera = Camera(ORTHOGRAPHIC);
     shadowCamera.init(0.f, shadowCameraSize.x, shadowCameraSize.y, 0.1, 10E3);
     shadowCamera.setDirection(direction());
-    // shadowCamera.setPosition(position);
-
-    shadowCamera.setPosition(-direction()*vec3(1E3));
+    shadowCamera.setPosition(position-direction()*vec3(1E3));
 
     shadowCamera.updateProjectionViewMatrix();
 
-    // infos._rShadowMatrix = inverse(shadowCamera.getProjectionViewMatrix());
     infos._rShadowMatrix = shadowCamera.getProjectionViewMatrix();
 }
 

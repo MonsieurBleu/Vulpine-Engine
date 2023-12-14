@@ -165,7 +165,6 @@ void Scene::depthOnlyDraw(Camera &camera)
             ShaderProgram *dom = i->material.depthOnly ? i->material.depthOnly.get() : depthOnlyMaterial.get();
             dom->activate();
 
-            // camera.updateProjectionViewMatrix();
             ShaderUniform(camera.getProjectionViewMatrixAddr(), 2).activate();
             ShaderUniform(camera.getViewMatrixAddr(), 3).activate();
             ShaderUniform(camera.getProjectionMatrixAddr(), 4).activate();
@@ -183,7 +182,7 @@ void Scene::depthOnlyDraw(Camera &camera)
     
     /*
     We consider that unsorted meshes have special materials, like transparents ones,
-    that cannot be used on depthOnlyDraw.
+    that cannot be used on depthOnlyDraw. So for the moment, this is disabled.
 
     for(auto i = unsortedMeshes.begin(); i != unsortedMeshes.end(); i++)
     {

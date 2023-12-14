@@ -91,7 +91,7 @@ void GLAPIENTRY MessageCallback(GLenum _source,
     */
 #ifdef PREVENT_GL_NOTIF_SPAM
     static std::list<errorHistoric> historic;
-    static const long spamTimeout = 10000;
+    static const long spamTimeout = 1E4;
 
     long now = GetTimeMs();
 

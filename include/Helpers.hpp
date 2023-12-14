@@ -36,6 +36,7 @@ class DirectionalLightHelper : public ObjectGroup
     private : 
 
         const SceneDirectionalLight light;
+        ModelRef helper;
 
     public :
 
