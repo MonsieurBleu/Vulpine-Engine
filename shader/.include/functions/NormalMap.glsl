@@ -25,7 +25,7 @@ mat3 cotangent_frame( vec3 N, vec3 p, vec2 uv )
     return mat3( T * invmax, B * invmax, N );
 }
 
-// #define WITH_NORMALMAP_GREEN_UP
+#define WITH_NORMALMAP_GREEN_UP
 
 vec3 perturbNormal( vec3 N, vec3 V, vec2 tNormal, vec2 texcoord) 
 { 

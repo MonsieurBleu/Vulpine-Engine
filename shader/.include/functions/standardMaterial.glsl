@@ -3,19 +3,21 @@
 #include globals/Constants.glsl
 #include functions/Noise.glsl
 
-float mRoughness = 0.5;
-float mRoughness2 = 0.5;
-float mMetallic = 0.4;
-float mEmmisive = 0.0;
+float mRoughness;
+float mRoughness2;
+float mMetallic;
+float mEmmisive;
 
 vec3 ambientLight = vec3(0.2);
 vec3 normalComposed;
 vec3 viewDir;
 vec3 color;
+float nDotV;
 
 struct Material
 {
     vec3 result;
+    float fresnel;
 };
 
 Material getBRDF(vec3 lightDirection, vec3 lightColor)
@@ -26,14 +28,13 @@ Material getBRDF(vec3 lightDirection, vec3 lightColor)
     float nDotH = max(dot(normalComposed, halfwayDir), 0.0);
     float nDotH2 = nDotH*nDotH;
     float nDotL = max(dot(normalComposed, -lightDirection), 0.0);
-    float nDotV = max(dot(normalComposed, viewDir), 0.0);
 
     vec3 fresnelSchlick = F0 + (1.0 - F0) * pow(1.0 - nDotH, 5.0);
 
     float nDenom = (nDotH2 * (mRoughness2 - 1.0) + 1.0);
     float normalDistrib = mRoughness2 / (PI * nDenom * nDenom);
 
-    float gK = mRoughness*mRoughness*0.5;
+    float gK = mRoughness2*0.5;
     float gKi = 1.0 - gK;
     float geometry = (nDotL*nDotV)/((nDotV*gKi + gK)*(nDotL*gKi + gK));
 
@@ -43,7 +44,7 @@ Material getBRDF(vec3 lightDirection, vec3 lightColor)
     vec3 diffuse = kD*color/PI;
 
     Material result;
-    result.result = (specular + diffuse) * lightColor * nDotL * 4.0;
+    result.result = (specular + diffuse) * lightColor * nDotL * 2.0;
 
     return result;
 }
@@ -99,16 +100,19 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
     return res;
 }
 
-Material getMultiLightStandard()
+Material getMultiLightPBR()
 {
     int id = 0;
     Material result;
+
+    nDotV = max(dot(normalComposed, viewDir), 0.0);
+    result.fresnel = 1.0 - nDotV;
+    
     while(true)
     {
         Light light = lights[id];
-        Material lightResult = {vec3(0.f)};
+        Material lightResult = {vec3(0.f), 0.f};
         float factor = 1.0;
-        float fresnelFactor = 1.0;
         switch(light.stencil.a)
         {
             case 0 :
@@ -119,7 +123,6 @@ Material getMultiLightStandard()
 
                 lightResult = getBRDF(light.direction.xyz, light.color.rgb);
                 factor = light.color.a;
-                fresnelFactor = factor;
                 factor *= 
                     light.stencil.b%2 == 0 ? 
                         1.f : 
@@ -134,7 +137,6 @@ Material getMultiLightStandard()
                 
                 lightResult = getBRDF(direction, light.color.rgb);
                 factor = distFactor*distFactor*light.color.a;
-                fresnelFactor = factor;
             }
                 break;
 
@@ -163,7 +165,6 @@ Material getMultiLightStandard()
                 
                 lightResult = getBRDF(direction, light.color.rgb);
                 factor = distFactor*distFactor*light.color.a;
-                fresnelFactor = factor;
             }
                 break;
 
@@ -178,12 +179,9 @@ Material getMultiLightStandard()
     return result;
 }
 
-vec3 getStandardEmmisive(vec3 fcolor, vec3 ambientLight)
+vec3 getStandardEmmisive(vec3 fcolor)
 {
-    // return  color.rgb * 
-    //         max(
-    //             rgb2v(color.rgb) - min(max(ambientLight*1.5, 0.1), 0.8), 
-    //             0.0);
-
-    return fcolor * (rgb2v(fcolor) - ambientLight);
+    vec3 baseEmmissive = fcolor*(rgb2v(fcolor) - ambientLight*0.5);
+    vec3 finalEmmisive = mix(baseEmmissive, 5.0*fcolor, mEmmisive);
+    return finalEmmisive;
 }

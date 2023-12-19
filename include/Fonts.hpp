@@ -24,6 +24,9 @@ UFT32Stream& operator<<(UFT32Stream& os, const std::string& str);
 
 bool u32strtof(std::u32string &str, float &f);
 int u32strtoi(std::u32string &str, int base = 10);
+bool u32chartoi(char32_t c, int &i);
+bool u32strtocolorHTML(std::u32string &str, vec3 &v);
+std::u32string rgbtou32str(vec3 v);
 
 struct FontCharInfo
 {

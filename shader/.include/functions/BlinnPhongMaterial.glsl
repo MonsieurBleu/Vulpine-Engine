@@ -33,7 +33,7 @@ Material getDSF(vec3 lightDirection, vec3 lightColor)
     float diffuseIntensity = 1.0;
     float specularIntensity = 2.0*colorVCorrection + mMetallic*5.0;
     
-    float fresnelIntensity = 5.0 + 2.0*mMetallic;
+    float fresnelIntensity = 0.5 + 2.0*mMetallic;
 
     // fresnelIntensity *= 2.0;
 

@@ -101,7 +101,12 @@ enum FastUi_supportedValueType
     FUI_noValue,
     FUI_vec3,
     FUI_vec3DirectionPhi,
-    FUI_vec3DirectionTheta
+    FUI_vec3DirectionTheta,
+    FUI_vec3Color,
+    FUI_vec3Hue,
+    FUI_vec3Saturation,
+    FUI_vec3Value,
+    FUI_floatAngle
 };
 
 class FastUI_value
@@ -116,12 +121,12 @@ class FastUI_value
         std::u32string textPrev;
         std::u32string textAfter;
 
-        FastUI_value(const float* value, std::u32string textPrev = U"", std::u32string textAfter = U"")
-        : constValue(value), type(FUI_float), textPrev(textPrev), textAfter(textAfter)
+        FastUI_value(const float* value, std::u32string textPrev = U"", std::u32string textAfter = U"", FastUi_supportedValueType type = FastUi_supportedValueType::FUI_float)
+        : constValue(value), type(type), textPrev(textPrev), textAfter(textAfter)
         {};
 
-        FastUI_value(float* value, std::u32string textPrev = U"", std::u32string textAfter = U"")
-        : value(value), type(FUI_float), textPrev(textPrev), textAfter(textAfter)
+        FastUI_value(float* value, std::u32string textPrev = U"", std::u32string textAfter = U"", FastUi_supportedValueType type = FastUi_supportedValueType::FUI_float)
+        : value(value), type(type), textPrev(textPrev), textAfter(textAfter)
         {};
 
         FastUI_value(const int* value, std::u32string textPrev = U"", std::u32string textAfter = U"")

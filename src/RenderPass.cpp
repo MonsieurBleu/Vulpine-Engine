@@ -77,8 +77,8 @@ void SSAOPass::setup()
         .addTexture(
             Texture2D()
                 .setResolution(globals.renderSize())
-                .setInternalFormat(GL_RGBA)
-                .setFormat(GL_RGBA)
+                .setInternalFormat(GL_R32F)
+                .setFormat(GL_RED)
                 .setPixelType(GL_FLOAT)
                 .setAttachement(GL_COLOR_ATTACHMENT0))
         .generate();

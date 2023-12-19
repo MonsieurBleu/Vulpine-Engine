@@ -17,7 +17,6 @@ layout (binding = 1) uniform sampler2D bMaterial;
 #include functions/standardMaterial.glsl
 #include functions/Reflections.glsl
 #include functions/NormalMap.glsl
-#include functions/HSV.glsl
 
 in vec3 viewPos;
 in vec3 viewVector;
@@ -35,13 +34,17 @@ void main()
     normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
     viewDir = normalize(_cameraPosition - position);
     
+    Material material = getMultiLightPBR();
     vec3 rColor = getSkyboxReflection(viewDir, normalComposed);
-    Material material = getMultiLightStandard();
-    fragColor.rgb = material.result + color*ambientLight + rColor;
+    const float reflectFactor = getReflectionFactor(material.fresnel, mMetallic, mRoughness);
+    fragColor.rgb = color*ambientLight + material.result + rColor*reflectFactor;
 
     fragColor.rgb = mix(fragColor.rgb, color, mEmmisive);
-    fragEmmisive = fragColor.rgb*(rgb2v(fragColor.rgb) - ambientLight*0.5);
-    fragEmmisive = mix(fragEmmisive, 5.0*fragColor.rgb, mEmmisive);
-
+    fragEmmisive = getStandardEmmisive(fragColor.rgb);
+    
+    // fragNormal = normalize((vec4(normalComposed, 0.0) * _cameraInverseViewMatrix).rgb)*0.5 + 0.5;
     fragNormal = normalize((vec4(normalComposed, 0.0) * inverse(_cameraViewMatrix)).rgb)*0.5 + 0.5;
 }
+
+
+

@@ -3,7 +3,9 @@
 
 UFT32Stream& operator<<(UFT32Stream& os, const float f)
 {
-    os << UFTconvert.from_bytes(std::to_string(f));
+    std::stringstream s;
+    s << std::setprecision(8) << f;
+    os << UFTconvert.from_bytes(s.str());
     return os;
 }
 
@@ -32,6 +34,33 @@ bool u32strtof(std::u32string &str, float &f)
     return !(errno || s.c_str() == endptr);
 }
 
+bool u32chartoi(char32_t c, int &i)
+{
+    switch (c)
+    {
+    case U'0': i = 0; break;
+    case U'1': i = 1; break;
+    case U'2': i = 2; break;
+    case U'3': i = 3; break;
+    case U'4': i = 4; break;
+    case U'5': i = 5; break;
+    case U'6': i = 6; break;
+    case U'7': i = 7; break;
+    case U'8': i = 8; break;
+    case U'9': i = 9; break;
+    case U'A': case U'a': i = 10; break;
+    case U'B': case U'b': i = 11; break;
+    case U'C': case U'c': i = 12; break;
+    case U'D': case U'd': i = 13; break;
+    case U'E': case U'e': i = 14; break;
+    case U'F': case U'f': i = 15; break;
+
+    default: return false; break;
+    }
+
+    return true;
+}
+
 int u32strtoi(std::u32string &str, int base)
 {
     errno = 0;
@@ -39,6 +68,59 @@ int u32strtoi(std::u32string &str, int base)
     std::string s = UFTconvert.to_bytes(str);
     int i = strtol(s.c_str(), &endptr, base);
     return errno || s.c_str() == endptr ? INT_MAX : i;
+}
+
+bool u32strtocolorHTML(std::u32string &str, vec3 &v)
+{
+    int i = 0;
+    if(str[0] == U'#')
+        i++;
+    
+    int size = str.size();
+
+    if(size-i != 6)
+        return false;
+
+    ivec3 rgb;
+    int tmp;
+    bool validInput = true;
+
+    for(int j = 0; j < 3; j++)
+    {
+        validInput &= u32chartoi(str[i+j*2], tmp);
+        validInput &= u32chartoi(str[i+j*2 +1], rgb[j]);
+        rgb[j] += tmp << 4;
+        std::cout << rgb[j] << "\t";
+    }
+    std::cout << "\n";
+
+    if(!validInput)
+        return false;
+
+    for(int j = 0; j < 3; j++)
+        v[j] = (float)rgb[j]/255.f;
+
+    return true;
+}
+
+std::u32string rgbtou32str(vec3 v)
+{
+    std::stringstream s;
+
+    if(v.r < 0.f || v.r > 1.f || v.g < 0.f || v.g > 1.f || v.b < 0.f || v.b > 1.f)
+        s << "Invalid";
+    else
+    {
+        ivec3 rgb = round(v*vec3(255.0));
+        s << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << rgb.r;
+        s << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << rgb.g;
+        s << std::hex << std::setw(2) << std::setfill('0') << std::uppercase << rgb.b;
+    }
+
+
+    std::u32string ret = UFTconvert.from_bytes(s.str());
+
+    return ret;
 }
 
 FontUFT8& FontUFT8::readCSV(const std::string filename)

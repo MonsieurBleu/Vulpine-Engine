@@ -164,6 +164,25 @@ UFT32Stream& FastUI_value::toString(UFT32Stream& os)
             case FUI_vec3DirectionTheta : 
                 os << -degrees(getPhiTheta(*(const vec3*)v).y); 
                 break;
+            
+            case FUI_vec3Color : 
+                os << rgbtou32str(*(const vec3*)v);
+                break;
+            
+            case FUI_vec3Hue :
+                os << (int)round(rgb2hsv(*(const vec3*)v).r*360.f);
+                break;
+
+            case FUI_vec3Saturation :
+                os << (int)round(rgb2hsv(*(const vec3*)v).g*100.f);
+                break;
+
+            case FUI_vec3Value :
+                os << (int)round(rgb2hsv(*(const vec3*)v).b*100.f);
+                break;
+            
+            case FUI_floatAngle : 
+                os << degrees(*(const float*)v); break;
 
             case FUI_noValue : break;
             default: os << U"[error type]";break;
@@ -236,9 +255,76 @@ UFT32Stream& FastUI_value::toString(UFT32Stream& os)
             }
                 break;
 
+            case FUI_vec3Color : 
+                {
+                    vec3 v;
+                    if(u32strtocolorHTML(ti, v))
+                        *(vec3*)value = v;
+                }
+                break;
+
+            case FUI_vec3Hue :
+                {
+                    float f;
+                    if(u32strtof(ti, f))
+                    {
+                        vec3 &v = *(vec3*)value;
+                        vec3 hsv = rgb2hsv(v);
+                        f /= 360.f;
+                        float hue = mod == 0.f ? f : hsv.x*mod + f;
+
+                        v = hsv2rgb(vec3(hue, hsv.y, hsv.z));
+                    }
+                }
+                break;
+
+            case FUI_vec3Saturation :
+                {
+                    float f;
+                    if(u32strtof(ti, f))
+                    {
+                        vec3 &v = *(vec3*)value;
+                        vec3 hsv = rgb2hsv(v);
+                        f /= 100.f;
+                        float sat = mod == 0.f ? f : hsv.y*mod + f;
+
+                        v = hsv2rgb(vec3(hsv.x, sat, hsv.z));
+                    }
+                }
+                break;
+
+            case FUI_vec3Value :
+                {
+                    float f;
+                    if(u32strtof(ti, f))
+                    {
+                        vec3 &v = *(vec3*)value;
+                        vec3 hsv = rgb2hsv(v);
+                        f /= 100.f;
+                        float val = mod == 0.f ? f : hsv.z*mod + f;
+
+                        v = hsv2rgb(vec3(hsv.x, hsv.y, val));
+                    }
+                }
+                break;
+
+            case FUI_floatAngle : 
+            {
+                float f;
+                if(u32strtof(ti, f))
+                {
+                    float &v = *(float*)value;
+                    f = radians(f);
+                    v = mod == 0.f ? f : v*mod + f;
+                    v = glm::mod(v, (float)(2.f*M_PI));
+                }
+            }
+                break;
+
             default:
                 break;
             }
+
 
             os << textAfter;
         }
@@ -504,10 +590,15 @@ void DirectionLight::setMenu(FastUI_valueMenu &menu, std::u32string name)
 {
     menu.push_back(
         {FastUI_menuTitle(menu.ui, name), FastUI_valueTab(menu.ui, {
-            FastUI_value(&infos._color.a, U"intensity\t"),
+            FastUI_value(&infos._color.a, U"Intensity\t"),
             FastUI_value(U"Direction"),
             FastUI_value((vec3*)&infos._direction,  U"\fphi\t", U"°", FUI_vec3DirectionPhi),
-            FastUI_value((vec3*)&infos._direction,  U"\ftheta\t", U"°", FUI_vec3DirectionTheta)
+            FastUI_value((vec3*)&infos._direction,  U"\ftheta\t", U"°", FUI_vec3DirectionTheta),
+            FastUI_value(U"Color"),
+            FastUI_value((vec3*)&infos._color, U"\fHEX\t", U"", FUI_vec3Color),
+            FastUI_value((vec3*)&infos._color, U"\fHue\t", U"°", FUI_vec3Hue),
+            FastUI_value((vec3*)&infos._color, U"\fSaturation\t", U"%", FUI_vec3Saturation),
+            FastUI_value((vec3*)&infos._color, U"\fLuminosity\t", U"%", FUI_vec3Value)
         })}
     );
 }

@@ -64,7 +64,7 @@ void main()
         // fragColor.rgb = mix(color, rColor, (1.0-mRoughness)*0.25)*materialColor;   
 
         materialColor = mix(materialColor, vec3(1.0), mMetallic*0.25);
-        fragColor.rgb = mix(color*materialColor, rColor, max(mMetallic*0.75, 0.0));
+        fragColor.rgb = mix(color*materialColor, (1.0-mRoughness)*rColor, max(mMetallic*0.75, 0.0));
 
     #else
          fragColor.rgb = color*materialColor;

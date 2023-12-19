@@ -357,9 +357,9 @@ void App::mainloop()
     
     ShaderProgram tmpShaderProg;
 
-    MeshMaterial uvBasic(
+    MeshMaterial skyboxMaterial(
             new ShaderProgram(
-                "shader/foward rendering/uv/basic.frag", 
+                "shader/foward rendering/uv/Skybox.frag", 
                 "shader/foward rendering/uv/phong.vert", 
                 "", 
                 globals.standartShaderUniform3D() 
@@ -395,7 +395,7 @@ void App::mainloop()
 
     #else 
         Texture2D skyTexture = Texture2D();
-        skybox->setMaterial(uvBasic);
+        skybox->setMaterial(skyboxMaterial);
 
         #ifdef GENERATED_SKYBOX
             skyTexture
@@ -411,7 +411,10 @@ void App::mainloop()
             // SkyboxPass skyboxPass(skyTexture, "basic.frag");
             skyboxPass.setup();
         #else
-            skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
+            skyTexture.loadFromFileKTX("ressources/test/skybox/skybox.ktx");
+            // skyTexture.loadFromFile("ressources/test/skybox/table_mountain_1_4k.hdr").generate();
+            // skyTexture.loadFromFileHDR("ressources/test/skybox/table_mountain_1_4k.hdr").generate();
+            // skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
             // skyTexture.loadFromFile("ressources/test/skybox/shudu_lake_4k.png").generate();
         #endif
 
@@ -425,7 +428,7 @@ void App::mainloop()
         DirectionLight()
             .setColor(vec3(143, 107, 71)/vec3(255))
             .setDirection(normalize(vec3(-0.454528, -0.707103, 0.541673)))
-            .setIntensity(0.5)
+            .setIntensity(1.0)
             );
     sun->cameraResolution = vec2(2048);
     // sun->cameraResolution = vec2(8192);
@@ -433,6 +436,14 @@ void App::mainloop()
     sun->activateShadows();
 
     scene.add(sun);
+
+    SceneDirectionalLight lumiereAppoint = newDirectionLight(
+        DirectionLight()
+            .setColor(vec3(107, 71, 175)/vec3(255))
+            .setIntensity(0.5)
+            );
+
+    scene.add(lumiereAppoint);
 
     ObjectGroupRef materialTesters = newObjectGroup();
     std::vector<MeshVao> mtGeometry = 
@@ -525,7 +536,7 @@ void App::mainloop()
                 std::shared_ptr<DirectionalLightHelper> helper = std::make_shared<DirectionalLightHelper>(sun);
                 helper->state.setPosition(vec3(2.5*g, 0.0, 2.5*t));
                 helper->state.scaleScalar(2.0);
-                materialTesters->add(helper);
+                // materialTesters->add(helper);
 
                 ModelRef model = newModel();
                 model->setMaterial(uvPBR);
@@ -703,27 +714,29 @@ void App::mainloop()
 
     FastUI_context ui(uiBatch, font, scene2D, defaultFontMaterial);
 
-    float test2 = 0.5;
-    int test3 = 512; 
+    // float test2 = 0.5;
+    // int test3 = 512; 
     FastUI_valueMenu menu(ui, {
         // {FastUI_menuTitle(ui, U"Infos"), FastUI_valueTab(ui, {
         //     FastUI_value(globals.appTime.getElapsedTimeAddr(), U"App Time\t", U" s"),
         //     FastUI_value(globals.unpausedTime.getElapsedTimeAddr(), U"Simulation Time\t", U" s"),
         // })}, 
-        {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
-            FastUI_value(&test2, U"value4\t", U" ms "),
-            FastUI_value(&test3, U"value5\t", U" units "),
+        // {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
+        //     FastUI_value(&test2, U"value4\t", U" ms "),
+        //     FastUI_value(&test2, U"value4\t", U" ° ", FUI_floatAngle),
+        //     FastUI_value(&test3, U"value5\t", U" units "),
             // FastUI_value(&test2, U"value5 : ", U" s "),
             // FastUI_value(&test2, U"value6 : ", U" m/s "),
-        })}  
+        // })}  
     });
 
     menu->state.setPosition(vec3(-0.9, 0.5, 0)).scaleScalar(0.95); //0.65
 
     sun->setMenu(menu, U"Sun");
+    lumiereAppoint->setMenu(menu, U"Lum.Appoint");
 
     globals.appTime.setMenuConst(menu);
-    globals.unpausedTime.setMenu(menu);
+    // globals.unpausedTime.setMenu(menu);
 
     #ifdef DEMO_MAGE_BATTLE
         FastUI_valueMenu menured(ui, {});
@@ -890,9 +903,6 @@ void App::mainloop()
 
             }
         }
-
-        float time = globals.unpausedTime.getElapsedTime();
-        // sun->setDirection(normalize(vec3(0.5, -abs(cos(time*0.25)), sin(time*0.25))));
 
         mainInput(globals.appTime.getDelta());
 
