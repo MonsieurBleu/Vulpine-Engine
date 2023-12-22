@@ -80,4 +80,26 @@ class BenchTimer
 
 std::ostream& operator<<(std::ostream& os, BenchTimer e);
 
+class LimitTimer
+{
+    private :
+
+        bool activated;
+        clockmicro::time_point lastStartTime;
+
+    public : 
+        float freq;
+
+        LimitTimer(float freq = 60.f);
+        void start();
+        void waitForEnd();
+        
+        void activate();
+        void deactivate();
+        void toggle();
+        bool isActivated();
+
+        void setMenu(FastUI_valueMenu &menu);
+};
+
 #endif

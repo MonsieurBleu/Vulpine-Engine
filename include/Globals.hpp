@@ -61,6 +61,9 @@ class Globals
 
         BenchTimer appTime = BenchTimer("App Time");
         BenchTimer unpausedTime = BenchTimer("Simulation Time");
+        BenchTimer cpuTime = BenchTimer("CPU Time");
+        BenchTimer gpuTime = BenchTimer("GPU Time");
+        LimitTimer fpsLimiter = LimitTimer();
 
         std::vector<ShaderUniform> standartShaderUniform2D() const;
         std::vector<ShaderUniform> standartShaderUniform3D() const;

@@ -159,11 +159,12 @@ void RenderBuffer::activate()
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW); 
 
-    #ifdef INVERTED_Z
-    glDepthFunc(GL_GREATER);
-    #else
-    glDepthFunc(GL_LESS);
-    #endif
+    // #ifdef INVERTED_Z
+    // glDepthFunc(GL_GREATER);
+    // #else
+    // glDepthFunc(GL_LESS);
+    // #endif
+
     FrameBuffer::activate();
 }
 

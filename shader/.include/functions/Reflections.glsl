@@ -28,7 +28,9 @@ vec3 getSkyboxReflection(vec3 v, vec3 n)
             /*
                 Fast roughness reflection blur
             */
-            uvSky += (1.0 - 2.0*random2(vec3(uv, 1.0)))*0.05*(mRoughness);
+            const float noiseMaxDist = 0.05;
+            vec3 noiseUv = vec3(uv, 1.0);
+            uvSky += (1.0 - 2.0*random2(noiseUv))*noiseMaxDist*mRoughness;
             uvSky.y = clamp(uvSky.y, 0.f, 0.999);
 
             return getSkyColor(uvSky); 

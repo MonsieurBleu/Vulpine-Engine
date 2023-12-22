@@ -233,8 +233,10 @@ void App::mainInput(double deltatime)
 
 void App::mainloopStartRoutine()
 {
+    globals.fpsLimiter.start();
     globals.appTime.start();
     globals.unpausedTime.start();
+    globals.cpuTime.start();
 
     globals._mouseLeftClick = false;
 
@@ -255,9 +257,15 @@ void App::mainloopPreRenderRoutine()
 
 void App::mainloopEndRoutine()
 {
+    globals.cpuTime.end();
+
+    globals.gpuTime.start();
     glfwSwapBuffers(window);
+    globals.gpuTime.end();
+
     globals.appTime.end();
     globals.unpausedTime.end();
+    globals.fpsLimiter.waitForEnd();
 }
 
 void App::mainloop()
@@ -349,7 +357,8 @@ void App::mainloop()
 
     MeshMaterial uvPhong(
             new ShaderProgram(
-                "shader/foward rendering/uv/phong.frag", 
+                // "shader/foward rendering/uv/phong.frag", 
+                "shader/foward rendering/uv/basic.frag", 
                 "shader/foward rendering/uv/phong.vert", 
                 "", 
                 globals.standartShaderUniform3D() 
@@ -728,6 +737,7 @@ void App::mainloop()
             // FastUI_value(&test2, U"value5 : ", U" s "),
             // FastUI_value(&test2, U"value6 : ", U" m/s "),
         // })}  
+
     });
 
     menu->state.setPosition(vec3(-0.9, 0.5, 0)).scaleScalar(0.95); //0.65
@@ -737,6 +747,9 @@ void App::mainloop()
 
     globals.appTime.setMenuConst(menu);
     // globals.unpausedTime.setMenu(menu);
+    globals.cpuTime.setMenu(menu);
+    globals.gpuTime.setMenu(menu);
+    globals.fpsLimiter.setMenu(menu);
 
     #ifdef DEMO_MAGE_BATTLE
         FastUI_valueMenu menured(ui, {});
@@ -966,8 +979,19 @@ void App::mainloop()
         glDisable(GL_BLEND);
 
         scene.updateAllObjects();
+
+        #ifdef INVERTED_Z
+        glDepthFunc(GL_GREATER);
+        #else
+        glDepthFunc(GL_LESS);
+        #endif
+        
         scene.generateShadowMaps(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
+
         renderBuffer.activate();
+        scene.depthOnlyDraw(camera);
+        glDepthFunc(GL_EQUAL);
+
         #ifdef CUBEMAP_SKYBOX
             skyboxCubeMap.bind();
         #else

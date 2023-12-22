@@ -9,7 +9,6 @@
 void main()
 {
     fragColor = vec4(color, 1.0);
-    fragNormal = vec3(1.f);
-    // fragEmmisive.rgb = fragColor.rgb;
+    fragNormal = normal;
     fragEmmisive.rgb = vec3(0.0);
 };

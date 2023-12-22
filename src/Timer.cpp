@@ -96,3 +96,29 @@ std::ostream& operator<<(std::ostream& os, BenchTimer e)
 
     return os;
 }
+
+LimitTimer::LimitTimer(float freq) : freq(freq)
+{}
+
+void LimitTimer::start()
+{
+    lastStartTime = clockmicro::now();
+}
+
+void LimitTimer::waitForEnd()
+{
+    if(!activated || freq == 0.f) return;
+
+    duration delta;
+    float t = 1000.f/freq;
+
+    do
+    {
+        delta = clockmicro::now()-lastStartTime;
+    } while( delta.count() < t);
+}
+
+void LimitTimer::activate(){activated = true;}
+void LimitTimer::deactivate(){activated = false;}
+void LimitTimer::toggle(){activated = !activated;}
+bool LimitTimer::isActivated(){return activated;}

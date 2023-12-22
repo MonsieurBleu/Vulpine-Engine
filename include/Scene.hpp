@@ -36,7 +36,6 @@ class Scene
         void addGroupElement(ObjectGroupRef group);
         void removeGroupElement(ObjectGroupRef group);
 
-        void depthOnlyDraw(Camera &camera);
 
     public :
         Scene();
@@ -48,6 +47,7 @@ class Scene
         void generateShadowMaps();
         void genLightBuffer();
         void draw();
+        void depthOnlyDraw(Camera &camera);
 
         void remove(ModelRef mesh);
         void remove(SceneLight light);

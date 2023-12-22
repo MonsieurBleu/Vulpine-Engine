@@ -558,8 +558,8 @@ void BenchTimer::setMenu(FastUI_valueMenu &menu)
     menu.push_back(
         // {FastUI_menuTitle(menu.ui, UFTconvert.from_bytes(name)), FastUI_valueTab(menu.ui, {
         {FastUI_menuTitle(menu.ui, U"[BenchTimer] "+name32), FastUI_valueTab(menu.ui, {
-            FastUI_value((const float*)&avgTotal,   U"avg\t", U" ms"),
             FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
+            FastUI_value((const float*)&avgTotal,   U"total avg\t", U" ms"),
             FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),
             FastUI_value((const float*)&elapsedTime,   U"elapsed time\t", U" s"),
             FastUI_value((bool*)&paused,   U"paused\t", U""),
@@ -575,13 +575,23 @@ void BenchTimer::setMenuConst(FastUI_valueMenu &menu) const
 
     menu.push_back(
         {FastUI_menuTitle(menu.ui, U"[BenchTimer] "+name32), FastUI_valueTab(menu.ui, {
-            FastUI_value((const float*)&avgTotal,   U"avg\t", U" ms"),
             FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
+            FastUI_value((const float*)&avgTotal,   U"total avg\t", U" ms"),
             FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),
             FastUI_value((const float*)&elapsedTime,   U"elapsed time\t", U" s"),
             FastUI_value((const bool*)&paused,   U"paused\t", U""),
             FastUI_value((const float*)&min,   U"min\t", U" ms"),
             FastUI_value((const float*)&max,   U"max\t", U" ms")
+        })}
+    );
+}
+
+void LimitTimer::setMenu(FastUI_valueMenu &menu)
+{
+    menu.push_back(
+        {FastUI_menuTitle(menu.ui, U"FPS Limiter"), FastUI_valueTab(menu.ui, {
+            FastUI_value(&freq, U"Frequence\t", U"\ffps"), 
+            FastUI_value(&activated, U"Activated\t", U"")
         })}
     );
 }
