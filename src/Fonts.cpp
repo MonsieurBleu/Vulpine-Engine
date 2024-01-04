@@ -202,6 +202,7 @@ void SingleStringBatch::batchText()
     if(!size) return;
     depthWrite = false;
     // invertFaces = true;
+    state.frustumCulled = false;
 
     GenericSharedBuffer positions(new char[sizeof(vec3)*6*size]);
     GenericSharedBuffer uvs(new char[sizeof(vec2)*6*size]);

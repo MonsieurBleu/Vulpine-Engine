@@ -4,7 +4,9 @@
 
 SimpleUiTile::SimpleUiTile(ModelState3D state, UiTileType tileType, vec4 color)
     : ModelState3D(state), tileType(tileType), color(color)
-{}
+{
+    frustumCulled = false;
+}
 
 SimpleUiTileBatch& SimpleUiTileBatch::add(SimpleUiTileRef tile)
 {

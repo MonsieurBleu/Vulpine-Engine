@@ -22,6 +22,7 @@ class ModelState3D
         bool usingLookAt = false;
 
     public :
+        bool frustumCulled = true;
         vec3 position      = vec3(0.f);
         vec3 scale         = vec3(1.f);
         vec3 rotation      = vec3(0.f);

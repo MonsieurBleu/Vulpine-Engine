@@ -1,5 +1,6 @@
 #include <Scene.hpp>
 #include <iostream>
+#include <Globals.hpp>
 
 Scene::Scene()
 {
@@ -109,9 +110,48 @@ void MeshGroup::draw()
 {
     material->activate();
 
+    if(material->getProgram() == 12)
+        system("cls");
+    
+    int drawcnt = 0;
+
     for(auto i : meshes)
         if(i->state.hide != ModelStateHideStatus::HIDE)
-            i->drawVAO();
+        {
+            if(i->state.frustumCulled)
+            {
+                vec3 camPos = globals.currentCamera->getPosition();
+                vec3 camDir = globals.currentCamera->getDirection();
+                vec3 center = vec3(i->state.modelMatrix * vec4(0, 0, 0, 1));
+
+                vec3 dir = center - camPos;
+                float hypothenus = dot(dir, camDir);
+
+                float radius = 5.0; /// retreive it from the objet bounding sphere
+
+                vec3 dirToBestPoint = (camPos + hypothenus*camDir) - center;
+
+                float lToBestPoint = length(dirToBestPoint);
+                dirToBestPoint = normalize(dirToBestPoint);
+                radius = radius < lToBestPoint ? radius : lToBestPoint;
+                vec3 newPos = center + radius * dirToBestPoint;
+
+                float cosBestAngle = dot(normalize(newPos - camPos), camDir);
+
+                float minCos = cos(globals.currentCamera->getState().FOV);
+
+                if(cosBestAngle >= minCos && i->depthWrite)
+                {
+                    drawcnt ++;
+                    i->drawVAO();
+                }
+            }
+            else
+                i->drawVAO();
+
+        }
+    
+    std::cout << drawcnt << "\n";
 
     material->deactivate();
 }
@@ -137,7 +177,12 @@ void Scene::genLightBuffer()
 void Scene::draw()
 {
     for(auto i = meshes.begin(); i != meshes.end(); i++)
-        i->draw();
+    {
+        /*
+            ANGLE CULLING TEST
+        */
+            i->draw();
+    }
     
     for(auto i : unsortedMeshes)
         if(i->state.hide != ModelStateHideStatus::HIDE)

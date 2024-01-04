@@ -430,7 +430,8 @@ void App::mainloop()
         skybox->setMap(skyTexture, 0);
     #endif
     skybox->invertFaces = true;
-    skybox->depthWrite = false;
+    skybox->depthWrite = true;
+    skybox->state.frustumCulled = false;
     scene.add(skybox);
     
     SceneDirectionalLight sun = newDirectionLight(
@@ -556,7 +557,6 @@ void App::mainloop()
                 model->setMap(material, 1);
 
                 materialTesters->add(model);
-                scene.add(model);
             }
         }
         mtTimer.end();
