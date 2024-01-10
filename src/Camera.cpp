@@ -84,13 +84,60 @@ void Camera::updateProjectionMatrix()
 
 }
 
+Frustum Camera::getFrustum(){return frustum;}
+
+void Camera::updateFrustum()
+{
+    const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint-state.position) : state.direction;
+
+    const vec3 right = normalize(cross(vec3(0, 1, 0), front));
+    const vec3 up = cross(right, front);
+    const vec3 p = state.position;
+    const float d = length(p);
+
+    const float n = state.nearPlane;
+    const float f = state.farPlane;
+
+    const float halfVSide = f*tanf(state.FOV*.5f);
+    const float halfHSide = halfVSide*width/height;
+    const vec3 fvec = f*front;
+
+    frustum.near.position = p + (n*front);
+    frustum.near.distance = length(frustum.near.position);
+    frustum.near.normal = front;
+
+    frustum.far.position = p + fvec;
+    frustum.far.distance = length(frustum.far.position);
+    frustum.far.normal = -front;
+
+    frustum.right.distance = d;
+    frustum.right.position = p;
+    frustum.right.normal = normalize(cross(fvec-(right*halfHSide), up));
+
+    frustum.left.distance = d;
+    frustum.left.position = p;
+    frustum.left.normal = normalize(cross(up, fvec+(right*halfHSide)));
+
+    frustum.top.distance = d;
+    frustum.top.position = p;
+    frustum.top.normal = normalize(cross(right, fvec - up*halfVSide));
+
+    frustum.bottom.distance = d;
+    frustum.bottom.position = p;
+    frustum.bottom.normal = normalize(cross(fvec + up*halfVSide, right));
+}
+
 const mat4 Camera::updateProjectionViewMatrix()
 {
     updateViewMatrix();
     updateProjectionMatrix();
     projectionViewMatrix = projectionMatrix*viewMatrix*mat4(1.0);
+
+    updateFrustum();
+
     return projectionViewMatrix;
 }
+
 
 void Camera::updateMouseFollow(GLFWwindow *window)
 {

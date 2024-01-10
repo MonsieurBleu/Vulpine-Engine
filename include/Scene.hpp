@@ -20,7 +20,7 @@ struct MeshGroup
         return *this;
     }
 
-    void draw();
+    uint draw();
 };
 
 class Scene
@@ -36,6 +36,7 @@ class Scene
         void addGroupElement(ObjectGroupRef group);
         void removeGroupElement(ObjectGroupRef group);
 
+        uint drawcnt = 0;
 
     public :
         Scene();
@@ -46,12 +47,14 @@ class Scene
         void updateAllObjects();
         void generateShadowMaps();
         void genLightBuffer();
-        void draw();
-        void depthOnlyDraw(Camera &camera);
+        uint draw();
+        void depthOnlyDraw(Camera &camera, bool cull = false);
 
         void remove(ModelRef mesh);
         void remove(SceneLight light);
         void remove(ObjectGroupRef group);
+
+        uint getDrawCalls();
 
         MeshMaterial depthOnlyMaterial;
 };

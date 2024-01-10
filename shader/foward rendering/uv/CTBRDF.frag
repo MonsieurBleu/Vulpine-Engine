@@ -26,10 +26,12 @@ void main()
     vec4 CE = texture(bColor, uv);
     vec4 NRM = texture(bMaterial, uv);
 
+    if(NRM.x <= 0.01 && NRM.y <= 0.01) discard;
+
+    mEmmisive = 1.0 - CE.a;
     mMetallic = 1.0 - NRM.a;
     mRoughness = NRM.b;
     mRoughness2 = mRoughness*mRoughness;
-    mEmmisive = 1.0 - CE.a;
     color = CE.rgb;
     normalComposed = perturbNormal(normal, viewVector, NRM.xy, uv);
     viewDir = normalize(_cameraPosition - position);

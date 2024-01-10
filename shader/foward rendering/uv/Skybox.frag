@@ -33,4 +33,6 @@ void main()
     // fragColor.rgb = vec3(uv, 1.0);
     // fragColor.rgb = vec3(uv.x-mod(uv.x, 0.1), 0.1, 0.0);
     // fragColor.rgb = vec3(0.1, uv.y-mod(uv.y, 0.1), 0.0);
+
+    fragNormal = vec3(1);
 }

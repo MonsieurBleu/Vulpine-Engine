@@ -1,10 +1,10 @@
 CC = g++
-CPPFLAGS = -Wall -Ofast -Wno-strict-aliasing -g
+CPPFLAGS = -Wall -Ofast -Wno-strict-aliasing
 ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -I include -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx
+	LIBFLAGS = -I include -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lOpenAL32
 	LINKFLAGS = libglfw3.a libglfw3dll.a 
 else
-	LIBFLAGS = -I include -L./ -lGLEW -lglfw -lGL -lktx
+	LIBFLAGS = -I include -L./ -lGLEW -lglfw -lGL -lktx -lOpenAL32
 	LINKFLAGS = 
 endif
 
@@ -47,6 +47,9 @@ reinstall : clean install
 obj/main.o : main.cpp
 obj/main.o : main.cpp $(DEPDIR)/main.d | $(DEPDIR)
 	$(CC) -c $(DEPFLAGSMAIN) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) $< -o $@
+
+obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
+	$(CC) -c $(CPPFLAGS) -fpermissive -w $(LIBFLAGS) $(INCLUDE)  $< -o $@
 
 obj/%.o : src/%.cpp
 obj/%.o : src/%.cpp $(DEPDIR)/%.d | $(DEPDIR)

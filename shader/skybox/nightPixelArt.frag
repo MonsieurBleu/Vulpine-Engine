@@ -40,10 +40,15 @@ void draw_auroras(inout vec3 color, vec2 uv) {
     color += final_color * t * (t + 0.5) * 0.75;
 }
 
-void draw_stars(inout vec3 color, vec3 uv) {
-    float t = sin(iTime * 2.0 * gold_noise3(-uv, 1)) * 0.5 + 0.5;
-    //color += step(0.99, stars) * t;
-    color += smoothstep(0.975, 1.0, gold_noise3(uv, 10.f)) * t;
+void draw_stars(inout vec3 color, vec3 uv)
+{
+    float t= 1.0;
+    // float t = sin(iTime * 2.0 * gold_noise3(-uv, 1)) * 0.5 + 0.5;
+    // color += smoothstep(0.975, 1.0, gold_noise3(uv *0.5, 10.f)) * t;
+    // color += smoothstep(0.975, 1.0, gold_noise3(uv, 10.f)) * t;
+    
+    uv = mod(uv, vec3(0.1));
+    // color += 1.0 - length(step(uv, vec3(0.05)));
 }
 
 
@@ -66,14 +71,18 @@ void main()
 
     vec3 position;
     float lonAngle = PI*(0.5-uvScreen.y);
-    float latAngle = 2.0*PI*(0.5-uvScreen.x);
-    position.y = sin(lonAngle);
+
+
     float latRadius = cos(lonAngle);
+    float latAngle = 2.0*PI*(0.5-uvScreen.x);
+
+    
+    position.y = sin(lonAngle);
     position.x = latRadius*cos(latAngle);
     position.z = latRadius*sin(latAngle);
 
     // position.z /= position.x;
-    position.z = position.z;
+    // position.z = position.z;
 
     uv = position.zy;
 
@@ -131,7 +140,7 @@ void main()
         0.1,
         clamp(
             10.0*pow(
-                distance(position, normalize(vec3(1.0, 1.0, 0.0))), 
+                distance(position, normalize(vec3(0.1, 1.0, 0.0))), 
                 2.0), 
             0, 
             1)

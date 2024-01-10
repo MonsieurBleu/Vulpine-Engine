@@ -1,9 +1,10 @@
 #include <Shader.hpp>
 #include <Utils.hpp>
-
+#include <Timer.hpp>
 #include <iostream>
 #include "Shadinclude.hpp"
 
+uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
 
 void Shader::prepareLoading(const std::string& path)
 {
@@ -23,7 +24,6 @@ void Shader::prepareLoading(const std::string& path)
 
 ShaderError Shader::refresh()
 {
-    startbenchrono();
     shader = glCreateShader(type);
 
     // std::string code = readFile(Path);
@@ -60,15 +60,6 @@ ShaderError Shader::refresh()
         return ShaderCompileError;
     }
 
-    std::cout 
-    << TERMINAL_OK 
-    << "Shader " 
-    << TERMINAL_FILENAME
-    << Path 
-    << TERMINAL_OK 
-    << " loaded and compiled successfully";
-    endbenchrono();
-
     return ShaderOk;
 }
 
@@ -92,6 +83,9 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
 
 ShaderError ShaderProgram::compileAndLink()
 {
+    BenchTimer timer;
+    timer.start();
+
     //// COMPILING SHADERS
     ShaderError serrf = frag.refresh();
     ShaderError serrv = ShaderOk;
@@ -108,7 +102,6 @@ ShaderError ShaderProgram::compileAndLink()
         return ShaderCompileError;
 
     ///// CREATING PROGRAM AND LINKING EVERYTHING
-    startbenchrono();
     program = glCreateProgram();    
 
     glAttachShader(program, frag.get_shader());
@@ -138,6 +131,14 @@ ShaderError ShaderProgram::compileAndLink()
             return ShaderLinkingError;
     }
 
+    glDeleteShader(frag.get_shader());
+    if(!vert.get_Path().empty()) glDeleteShader(vert.get_shader());
+    if(!geom.get_Path().empty()) glDeleteShader(geom.get_shader());
+
+    useCount[program]++;
+
+    timer.end();
+
     std::cout 
     << TERMINAL_OK 
     << "Shader Program (id " << program << ") "
@@ -146,12 +147,9 @@ ShaderError ShaderProgram::compileAndLink()
     << (vert.get_Path().empty() ? "" : " "+vert.get_Path())
     << (geom.get_Path().empty() ? "" : " "+geom.get_Path())
     << TERMINAL_OK 
-    << " linked successfully";
-    endbenchrono();
-
-    glDeleteShader(frag.get_shader());
-    if(!vert.get_Path().empty()) glDeleteShader(vert.get_shader());
-    if(!geom.get_Path().empty()) glDeleteShader(geom.get_shader());
+    << " linked successfully in "
+    << TERMINAL_TIMER << timer.getElapsedTime()*1000.f << " ms\n"
+    << TERMINAL_RESET;
 
     return ShaderOk;
 }
@@ -178,5 +176,36 @@ void ShaderProgram::deactivate() const
 ShaderProgram& ShaderProgram::addUniform(ShaderUniform newUniform)
 {
     uniforms.add(newUniform);
+    return *this;
+}
+
+ShaderProgram::~ShaderProgram()
+{
+    if(program != NO_PROGRAM)
+    {
+        uint16 &cnt = useCount[program];
+        cnt--;
+
+        if(!cnt)
+            glDeleteProgram(program);
+    }
+}
+
+ShaderProgram::ShaderProgram(const ShaderProgram& other)
+{
+    *(this) = other;
+}
+
+ShaderProgram& ShaderProgram::operator=(const ShaderProgram& other)
+{
+    this->program = other.program;
+    this->uniforms = other.uniforms;
+    this->vert = other.vert;
+    this->frag = other.frag;
+    this->geom = other.geom;
+
+    if(program != NO_PROGRAM)
+        useCount[program]++;
+    
     return *this;
 }

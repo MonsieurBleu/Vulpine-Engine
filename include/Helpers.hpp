@@ -16,7 +16,7 @@ class PointLightHelperMODEL : public MeshModel3D
         // void drawVAO(GLenum mode = GL_TRIANGLES);
         // void draw(GLenum mode = GL_TRIANGLES);
 
-        void preDrawRoutine() override;
+        // void preDrawRoutine() override;
 };
 
 class PointLightHelper : public ObjectGroup
@@ -26,6 +26,7 @@ class PointLightHelper : public ObjectGroup
         const ScenePointLight light;
 
     public :
+        ModelRef helper;
 
         PointLightHelper(ScenePointLight light);
         void update(bool forceUpdate = false) override;

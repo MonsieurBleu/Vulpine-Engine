@@ -234,9 +234,10 @@ void main()
         vec2 SSMuv = uvScreen * vec2(iResolution) * 1/900.0;
         if(SSMuv.x >= 0.f && SSMuv.x <= 1.0 && SSMuv.y >= 0.f && SSMuv.y <= 1.0)
         {
-            float d = texture(bSunMap, SSMuv).r;
-            d = pow(d, 100.0)*5000000000.0;
-            _fragColor.rgb = vec3(d);
+            // float d = texture(bSunMap, SSMuv).r;
+            // d = pow(d, 100.0)*5000000000.0;
+            // _fragColor.rgb = vec3(d);
+            _fragColor.rgb = texture(bSunMap, SSMuv).rgb;
         }
     #endif
 

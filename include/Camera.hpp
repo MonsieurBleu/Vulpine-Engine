@@ -32,6 +32,18 @@ struct CameraState
         vec3 direction;
 };
 
+struct FrustumPlane
+{
+    vec3 normal;
+    vec3 position;
+    float distance;
+};
+
+struct Frustum
+{
+    FrustumPlane top, bottom, right, left, far, near;
+};
+
 class Camera 
 { 
     private: 
@@ -45,6 +57,8 @@ class Camera
         mat4 projectionViewMatrix;
 
         CameraType type = PERSPECTIVE;
+
+        Frustum frustum;
 
     public: 
         
@@ -71,6 +85,9 @@ class Camera
         const mat4* getProjectionMatrixAddr() {return &projectionMatrix;};
         const mat4* getProjectionViewMatrixAddr() {return &projectionViewMatrix;};
         
+        void updateFrustum();
+        Frustum getFrustum();
+
         void updateViewMatrix();
         void updateProjectionMatrix();
         const mat4 updateProjectionViewMatrix();

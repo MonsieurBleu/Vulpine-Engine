@@ -9,7 +9,7 @@
 
 #include <Uniforms.hpp>
 
-
+#define NO_PROGRAM 0xFFFFFF
 
 enum ShaderError
 {
@@ -23,7 +23,7 @@ class Shader
 {
     private :
         GLuint type;
-        GLuint shader;
+        GLuint shader = NO_PROGRAM;
         std::string Path;
 
     public :
@@ -42,21 +42,30 @@ class Shader
         const std::string &get_Path(){return Path;};
 };
 
+#define MAX_SHADER_HANDLE 0x1000
+
 class ShaderProgram
 {
     private :
 
-        GLuint program;
+        GLuint program = NO_PROGRAM;
 
         Shader vert;
         Shader frag;
         Shader geom;
 
-    public :
+        static uint16 useCount[MAX_SHADER_HANDLE];
 
+
+    public :
         ShaderUniformGroup uniforms;
 
-        ShaderProgram() {};
+
+        ShaderProgram& operator=(const ShaderProgram& other);
+
+        ShaderProgram(){};
+        ShaderProgram(const ShaderProgram& other);
+        ~ShaderProgram();
 
         ShaderProgram(const std::string _fragPath, 
                       const std::string _vertPath = "", 

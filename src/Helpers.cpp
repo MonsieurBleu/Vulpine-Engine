@@ -85,24 +85,21 @@ PointLightHelperMODEL::PointLightHelperMODEL(ScenePointLight light) : light(ligh
 //     material->deactivate();
 // }
 
-void PointLightHelperMODEL::preDrawRoutine()
-{
-    // state.setPosition(vec3(10, 1, 10));
-    // state.scaleScalar(5.0);
-}
 
 PointLightHelper::PointLightHelper(ScenePointLight light) : light(light)
 {
-    ModelRef helper = newModel(
-        MeshMaterial(
-            new ShaderProgram(
+    static MeshMaterial mat(new ShaderProgram(
                 "shader/foward rendering/basic.frag", 
                 "shader/foward rendering/basic.vert", 
                 "", 
                 globals.standartShaderUniform3D()
-                )
-            ),
-        readOBJ("ressources/helpers/PointLight.obj", true),
+                ));
+
+    static MeshVao geo = readOBJ("ressources/helpers/PointLight.obj", true);
+
+    helper = newModel(
+        mat,
+        geo,
         ModelState3D().scaleScalar(1.0)
     );
 

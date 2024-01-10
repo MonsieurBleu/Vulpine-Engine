@@ -1,0 +1,1 @@
+./convertorPNG.exe -res 2048 

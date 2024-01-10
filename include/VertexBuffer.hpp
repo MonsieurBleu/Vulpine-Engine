@@ -69,7 +69,14 @@ class VertexAttributeGroup
 
         bool generated = false;
 
+        vec3 AABBmin;
+        vec3 AABBmax;
+
     public : 
+
+        VertexAttributeGroup& genAABB();
+        vec3 getAABBMin();
+        vec3 getAABBMax();
 
         std::vector<VertexAttribute> attributes;
 

@@ -68,10 +68,10 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
 
     #ifdef EFFICIENT_SMOOTH_SHADOW
         int it = 8;
-        int itPenumbra = 32;
-        int i;
+        int itPenumbra = it + 32;
+        int i = 0;
 
-        for(i = 0; i < it; i++)
+        for(; i < it; i++)
             res += texture(
                 shadowmap, 
                 mapPosition.xy + 2.0*radius*vec2(gold_noise3(position, i), 
@@ -84,7 +84,7 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
             float prct = 0.5 + 0.5*abs(res-p)/p;
             itPenumbra = int(float(itPenumbra)*prct);
 
-            for(i = 0; i < itPenumbra; i++)
+            for(; i < itPenumbra; i++)
                 res += texture(
                     shadowmap, 
                     mapPosition.xy + radius*vec2(gold_noise3(position, i), 
@@ -92,7 +92,7 @@ float getShadow(sampler2D shadowmap, mat4 rMatrix)
                 - bias < mapPosition.z ? 1.0 : 0.0;
         }
         
-        res /= float(i);
+        res /= float(i+1);
     #else
         res = texture(shadowmap, mapPosition.xy).r - bias < mapPosition.z ? 1.0 : 0.0;
     #endif

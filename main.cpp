@@ -3,6 +3,7 @@
 // #define GLFW_DLL
 // #include <GLFW/glfw3.h>
 
+#include <Audio.hpp>
 #include <App.hpp>
 #include <Utils.hpp>
 #include <GLutils.hpp>
@@ -31,8 +32,15 @@ int featureTest()
 };
 #endif
 
+ALCdevice* openALDevice = nullptr;
+ALCcontext* openALContext = nullptr;
+
 int main()
 {
+    int status = EXIT_FAILURE;
+    GLFWwindow* window;
+    ALCboolean contextMadeCurrent = false;
+
     #ifdef DO_TEST
     featureTest();
     #endif
@@ -41,11 +49,30 @@ int main()
 
     system("cls");
 
+    openALDevice = alcOpenDevice(nullptr);
+    if(!openALDevice)
+    {
+        std::cerr << "ERROR: could not start OpenAL\n";
+        goto quit;
+    }
+
+    if(!alcCall(alcCreateContext, openALContext, openALDevice, openALDevice, nullptr) || !openALContext)
+    {
+        std::cerr << "ERROR: could not create audio context\n";
+        goto quitALC;
+    }
+
+    if(!alcCall(alcMakeContextCurrent, contextMadeCurrent, openALDevice, openALContext) || contextMadeCurrent != ALC_TRUE)
+    {
+        std::cerr << "ERROR: Could not make audio context current\n" << std::endl;
+        goto quitALC;
+    }
+
     // start GL context and O/S window using the GLFW helper library
     if (!glfwInit())
     {
         std::cerr << "ERROR: could not start GLFW3\n";
-        return 1;
+        goto quitALC;
     } 
 
     // uncomment these lines if on Apple OS X
@@ -54,12 +81,10 @@ int main()
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
 
-    GLFWwindow* window = glfwCreateWindow(1920, 1080, "RT Voxels", NULL, NULL);
-    // GLFWwindow* window = glfwCreateWindow(3440, 1440, "RT Voxels", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "Game Engine", NULL, NULL);
     if (!window) {
-    std::cerr << "ERROR: could not open window with GLFW3\n";
-    glfwTerminate();
-    return 1;
+        std::cerr << "ERROR: could not open window with GLFW3\n";
+        goto quitGLFW;
     }
     glfwMakeContextCurrent(window);
                                     
@@ -71,25 +96,31 @@ int main()
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(MessageCallback, 0);
 
-    // get version info
-    const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
-    const GLubyte* version = glGetString(GL_VERSION); // version as a string
-    std::cout << TERMINAL_INFO 
-    << "Renderer: " << renderer << "\n" 
-    << "OpenGL version supported " << version << "\n"
-    << TERMINAL_RESET << "\n";
+    if(true)
+    {
+        const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
+        const GLubyte* version = glGetString(GL_VERSION); // version as a string
+        std::cout << TERMINAL_INFO 
+        << "Renderer: " << renderer << "\n" 
+        << "OpenGL version supported " << version << "\n"
+        << TERMINAL_RESET << "\n";
 
-    // tell GL to only draw onto a pixel if the shape is closer to the viewer
-    // glEnable(GL_DEPTH_TEST); // enable depth-testing
-    // glDepthFunc(GL_LESS); // depth-testing interprets a smaller value as "closer"
+        App app(window);
+        app.mainloop();
+    }
 
-    /* OTHER STUFF GOES HERE NEXT */
+    status = EXIT_SUCCESS;
 
-    App RTVoxl(window);
-    RTVoxl.mainloop();
-
-    // close GL context and any other GLFW resources
+quitGLFW :
     glfwTerminate();
+quitALC :
+    if(openALContext)
+    {
+        alcCall(alcMakeContextCurrent, contextMadeCurrent, openALDevice, nullptr);
+        alcCall(alcDestroyContext, openALDevice, openALContext);
+    }
+    alcCloseDevice(openALDevice);
+quit :
 
-    return EXIT_SUCCESS;
+    return status;
 }

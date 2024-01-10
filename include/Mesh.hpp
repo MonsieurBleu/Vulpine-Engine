@@ -19,10 +19,13 @@ class MeshMaterial : public std::shared_ptr<ShaderProgram>
     public : 
         MeshMaterial(ShaderProgram* material = NULL, ShaderProgram* depthOnlyMaterial = NULL);
         std::shared_ptr<ShaderProgram> depthOnly;
+        
+        ~MeshMaterial();
 };
 
 
 typedef std::shared_ptr<VertexAttributeGroup> MeshVao;
+
 
 class Mesh
 {
@@ -37,6 +40,7 @@ class Mesh
         GLenum defaultMode = GL_TRIANGLES;
         bool invertFaces = false;
         bool depthWrite = true;
+        bool noBackFaceCulling = false;
 
         Mesh(){};
         // Mesh(Mesh& mesh);
@@ -57,6 +61,8 @@ class Mesh
 
         virtual void draw(GLenum mode = GL_TRIANGLES);
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
+
+        virtual bool cull();
 };
 
 #define MODEL_UNIFORM_START           16
@@ -108,10 +114,8 @@ class MeshModel3D : public Mesh
             bool loadMaterialMap = true);
 
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
-        virtual void preDrawRoutine();
+        virtual bool cull();
 };
-
-Mesh readSTL(const std::string filePath);
 
 MeshVao readOBJ(const std::string filePath, bool useVertexColors = false);
 

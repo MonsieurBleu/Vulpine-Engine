@@ -1,6 +1,7 @@
 #include <Scene.hpp>
 #include <iostream>
 #include <Globals.hpp>
+#include <Helpers.hpp>
 
 Scene::Scene()
 {
@@ -106,54 +107,21 @@ void Scene::add(ObjectGroupRef group)
     groups.push_back(group);
 }
 
-void MeshGroup::draw()
+uint MeshGroup::draw()
 {
     material->activate();
-
-    if(material->getProgram() == 12)
-        system("cls");
     
-    int drawcnt = 0;
+    uint drawcnt = 0;
 
     for(auto i : meshes)
-        if(i->state.hide != ModelStateHideStatus::HIDE)
+        if(i->cull())
         {
-            if(i->state.frustumCulled)
-            {
-                vec3 camPos = globals.currentCamera->getPosition();
-                vec3 camDir = globals.currentCamera->getDirection();
-                vec3 center = vec3(i->state.modelMatrix * vec4(0, 0, 0, 1));
-
-                vec3 dir = center - camPos;
-                float hypothenus = dot(dir, camDir);
-
-                float radius = 5.0; /// retreive it from the objet bounding sphere
-
-                vec3 dirToBestPoint = (camPos + hypothenus*camDir) - center;
-
-                float lToBestPoint = length(dirToBestPoint);
-                dirToBestPoint = normalize(dirToBestPoint);
-                radius = radius < lToBestPoint ? radius : lToBestPoint;
-                vec3 newPos = center + radius * dirToBestPoint;
-
-                float cosBestAngle = dot(normalize(newPos - camPos), camDir);
-
-                float minCos = cos(globals.currentCamera->getState().FOV);
-
-                if(cosBestAngle >= minCos && i->depthWrite)
-                {
-                    drawcnt ++;
-                    i->drawVAO();
-                }
-            }
-            else
-                i->drawVAO();
-
+            drawcnt ++;
+            i->drawVAO();
         }
-    
-    std::cout << drawcnt << "\n";
 
     material->deactivate();
+    return drawcnt;
 }
 
 void Scene::updateAllObjects()
@@ -174,29 +142,32 @@ void Scene::genLightBuffer()
     ligthBuffer.activate(0);
 }
 
-void Scene::draw()
+uint Scene::draw()
 {
+    drawcnt = 0;
+
     for(auto i = meshes.begin(); i != meshes.end(); i++)
-    {
-        /*
-            ANGLE CULLING TEST
-        */
-            i->draw();
-    }
+        drawcnt += i->draw();
     
     for(auto i : unsortedMeshes)
-        if(i->state.hide != ModelStateHideStatus::HIDE)
+        if(i->cull())
+        {
             i->draw();
+            drawcnt ++;
+        }
 
     ligthBuffer.reset();
+    return drawcnt;
 }
+
+uint Scene::getDrawCalls(){return drawcnt;}
 
 // TODO : Add a way to have custom depth vertex shader to some object
 // NOTE : If an object have a non trivial vertex shader, maybe the vertices
 //        should be calculated just once in a compute/cpu prepass. But this 
 //        woulnd't be compatible with tesselation.
 
-void Scene::depthOnlyDraw(Camera &camera)
+void Scene::depthOnlyDraw(Camera &camera, bool cull)
 {
     if(depthOnlyMaterial != NULL)
     {
@@ -216,9 +187,16 @@ void Scene::depthOnlyDraw(Camera &camera)
             ShaderUniform(camera.getPositionAddr(), 5).activate();
             ShaderUniform(camera.getDirectionAddr(), 6).activate();
 
-            for(auto j : i->meshes)
-                j->drawVAO();
-            
+            if(cull)
+            {
+                for(auto j : i->meshes)
+                    if(j->cull())
+                        j->drawVAO();
+            }
+            else
+                for(auto j : i->meshes)
+                    j->drawVAO();
+
             dom->deactivate();
         }
 
@@ -229,10 +207,13 @@ void Scene::depthOnlyDraw(Camera &camera)
     We consider that unsorted meshes have special materials, like transparents ones,
     that cannot be used on depthOnlyDraw. So for the moment, this is disabled.
 
-    for(auto i = unsortedMeshes.begin(); i != unsortedMeshes.end(); i++)
-    {
-        (*i)->drawVAO();
-    }
+    if(cull)
+        for(auto i : unsortedMeshes)
+            if(i->cull())
+                i->drawVAO();
+    else
+        for(auto i : unsortedMeshes)
+            i->drawVAO();
     */
 }
 

@@ -38,6 +38,8 @@ class Globals
         std::u32string textInputString;
         void* currentTextInputUser = nullptr;
 
+        uint _drawCalls3D = 0;
+
     public :
 
         /**

@@ -199,7 +199,40 @@ VertexAttributeGroup& VertexAttributeGroup::generate()
         glVertexAttribBinding(i, attribute.getLocation());
     }); 
 
+    genAABB();
+ 
     generated = true;
     
     return *this;
 };
+
+
+VertexAttributeGroup& VertexAttributeGroup::genAABB()
+{
+    if(!attributes.size()) return *this;
+
+    vec3 *b = (vec3*)attributes[0].getBufferAddr();
+    int size = attributes[0].getVertexCount();
+
+    AABBmax = vec3(-1E12);
+    AABBmin = vec3(1E12);
+
+    for(int i = 0; i < size; i++)
+    {
+        AABBmax = max(AABBmax, b[i]);
+        AABBmin = min(AABBmin, b[i]);
+    }
+
+    return *this;
+}
+
+vec3 VertexAttributeGroup::getAABBMin()
+{
+    return AABBmin;
+}
+
+vec3 VertexAttributeGroup::getAABBMax()
+{
+    return AABBmax;
+}
+

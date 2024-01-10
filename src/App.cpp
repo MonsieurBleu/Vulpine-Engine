@@ -37,6 +37,8 @@
 #include <iomanip>
 #include <codecvt>
 
+#include <Audio.hpp>
+
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
@@ -182,7 +184,7 @@ void App::mainInput(double deltatime)
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
     
-    float camspeed = 2.0;
+    float camspeed = 5.0;
     if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         camspeed *= 5.0;
 
@@ -263,9 +265,9 @@ void App::mainloopEndRoutine()
     glfwSwapBuffers(window);
     globals.gpuTime.end();
 
+    globals.fpsLimiter.waitForEnd();
     globals.appTime.end();
     globals.unpausedTime.end();
-    globals.fpsLimiter.waitForEnd();
 }
 
 void App::mainloop()
@@ -277,7 +279,7 @@ void App::mainloop()
         (globals.screenResolution().y - globals.windowHeight())/2);
 
     /// SETTING UP THE CAMERA 
-    camera.init(radians(50.0f), globals.windowWidth(), globals.windowHeight(), 0.1f, 1000.0f);
+    camera.init(radians(70.0f), globals.windowWidth(), globals.windowHeight(), 0.1f, 1E4f);
     // camera.init(radians(50.0f), 1920*0.05, 1080*0.05, 0.1f, 1000.0f);
 
     glEnable(GL_DEPTH_TEST);
@@ -295,8 +297,8 @@ void App::mainloop()
     Scene scene2D;
 
     bool wireframe = false;
-    bool vsync = true;
-    glfwSwapInterval(1);
+    bool vsync = false;
+    glfwSwapInterval(0);
 
     ShaderProgram PostProcessing = ShaderProgram(
         "shader/post-process/final composing.frag", 
@@ -355,6 +357,14 @@ void App::mainloop()
                 globals.standartShaderUniform3D() 
             ));
 
+    MeshMaterial uvPBRStencil(
+            new ShaderProgram(
+                "shader/foward rendering/uv/CTBRDF.frag", 
+                "shader/foward rendering/uv/phong.vert", 
+                "", 
+                globals.standartShaderUniform3D() 
+            ));
+
     MeshMaterial uvPhong(
             new ShaderProgram(
                 // "shader/foward rendering/uv/phong.frag", 
@@ -382,8 +392,19 @@ void App::mainloop()
                 // , 
                 // globals.standartShaderUniform3D() 
             ));
-    
+
+    MeshMaterial uvDepthOnlyStencil(
+            new ShaderProgram(
+                "shader/depthOnlyStencil.frag", 
+                "shader/foward rendering/uv/phong.vert", 
+                ""
+                // , 
+                // globals.standartShaderUniform3D() 
+            ));
+
     scene.depthOnlyMaterial = uvDepthOnly;
+    uvPBRStencil.depthOnly = uvDepthOnlyStencil;
+
 
     ModelRef skybox(new MeshModel3D);
     skybox->setVao(readOBJ("ressources/test/skybox/skybox.obj", false));
@@ -605,6 +626,13 @@ void App::mainloop()
         keyboard->state.scaleScalar(0.1).setPosition(vec3(0, 1, -5)).setRotation(vec3(0, 0, 0));
         scene.add(keyboard);
 
+        ModelRef leaves = newModel(uvPBRStencil, readOBJ("ressources/material demo/tree/leaves/model.obj"));
+        leaves->setMap(Texture2D().loadFromFileKTX("ressources/material demo/tree/leaves/CE.ktx"), 0);
+        leaves->setMap(Texture2D().loadFromFileKTX("ressources/material demo/tree/leaves/NRM.ktx"), 1);
+        leaves->state.scaleScalar(1.0).setPosition(vec3(0, 0, 0)).setRotation(vec3(0, 0, 0));
+        leaves->noBackFaceCulling = true;
+        scene.add(leaves);
+
     #else
     
     #ifdef DEMO_MAGE_BATTLE
@@ -751,6 +779,9 @@ void App::mainloop()
     globals.gpuTime.setMenu(menu);
     globals.fpsLimiter.setMenu(menu);
 
+    globals.fpsLimiter.activate();
+    globals.fpsLimiter.freq = 144.f;
+
     #ifdef DEMO_MAGE_BATTLE
         FastUI_valueMenu menured(ui, {});
         red.setMenu(menured, U"Red Team");
@@ -793,10 +824,18 @@ void App::mainloop()
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); 
 
 
+    // AudioFile test;
+    // test.loadOGG("ressources/sounds/Clouded Thoughts by Wakapedia.ogg");
+
+    // AudioSource source;
+    // source
+    //     .setBuffer(test.getHandle())
+    //     .play();
+
     while(state != quit)
     {
         mainloopStartRoutine();
-        
+
         glfwPollEvents();
 
         camera.updateMouseFollow(window);
@@ -989,7 +1028,7 @@ void App::mainloop()
         scene.generateShadowMaps(); // GL error GL_INVALID_OPERATION in (null): (ID: 173538523)
 
         renderBuffer.activate();
-        scene.depthOnlyDraw(camera);
+        scene.depthOnlyDraw(camera, true);
         glDepthFunc(GL_EQUAL);
 
         #ifdef CUBEMAP_SKYBOX
@@ -1009,7 +1048,8 @@ void App::mainloop()
         Bloom.render(camera);
 
         glViewport(0, 0, globals.windowWidth(), globals.windowHeight());
-        sun->shadowMap.bindTexture(0, 6);
+        // sun->shadowMap.bindTexture(0, 6);
+        skyTexture.bind(6);
         screenBuffer2D.bindTexture(0, 7);
         PostProcessing.activate();
         globals.drawFullscreenQuad();
@@ -1018,4 +1058,7 @@ void App::mainloop()
 
         mainloopEndRoutine();
     }
+
+    // alCall(alDeleteSources, 1, &source.getHandle());
+    // alCall(alDeleteBuffers, 1, (ALuint*)&test);
 }

@@ -5,6 +5,8 @@
 
 #include <Utils.hpp>
 
+#include <Globals.hpp>
+
 using namespace glm;
 
 // Mesh::Mesh(Mesh& mesh)
@@ -16,6 +18,15 @@ using namespace glm;
 MeshMaterial::MeshMaterial(ShaderProgram* material, ShaderProgram* depthOnlyMaterial)
     : std::shared_ptr<ShaderProgram>(material), depthOnly(depthOnlyMaterial)
 {    
+}
+
+MeshMaterial::~MeshMaterial()
+{
+    // if(use_count() == 1 && get())
+    // {
+    //     std::cout << "Deleting material " << get()->getProgram() << "\n";
+    //     glDeleteProgram(get()->getProgram());
+    // }
 }
 
 void Mesh::drawVAO(GLenum mode)
@@ -73,7 +84,34 @@ Mesh& Mesh::removeMap(int location)
     return *this;
 }
 
-void MeshModel3D::preDrawRoutine(){}
+bool Mesh::cull(){return true;};
+
+bool MeshModel3D::cull()
+{
+    if(state.hide == ModelStateHideStatus::HIDE)
+        return false;
+    
+    if(!state.frustumCulled)
+        return true;
+
+    const mat4 m = state.modelMatrix;
+    vec3 center = vec3(m[3]);
+    vec3 scale = vec3(
+        length(vec3(m[0])),
+        length(vec3(m[1])),
+        length(vec3(m[2]))
+    );
+    float radius = max(length(vao->getAABBMax()*scale), length(vao->getAABBMin()*scale));
+    const Frustum f = globals.currentCamera->getFrustum();   
+
+    return                     
+        dot(f.left.normal  , center-f.left.position  ) > -radius &&
+        dot(f.right.normal , center-f.right.position ) > -radius &&
+        dot(f.far.normal   , center-f.far.position   ) > -radius &&
+        dot(f.near.normal  , center-f.near.position  ) > -radius &&
+        dot(f.top.normal   , center-f.top.position   ) > -radius &&
+        dot(f.bottom.normal, center-f.bottom.position) > -radius;
+}
 
 void MeshModel3D::drawVAO(GLenum mode)
 {
@@ -90,6 +128,8 @@ void MeshModel3D::drawVAO(GLenum mode)
         glCullFace(GL_FRONT);
     if(!depthWrite)
         glDisable(GL_DEPTH_TEST);
+    if(noBackFaceCulling)
+        glDisable(GL_CULL_FACE); 
 
     glBindVertexArray(vao->getHandle());
     mode = defaultMode;
@@ -99,6 +139,8 @@ void MeshModel3D::drawVAO(GLenum mode)
         glCullFace(GL_BACK);
     if(!depthWrite)
         glEnable(GL_DEPTH_TEST);
+    if(noBackFaceCulling)
+        glEnable(GL_CULL_FACE); 
 }
 
 void MeshModel3D::createUniforms()
@@ -150,12 +192,12 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
 
     if(obj == nullptr || fsize == UINT64_MAX)
     {
-        std::cout 
+        std::cerr
         << TERMINAL_ERROR << "Error loading file : "
         << TERMINAL_FILENAME << filePath 
         << TERMINAL_ERROR << "\n";
         perror("\treadOBJ");
-        std::cout << "\tThe loader will return an empty object.\n" << TERMINAL_RESET;
+        std::cerr << "\tThe loader will return an empty object.\n" << TERMINAL_RESET;
 
         return MeshVao();
     }
@@ -310,3 +352,5 @@ ModelRef  MeshModel3D::copyWithSharedMesh()
     m->mapsLocation = mapsLocation;
     return m;
 }
+
+
