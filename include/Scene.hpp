@@ -40,9 +40,9 @@ class Scene
 
     public :
         Scene();
-        void add(ModelRef mesh, bool sort = true);
-        void add(SceneLight light);
-        void add(ObjectGroupRef group);
+        Scene& add(ModelRef mesh, bool sort = true);
+        Scene& add(SceneLight light);
+        Scene& add(ObjectGroupRef group);
 
         void updateAllObjects();
         void generateShadowMaps();

@@ -43,7 +43,12 @@ class Mesh
         bool noBackFaceCulling = false;
 
         Mesh(){};
+
         // Mesh(Mesh& mesh);
+
+        Mesh(MeshMaterial material)
+        : material(material) {};
+
         Mesh(MeshMaterial material, 
              MeshVao vao)
         : material(material), vao(vao) 
@@ -58,6 +63,8 @@ class Mesh
         Mesh& setVao(MeshVao _vao);
         Mesh& setMap(Texture2D texture, int location);
         Mesh& removeMap(int location);
+        
+        void bindMap(int id, int location);
 
         virtual void draw(GLenum mode = GL_TRIANGLES);
         virtual void drawVAO(GLenum mode = GL_TRIANGLES);
@@ -92,6 +99,10 @@ class MeshModel3D : public Mesh
             {createUniforms();};
 
         MeshModel3D(Mesh& mesh) : Mesh(mesh)
+            {createUniforms();};
+
+        MeshModel3D(MeshMaterial material)
+            : Mesh(material)
             {createUniforms();};
 
         MeshModel3D(MeshMaterial material, MeshVao vao)

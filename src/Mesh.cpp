@@ -161,22 +161,32 @@ MeshModel3D& MeshModel3D::loadFromFolder(
 {
     setVao(readOBJ(folderPath + "model.obj"));
 
+    // if(loadColorMap)
+    //     setMap(
+    //         Texture2D()
+    //             .loadFromFile((folderPath + "color.png").c_str())
+    //                 .setFormat(GL_RGBA)
+    //                 .setInternalFormat(GL_SRGB8_ALPHA8)
+    //                 .generate(), 
+    //         0);
+
+    // if(loadMaterialMap)
+    //     setMap(
+    //         Texture2D()
+    //             .loadFromFile((folderPath + "material.png").c_str())
+    //                 .setFormat(GL_RGBA)
+    //                 .setInternalFormat(GL_SRGB8_ALPHA8)
+    //                 .generate(), 
+    //         1);
+
     if(loadColorMap)
         setMap(
-            Texture2D()
-                .loadFromFile((folderPath + "color.png").c_str())
-                    .setFormat(GL_RGBA)
-                    .setInternalFormat(GL_SRGB8_ALPHA8)
-                    .generate(), 
+            Texture2D().loadFromFileKTX((folderPath + "CE.ktx").c_str()),
             0);
 
     if(loadMaterialMap)
         setMap(
-            Texture2D()
-                .loadFromFile((folderPath + "material.png").c_str())
-                    .setFormat(GL_RGBA)
-                    .setInternalFormat(GL_SRGB8_ALPHA8)
-                    .generate(), 
+            Texture2D().loadFromFileKTX((folderPath + "NRM.ktx").c_str()),
             1);
 
     return (*this);
@@ -351,6 +361,12 @@ ModelRef  MeshModel3D::copyWithSharedMesh()
     m->maps = maps;
     m->mapsLocation = mapsLocation;
     return m;
+}
+
+void Mesh::bindMap(int id, int location)
+{
+    if(id > (int)maps.size()) return;
+    maps[id].bind(location);
 }
 
 
