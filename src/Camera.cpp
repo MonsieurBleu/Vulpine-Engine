@@ -2,7 +2,7 @@
 #include <App.hpp>
 #include <tgmath.h>
 
-#include <glm/gtx/string_cast.hpp>
+#include <glm\gtx\string_cast.hpp>
 
 #include <Camera.hpp> 
 #include <Utils.hpp>

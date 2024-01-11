@@ -31,6 +31,8 @@ SOURCES := $(call rwildcard,$(SDIR),*.cpp)
 OBJ := $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
 OBJ += $(ODIR)/main.o
 
+default: $(EXEC)
+
 #/******* GAME BUILD ARGUMENTS ********/
 
 G_ODIR=../obj
@@ -63,7 +65,7 @@ $(G_EXEC): $(G_OBJ) $(G_EOBJ)
 #/**************************************/
 
 
-default: $(EXEC)
+
 
 run :
 	$(EXEC)
