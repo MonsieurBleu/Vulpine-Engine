@@ -38,12 +38,12 @@ Scene::Scene()
 
 }
 
-void Scene::add(ModelRef mesh, bool sort)
+Scene& Scene::add(ModelRef mesh, bool sort)
 {
     if(!sort)
     {
         unsortedMeshes.push_back(mesh);
-        return;
+        return *this;
     }
 
     for(auto i = meshes.begin(); i != meshes.end(); i++)
@@ -51,16 +51,18 @@ void Scene::add(ModelRef mesh, bool sort)
         if(i->material.get() == mesh->getMaterial().get())
         {
             i->add(mesh);
-            return;
+            return *this;
         }
     }
 
     meshes.push_back(MeshGroup(mesh->getMaterial()).add(mesh));
+    return *this;
 };
 
-void Scene::add(SceneLight light)
+Scene& Scene::add(SceneLight light)
 {
     lights.push_back(light);
+    return *this;
 }
 
 void Scene::addGroupElement(ObjectGroupRef group)
@@ -100,11 +102,13 @@ void Scene::removeGroupElement(ObjectGroupRef group)
     }
 }
 
-void Scene::add(ObjectGroupRef group)
+Scene& Scene::add(ObjectGroupRef group)
 {
     addGroupElement(group);
 
     groups.push_back(group);
+
+    return *this;
 }
 
 uint MeshGroup::draw()

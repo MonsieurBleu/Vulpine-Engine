@@ -44,14 +44,19 @@ G_EOBJ := $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
 G_EOBJ += $(G_ODIR)/main.o
 
 ifeq ($(OS),Windows_NT)
-	G_EXEC = ../build/Game.exe
+	G_EXEC = ..\build\Game.exe
 else
-	G_EXEC = ../build/Game.exe
+	G_EXEC = ..\build\Game.exe
 endif
 
 default: $(EXEC)
 
 game: $(G_EXEC)
+
+gameClean : 
+	$(RM) $(G_EXEC) ..\obj\*.o
+
+gameReinstall : gameClean game
 
 $(G_EXEC): $(G_OBJ) $(G_EOBJ)
 	$(CC) $(G_EOBJ) $(G_OBJ) $(LINKFLAGS) -o $(G_EXEC) $(LIBFLAGS)
