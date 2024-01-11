@@ -3,8 +3,7 @@
 
 #include <iostream>
 
-#include <Camera.hpp>
-#include <Shader.hpp>
+#include <Scene.hpp>
 
 #include <Inputs.hpp>
 
@@ -18,13 +17,11 @@ enum AppState
 
 class App
 {
-    private :
+    protected :
 
         AppState state = run;
         GLFWwindow* window;
         uint64_t timestart;
-
-        // Map World;
 
         Camera camera;
 
@@ -34,16 +31,23 @@ class App
         FrameBuffer screenBuffer2D;
         SSAOPass SSAO;
         BloomPass Bloom;
+        ShaderProgram finalProcessingStage;
+
+        Scene scene;
+        Scene scene2D;
+
+        void mainloopStartRoutine();
+        void mainloopPreRenderRoutine();
+        void mainloopEndRoutine();
+
+        virtual bool userInput(GLFWKeyInfo input);
 
     public :
         App(GLFWwindow* window);
 
-        void mainloopStartRoutine();
-        void mainloop();
-        void mainloopPreRenderRoutine();
-        void mainloopEndRoutine();
+        void init();
 
+        virtual void mainloop();
 };
-
 
 #endif

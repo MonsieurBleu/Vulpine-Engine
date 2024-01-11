@@ -48,6 +48,13 @@ Globals globals;
 
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
+void App::init()
+{
+    return;
+}
+
+bool App::userInput(GLFWKeyInfo input){return false;};
+
 App::App(GLFWwindow* window) : 
     window(window), 
     renderBuffer(globals.renderSizeAddr()),
@@ -80,7 +87,6 @@ App::App(GLFWwindow* window) :
     {
         ShaderUniform(globals.windowSizeAddr(), 0),
         ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
-
     };
 
     globals._standartShaderUniform3D =
@@ -163,8 +169,6 @@ App::App(GLFWwindow* window) :
 
             glfwSetCursorPos(window, center.x, center.y);
         }
-
-
     });
     
     glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codepoint)
@@ -242,14 +246,7 @@ void App::mainloopStartRoutine()
 
     globals._mouseLeftClick = false;
 
-    // const float limit = 1000.f/60.f;
-    // float d = globals.appTime.getDeltaMS();
-    // BenchTimer dummy;
-    // while(dummy.getElapsedTime()*1000.f < limit-d)
-    // {
-    //     dummy.start();
-    //     dummy.end();
-    // }
+    glfwPollEvents();
 }
 
 void App::mainloopPreRenderRoutine()
@@ -293,20 +290,17 @@ void App::mainloop()
         camera.setState(buff);
     }
 
-    Scene scene;
-    Scene scene2D;
-
     bool wireframe = false;
     bool vsync = false;
     glfwSwapInterval(0);
 
-    ShaderProgram PostProcessing = ShaderProgram(
+    finalProcessingStage = ShaderProgram(
         "shader/post-process/final composing.frag", 
         "shader/post-process/basic.vert", 
         "", 
         globals.standartShaderUniform2D());
     
-    PostProcessing.addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10));
+    finalProcessingStage.addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10));
 
     #ifdef INVERTED_Z
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
@@ -836,8 +830,6 @@ void App::mainloop()
     {
         mainloopStartRoutine();
 
-        glfwPollEvents();
-
         camera.updateMouseFollow(window);
 
         GLFWKeyInfo input;
@@ -866,7 +858,7 @@ void App::mainloop()
                 system("cls");
                 SSAO.getShader().reset();
                 Bloom.getShader().reset();
-                PostProcessing.reset();
+                finalProcessingStage.reset();
                 uvPBR->reset();
                 skybox->getMaterial()->reset();
                 ssb->getMaterial()->reset();
@@ -1051,7 +1043,7 @@ void App::mainloop()
         // sun->shadowMap.bindTexture(0, 6);
         skyTexture.bind(6);
         screenBuffer2D.bindTexture(0, 7);
-        PostProcessing.activate();
+        finalProcessingStage.activate();
         globals.drawFullscreenQuad();
  
         sun->shadowCamera.setPosition(camera.getPosition());
