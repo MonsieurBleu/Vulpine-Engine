@@ -4,7 +4,7 @@ ifeq ($(OS),Windows_NT)
 	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lOpenAL32
 	LINKFLAGS = libglfw3.a libglfw3dll.a 
 else
-	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lOpenAL32
+	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal
 	LINKFLAGS = 
 endif
 
@@ -47,6 +47,8 @@ else
 	G_EXEC = ../build/Game.exe
 endif
 
+default: $(EXEC)
+
 game: $(G_EXEC)
 
 $(G_EXEC): $(G_OBJ) $(G_EOBJ)
@@ -63,7 +65,7 @@ $(G_EXEC): $(G_OBJ) $(G_EOBJ)
 #/**************************************/
 
 
-default: $(EXEC)
+
 
 run :
 	$(EXEC)

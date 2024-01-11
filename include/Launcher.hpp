@@ -3,14 +3,14 @@
 #include <Utils.hpp>
 #include <GLutils.hpp>
 
-ALCdevice* openALDevice = nullptr;
-ALCcontext* openALContext = nullptr;
+ALCdevice *openALDevice = nullptr;
+ALCcontext *openALContext = nullptr;
 
 template <typename GameType, typename... Params>
 int launchGame(GameType **game, std::string name, Params... initParams)
 {
     int status = EXIT_FAILURE;
-    GLFWwindow* window;
+    GLFWwindow *window;
     ALCboolean contextMadeCurrent = false;
 
     atexit(checkHeap);
@@ -22,21 +22,22 @@ int launchGame(GameType **game, std::string name, Params... initParams)
 #endif
 
     openALDevice = alcOpenDevice(nullptr);
-    if(!openALDevice)
+    if (!openALDevice)
     {
         std::cerr << "ERROR: could not start OpenAL\n";
         goto quit;
     }
 
-    if(!alcCall(alcCreateContext, openALContext, openALDevice, openALDevice, nullptr) || !openALContext)
+    if (!alcCall(alcCreateContext, openALContext, openALDevice, openALDevice, nullptr) || !openALContext)
     {
         std::cerr << "ERROR: could not create audio context\n";
         goto quitALC;
     }
 
-    if(!alcCall(alcMakeContextCurrent, contextMadeCurrent, openALDevice, openALContext) || contextMadeCurrent != ALC_TRUE)
+    if (!alcCall(alcMakeContextCurrent, contextMadeCurrent, openALDevice, openALContext) || contextMadeCurrent != ALC_TRUE)
     {
-        std::cerr << "ERROR: Could not make audio context current\n" << std::endl;
+        std::cerr << "ERROR: Could not make audio context current\n"
+                  << std::endl;
         goto quitALC;
     }
 
@@ -45,7 +46,7 @@ int launchGame(GameType **game, std::string name, Params... initParams)
     {
         std::cerr << "ERROR: could not start GLFW3\n";
         goto quitALC;
-    } 
+    }
 
     // uncomment these lines if on Apple OS X
     /*glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -54,12 +55,13 @@ int launchGame(GameType **game, std::string name, Params... initParams)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
 
     window = glfwCreateWindow(1920, 1080, name.c_str(), NULL, NULL);
-    if (!window) {
+    if (!window)
+    {
         std::cerr << "ERROR: could not open window with GLFW3\n";
         goto quitGLFW;
     }
     glfwMakeContextCurrent(window);
-                                    
+
     // start GLEW extension handler
     glewExperimental = GL_TRUE;
     glewInit();
@@ -68,14 +70,14 @@ int launchGame(GameType **game, std::string name, Params... initParams)
     glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
     glDebugMessageCallback(MessageCallback, 0);
 
-    if(true)
+    if (true)
     {
-        const GLubyte* renderer = glGetString(GL_RENDERER); // get renderer string
-        const GLubyte* version = glGetString(GL_VERSION); // version as a string
-        std::cout << TERMINAL_INFO 
-        << "Renderer: " << renderer << "\n" 
-        << "OpenGL version supported " << version << "\n"
-        << TERMINAL_RESET << "\n";
+        const GLubyte *renderer = glGetString(GL_RENDERER); // get renderer string
+        const GLubyte *version = glGetString(GL_VERSION);   // version as a string
+        std::cout << TERMINAL_INFO
+                  << "Renderer: " << renderer << "\n"
+                  << "OpenGL version supported " << version << "\n"
+                  << TERMINAL_RESET << "\n";
 
         *game = new GameType(window);
 
@@ -86,16 +88,16 @@ int launchGame(GameType **game, std::string name, Params... initParams)
 
     status = EXIT_SUCCESS;
 
-quitGLFW :
+quitGLFW:
     glfwTerminate();
-quitALC :
-    if(openALContext)
+quitALC:
+    if (openALContext)
     {
         alcCall(alcMakeContextCurrent, contextMadeCurrent, openALDevice, nullptr);
         alcCall(alcDestroyContext, openALDevice, openALContext);
     }
     alcCloseDevice(openALDevice);
-quit :
+quit:
 
     return status;
 }

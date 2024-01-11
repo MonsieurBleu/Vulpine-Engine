@@ -1,70 +1,69 @@
 #include <iostream>
 #include <VertexBuffer.hpp>
 #include <glm/gtx/string_cast.hpp>
+#include <string.h>
 
 using namespace glm;
 
-std::ostream& operator<<(std::ostream& os, const VertexAttribute &l)
+std::ostream &operator<<(std::ostream &os, const VertexAttribute &l)
 {
     switch (l.type)
     {
-    case GL_FLOAT :
+    case GL_FLOAT:
         switch (l.perVertexSize)
         {
-        case 4 :
+        case 4:
         {
             vec4 *d = (vec4 *)l.buffer.get();
-            for(uint64 i = 0; i < l.vertexCount; i++)
+            for (uint64 i = 0; i < l.vertexCount; i++)
                 os << to_string(d[i]) << "\n";
         }
-            break;
+        break;
 
-        case 3 :
+        case 3:
         {
             vec3 *d = (vec3 *)l.buffer.get();
-            for(uint64 i = 0; i < l.vertexCount; i++)
+            for (uint64 i = 0; i < l.vertexCount; i++)
                 os << to_string(d[i]) << "\n";
         }
-            break;
+        break;
 
-        case 2 :
+        case 2:
         {
             vec2 *d = (vec2 *)l.buffer.get();
-            for(uint64 i = 0; i < l.vertexCount; i++)
+            for (uint64 i = 0; i < l.vertexCount; i++)
                 os << to_string(d[i]) << "\n";
         }
-            break;
+        break;
 
-        case 1 :
+        case 1:
         {
             vec1 *d = (vec1 *)l.buffer.get();
-            for(uint64 i = 0; i < l.vertexCount; i++)
+            for (uint64 i = 0; i < l.vertexCount; i++)
                 os << to_string(d[i]) << "\n";
         }
-            break;
+        break;
 
         default:
             break;
         }
         break;
-    
+
     default:
         break;
     }
 
-
-
     return os;
 }
 
-VertexAttribute::VertexAttribute(GenericSharedBuffer _src, 
-                           GLuint _location,
-                           uint64 _vertexCount, 
-                           uint8  _perVertexSize = 3, 
-                           GLenum _type = GL_FLOAT,
-                           bool   _copySource = false)
+VertexAttribute::VertexAttribute(GenericSharedBuffer _src,
+                                 GLuint _location,
+                                 uint64 _vertexCount,
+                                 uint8 _perVertexSize = 3,
+                                 GLenum _type = GL_FLOAT,
+                                 bool _copySource = false)
 {
-    if(perVertexSize == 0 || perVertexSize > MAX_PER_VERTEX_SIZE)
+    if (perVertexSize == 0 || perVertexSize > MAX_PER_VERTEX_SIZE)
         return;
 
     location = _location;
@@ -74,12 +73,12 @@ VertexAttribute::VertexAttribute(GenericSharedBuffer _src,
 
     switch (type)
     {
-    case GL_BYTE :
-    case GL_UNSIGNED_BYTE :
+    case GL_BYTE:
+    case GL_UNSIGNED_BYTE:
         perValuesSize = 1;
         break;
 
-    case GL_HALF_FLOAT :
+    case GL_HALF_FLOAT:
     case GL_SHORT:
     case GL_UNSIGNED_SHORT:
         perValuesSize = 2;
@@ -91,7 +90,7 @@ VertexAttribute::VertexAttribute(GenericSharedBuffer _src,
     case GL_FIXED:
         perValuesSize = 4;
         break;
-    
+
     case GL_DOUBLE:
         perValuesSize = 8;
         break;
@@ -101,12 +100,12 @@ VertexAttribute::VertexAttribute(GenericSharedBuffer _src,
         break;
     }
 
-    bufferSize = perValuesSize*perVertexSize*vertexCount;
+    bufferSize = perValuesSize * perVertexSize * vertexCount;
 
-    if(_copySource)
+    if (_copySource)
     {
-        buffer = std::shared_ptr<char []>(new char[bufferSize]);
-        memcpy((void*)buffer.get(), (void*)_src.get(), bufferSize);
+        buffer = std::shared_ptr<char[]>(new char[bufferSize]);
+        memcpy((void *)buffer.get(), (void *)_src.get(), bufferSize);
     }
     else
         buffer = _src;
@@ -116,7 +115,7 @@ void VertexAttribute::updateData(GenericSharedBuffer _src, uint64 _vertexCount)
 {
     buffer = _src;
     vertexCount = _vertexCount;
-    bufferSize = perValuesSize*perVertexSize*vertexCount;
+    bufferSize = perValuesSize * perVertexSize * vertexCount;
     sendAllToGPU();
 }
 
@@ -133,12 +132,11 @@ void VertexAttribute::sendAllToGPU()
 
 void VertexAttribute::setFormat()
 {
-    glBindVertexBuffer(location, handle, 0, perValuesSize*perVertexSize);
+    glBindVertexBuffer(location, handle, 0, perValuesSize * perVertexSize);
     glVertexAttribFormat(location, perVertexSize, type, GL_FALSE, 0);
 }
 
-char* VertexAttribute::getBufferAddr(){return buffer.get();};
-
+char *VertexAttribute::getBufferAddr() { return buffer.get(); };
 
 VertexAttributeGroup::VertexAttributeGroup(std::vector<VertexAttribute> &newAttributes)
 {
@@ -150,17 +148,17 @@ VertexAttributeGroup::VertexAttributeGroup(std::vector<VertexAttribute> newAttri
     add(newAttributes);
 }
 
-void VertexAttributeGroup::forEach(void (*func)(int, VertexAttribute&))
+void VertexAttributeGroup::forEach(void (*func)(int, VertexAttribute &))
 {
-    for(uint64 i = 0; i < attributes.size(); i++)
+    for (uint64 i = 0; i < attributes.size(); i++)
     {
         func(i, attributes[i]);
     }
 }
 
-void VertexAttributeGroup::forEach(void (*func)(int, const VertexAttribute&)) const
+void VertexAttributeGroup::forEach(void (*func)(int, const VertexAttribute &)) const
 {
-    for(uint64 i = 0; i != attributes.size(); i++)
+    for (uint64 i = 0; i != attributes.size(); i++)
     {
         func(i, attributes[i]);
     }
@@ -168,7 +166,7 @@ void VertexAttributeGroup::forEach(void (*func)(int, const VertexAttribute&)) co
 
 void VertexAttributeGroup::add(std::vector<VertexAttribute> &newAttributes)
 {
-    for(auto i = newAttributes.begin(); i != newAttributes.end(); i++)
+    for (auto i = newAttributes.begin(); i != newAttributes.end(); i++)
     {
         attributes.push_back(*i);
     }
@@ -179,45 +177,44 @@ void VertexAttributeGroup::add(VertexAttribute newAttribute)
     attributes.push_back(newAttribute);
 }
 
-VertexAttributeGroup& VertexAttributeGroup::generate()
+VertexAttributeGroup &VertexAttributeGroup::generate()
 {
-    if(generated) return *this;
+    if (generated)
+        return *this;
 
-    forEach([](int i, VertexAttribute& attribute)
-    {
+    forEach([](int i, VertexAttribute &attribute)
+            {
         attribute.genBuffer();
-        attribute.sendAllToGPU();
-    });
+        attribute.sendAllToGPU(); });
 
     glGenVertexArrays(1, &arrayHandle);
     glBindVertexArray(arrayHandle);
 
-    forEach([](int i, VertexAttribute& attribute)
-    {
+    forEach([](int i, VertexAttribute &attribute)
+            {
         glEnableVertexAttribArray(i);
         attribute.setFormat();
-        glVertexAttribBinding(i, attribute.getLocation());
-    }); 
+        glVertexAttribBinding(i, attribute.getLocation()); });
 
     genAABB();
- 
+
     generated = true;
-    
+
     return *this;
 };
 
-
-VertexAttributeGroup& VertexAttributeGroup::genAABB()
+VertexAttributeGroup &VertexAttributeGroup::genAABB()
 {
-    if(!attributes.size()) return *this;
+    if (!attributes.size())
+        return *this;
 
-    vec3 *b = (vec3*)attributes[0].getBufferAddr();
+    vec3 *b = (vec3 *)attributes[0].getBufferAddr();
     int size = attributes[0].getVertexCount();
 
     AABBmax = vec3(-1E12);
     AABBmin = vec3(1E12);
 
-    for(int i = 0; i < size; i++)
+    for (int i = 0; i < size; i++)
     {
         AABBmax = max(AABBmax, b[i]);
         AABBmin = min(AABBmin, b[i]);
@@ -235,4 +232,3 @@ vec3 VertexAttributeGroup::getAABBMax()
 {
     return AABBmax;
 }
-

@@ -6,7 +6,7 @@
 
 uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
 
-void Shader::prepareLoading(const std::string& path)
+void Shader::prepareLoading(const std::string &path)
 {
     startbenchrono();
 
@@ -14,11 +14,11 @@ void Shader::prepareLoading(const std::string& path)
 
     std::string extension = getFileExtension(Path);
 
-    if(extension == "frag")
+    if (extension == "frag")
         type = GL_FRAGMENT_SHADER;
-    else if(extension == "vert")
+    else if (extension == "vert")
         type = GL_VERTEX_SHADER;
-    else if(extension == "geom")
+    else if (extension == "geom")
         type = GL_GEOMETRY_SHADER;
 }
 
@@ -29,9 +29,9 @@ ShaderError Shader::refresh()
     // std::string code = readFile(Path);
     std::string code = Shadinclude::load(Path, "#include");
 
-    if(code.empty())
+    if (code.empty())
         return ShaderNoFile;
-    
+
     const char *glcode = code.c_str();
     glShaderSource(shader, 1, &glcode, NULL);
     glCompileShader(shader);
@@ -44,18 +44,19 @@ ShaderError Shader::refresh()
     glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
 
-    if(logLength > 0)
+    if (logLength > 0)
     {
         GLchar ShaderError[logLength];
         glGetShaderInfoLog(shader, logLength, NULL, ShaderError);
-        std::cerr 
-        << TERMINAL_ERROR 
-        << "Error compiling shader " 
-        << TERMINAL_FILENAME 
-        << Path 
-        << TERMINAL_ERROR 
-        << " :\n";
-        std::cerr << ShaderError << std::endl << TERMINAL_RESET;
+        std::cerr
+            << TERMINAL_ERROR
+            << "Error compiling shader "
+            << TERMINAL_FILENAME
+            << Path
+            << TERMINAL_ERROR
+            << " :\n";
+        std::cerr << ShaderError << std::endl
+                  << TERMINAL_RESET;
 
         return ShaderCompileError;
     }
@@ -63,19 +64,18 @@ ShaderError Shader::refresh()
     return ShaderOk;
 }
 
-
-ShaderProgram::ShaderProgram(const std::string _fragPath, 
-                             const std::string _vertPath, 
+ShaderProgram::ShaderProgram(const std::string _fragPath,
+                             const std::string _vertPath,
                              const std::string _geomPath,
                              std::vector<ShaderUniform> uniforms)
-                             : uniforms(uniforms)
+    : uniforms(uniforms)
 {
     frag.prepareLoading(_fragPath);
 
-    if(!_vertPath.empty())
+    if (!_vertPath.empty())
         vert.prepareLoading(_vertPath);
 
-    if(!_geomPath.empty())
+    if (!_geomPath.empty())
         geom.prepareLoading(_geomPath);
 
     compileAndLink();
@@ -91,27 +91,26 @@ ShaderError ShaderProgram::compileAndLink()
     ShaderError serrv = ShaderOk;
     ShaderError serrg = ShaderOk;
 
-
-    if(!vert.get_Path().empty())
+    if (!vert.get_Path().empty())
         serrv = vert.refresh();
 
-    if(!geom.get_Path().empty())
+    if (!geom.get_Path().empty())
         serrg = geom.refresh();
 
-    if(serrf != ShaderOk || serrv != ShaderOk || serrg != ShaderOk)
+    if (serrf != ShaderOk || serrv != ShaderOk || serrg != ShaderOk)
         return ShaderCompileError;
 
     ///// CREATING PROGRAM AND LINKING EVERYTHING
-    program = glCreateProgram();    
+    program = glCreateProgram();
 
     glAttachShader(program, frag.get_shader());
 
-    if(!vert.get_Path().empty())
+    if (!vert.get_Path().empty())
         glAttachShader(program, vert.get_shader());
-    
-    if(!geom.get_Path().empty())
+
+    if (!geom.get_Path().empty())
         glAttachShader(program, geom.get_shader());
-    
+
     glLinkProgram(program);
 
     GLint result = GL_FALSE;
@@ -119,37 +118,40 @@ ShaderError ShaderProgram::compileAndLink()
     glGetProgramiv(program, GL_LINK_STATUS, &result);
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 
-    if(logLength > 0 && result != GL_TRUE)
+    if (logLength > 0 && result != GL_TRUE)
     // if(logLength > 0)
     {
         char programError[logLength];
         glGetProgramInfoLog(program, logLength, NULL, programError);
         std::cerr << TERMINAL_ERROR << "Error compiling shaders " << frag.get_Path() << " " << vert.get_Path() << " " << geom.get_Path() << " :\n";
-        std::cerr << programError << std::endl << TERMINAL_RESET;
+        std::cerr << programError << std::endl
+                  << TERMINAL_RESET;
 
-        if(result != GL_TRUE)
+        if (result != GL_TRUE)
             return ShaderLinkingError;
     }
 
     glDeleteShader(frag.get_shader());
-    if(!vert.get_Path().empty()) glDeleteShader(vert.get_shader());
-    if(!geom.get_Path().empty()) glDeleteShader(geom.get_shader());
+    if (!vert.get_Path().empty())
+        glDeleteShader(vert.get_shader());
+    if (!geom.get_Path().empty())
+        glDeleteShader(geom.get_shader());
 
     useCount[program]++;
 
     timer.end();
 
-    std::cout 
-    << TERMINAL_OK 
-    << "Shader Program (id " << program << ") "
-    << TERMINAL_FILENAME
-    << frag.get_Path() 
-    << (vert.get_Path().empty() ? "" : " "+vert.get_Path())
-    << (geom.get_Path().empty() ? "" : " "+geom.get_Path())
-    << TERMINAL_OK 
-    << " linked successfully in "
-    << TERMINAL_TIMER << timer.getElapsedTime()*1000.f << " ms\n"
-    << TERMINAL_RESET;
+    std::cout
+        << TERMINAL_OK
+        << "Shader Program (id " << program << ") "
+        << TERMINAL_FILENAME
+        << frag.get_Path()
+        << (vert.get_Path().empty() ? "" : " " + vert.get_Path())
+        << (geom.get_Path().empty() ? "" : " " + geom.get_Path())
+        << TERMINAL_OK
+        << " linked successfully in "
+        << TERMINAL_TIMER << timer.getElapsedTime() * 1000.f << " ms\n"
+        << TERMINAL_RESET;
 
     return ShaderOk;
 }
@@ -173,7 +175,7 @@ void ShaderProgram::deactivate() const
     glUseProgram(program);
 }
 
-ShaderProgram& ShaderProgram::addUniform(ShaderUniform newUniform)
+ShaderProgram &ShaderProgram::addUniform(ShaderUniform newUniform)
 {
     uniforms.add(newUniform);
     return *this;
@@ -181,22 +183,22 @@ ShaderProgram& ShaderProgram::addUniform(ShaderUniform newUniform)
 
 ShaderProgram::~ShaderProgram()
 {
-    if(program != NO_PROGRAM)
+    if (program != NO_PROGRAM)
     {
         uint16 &cnt = useCount[program];
         cnt--;
 
-        if(!cnt)
+        if (!cnt)
             glDeleteProgram(program);
     }
 }
 
-ShaderProgram::ShaderProgram(const ShaderProgram& other)
+ShaderProgram::ShaderProgram(const ShaderProgram &other)
 {
     *(this) = other;
 }
 
-ShaderProgram& ShaderProgram::operator=(const ShaderProgram& other)
+ShaderProgram &ShaderProgram::operator=(const ShaderProgram &other)
 {
     this->program = other.program;
     this->uniforms = other.uniforms;
@@ -204,8 +206,8 @@ ShaderProgram& ShaderProgram::operator=(const ShaderProgram& other)
     this->frag = other.frag;
     this->geom = other.geom;
 
-    if(program != NO_PROGRAM)
+    if (program != NO_PROGRAM)
         useCount[program]++;
-    
+
     return *this;
 }

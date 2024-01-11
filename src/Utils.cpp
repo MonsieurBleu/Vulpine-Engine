@@ -2,18 +2,20 @@
 #include <fstream>
 #include <Utils.hpp>
 
-std::string readFile(const std::string& filePath) // Mights just use a C approach instead
+std::string readFile(const std::string &filePath) // Mights just use a C approach instead
 {
     std::string content;
     std::ifstream fileStream(filePath, std::ios::in);
 
-    if(!fileStream.is_open()) {
-        std::cerr << TERMINAL_ERROR << "Could not read file " << filePath << ". File does not exist." << TERMINAL_RESET<< std::endl;
+    if (!fileStream.is_open())
+    {
+        std::cerr << TERMINAL_ERROR << "Could not read file " << filePath << ". File does not exist." << TERMINAL_RESET << std::endl;
         return "";
     }
 
     std::string line = "";
-    while(!fileStream.eof()) {
+    while (!fileStream.eof())
+    {
         std::getline(fileStream, line);
         content.append(line + "\n");
     }
@@ -27,9 +29,10 @@ std::string getFileExtension(const std::string &fileName)
     std::string result;
 
     auto i = fileName.rbegin();
-    while(i != fileName.rend())
+    while (i != fileName.rend())
     {
-        if(*i == '.') break;
+        if (*i == '.')
+            break;
 
         result = *i + result;
 
@@ -41,40 +44,41 @@ std::string getFileExtension(const std::string &fileName)
 
 void checkHeap()
 {
-    int  heapstatus;
+#ifdef _WIN32
+    int heapstatus;
 
     // Check heap status
     heapstatus = _heapchk();
-    switch( heapstatus )
+    switch (heapstatus)
     {
     case _HEAPOK:
-        std::cout 
-        << TERMINAL_OK
-        << " OK - heap is fine\n";
+        std::cout
+            << TERMINAL_OK
+            << " OK - heap is fine\n";
         break;
     case _HEAPEMPTY:
 
-        std::cout 
-        << TERMINAL_OK
-        << " OK - heap is empty\n";
+        std::cout
+            << TERMINAL_OK
+            << " OK - heap is empty\n";
         break;
 
     case _HEAPBADBEGIN:
-        std::cout 
-        << TERMINAL_ERROR
-        <<"ERROR - bad start of heap\n";
+        std::cout
+            << TERMINAL_ERROR
+            << "ERROR - bad start of heap\n";
         break;
 
     case _HEAPBADNODE:
-        std::cout 
-        << TERMINAL_ERROR
-        << "ERROR - bad node in heap\n";
+        std::cout
+            << TERMINAL_ERROR
+            << "ERROR - bad node in heap\n";
         break;
     }
 
     std::cout << TERMINAL_RESET;
+#endif
 }
-
 
 clockmicro::time_point benchrono;
 
@@ -87,7 +91,8 @@ void endbenchrono()
 {
     duration elapsed = clockmicro::now() - benchrono;
 
-    std::cout << " in " << TERMINAL_TIMER << elapsed.count() << " ms \n" << TERMINAL_RESET;
+    std::cout << " in " << TERMINAL_TIMER << elapsed.count() << " ms \n"
+              << TERMINAL_RESET;
 }
 
 uint64_t GetTimeMs()
