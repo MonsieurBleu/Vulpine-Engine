@@ -31,4 +31,4 @@ obj/*.obj
 *.out
 *.app
 
-Engine/ressources/*
+.vscode
