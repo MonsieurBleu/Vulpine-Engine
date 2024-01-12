@@ -67,6 +67,8 @@ class Globals
         BenchTimer gpuTime = BenchTimer("GPU Time");
         LimitTimer fpsLimiter = LimitTimer();
 
+        bool enablePhysics = true;
+
         std::vector<ShaderUniform> standartShaderUniform2D() const;
         std::vector<ShaderUniform> standartShaderUniform3D() const;
 

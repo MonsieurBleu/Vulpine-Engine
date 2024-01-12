@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -Wall -Ofast -Wno-strict-aliasing
+CPPFLAGS = -Wall -g -Wno-strict-aliasing
 ifeq ($(OS),Windows_NT)
 	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lOpenAL32
 	LINKFLAGS = libglfw3.a libglfw3dll.a 

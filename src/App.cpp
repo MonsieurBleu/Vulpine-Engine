@@ -24,11 +24,13 @@
 
 #include <Helpers.hpp>
 
+#include <GameObject.hpp>
+
 #include <Fonts.hpp>
 #include <FastUI.hpp>
 
-#ifdef DEMO_MAGE_BATTLE
-    #include <demos/Mage_Battle/Team.hpp>
+#ifdef FPS_DEMO
+#include "demos/FPS/FPSController.hpp"
 #endif
 
 #include <CubeMap.hpp>
@@ -219,7 +221,9 @@ void App::mainInput(double deltatime)
         velocity.y -= camspeed;
     }
 
+#ifndef FPS_DEMO
     camera.move(velocity, deltatime);
+#endif
 
     // if(glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
     // {
@@ -630,106 +634,118 @@ void App::mainloop()
         scene.add(leaves);
 
     #else
-    
-    #ifdef DEMO_MAGE_BATTLE
-        // glLineWidth(7.0);
-
-        // ModelRef ground = newModel(uvPBR, mtGeometry[2]); 
-        // ModelRef ground = newModel(uvPBR, readOBJ("ressources/demos/Mage_Battle/arena.obj"));
-        ModelRef ground = newModel(uvPBR, readOBJ("ressources/demos/Mage_Battle/COL.obj"));
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/CE.ktx"), 0);
-        ground->setMap(Texture2D().loadFromFileKTX("ressources/material demo/ktx/NRM.ktx"), 1);
-        // ground->state.setScale(vec3(ARENA_RADIUS*2.0, 0.5, ARENA_RADIUS*2.0)).setPosition(vec3(0, -0.5, 0));
-        ground->state.setPosition(vec3(2, 0, -3)).scaleScalar(0.33);
-        scene.add(ground);
-        
- 
-        // SceneTubeLight test = newTubetLight();
-        // test->setColor(vec3(0, 0.5, 1.0))
-        //     .setIntensity(1.0)
-        //     .setRadius(3.0)
-        //     .setPos(vec3(-2, 0, -2), vec3(2, 0, 2));
-        // scene.add(test);
-        // scene.add(std::make_shared<TubeLightHelper>(test));
-
-
-        MeshMaterial MageMaterial(
-                new ShaderProgram(
-                    "shader/demos/Mage_Battle/Mage.frag", 
-                    "shader/demos/Mage_Battle/Mage.vert", 
-                    "", 
-                    globals.standartShaderUniform3D() 
-                ),
-                new ShaderProgram(
-                    "shader/demos/Mage_Battle/MageDepthOnly.frag", 
-                    "shader/demos/Mage_Battle/Mage.vert", 
-                    ""
-                    , globals.standartShaderUniform3D() 
-                )     
-                );
-        
-        Texture2D mageCE = Texture2D().loadFromFileKTX("ressources/demos/Mage_Battle/CE.ktx");
-        Texture2D mageNRM = Texture2D().loadFromFileKTX("ressources/demos/Mage_Battle/NRM.ktx");
-
-        ModelRef MageTestModelAttack = newModel(MageMaterial, readOBJ("ressources/demos/Mage_Battle/mage_attacker.obj"));
-        MageTestModelAttack->setMap(mageCE, 0).setMap(mageNRM, 1);
-        MageTestModelAttack->state.scaleScalar(0.35);
-
-        ModelRef MageTestModelHeal = newModel(MageMaterial, readOBJ("ressources/demos/Mage_Battle/mage_healer.obj"));
-        MageTestModelHeal->setMap(mageCE, 0).setMap(mageNRM, 1);
-        MageTestModelHeal->state.scaleScalar(0.25);
-
-        ModelRef MageTestModelTank = newModel(MageMaterial, readOBJ("ressources/demos/Mage_Battle/mage_tank.obj"));
-        MageTestModelTank->setMap(mageCE, 0).setMap(mageNRM, 1);
-        MageTestModelTank->state.scaleScalar(0.5);
-
-        // MageRef MageTest = SpawnNewMage(MageTestModel, vec3(0), vec3(0), DEBUG);
-        // scene.add(MageTest->getModel());
-
-        Team::healModel = MageTestModelHeal;
-        Team::attackModel = MageTestModelAttack;
-        Team::tankModel = MageTestModelTank; 
-
-        int unitsNB = 200;
-        int healNB = unitsNB*0.2f;
-        int attackNB = unitsNB*0.7f;
-        int tankNB = unitsNB*0.1f;
-
-        Team red;
-        red.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xCE, 0x20, 0x29)/vec3(255.f));
-
-        Team blue;
-        blue.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x28, 0x32, 0xC2)/vec3(255.f));
-
-        Team yellow;
-        yellow.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(ARENA_RADIUS*0.5, 0, ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0xFD, 0xD0, 0x17)/vec3(255.f));
-
-        Team green;
-        green.SpawnUnits(scene, healNB, attackNB, tankNB, vec3(-ARENA_RADIUS*0.5, 0, -ARENA_RADIUS*0.5), ARENA_RADIUS*0.4, vec3(0x3C, 0xB0, 0x43)/vec3(255.f));
-
-        Team magenta;
-        magenta.SpawnUnits(scene, healNB*3, attackNB*3, tankNB*3, vec3(0, 0, 0), ARENA_RADIUS*0.65, vec3(0xE9, 0x2C, 0x91)/vec3(255.f));
-
-        globals.unpausedTime.pause();
     #endif
-    
-    #endif
+
+#ifdef FPS_DEMO
+    RigidBody::gravity = vec3(0.0, -80, 0.0);
+    PhysicsEngine physicsEngine(&globals);
+
+    ModelRef floor = newModel(
+        uvPhong,
+        readOBJ("ressources/test/5x5x1 box.obj", false),
+        ModelState3D()
+            .setScale(vec3(32, 0.2, 32)));
+
+    Texture2D color;
+    Texture2D normal;
+
+    std::string namec = "ressources/material demo/ktx/0CE.ktx";
+    color.loadFromFileKTX(namec.c_str())
+        .setFormat(GL_RGBA)
+        .setInternalFormat(GL_SRGB8_ALPHA8)
+        .generate();
+
+    std::string namem = "ressources/material demo/ktx/0NRM.ktx";
+    normal.loadFromFileKTX(namem.c_str())
+        .setFormat(GL_RGBA)
+        .setInternalFormat(GL_SRGB8_ALPHA8)
+        .generate();
+
+    floor->setMap(color, 0);
+    floor->setMap(normal, 1);
+
+    const float texScale = 30.0f;
+    uvPhong->addUniform(ShaderUniform(&texScale, 7));
+
+    AABBCollider aabbCollider = AABBCollider(vec3(-32 * 5, -.1, -32 * 5), vec3(32 * 5, .1, 32 * 5));
+
+    RigidBodyRef FloorBody = newRigidBody(
+        vec3(0.0, -9.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &aabbCollider,
+        PhysicsMaterial(),
+        0.0,
+        false);
+
+    physicsEngine.addObject(FloorBody);
+
+    ObjectGroupRef FloorObject = newObjectGroup();
+    FloorObject->add(floor);
+
+    GameObject FloorGameObject(FloorObject, FloorBody);
+
+    scene.add(FloorObject);
+
+    SphereCollider playerCollider = SphereCollider(2.0);
+
+    RigidBodyRef playerBody = newRigidBody(
+        vec3(0.0, 8.0, 0.0),
+        vec3(0.0, 0.0, 0.0),
+        quat(0.0, 0.0, 0.0, 1.0),
+        vec3(0.0, 0.0, 0.0),
+        &playerCollider,
+        PhysicsMaterial(0.0f, 0.0f, 0.0f, 0.0f),
+        1.0,
+        true);
+
+    physicsEngine.addObject(playerBody);
+
+    FPSController player(window, playerBody, &camera, &inputs);
+
+    FPSVariables::thingsYouCanStandOn.push_back(FloorBody);
 
     FontRef font(new FontUFT8);
-    font->readCSV("ressources/fonts/Roboto/out.csv");
-    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/Roboto/out.ktx"));
+    font->readCSV("ressources/fonts/MorkDungeon/out.csv");
+    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
 
     MeshMaterial defaultFontMaterial(
         new ShaderProgram(
             "shader/2D/sprite.frag",
             "shader/2D/sprite.vert",
             "",
-            globals.standartShaderUniform3D()
-        ));
+            globals.standartShaderUniform3D()));
 
     std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
-    ssb->setFont(font);;
+    ssb->setFont(font);
+    ;
     ssb->setMaterial(defaultFontMaterial);
+
+    ssb->state.setPosition(vec3(-0.95f, .5f, .0f));
+
+    vec3 textColor = vec3(0x00, 0x00, 0x00) / vec3(256.f);
+    ssb->uniforms.add(ShaderUniform(&textColor, 32));
+
+    // scene2D.add(ssb);
+
+#endif
+
+    // FontRef font(new FontUFT8);
+    // font->readCSV("ressources/fonts/Roboto/out.csv");
+    // font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/Roboto/out.ktx"));
+
+    // MeshMaterial defaultFontMaterial(
+    //     new ShaderProgram(
+    //         "shader/2D/sprite.frag",
+    //         "shader/2D/sprite.vert",
+    //         "",
+    //         globals.standartShaderUniform3D()
+    //     ));
+
+    // std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
+    // ssb->setFont(font);;
+    // ssb->setMaterial(defaultFontMaterial);
 
     MeshMaterial defaultSUIMaterial(
         new ShaderProgram(
@@ -778,41 +794,6 @@ void App::mainloop()
     globals.fpsLimiter.activate();
     globals.fpsLimiter.freq = 144.f;
 
-    #ifdef DEMO_MAGE_BATTLE
-        FastUI_valueMenu menured(ui, {});
-        red.setMenu(menured, U"Red Team");
-        
-        FastUI_valueMenu menublue(ui, {});
-        blue.setMenu(menublue, U"Blue Team");
-
-        FastUI_valueMenu menugreen(ui, {});
-        green.setMenu(menugreen, U"Green Team");
-
-        FastUI_valueMenu menuyellow(ui, {});
-        yellow.setMenu(menuyellow, U"Yellow Team");
-
-        FastUI_valueMenu menumagenta(ui, {});
-        magenta.setMenu(menumagenta, U"Magenta Team");
-
-        menured->state.setPosition(vec3(-0.98, 0.5, 0)).scaleScalar(0.85);
-        menublue->state.setPosition(vec3(-0.98, 0.3, 0)).scaleScalar(0.85);
-        menuyellow->state.setPosition(vec3(-0.98, 0.1, 0)).scaleScalar(0.85);
-        menugreen->state.setPosition(vec3(-0.98, -0.1, 0)).scaleScalar(0.85);
-        menumagenta->state.setPosition(vec3(-0.98, -0.3, 0)).scaleScalar(0.85);
-
-        menured.batch();
-        menublue.batch();
-        menuyellow.batch();
-        menugreen.batch();
-        menumagenta.batch();
-
-        menured.setCurrentTab(0);
-        menublue.setCurrentTab(0);
-        menugreen.setCurrentTab(0);
-        menuyellow.setCurrentTab(0);
-        menumagenta.setCurrentTab(0);
-    #endif
-
     menu.batch();
     scene2D.updateAllObjects();
     uiBatch->batch();
@@ -834,6 +815,11 @@ void App::mainloop()
 
         camera.updateMouseFollow(window);
 
+#ifdef FPS_DEMO
+        physicsEngine.update(globals.appTime.getDelta());
+        player.update(globals.appTime.getDelta());
+        FloorGameObject.update(globals.appTime.getDelta());
+#else
         GLFWKeyInfo input;
         while(inputs.pull(input))
         {
@@ -868,10 +854,6 @@ void App::mainloop()
 
                 #ifdef GENERATED_SKYBOX
                     skyboxPass.getShader().reset();
-                #endif
-
-                #ifdef DEMO_MAGE_BATTLE
-                    MageMaterial->reset();
                 #endif
 
                 break;
@@ -949,6 +931,7 @@ void App::mainloop()
 
             }
         }
+#endif
 
         mainInput(globals.appTime.getDelta());
 
@@ -962,40 +945,6 @@ void App::mainloop()
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-
-        #ifdef DEMO_MAGE_BATTLE
-            if(!globals.unpausedTime.isPaused())
-            {
-                red.tick();
-                blue.tick();
-                yellow.tick();
-                green.tick();
-                magenta.tick();
-            }
-
-            menured.trackCursor();
-            menured.updateText();
-
-            menublue.trackCursor();
-            menublue.updateText();
-
-            menuyellow.trackCursor();
-            menuyellow.updateText();
-
-            menugreen.trackCursor();
-            menugreen.updateText();
-
-            menumagenta.trackCursor();
-            menumagenta.updateText();
-        #endif
-
-        // ssb->text = U"time : " + UFTconvert.from_bytes(std::to_string((int)globals.unpausedTime.getElapsedTime()));
-        // ssb->batchText();
-
-        // int id = (int)(time)%2;
-        // menu.setCurrentTab(id);
-        // std::cout << id;
 
         menu.trackCursor();
         menu.updateText();
