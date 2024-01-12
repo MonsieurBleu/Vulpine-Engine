@@ -401,12 +401,12 @@ void App::mainloop()
 
 
     ModelRef skybox(new MeshModel3D);
-    skybox->setVao(readOBJ("ressources/test/skybox/skybox.obj", false));
+    skybox->setVao(readOBJ("ressources/material demo/skybox/skybox.obj", false));
     skybox->state.scaleScalar(1E6);
 
     #ifdef CUBEMAP_SKYBOX
         CubeMap skyboxCubeMap;
-        skyboxCubeMap.loadAndGenerate("ressources/test/cubemap/");
+        skyboxCubeMap.loadAndGenerate("ressources/material demo/cubemap/");
 
         skybox->setMaterial(MeshMaterial((
             new ShaderProgram(
@@ -435,11 +435,13 @@ void App::mainloop()
             // SkyboxPass skyboxPass(skyTexture, "basic.frag");
             skyboxPass.setup();
         #else
-            skyTexture.loadFromFileKTX("ressources/test/skybox/skybox.ktx");
+            // skyTexture.loadFromFileKTX("ressources/material demo/skybox/skybox.ktx");
             // skyTexture.loadFromFile("ressources/test/skybox/table_mountain_1_4k.hdr").generate();
             // skyTexture.loadFromFileHDR("ressources/test/skybox/table_mountain_1_4k.hdr").generate();
             // skyTexture.loadFromFile("ressources/test/skybox/puresky2.png").generate();
             // skyTexture.loadFromFile("ressources/test/skybox/shudu_lake_4k.png").generate();
+            skyTexture.loadFromFileKTX("ressources/material demo/skybox/8k-puresky.ktx");
+            // skyTexture.loadFromFile("ressources/material demo/skybox/8k-cloud-puresky.png");
         #endif
 
         skybox->setMap(skyTexture, 0);

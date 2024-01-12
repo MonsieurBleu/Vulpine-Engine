@@ -169,7 +169,7 @@ void main()
     float aspectRatio = float(iResolution.y)/float(iResolution.x);
 
     // Pixel art effect 
-        // float pixelSize = 0.0075;
+        // float pixelSize = 0.0035; //0.0075
 
         // /* Additionnal depth based resolution change */
         // float d = texture(bDepth, uv).r*2.0;
@@ -260,4 +260,5 @@ void main()
 
     // _fragColor.rgb = vec3(1.0 - AO.r);
     // _fragColor.rgb = 1.0 - AO.rgb;
+
 }
