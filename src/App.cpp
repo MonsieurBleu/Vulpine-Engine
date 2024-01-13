@@ -29,10 +29,6 @@
 #include <Fonts.hpp>
 #include <FastUI.hpp>
 
-#ifdef FPS_DEMO
-#include "demos/FPS/FPSController.hpp"
-#endif
-
 #include <CubeMap.hpp>
 
 #include <sstream>
@@ -152,24 +148,39 @@ App::App(GLFWwindow* window) :
     
     glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
     {
+        static bool lastCameraFollow = !globals.currentCamera->getMouseFollow();
+        bool cameraFollow = globals.currentCamera->getMouseFollow();
+
+        if(!lastCameraFollow && cameraFollow)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else if(lastCameraFollow && !cameraFollow)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+
+        lastCameraFollow = cameraFollow;
+
         if(globals.currentCamera->getMouseFollow())
         {
-            vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
-            vec2 sensibility(50.0);
-            vec2 dir = sensibility * (vec2(dx, dy)-center)/center;
+            /* TODO : replace this by a global function call, so that the camera 
+                      controller can be easly changed.
+            */
+            {
+                vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
+                vec2 sensibility(50.0);
+                vec2 dir = sensibility * (vec2(dx, dy)-center)/center;
 
-            float yaw = radians(-dir.x);
-            float pitch = radians(-dir.y);
+                float yaw = radians(-dir.x);
+                float pitch = radians(-dir.y);
 
-            vec3 up = vec3(0,1,0);
-            vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
-            front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
-            front = normalize(front);
+                vec3 up = vec3(0,1,0);
+                vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
+                front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
+                front = normalize(front);
 
-            front.y = clamp(front.y, -0.9f, 0.9f);
-            globals.currentCamera->setDirection(front);
+                front.y = clamp(front.y, -0.9f, 0.9f);
+                globals.currentCamera->setDirection(front);
 
-            glfwSetCursorPos(window, center.x, center.y);
+                glfwSetCursorPos(window, center.x, center.y);
+            }
         }
     });
     
@@ -179,6 +190,12 @@ App::App(GLFWwindow* window) :
         // globals.textInputString.str().push_back(codepoint);
         globals.textInputString.push_back(codepoint);
     });
+    
+    /// CENTER WINDOW
+    glfwSetWindowPos(
+        window, 
+        (globals.screenResolution().x - globals.windowWidth())/2, 
+        (globals.screenResolution().y - globals.windowHeight())/2);
 }
 
 void App::mainInput(double deltatime)
@@ -221,10 +238,6 @@ void App::mainInput(double deltatime)
         velocity.y -= camspeed;
     }
 
-#ifndef FPS_DEMO
-    camera.move(velocity, deltatime);
-#endif
-
     // if(glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
     // {
     //     camera.add_FOV(-0.1);
@@ -239,18 +252,21 @@ void App::mainInput(double deltatime)
     // {
     //     // glBufferSubData(GL_SHADER_STORAGE_BUFFER, offset, size, data); //to update partially
     // }
+
+    camera.move(velocity, deltatime);
 }
 
 void App::mainloopStartRoutine()
 {
     globals.fpsLimiter.start();
     globals.appTime.start();
-    globals.unpausedTime.start();
+    globals.simulationTime.start();
     globals.cpuTime.start();
 
     globals._mouseLeftClick = false;
 
     glfwPollEvents();
+    globals._windowHasFocus = glfwGetWindowAttrib(window, GLFW_FOCUSED);
 }
 
 void App::mainloopPreRenderRoutine()
@@ -268,17 +284,11 @@ void App::mainloopEndRoutine()
 
     globals.fpsLimiter.waitForEnd();
     globals.appTime.end();
-    globals.unpausedTime.end();
+    globals.simulationTime.end();
 }
 
 void App::mainloop()
 {   
-    /// CENTER WINDOW
-    glfwSetWindowPos(
-        window, 
-        (globals.screenResolution().x - globals.windowWidth())/2, 
-        (globals.screenResolution().y - globals.windowHeight())/2);
-
     /// SETTING UP THE CAMERA 
     camera.init(radians(70.0f), globals.windowWidth(), globals.windowHeight(), 0.1f, 1E4f);
     // camera.init(radians(50.0f), 1920*0.05, 1080*0.05, 0.1f, 1000.0f);
@@ -636,116 +646,21 @@ void App::mainloop()
     #else
     #endif
 
-#ifdef FPS_DEMO
-    RigidBody::gravity = vec3(0.0, -80, 0.0);
-    PhysicsEngine physicsEngine(&globals);
-
-    ModelRef floor = newModel(
-        uvPhong,
-        readOBJ("ressources/test/5x5x1 box.obj", false),
-        ModelState3D()
-            .setScale(vec3(32, 0.2, 32)));
-
-    Texture2D color;
-    Texture2D normal;
-
-    std::string namec = "ressources/material demo/ktx/0CE.ktx";
-    color.loadFromFileKTX(namec.c_str())
-        .setFormat(GL_RGBA)
-        .setInternalFormat(GL_SRGB8_ALPHA8)
-        .generate();
-
-    std::string namem = "ressources/material demo/ktx/0NRM.ktx";
-    normal.loadFromFileKTX(namem.c_str())
-        .setFormat(GL_RGBA)
-        .setInternalFormat(GL_SRGB8_ALPHA8)
-        .generate();
-
-    floor->setMap(color, 0);
-    floor->setMap(normal, 1);
-
-    const float texScale = 30.0f;
-    uvPhong->addUniform(ShaderUniform(&texScale, 7));
-
-    AABBCollider aabbCollider = AABBCollider(vec3(-32 * 5, -.1, -32 * 5), vec3(32 * 5, .1, 32 * 5));
-
-    RigidBodyRef FloorBody = newRigidBody(
-        vec3(0.0, -9.0, 0.0),
-        vec3(0.0, 0.0, 0.0),
-        quat(0.0, 0.0, 0.0, 1.0),
-        vec3(0.0, 0.0, 0.0),
-        &aabbCollider,
-        PhysicsMaterial(),
-        0.0,
-        false);
-
-    physicsEngine.addObject(FloorBody);
-
-    ObjectGroupRef FloorObject = newObjectGroup();
-    FloorObject->add(floor);
-
-    GameObject FloorGameObject(FloorObject, FloorBody);
-
-    scene.add(FloorObject);
-
-    SphereCollider playerCollider = SphereCollider(2.0);
-
-    RigidBodyRef playerBody = newRigidBody(
-        vec3(0.0, 8.0, 0.0),
-        vec3(0.0, 0.0, 0.0),
-        quat(0.0, 0.0, 0.0, 1.0),
-        vec3(0.0, 0.0, 0.0),
-        &playerCollider,
-        PhysicsMaterial(0.0f, 0.0f, 0.0f, 0.0f),
-        1.0,
-        true);
-
-    physicsEngine.addObject(playerBody);
-
-    FPSController player(window, playerBody, &camera, &inputs);
-
-    FPSVariables::thingsYouCanStandOn.push_back(FloorBody);
-
     FontRef font(new FontUFT8);
-    font->readCSV("ressources/fonts/MorkDungeon/out.csv");
-    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/MorkDungeon/out.ktx"));
+    font->readCSV("ressources/fonts/Roboto/out.csv");
+    font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/Roboto/out.ktx"));
 
     MeshMaterial defaultFontMaterial(
         new ShaderProgram(
             "shader/2D/sprite.frag",
             "shader/2D/sprite.vert",
             "",
-            globals.standartShaderUniform3D()));
+            globals.standartShaderUniform3D()
+        ));
 
     std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
-    ssb->setFont(font);
-    ;
+    ssb->setFont(font);;
     ssb->setMaterial(defaultFontMaterial);
-
-    ssb->state.setPosition(vec3(-0.95f, .5f, .0f));
-
-    vec3 textColor = vec3(0x00, 0x00, 0x00) / vec3(256.f);
-    ssb->uniforms.add(ShaderUniform(&textColor, 32));
-
-    // scene2D.add(ssb);
-
-#endif
-
-    // FontRef font(new FontUFT8);
-    // font->readCSV("ressources/fonts/Roboto/out.csv");
-    // font->setAtlas(Texture2D().loadFromFileKTX("ressources/fonts/Roboto/out.ktx"));
-
-    // MeshMaterial defaultFontMaterial(
-    //     new ShaderProgram(
-    //         "shader/2D/sprite.frag",
-    //         "shader/2D/sprite.vert",
-    //         "",
-    //         globals.standartShaderUniform3D()
-    //     ));
-
-    // std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
-    // ssb->setFont(font);;
-    // ssb->setMaterial(defaultFontMaterial);
 
     MeshMaterial defaultSUIMaterial(
         new ShaderProgram(
@@ -768,7 +683,7 @@ void App::mainloop()
     FastUI_valueMenu menu(ui, {
         // {FastUI_menuTitle(ui, U"Infos"), FastUI_valueTab(ui, {
         //     FastUI_value(globals.appTime.getElapsedTimeAddr(), U"App Time\t", U" s"),
-        //     FastUI_value(globals.unpausedTime.getElapsedTimeAddr(), U"Simulation Time\t", U" s"),
+        //     FastUI_value(globals.simulationTime.getElapsedTimeAddr(), U"Simulation Time\t", U" s"),
         // })}, 
         // {FastUI_menuTitle(ui, U"Titre 2"), FastUI_valueTab(ui, {
         //     FastUI_value(&test2, U"value4\t", U" ms "),
@@ -786,7 +701,7 @@ void App::mainloop()
     lumiereAppoint->setMenu(menu, U"Lum.Appoint");
 
     globals.appTime.setMenuConst(menu);
-    // globals.unpausedTime.setMenu(menu);
+    // globals.simulationTime.setMenu(menu);
     globals.cpuTime.setMenu(menu);
     globals.gpuTime.setMenu(menu);
     globals.fpsLimiter.setMenu(menu);
@@ -815,11 +730,6 @@ void App::mainloop()
 
         camera.updateMouseFollow(window);
 
-#ifdef FPS_DEMO
-        physicsEngine.update(globals.appTime.getDelta());
-        player.update(globals.appTime.getDelta());
-        FloorGameObject.update(globals.appTime.getDelta());
-#else
         GLFWKeyInfo input;
         while(inputs.pull(input))
         {
@@ -900,7 +810,7 @@ void App::mainloop()
                 break;
             
             case GLFW_KEY_TAB :
-                globals.unpausedTime.toggle();
+                globals.simulationTime.toggle();
                 break;
 
             case GLFW_MOUSE_BUTTON_LEFT :
@@ -931,7 +841,6 @@ void App::mainloop()
 
             }
         }
-#endif
 
         mainInput(globals.appTime.getDelta());
 

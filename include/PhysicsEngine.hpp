@@ -50,11 +50,10 @@ class PhysicsEngine
 {
 private:
     std::vector<RigidBodyRef> bodies;
-    Globals *globals;
     std::set<Collision> collisionEvents;
 
 public:
-    PhysicsEngine(Globals *globals);
+    PhysicsEngine();
     ~PhysicsEngine();
 
     void addObject(RigidBodyRef body);

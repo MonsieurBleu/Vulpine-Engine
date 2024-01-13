@@ -4,12 +4,20 @@ SDIR=out
 SOURCES := $(wildcard $(SDIR)/*.png)
 IMG := $(SOURCES:$(SDIR)/%.png=$(ODIR)/%.ktx)
 
-install : $(IMG)
+KTX_FLAGS := --genmipmap 
 
-reinstall : clean install
+default : $(IMG)
 
 out_ktx/%CE.ktx : out/%CE.png
-	toktx $@ $< 
+out_ktx/CE.ktx : out/CE.png
+	toktx $(KTX_FLAGS) $@ $< 
 
 out_ktx/%NRM.ktx : out/%NRM.png
-	toktx --assign_oetf linear $@ $< 
+out_ktx/NRM.ktx : out/NRM.png
+	toktx --assign_oetf linear $(KTX_FLAGS) $@ $< 
+
+redo : clean install
+
+install : 
+	g++ -Wall -O3 convertor.cpp -o convertor.exe
+

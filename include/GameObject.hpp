@@ -20,4 +20,7 @@ public:
     ~GameObject();
 
     void update(float deltaTime);
+
+    ObjectGroupRef& getGroup(){return objectGroup;};
+    RigidBodyRef& getBody(){return rigidBody;};
 };

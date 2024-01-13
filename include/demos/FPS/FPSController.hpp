@@ -43,14 +43,16 @@ class FPSController
 {
 private:
     RigidBodyRef body;
-    Camera *camera;
     InputBuffer *inputs;
+    bool doJump;
 
 public:
     FPSController(GLFWwindow *window, RigidBodyRef body, Camera *camera, InputBuffer *inputs);
     ~FPSController();
 
     void update(float deltaTime);
+
+    void doInputs(GLFWKeyInfo& input);
 
     void move(float forward, float side, float deltaTime);
     void accelerate(vec3 wishDirection, float wishSpeed, float accel, float deltaTime);

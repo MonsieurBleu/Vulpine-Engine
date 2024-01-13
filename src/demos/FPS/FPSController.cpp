@@ -18,88 +18,87 @@ bool FPSVariables::lockJump = false;
 
 std::vector<RigidBodyRef> FPSVariables::thingsYouCanStandOn;
 
-FPSController::FPSController(GLFWwindow *window, RigidBodyRef body, Camera *camera, InputBuffer *inputs) : body(body), camera(camera), inputs(inputs)
+FPSController::FPSController(GLFWwindow *window, RigidBodyRef body, Camera *camera, InputBuffer *inputs) : body(body), inputs(inputs)
 {
-    glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
-                       {
-        GLFWKeyInfo input;
-        input.window = window;
-        input.key = key;
-        input.scancode = scancode;
-        input.action = action;
-        input.mods = mods;
+    // glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
+    //                    {
+    //     GLFWKeyInfo input;
+    //     input.window = window;
+    //     input.key = key;
+    //     input.scancode = scancode;
+    //     input.action = action;
+    //     input.mods = mods;
 
-        giveCallbackToApp(input); });
+    //     giveCallbackToApp(input); });
 
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
-    glfwSetCursorPosCallback(window, [](GLFWwindow *window, double xpos, double ypos)
-                             {  FPSVariables::cursorXNew = xpos;
-                                FPSVariables::cursorYNew = ypos; });
+    // glfwSetCursorPosCallback(window, [](GLFWwindow *window, double xpos, double ypos)
+    //                          {  FPSVariables::cursorXNew = xpos;
+    //                             FPSVariables::cursorYNew = ypos; });
 
-    glfwSetCursorPos(window, 0, 0);
+    // glfwSetCursorPos(window, 0, 0);
 }
 
 FPSController::~FPSController()
 {
 }
 
+void FPSController::doInputs(GLFWKeyInfo& input)
+{
+    doJump = false;
+    if (input.action == GLFW_PRESS)
+    {
+        switch (input.key)
+        {
+        case GLFW_KEY_W:
+            FPSVariables::W = true;
+            break;
+        case GLFW_KEY_S:
+            FPSVariables::S = true;
+            break;
+        case GLFW_KEY_A:
+            FPSVariables::A = true;
+            break;
+        case GLFW_KEY_D:
+            FPSVariables::D = true;
+            break;
+        case GLFW_KEY_SPACE:
+            doJump = true;
+            break;
+        default:
+            // std::cout << "Key: " << input.key << "\n";
+            break;
+        }
+    }
+    else if (input.action == GLFW_RELEASE)
+    {
+        switch (input.key)
+        {
+        case GLFW_KEY_W:
+            FPSVariables::W = false;
+            break;
+        case GLFW_KEY_S:
+            FPSVariables::S = false;
+            break;
+        case GLFW_KEY_A:
+            FPSVariables::A = false;
+            break;
+        case GLFW_KEY_D:
+            FPSVariables::D = false;
+            break;
+
+        default:
+            // std::cout << "Key: " << input.key << "\n";
+            break;
+        }
+    }
+}
+
 void FPSController::update(float deltaTime)
 {
     float forward = 0.0f;
     float side = 0.0f;
-    bool jump = false;
-
-    GLFWKeyInfo input;
-    while (inputs->pull(input))
-    {
-        if (input.action == GLFW_PRESS)
-        {
-            switch (input.key)
-            {
-            case GLFW_KEY_W:
-                FPSVariables::W = true;
-                break;
-            case GLFW_KEY_S:
-                FPSVariables::S = true;
-                break;
-            case GLFW_KEY_A:
-                FPSVariables::A = true;
-                break;
-            case GLFW_KEY_D:
-                FPSVariables::D = true;
-                break;
-            case GLFW_KEY_SPACE:
-                jump = true;
-                break;
-            default:
-                // std::cout << "Key: " << input.key << "\n";
-                break;
-            }
-        }
-        else if (input.action == GLFW_RELEASE)
-        {
-            switch (input.key)
-            {
-            case GLFW_KEY_W:
-                FPSVariables::W = false;
-                break;
-            case GLFW_KEY_S:
-                FPSVariables::S = false;
-                break;
-            case GLFW_KEY_A:
-                FPSVariables::A = false;
-                break;
-            case GLFW_KEY_D:
-                FPSVariables::D = false;
-                break;
-
-            default:
-                // std::cout << "Key: " << input.key << "\n";
-                break;
-            }
-        }
-    }
 
     if (FPSVariables::W)
     {
@@ -134,7 +133,7 @@ void FPSController::update(float deltaTime)
 
     this->friction(deltaTime);
 
-    if (jump && !FPSVariables::lockJump)
+    if (doJump && !FPSVariables::lockJump)
     {
         this->jump(deltaTime);
     }
@@ -148,9 +147,9 @@ void FPSController::update(float deltaTime)
     float speed = length(vec2(body->getVelocity().x, body->getVelocity().z));
     if (speed > 0)
         pos.y += bob;
-    camera->setPosition(pos);
+    globals.currentCamera->setPosition(pos);
 
-    std::cout << "\r" << speed << " m/s   " << std::flush;
+    // std::cout << "\r" << speed << " m/s   " << std::flush;
     // std::cout << "\r" << body->getVelocity().x << ", " << body->getVelocity().y << ", " << body->getVelocity().z << " m/s   " << std::flush;
 
     mouseLook();
@@ -165,7 +164,7 @@ void FPSController::move(float fmove, float smove, float deltaTime)
 {
     vec3 forward, right;
 
-    const vec3 camDir = camera->getDirection();
+    const vec3 camDir = globals.currentCamera->getDirection();
     right = normalize(cross(camDir, vec3(0.0f, 1.0f, 0.0f)));
     forward = normalize(cross(vec3(0.0f, 1.0f, 0.0f), right));
 
@@ -306,6 +305,7 @@ void FPSController::jump(float deltaTime)
 
 void FPSController::mouseLook()
 {
+    /*
     float xoffset = FPSVariables::cursorXOld - FPSVariables::cursorXNew;
     float yoffset = FPSVariables::cursorYOld - FPSVariables::cursorYNew;
 
@@ -317,18 +317,19 @@ void FPSController::mouseLook()
     xoffset *= sensitivity;
     yoffset *= sensitivity;
 
-    const vec3 camDir = camera->getDirection();
+    const vec3 camDir = globals.currentCamera->getDirection();
     const vec3 camRight = normalize(cross(camDir, vec3(0.0f, 1.0f, 0.0f)));
     // const vec3 camUp = normalize(cross(camRight, camDir));
 
     quat pitchQuat = angleAxis(yoffset, camRight);
     quat yawQuat = angleAxis(xoffset, vec3(0.0f, 1.0f, 0.0f));
 
-    quat newRotation = yawQuat * pitchQuat * camera->getDirection();
+    quat newRotation = yawQuat * pitchQuat * globals.currentCamera->getDirection();
 
     // print camera->getDirection()
     // std::cout << "Camera direction: " << camera->getDirection().x << ", " << camera->getDirection().y << ", " << camera->getDirection().z << "\n";
     // std::cout << "camera position: " << camera->getPosition().x << ", " << camera->getPosition().y << ", " << camera->getPosition().z << "\n";
     vec3 rot = eulerAngles(newRotation);
-    camera->setDirection(rot);
+    globals.currentCamera->setDirection(rot);
+    */
 }

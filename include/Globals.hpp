@@ -40,6 +40,8 @@ class Globals
 
         uint _drawCalls3D = 0;
 
+        int _windowHasFocus = false;
+
     public :
 
         /**
@@ -62,7 +64,7 @@ class Globals
         const glm::vec2 mousePosition() const;
 
         BenchTimer appTime = BenchTimer("App Time");
-        BenchTimer unpausedTime = BenchTimer("Simulation Time");
+        BenchTimer simulationTime = BenchTimer("Simulation Time");
         BenchTimer cpuTime = BenchTimer("CPU Time");
         BenchTimer gpuTime = BenchTimer("GPU Time");
         LimitTimer fpsLimiter = LimitTimer();
@@ -121,6 +123,7 @@ class Globals
          */
         bool getTextInputs(void* user, std::u32string& buff);
 
+        int windowHasFocus();
 };
 
 extern Globals globals;

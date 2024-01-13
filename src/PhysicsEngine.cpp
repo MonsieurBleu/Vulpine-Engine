@@ -6,7 +6,7 @@
 int RigidBody::IDCounter = 0;
 vec3 RigidBody::gravity = vec3(0.f, -9.81f, 0.f);
 
-PhysicsEngine::PhysicsEngine(Globals *globals) : globals(globals)
+PhysicsEngine::PhysicsEngine()
 {
 }
 
@@ -33,7 +33,7 @@ void PhysicsEngine::removeObject(RigidBodyRef body)
 
 void PhysicsEngine::update(float deltaTime)
 {
-    if (globals->enablePhysics)
+    if (globals.enablePhysics)
     {
         for (size_t i = 0; i < bodies.size(); i++)
         {
