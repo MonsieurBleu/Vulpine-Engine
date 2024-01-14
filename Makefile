@@ -1,7 +1,7 @@
 CC = g++
 CPPFLAGS = -Wall -Ofast -Wno-strict-aliasing
 ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lOpenAL32
+	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lsoft_oal
 	LINKFLAGS = libglfw3.a libglfw3dll.a 
 else
 	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal

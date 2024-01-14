@@ -53,6 +53,64 @@ void App::init()
 
 bool App::userInput(GLFWKeyInfo input){return false;};
 
+bool App::baseInput(GLFWKeyInfo input)
+{
+    bool used = false;
+
+    if(input.action == GLFW_RELEASE)
+    switch (input.key)
+    {
+        case GLFW_MOUSE_BUTTON_LEFT:
+            globals._mouseLeftClickDown = false;
+            used = true;
+            break;
+        
+        default: break;
+    }
+
+    if(input.action == GLFW_PRESS)
+    switch (input.key)
+    {
+        case GLFW_MOUSE_BUTTON_LEFT :
+            globals._mouseLeftClick = true;
+            globals._mouseLeftClickDown = true;
+            used = true;
+            break;
+        
+        case GLFW_KEY_V :
+            if(input.mods&GLFW_MOD_CONTROL)
+            {
+                if(globals.isTextInputsActive())
+                {
+                    globals.textInputString += UFTconvert.from_bytes(glfwGetClipboardString(window));
+                    used = true;
+                }
+            }
+            break;
+        
+        case GLFW_KEY_ENTER :
+            if(globals.isTextInputsActive())
+            {
+                globals.textInputString.push_back(U'\n');
+                used = true;
+            }
+            break;
+
+        case GLFW_KEY_DELETE :
+        case GLFW_KEY_BACKSPACE :
+            if(globals.isTextInputsActive() && !globals.textInputString.empty())
+            {
+                globals.textInputString.pop_back();
+                used = true;
+            }
+            break;
+        
+        default: break;
+    }
+
+    return used;
+}
+
 App::App(GLFWwindow* window) : 
     window(window), 
     renderBuffer(globals.renderSizeAddr()),
@@ -205,10 +263,6 @@ App::App(GLFWwindow* window) :
 
 void App::mainInput(double deltatime)
 {
-    double mpx, mpy;
-    glfwGetCursorPos(window, &mpx, &mpy);
-    globals._mousePosition = vec2(mpx, mpy);
-
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         state = quit;
     
@@ -272,6 +326,10 @@ void App::mainloopStartRoutine()
 
     glfwPollEvents();
     globals._windowHasFocus = glfwGetWindowAttrib(window, GLFW_FOCUSED);
+
+    double mpx, mpy;
+    glfwGetCursorPos(window, &mpx, &mpy);
+    globals._mousePosition = vec2(mpx, mpy);
 }
 
 void App::mainloopPreRenderRoutine()

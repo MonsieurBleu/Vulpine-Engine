@@ -43,6 +43,7 @@ class App
         vec3 ambientLight;
 
         virtual bool userInput(GLFWKeyInfo input);
+        bool baseInput(GLFWKeyInfo input);
 
     public :
         App(GLFWwindow* window);

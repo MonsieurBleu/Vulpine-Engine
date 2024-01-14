@@ -592,7 +592,7 @@ void LimitTimer::setMenu(FastUI_valueMenu &menu)
 {
     menu.push_back(
         {FastUI_menuTitle(menu.ui, U"FPS Limiter"), FastUI_valueTab(menu.ui, {
-            FastUI_value(&freq, U"Frequence\t", U"\ffps"), 
+            FastUI_value(&freq, U"Frequency\t", U"\ffps"), 
             FastUI_value(&activated, U"Activated\t", U"")
         })}
     );
