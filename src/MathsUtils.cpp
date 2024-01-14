@@ -1,4 +1,5 @@
 #include <MathsUtils.hpp>
+#include <Constants.hpp>
 
 vec2 getPhiTheta(vec3 v)
 {
@@ -66,4 +67,8 @@ float getSaturation(vec3 c)
 float getValue(vec3 c)
 {
     return mix(c.b, c.g, step(c.b, c.g));
+}
+
+float gold_noise3(vec3 coordinate, float seed){
+    return 0.5 - fract(tan(distance(coordinate*vec3(seed+PHI*00000.1), vec3(PHI*00000.1, PI*00000.1, E)))*SQR2*10000.0);
 }

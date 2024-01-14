@@ -21,5 +21,6 @@ float getSaturation(vec3 c);
 
 float getValue(vec3 c);
 
+float gold_noise3(vec3 coordinate, float seed);
 
 #endif

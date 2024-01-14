@@ -8,7 +8,7 @@ float mRoughness2;
 float mMetallic;
 float mEmmisive;
 
-vec3 ambientLight = vec3(0.2);
+// vec3 ambientLight = vec3(0.2);
 vec3 normalComposed;
 vec3 viewDir;
 vec3 color;

@@ -95,7 +95,8 @@ App::App(GLFWwindow* window) :
         ShaderUniform(camera.getViewMatrixAddr(),             3),
         ShaderUniform(camera.getProjectionMatrixAddr(),       4),
         ShaderUniform(camera.getPositionAddr(),               5),
-        ShaderUniform(camera.getDirectionAddr(),              6)
+        ShaderUniform(camera.getDirectionAddr(),              6),
+        ShaderUniform(&ambientLight,                         15),
     };
 
     globals._fullscreenQuad.setVao(
@@ -196,6 +197,10 @@ App::App(GLFWwindow* window) :
         window, 
         (globals.screenResolution().x - globals.windowWidth())/2, 
         (globals.screenResolution().y - globals.windowHeight())/2);
+
+    #ifdef INVERTED_Z
+    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+    #endif
 }
 
 void App::mainInput(double deltatime)
@@ -271,7 +276,7 @@ void App::mainloopStartRoutine()
 
 void App::mainloopPreRenderRoutine()
 {
-    camera.updateProjectionViewMatrix();
+    globals.currentCamera->updateProjectionViewMatrix();
 }
 
 void App::mainloopEndRoutine()
@@ -315,10 +320,6 @@ void App::mainloop()
         globals.standartShaderUniform2D());
     
     finalProcessingStage.addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10));
-
-    #ifdef INVERTED_Z
-    glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
-    #endif
 
     /* 
     ScenePointLight redLight = newPointLight(
@@ -659,7 +660,7 @@ void App::mainloop()
         ));
 
     std::shared_ptr<SingleStringBatch> ssb(new SingleStringBatch);
-    ssb->setFont(font);;
+    ssb->setFont(font);
     ssb->setMaterial(defaultFontMaterial);
 
     MeshMaterial defaultSUIMaterial(
