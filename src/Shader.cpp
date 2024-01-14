@@ -172,7 +172,7 @@ void ShaderProgram::activate() const
 
 void ShaderProgram::deactivate() const
 {
-    glUseProgram(program);
+    glUseProgram(0);
 }
 
 ShaderProgram &ShaderProgram::addUniform(ShaderUniform newUniform)

@@ -40,6 +40,8 @@ class App
         void mainloopPreRenderRoutine();
         void mainloopEndRoutine();
 
+        vec3 ambientLight;
+
         virtual bool userInput(GLFWKeyInfo input);
 
     public :

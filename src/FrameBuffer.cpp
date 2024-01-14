@@ -152,7 +152,7 @@ void RenderBuffer::bindTextures()
 
 void RenderBuffer::activate()
 {
-    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_DEPTH_TEST);
     glEnable(GL_FRAMEBUFFER_SRGB);
 
     glEnable(GL_CULL_FACE);
