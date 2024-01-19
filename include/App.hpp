@@ -12,14 +12,15 @@
 enum AppState
 {
     quit,
-    run // default state for tests
+    init,
+    run 
 };
 
 class App
 {
     protected :
 
-        AppState state = run;
+        AppState state = AppState::init;
         GLFWwindow* window;
         uint64_t timestart;
 

@@ -182,19 +182,19 @@ VertexAttributeGroup &VertexAttributeGroup::generate()
     if (generated)
         return *this;
 
-    forEach([](int i, VertexAttribute &attribute)
-            {
+    forEach([](int i, VertexAttribute &attribute){
         attribute.genBuffer();
-        attribute.sendAllToGPU(); });
+        attribute.sendAllToGPU();
+    });
 
     glGenVertexArrays(1, &arrayHandle);
     glBindVertexArray(arrayHandle);
 
-    forEach([](int i, VertexAttribute &attribute)
-            {
+    forEach([](int i, VertexAttribute &attribute){
         glEnableVertexAttribArray(i);
         attribute.setFormat();
-        glVertexAttribBinding(i, attribute.getLocation()); });
+        glVertexAttribBinding(i, attribute.getLocation());
+    });
 
     genAABB();
 

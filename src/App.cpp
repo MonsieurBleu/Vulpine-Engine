@@ -40,6 +40,7 @@
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
+std::mutex physicsMutex;
 InputBuffer inputs;
 
 Globals globals;

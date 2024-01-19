@@ -143,11 +143,15 @@ void FPSController::update(float deltaTime)
     vec3 pos = body->getPosition();
 
     // head bobbing
-    float bob = sin(glfwGetTime() * 10.0f) * 0.1f;
+    float bob = sin(globals.simulationTime.getElapsedTime() * 10.0f) * 0.1f;
     float speed = length(vec2(body->getVelocity().x, body->getVelocity().z));
     if (speed > 0)
         pos.y += bob;
-    globals.currentCamera->setPosition(pos);
+
+    float diffBias = 0.0001;
+    vec3 diff = globals.currentCamera->getPosition()-pos;
+    if(dot(diff, diff) > diffBias)
+        globals.currentCamera->setPosition(pos);
 
     // std::cout << "\r" << speed << " m/s   " << std::flush;
     // std::cout << "\r" << body->getVelocity().x << ", " << body->getVelocity().y << ", " << body->getVelocity().z << " m/s   " << std::flush;

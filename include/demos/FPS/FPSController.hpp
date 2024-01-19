@@ -17,9 +17,9 @@ struct FPSVariables
     static constexpr float jumpForce = 60.0f;
     static constexpr float sensitivity = 0.01f;
 
-    static constexpr float forwardSpeed = 20.0f;
-    static constexpr float sideSpeed = 35.0f;
-    static constexpr float backSpeed = 20.0f;
+    static constexpr float forwardSpeed = 15.0f;    // 20
+    static constexpr float sideSpeed = 15.0f;       // 35
+    static constexpr float backSpeed = 10.0f;       // 20
 
     static float cursorXOld;
     static float cursorYOld;

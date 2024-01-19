@@ -462,7 +462,7 @@ void FastUI_valueMenu::batch()
         // );
 
         e.tab.batch();
-        e.tab->state.scaleScalar(0.85);
+        e.tab->state.scaleScalar(1.0);
         e.tab->state.setPosition(vec3(0, -titleOffset.y, 0));
         e.tab->state.hide = ModelStateHideStatus::HIDE;
         g->add(dynamic_cast<ObjectGroupRef&>(e.tab));
@@ -559,7 +559,7 @@ void BenchTimer::setMenu(FastUI_valueMenu &menu)
 
     menu.push_back(
         // {FastUI_menuTitle(menu.ui, UFTconvert.from_bytes(name)), FastUI_valueTab(menu.ui, {
-        {FastUI_menuTitle(menu.ui, U"[BenchTimer] "+name32), FastUI_valueTab(menu.ui, {
+        {FastUI_menuTitle(menu.ui, name32), FastUI_valueTab(menu.ui, {
             FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
             FastUI_value((const float*)&avgTotal,   U"total avg\t", U" ms"),
             FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),
@@ -576,7 +576,7 @@ void BenchTimer::setMenuConst(FastUI_valueMenu &menu) const
     std::u32string name32 = name.size() ? UFTconvert.from_bytes(name) : U"untitled";
 
     menu.push_back(
-        {FastUI_menuTitle(menu.ui, U"[BenchTimer] "+name32), FastUI_valueTab(menu.ui, {
+        {FastUI_menuTitle(menu.ui, U"[const] "+name32), FastUI_valueTab(menu.ui, {
             FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
             FastUI_value((const float*)&avgTotal,   U"total avg\t", U" ms"),
             FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),

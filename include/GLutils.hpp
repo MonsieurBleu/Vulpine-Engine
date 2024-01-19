@@ -77,6 +77,42 @@ std::ostream& operator<<(std::ostream& os, GLenum_t e)
     return os;
 }
 
+void printGLerror(
+                    GLenum _source, 
+                    GLenum _type,
+                    GLuint id,
+                    GLenum _severity,
+                    GLsizei length,
+                    const GLchar* message)
+{
+    GLenum_t severity(_severity);
+    GLenum_t type(_type);
+    GLenum_t source(_source);
+
+    const std::string *color = &TERMINAL_RESET;
+
+    if(type.val == GL_DEBUG_TYPE_ERROR)
+    {
+        color = &TERMINAL_ERROR;
+    }
+    else if(severity.val == GL_DEBUG_SEVERITY_NOTIFICATION)
+    {
+        color = &TERMINAL_NOTIF;
+    }
+    else
+    {
+        color = &TERMINAL_WARNING;
+    }
+
+    std::cerr
+    << TERMINAL_NOTIF << "\nGL CALLBACK "       << *color << "[" << type << "]"
+    << TERMINAL_RESET << "\n\tid       = "      << *color << id
+    << TERMINAL_RESET << "\n\tfrom     = "      << *color << source
+    << TERMINAL_RESET << "\n\tseverity = "      << *color << severity
+    << TERMINAL_RESET << "\n\tmessage  = "      << *color << message
+    << "\n\n" << TERMINAL_RESET;
+}
+
 void GLAPIENTRY MessageCallback(GLenum _source,
                                 GLenum _type,
                                 GLuint id,
@@ -102,35 +138,12 @@ void GLAPIENTRY MessageCallback(GLenum _source,
     historic.push_front((errorHistoric){id, now});
 #endif
 
-    const std::string *color = &TERMINAL_RESET;
-    GLenum_t severity(_severity);
-    GLenum_t type(_type);
-    GLenum_t source(_source);
-
-    if(type.val == GL_DEBUG_TYPE_ERROR)
-    {
-        color = &TERMINAL_ERROR;
-    }
-    else if(severity.val == GL_DEBUG_SEVERITY_NOTIFICATION)
-    {
-    #ifdef SHOW_GL_NOTIF
-        color = &TERMINAL_NOTIF;
-    #else
+    #ifndef SHOW_GL_NOTIF
+    if(_severity == GL_DEBUG_SEVERITY_NOTIFICATION)
         return;
     #endif
-    }
-    else
-    {
-        color = &TERMINAL_WARNING;
-    }
 
-    std::cerr
-    << TERMINAL_NOTIF << "\nGL CALLBACK "       << *color << "[" << type << "]"
-    << TERMINAL_RESET << "\n\tid       = "      << *color << id
-    << TERMINAL_RESET << "\n\tfrom     = "      << *color << source
-    << TERMINAL_RESET << "\n\tseverity = "      << *color << severity
-    << TERMINAL_RESET << "\n\tmessage  = "      << *color << message
-    << "\n\n" << TERMINAL_RESET;
+    printGLerror(_source, _type, id, _severity, length, message);
 };
 
 

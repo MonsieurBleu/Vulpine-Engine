@@ -121,6 +121,7 @@ uint MeshGroup::draw()
         if(i->cull())
         {
             drawcnt ++;
+            i->bindAllMaps();
             i->drawVAO();
         }
 
@@ -195,11 +196,17 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             {
                 for(auto j : i->meshes)
                     if(j->cull())
+                    {
+                        j->bindAllMaps();
                         j->drawVAO();
+                    }
             }
             else
                 for(auto j : i->meshes)
+                {
+                    j->bindAllMaps();
                     j->drawVAO();
+                }
 
             dom->deactivate();
         }
