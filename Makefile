@@ -46,7 +46,7 @@ G_EOBJ += $(G_ODIR)/main.o
 ifeq ($(OS),Windows_NT)
 	G_EXEC = ..\build\Game.exe
 else
-	G_EXEC = ..\build\Game.exe
+	G_EXEC = ../build/Game
 endif
 
 default: $(EXEC)
@@ -54,7 +54,11 @@ default: $(EXEC)
 game: $(G_EXEC)
 
 gameClean : 
+ifeq ($(OS),Windows_NT)
 	$(RM) $(G_EXEC) ..\obj\*.o
+else
+	$(RM) $(G_EXEC) ../obj/*.o
+endif
 
 gameReinstall : gameClean game
 
@@ -110,7 +114,11 @@ include $(wildcard $(DEPFILES))
 
 
 clean : 
+ifeq ($(OS),Windows_NT)
 	$(RM) $(EXEC) obj\*.o $(DEPDIR)\*.d
+else
+	$(RM) $(EXEC) obj/*.o $(DEPDIR)/*.d
+endif
 
 countlines :
 	find ./ -type f \( -iname \*.cpp -o -iname \*.hpp -o -iname \*.frag -o -iname \*.vert -o -iname \*.geom \) | sed 's/.*/"&"/' | xargs  wc -l

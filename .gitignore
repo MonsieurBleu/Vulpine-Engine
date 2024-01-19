@@ -32,3 +32,5 @@ obj/*.obj
 *.app
 
 .vscode
+
+GameEngine
