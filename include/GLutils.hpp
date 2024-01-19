@@ -2,7 +2,7 @@
 #define GLUTILS_HPP
 
 #include <iostream>
-#include <list>
+#include <deque>
 #include <string.h>
 #include <algorithm>
 
@@ -126,7 +126,7 @@ void GLAPIENTRY MessageCallback(GLenum _source,
         Some non duplicated error could be missed.
     */
 #ifdef PREVENT_GL_NOTIF_SPAM
-    static std::list<errorHistoric> historic;
+    static std::deque<errorHistoric> historic;
     static const long spamTimeout = 1E4;
 
     long now = GetTimeMs();

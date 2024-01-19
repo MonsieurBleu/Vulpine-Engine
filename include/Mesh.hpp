@@ -68,8 +68,8 @@ class Mesh
         void bindAllMaps();
         void bindMap(int id, int location);
 
-        virtual void draw(GLenum mode = GL_TRIANGLES);
-        virtual void drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual GLuint draw(GLenum mode = GL_TRIANGLES);
+        virtual GLuint drawVAO(GLenum mode = GL_TRIANGLES);
 
         virtual bool cull();
 };
@@ -98,6 +98,8 @@ class MeshModel3D : public Mesh
 {
     protected :
         void createUniforms();
+
+        bool culled = true;
 
     public :
         MeshModel3D() : Mesh()
@@ -132,8 +134,9 @@ class MeshModel3D : public Mesh
         void update();
         void setDrawMode();
         void resetDrawMode();
-        virtual void drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual GLuint drawVAO(GLenum mode = GL_TRIANGLES);
         virtual bool cull();
+        bool isCulled();
 };
 
 class ModelInstance : public ModelState3D
@@ -168,7 +171,7 @@ class InstancedMeshModel3D : public MeshModel3D
         void updateInstances();
         ModelInstance* createInstance();
 
-        void drawVAO(GLenum mode = GL_TRIANGLES) final;
+        GLuint drawVAO(GLenum mode = GL_TRIANGLES) final;
         bool cull() final;
 };
 

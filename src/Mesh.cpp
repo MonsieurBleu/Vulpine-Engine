@@ -29,21 +29,24 @@ MeshMaterial::~MeshMaterial()
     // }
 }
 
-void Mesh::drawVAO(GLenum mode)
+GLuint Mesh::drawVAO(GLenum mode)
 {
     glBindVertexArray(vao->getHandle());
     // if(!mode)
         mode = defaultMode;
 
     glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
+
+    return 1;
 }
 
-void Mesh::draw(GLenum mode) 
+GLuint Mesh::draw(GLenum mode) 
 {
     material->activate();
     bindAllMaps();
-    drawVAO(mode);
+    GLuint dc = drawVAO(mode);
     material->deactivate();
+    return dc;
 }
 
 
@@ -90,10 +93,10 @@ bool Mesh::cull(){return true;};
 bool MeshModel3D::cull()
 {
     if(state.hide == ModelStateHideStatus::HIDE)
-        return false;
+        return culled = false;
     
     if(!state.frustumCulled)
-        return true;
+        return culled = true;
 
     const mat4 m = state.modelMatrix;
     vec3 center = vec3(m[3]);
@@ -105,7 +108,7 @@ bool MeshModel3D::cull()
     float radius = max(length(vao->getAABBMax()*scale), length(vao->getAABBMin()*scale));
     const Frustum f = globals.currentCamera->getFrustum();   
 
-    return                     
+    return culled =                   
         dot(f.left.normal  , center-f.left.position  ) > -radius &&
         dot(f.right.normal , center-f.right.position ) > -radius &&
         dot(f.far.normal   , center-f.far.position   ) > -radius &&
@@ -147,8 +150,11 @@ void MeshModel3D::resetDrawMode()
         glEnable(GL_CULL_FACE); 
 }
 
-void MeshModel3D::drawVAO(GLenum mode)
+GLuint MeshModel3D::drawVAO(GLenum mode)
 {
+    if(!culled)
+        return 0;
+
     update();
     setDrawMode();
 
@@ -157,7 +163,11 @@ void MeshModel3D::drawVAO(GLenum mode)
     glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
     
     resetDrawMode();
+
+    return 1;
 }
+
+bool MeshModel3D::isCulled(){return culled;};
 
 void MeshModel3D::createUniforms()
 {
@@ -425,7 +435,7 @@ void InstancedMeshModel3D::allocate(size_t maxInstanceCount)
     glBindVertexArray(0);
 }   
 
-void InstancedMeshModel3D::drawVAO(GLenum mode)
+GLuint InstancedMeshModel3D::drawVAO(GLenum mode)
 {
     update();
     setDrawMode();
@@ -439,6 +449,8 @@ void InstancedMeshModel3D::drawVAO(GLenum mode)
     );
     
     resetDrawMode();
+
+    return 1;
 }
 
 bool InstancedMeshModel3D::cull()

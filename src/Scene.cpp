@@ -118,12 +118,11 @@ uint MeshGroup::draw()
     uint drawcnt = 0;
 
     for(auto i : meshes)
-        if(i->cull())
-        {
-            drawcnt ++;
-            i->bindAllMaps();
-            i->drawVAO();
-        }
+    if(i->isCulled())
+    {
+        i->bindAllMaps();
+        drawcnt += i->drawVAO();
+    }
 
     material->deactivate();
     return drawcnt;
@@ -155,11 +154,8 @@ uint Scene::draw()
         drawcnt += i->draw();
     
     for(auto i : unsortedMeshes)
-        if(i->cull())
-        {
-            i->draw();
-            drawcnt ++;
-        }
+        if(i->isCulled())
+            drawcnt += i->draw();
 
     ligthBuffer.reset();
     return drawcnt;
@@ -195,7 +191,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             if(cull)
             {
                 for(auto j : i->meshes)
-                    if(j->cull())
+                    if(j->isCulled())
                     {
                         j->bindAllMaps();
                         j->drawVAO();
@@ -283,4 +279,16 @@ void Scene::remove(ObjectGroupRef group)
             groups.erase(i);
             return;
         }
+}
+
+void Scene::cull()
+{
+    for(auto i = meshes.begin(); i != meshes.end(); i++)
+    {
+        for(auto j : i->meshes)
+            j->cull();
+    }
+
+    for(auto i : unsortedMeshes)
+        i->cull();
 }
