@@ -46,6 +46,8 @@ class App
         virtual bool userInput(GLFWKeyInfo input);
         bool baseInput(GLFWKeyInfo input);
 
+        void setIcon(const std::string &filename);
+
     public :
         App(GLFWwindow* window);
 

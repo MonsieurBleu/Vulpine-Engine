@@ -226,14 +226,21 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
 
 void Scene::generateShadowMaps()
 {
+    Camera *tmp = globals.currentCamera;
+
     for(auto i : lights)
         if(i->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
         {
             i->shadowMap.activate();
             i->updateShadowCamera();
+            i->shadowCamera.updateFrustum();
+            globals.currentCamera = &i->shadowCamera;
+            cull();
             depthOnlyDraw(i->shadowCamera);
             i->shadowMap.deactivate();
         }
+    
+    globals.currentCamera = tmp;
 }
 
 void Scene::remove(ModelRef mesh)

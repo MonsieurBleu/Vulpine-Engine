@@ -35,6 +35,8 @@
 #include <iomanip>
 #include <codecvt>
 
+#include <stb/stb_image.h>
+
 #include <Audio.hpp>
 
 //https://antongerdelan.net/opengl/hellotriangle.html
@@ -50,6 +52,14 @@ std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 void App::init()
 {
     return;
+}
+
+void App::setIcon(const std::string &filename)
+{
+    GLFWimage image[1]; 
+    image[0].pixels = stbi_load(filename.c_str(), &image[0].width, &image[0].height, 0, 4);
+    glfwSetWindowIcon(window, 1, image); 
+    stbi_image_free(image[0].pixels);
 }
 
 bool App::userInput(GLFWKeyInfo input){return false;};

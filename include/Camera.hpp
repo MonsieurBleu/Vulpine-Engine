@@ -36,6 +36,7 @@ struct FrustumPlane
 {
     vec3 normal;
     vec3 position;
+    /* the distance seems useless */
     float distance;
 };
 
