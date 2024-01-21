@@ -2,7 +2,7 @@
 #define INPUTS_HPP
 
 #include <mutex>
-#include <list>
+#include <deque>
 
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
@@ -20,7 +20,7 @@ void giveCallbackToApp(GLFWKeyInfo input);
 
 class App;
 
-class InputBuffer : private std::list<GLFWKeyInfo>
+class InputBuffer : private std::deque<GLFWKeyInfo>
 {
     friend void giveCallbackToApp(GLFWKeyInfo input);
     void add(GLFWKeyInfo input);

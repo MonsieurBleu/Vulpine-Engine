@@ -7,7 +7,7 @@
 struct MeshGroup
 {
     MeshMaterial material;
-    std::list<ModelRef> meshes;
+    std::deque<ModelRef> meshes;
 
     MeshGroup(MeshMaterial _material)
     {
@@ -26,12 +26,12 @@ struct MeshGroup
 class Scene
 {
     private : 
-        std::list<MeshGroup> meshes;
-        std::list<ModelRef> unsortedMeshes;
+        std::deque<MeshGroup> meshes;
+        std::deque<ModelRef> unsortedMeshes;
 
         LightBuffer ligthBuffer;
-        std::list<SceneLight> lights;
-        std::list<ObjectGroupRef> groups;
+        std::deque<SceneLight> lights;
+        std::deque<ObjectGroupRef> groups;
 
         void addGroupElement(ObjectGroupRef group);
         void removeGroupElement(ObjectGroupRef group);
@@ -53,6 +53,12 @@ class Scene
         void remove(ModelRef mesh);
         void remove(SceneLight light);
         void remove(ObjectGroupRef group);
+
+        /**
+         * @brief Cull all MeshModel3D in the scene
+         * @attention No arguments, works with the globals.currentCamera attribute
+         */
+        void cull();
 
         uint getDrawCalls();
 

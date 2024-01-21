@@ -2,7 +2,7 @@
 #define GLUTILS_HPP
 
 #include <iostream>
-#include <list>
+#include <deque>
 #include <string.h>
 #include <algorithm>
 
@@ -77,35 +77,19 @@ std::ostream& operator<<(std::ostream& os, GLenum_t e)
     return os;
 }
 
-void GLAPIENTRY MessageCallback(GLenum _source,
-                                GLenum _type,
-                                GLuint id,
-                                GLenum _severity,
-                                GLsizei length,
-                                const GLchar* message,
-                                const void* userParam )
+void printGLerror(
+                    GLenum _source, 
+                    GLenum _type,
+                    GLuint id,
+                    GLenum _severity,
+                    GLsizei length,
+                    const GLchar* message)
 {
-    /*
-        Historic that restrain message callback spam at each frame
-        Some non duplicated error could be missed.
-    */
-#ifdef PREVENT_GL_NOTIF_SPAM
-    static std::list<errorHistoric> historic;
-    static const long spamTimeout = 1E4;
-
-    long now = GetTimeMs();
-
-    for(auto i = historic.begin(); i != historic.end(); i++)
-        if(i->id == id && (now-i->time) < spamTimeout)
-            return;
-
-    historic.push_front((errorHistoric){id, now});
-#endif
-
-    const std::string *color = &TERMINAL_RESET;
     GLenum_t severity(_severity);
     GLenum_t type(_type);
     GLenum_t source(_source);
+
+    const std::string *color = &TERMINAL_RESET;
 
     if(type.val == GL_DEBUG_TYPE_ERROR)
     {
@@ -113,11 +97,7 @@ void GLAPIENTRY MessageCallback(GLenum _source,
     }
     else if(severity.val == GL_DEBUG_SEVERITY_NOTIFICATION)
     {
-    #ifdef SHOW_GL_NOTIF
         color = &TERMINAL_NOTIF;
-    #else
-        return;
-    #endif
     }
     else
     {
@@ -131,6 +111,39 @@ void GLAPIENTRY MessageCallback(GLenum _source,
     << TERMINAL_RESET << "\n\tseverity = "      << *color << severity
     << TERMINAL_RESET << "\n\tmessage  = "      << *color << message
     << "\n\n" << TERMINAL_RESET;
+}
+
+void GLAPIENTRY MessageCallback(GLenum _source,
+                                GLenum _type,
+                                GLuint id,
+                                GLenum _severity,
+                                GLsizei length,
+                                const GLchar* message,
+                                const void* userParam )
+{
+    /*
+        Historic that restrain message callback spam at each frame
+        Some non duplicated error could be missed.
+    */
+#ifdef PREVENT_GL_NOTIF_SPAM
+    static std::deque<errorHistoric> historic;
+    static const long spamTimeout = 1E4;
+
+    long now = GetTimeMs();
+
+    for(auto i = historic.begin(); i != historic.end(); i++)
+        if(i->id == id && (now-i->time) < spamTimeout)
+            return;
+
+    historic.push_front((errorHistoric){id, now});
+#endif
+
+    #ifndef SHOW_GL_NOTIF
+    if(_severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+        return;
+    #endif
+
+    printGLerror(_source, _type, id, _severity, length, message);
 };
 
 

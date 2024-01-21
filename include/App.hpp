@@ -12,14 +12,15 @@
 enum AppState
 {
     quit,
-    run // default state for tests
+    init,
+    run 
 };
 
 class App
 {
     protected :
 
-        AppState state = run;
+        AppState state = AppState::init;
         GLFWwindow* window;
         uint64_t timestart;
 
@@ -44,6 +45,8 @@ class App
 
         virtual bool userInput(GLFWKeyInfo input);
         bool baseInput(GLFWKeyInfo input);
+
+        void setIcon(const std::string &filename);
 
     public :
         App(GLFWwindow* window);

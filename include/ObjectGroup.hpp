@@ -1,7 +1,7 @@
 #ifndef OBJECT_GROUP_HPP
 #define OBJECT_GROUP_HPP
 
-#include <list>
+#include <deque>
 
 #include <Mesh.hpp>
 #include <Light.hpp>
@@ -18,10 +18,10 @@ class ObjectGroup
     protected :
         ObjectGroup* parent = NULL;
 
-        std::list<ModelStateRef> states;
-        std::list<ObjectGroupRef> children;
-        std::list<ModelRef> meshes;
-        std::list<SceneLight> lights;
+        std::deque<ModelStateRef> states;
+        std::deque<ObjectGroupRef> children;
+        std::deque<ModelRef> meshes;
+        std::deque<SceneLight> lights;
 
     public : 
         ModelState3D state;

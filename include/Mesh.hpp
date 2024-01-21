@@ -9,6 +9,7 @@
 #define MESH_BASE_ATTRIBUTE_LOCATION_POSITION 0
 #define MESH_BASE_ATTRIBUTE_LOCATION_COLOR    1
 #define MESH_BASE_ATTRIBUTE_LOCATION_NORMAL   2
+#define MESH_BASE_ATTRIBUTE_LOCATION_INSTANCE 3
 
 #define MESH_BASE_UNIFORM_LOCATION_MODEL_MATRIX 3
 
@@ -64,10 +65,11 @@ class Mesh
         Mesh& setMap(Texture2D texture, int location);
         Mesh& removeMap(int location);
         
+        void bindAllMaps();
         void bindMap(int id, int location);
 
-        virtual void draw(GLenum mode = GL_TRIANGLES);
-        virtual void drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual GLuint draw(GLenum mode = GL_TRIANGLES);
+        virtual GLuint drawVAO(GLenum mode = GL_TRIANGLES);
 
         virtual bool cull();
 };
@@ -81,6 +83,9 @@ class Mesh
 #define ModelRef std::shared_ptr<MeshModel3D> 
 #define newModel std::make_shared<MeshModel3D>
 
+#define InstancedModelRef std::shared_ptr<InstancedMeshModel3D> 
+#define newInstancedModel std::make_shared<InstancedMeshModel3D>
+
 /*
     A special type of Mesh that contains additionnal 
     uniforms who will be updated at each drawcall 
@@ -93,6 +98,8 @@ class MeshModel3D : public Mesh
 {
     protected :
         void createUniforms();
+
+        bool culled = true;
 
     public :
         MeshModel3D() : Mesh()
@@ -124,8 +131,48 @@ class MeshModel3D : public Mesh
             bool loadColorMap = true, 
             bool loadMaterialMap = true);
 
-        virtual void drawVAO(GLenum mode = GL_TRIANGLES);
+        void update();
+        void setDrawMode();
+        void resetDrawMode();
+        virtual GLuint drawVAO(GLenum mode = GL_TRIANGLES);
         virtual bool cull();
+        bool isCulled();
+};
+
+class ModelInstance : public ModelState3D
+{
+    // friend InstancedMeshModel3D;
+
+    // private : 
+
+    // public : 
+        // ModelInstance(bool &uil) : updateInstanceList(uil){};
+        // bool &updateInstanceList;
+};
+
+class InstancedMeshModel3D : public MeshModel3D
+{
+    private :
+        size_t createdInstance = 0;
+        size_t allocatedInstance = 0;
+        size_t drawnInstance = 0;
+        
+        std::shared_ptr<VertexAttribute> matricesBuffer;
+        std::shared_ptr<ModelInstance*> instances;
+
+    public :
+
+        void allocate(size_t maxInstanceCount);
+        /**
+         * @brief Update the models Instance and send everything to the GPU.
+         * 
+         * @attention All of the instance's states are considered updated
+         */
+        void updateInstances();
+        ModelInstance* createInstance();
+
+        GLuint drawVAO(GLenum mode = GL_TRIANGLES) final;
+        bool cull() final;
 };
 
 MeshVao readOBJ(const std::string filePath, bool useVertexColors = false);

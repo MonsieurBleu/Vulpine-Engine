@@ -4,6 +4,8 @@
 #include <GL/glew.h>
 #include <Utils.hpp>
 
+#include <Globals.hpp>
+
 bool Light::freeShadowMapBinds[Light::maxShadowMap] = {
     true, true, true, true,
     true, true, true, true,
@@ -204,7 +206,13 @@ void DirectionLight::applyModifier(const ModelState3D& state)
 
 void DirectionLight::updateShadowCamera()
 {
-    vec3 position = shadowCamera.getPosition();
+    // vec3 position = shadowCamera.getPosition();
+
+    vec3 cPos = globals.currentCamera->getPosition();
+    cPos.y = 0;
+    vec3 cDir = globals.currentCamera->getDirection();
+    vec3 position = cPos + vec3(shadowCameraSize.y*0.25)*cDir;
+
     shadowCamera = Camera(ORTHOGRAPHIC);
     shadowCamera.init(0.f, shadowCameraSize.x, shadowCameraSize.y, 0.1, 10E3);
     shadowCamera.setDirection(direction());

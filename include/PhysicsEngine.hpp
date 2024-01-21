@@ -17,6 +17,8 @@ class Collider;
 #define RigidBodyRef std::shared_ptr<RigidBody>
 #define newRigidBody std::make_shared<RigidBody>
 
+extern std::mutex physicsMutex;
+
 struct Collision
 {
     RigidBodyRef body1;

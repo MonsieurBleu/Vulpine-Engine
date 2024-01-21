@@ -87,43 +87,77 @@ Frustum Camera::getFrustum() { return frustum; }
 
 void Camera::updateFrustum()
 {
-    const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
+    if(type == PERSPECTIVE)
+    {
+        const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
 
-    const vec3 right = normalize(cross(vec3(0, 1, 0), front));
-    const vec3 up = cross(right, front);
-    const vec3 p = state.position;
-    const float d = length(p);
+        const vec3 right = normalize(cross(vec3(0, 1, 0), front));
+        const vec3 up = cross(right, front);
+        const vec3 p = state.position;
+        const float d = length(p);
 
-    const float n = state.nearPlane;
-    const float f = state.farPlane;
+        const float n = state.nearPlane;
+        const float f = state.farPlane;
 
-    const float halfVSide = f * tanf(state.FOV * .5f);
-    const float halfHSide = halfVSide * width / height;
-    const vec3 fvec = f * front;
+        const float halfVSide = f * tanf(state.FOV * .5f);
+        const float halfHSide = halfVSide * width / height;
+        const vec3 fvec = f * front;
 
-    frustum.near.position = p + (n * front);
-    frustum.near.distance = length(frustum.near.position);
-    frustum.near.normal = front;
+        frustum.near.position = p + (n * front);
+        frustum.near.distance = length(frustum.near.position);
+        frustum.near.normal = front;
 
-    frustum.far.position = p + fvec;
-    frustum.far.distance = length(frustum.far.position);
-    frustum.far.normal = -front;
+        frustum.far.position = p + fvec;
+        frustum.far.distance = length(frustum.far.position);
+        frustum.far.normal = -front;
 
-    frustum.right.distance = d;
-    frustum.right.position = p;
-    frustum.right.normal = normalize(cross(fvec - (right * halfHSide), up));
+        frustum.right.distance = d;
+        frustum.right.position = p;
+        frustum.right.normal = normalize(cross(fvec - (right * halfHSide), up));
 
-    frustum.left.distance = d;
-    frustum.left.position = p;
-    frustum.left.normal = normalize(cross(up, fvec + (right * halfHSide)));
+        frustum.left.distance = d;
+        frustum.left.position = p;
+        frustum.left.normal = normalize(cross(up, fvec + (right * halfHSide)));
 
-    frustum.top.distance = d;
-    frustum.top.position = p;
-    frustum.top.normal = normalize(cross(right, fvec - up * halfVSide));
+        frustum.top.distance = d;
+        frustum.top.position = p;
+        frustum.top.normal = normalize(cross(right, fvec - up * halfVSide));
 
-    frustum.bottom.distance = d;
-    frustum.bottom.position = p;
-    frustum.bottom.normal = normalize(cross(fvec + up * halfVSide, right));
+        frustum.bottom.distance = d;
+        frustum.bottom.position = p;
+        frustum.bottom.normal = normalize(cross(fvec + up * halfVSide, right));
+    }
+    else
+    {
+        const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
+        const vec3 right = normalize(cross(vec3(0, 1, 0), front));
+        const vec3 up = cross(right, front);
+        const vec3 p = state.position;
+        
+        const float n = state.nearPlane;
+        const float f = state.farPlane;
+
+        const float w = width/2;
+        const float h = height/2;
+ 
+        frustum.near.position = p + (n * front);
+        frustum.near.normal = front;
+
+        frustum.far.position = p + (f * front);
+        frustum.far.normal = -front;
+
+        frustum.right.position = p + (w * right);
+        frustum.right.normal = -right;
+
+        frustum.left.position = p - (w * right);
+        frustum.left.normal = right;
+
+        frustum.top.position = p + (h * up);
+        frustum.top.normal = -up;
+
+        frustum.bottom.position = p - (h * up);
+        frustum.bottom.normal = up;
+    }
 }
 
 const mat4 Camera::updateProjectionViewMatrix()

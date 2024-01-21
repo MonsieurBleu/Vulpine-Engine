@@ -118,11 +118,11 @@ uint MeshGroup::draw()
     uint drawcnt = 0;
 
     for(auto i : meshes)
-        if(i->cull())
-        {
-            drawcnt ++;
-            i->drawVAO();
-        }
+    if(i->isCulled())
+    {
+        i->bindAllMaps();
+        drawcnt += i->drawVAO();
+    }
 
     material->deactivate();
     return drawcnt;
@@ -154,11 +154,8 @@ uint Scene::draw()
         drawcnt += i->draw();
     
     for(auto i : unsortedMeshes)
-        if(i->cull())
-        {
-            i->draw();
-            drawcnt ++;
-        }
+        if(i->isCulled())
+            drawcnt += i->draw();
 
     ligthBuffer.reset();
     return drawcnt;
@@ -194,12 +191,18 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             if(cull)
             {
                 for(auto j : i->meshes)
-                    if(j->cull())
+                    if(j->isCulled())
+                    {
+                        j->bindAllMaps();
                         j->drawVAO();
+                    }
             }
             else
                 for(auto j : i->meshes)
+                {
+                    j->bindAllMaps();
                     j->drawVAO();
+                }
 
             dom->deactivate();
         }
@@ -223,14 +226,21 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
 
 void Scene::generateShadowMaps()
 {
+    Camera *tmp = globals.currentCamera;
+
     for(auto i : lights)
         if(i->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
         {
             i->shadowMap.activate();
             i->updateShadowCamera();
+            i->shadowCamera.updateFrustum();
+            globals.currentCamera = &i->shadowCamera;
+            cull();
             depthOnlyDraw(i->shadowCamera);
             i->shadowMap.deactivate();
         }
+    
+    globals.currentCamera = tmp;
 }
 
 void Scene::remove(ModelRef mesh)
@@ -276,4 +286,16 @@ void Scene::remove(ObjectGroupRef group)
             groups.erase(i);
             return;
         }
+}
+
+void Scene::cull()
+{
+    for(auto i = meshes.begin(); i != meshes.end(); i++)
+    {
+        for(auto j : i->meshes)
+            j->cull();
+    }
+
+    for(auto i : unsortedMeshes)
+        i->cull();
 }

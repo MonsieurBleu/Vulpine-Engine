@@ -1,7 +1,7 @@
 #ifndef FAST_UI_HPP
 #define FAST_UI_HPP
 
-#include <list>
+#include <deque>
 #include <Fonts.hpp>
 #include <Scene.hpp>
 
@@ -33,7 +33,7 @@ typedef std::shared_ptr<SimpleUiTile> SimpleUiTileRef;
 class SimpleUiTileBatch : public MeshModel3D
 {
     private : 
-        std::list<SimpleUiTileRef> tiles;
+        std::deque<SimpleUiTileRef> tiles;
 
     public : 
         SimpleUiTileBatch& add(SimpleUiTileRef tile);

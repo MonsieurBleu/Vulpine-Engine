@@ -29,20 +29,24 @@ MeshMaterial::~MeshMaterial()
     // }
 }
 
-void Mesh::drawVAO(GLenum mode)
+GLuint Mesh::drawVAO(GLenum mode)
 {
     glBindVertexArray(vao->getHandle());
     // if(!mode)
         mode = defaultMode;
 
     glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
+
+    return 1;
 }
 
-void Mesh::draw(GLenum mode) 
+GLuint Mesh::draw(GLenum mode) 
 {
     material->activate();
-    drawVAO(mode);
+    bindAllMaps();
+    GLuint dc = drawVAO(mode);
     material->deactivate();
+    return dc;
 }
 
 
@@ -89,10 +93,10 @@ bool Mesh::cull(){return true;};
 bool MeshModel3D::cull()
 {
     if(state.hide == ModelStateHideStatus::HIDE)
-        return false;
+        return culled = false;
     
     if(!state.frustumCulled)
-        return true;
+        return culled = true;
 
     const mat4 m = state.modelMatrix;
     vec3 center = vec3(m[3]);
@@ -104,7 +108,7 @@ bool MeshModel3D::cull()
     float radius = max(length(vao->getAABBMax()*scale), length(vao->getAABBMin()*scale));
     const Frustum f = globals.currentCamera->getFrustum();   
 
-    return                     
+    return culled =                   
         dot(f.left.normal  , center-f.left.position  ) > -radius &&
         dot(f.right.normal , center-f.right.position ) > -radius &&
         dot(f.far.normal   , center-f.far.position   ) > -radius &&
@@ -113,28 +117,31 @@ bool MeshModel3D::cull()
         dot(f.bottom.normal, center-f.bottom.position) > -radius;
 }
 
-void MeshModel3D::drawVAO(GLenum mode)
+void MeshModel3D::update()
 {
-    // preDrawRoutine();
-
     state.update(); // can be removed if the scene arleady do the update
     uniforms.update();
+}
 
+void Mesh::bindAllMaps()
+{
     for(size_t i = 0; i < maps.size(); i ++)
         if(maps[i].getHandle())
             maps[i].bind(mapsLocation[i]);
+}
 
+void MeshModel3D::setDrawMode()
+{
     if(invertFaces)
         glCullFace(GL_FRONT);
     if(!depthWrite)
         glDisable(GL_DEPTH_TEST);
     if(noBackFaceCulling)
         glDisable(GL_CULL_FACE); 
+}
 
-    glBindVertexArray(vao->getHandle());
-    mode = defaultMode;
-    glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
-
+void MeshModel3D::resetDrawMode()
+{
     if(invertFaces)
         glCullFace(GL_BACK);
     if(!depthWrite)
@@ -142,6 +149,25 @@ void MeshModel3D::drawVAO(GLenum mode)
     if(noBackFaceCulling)
         glEnable(GL_CULL_FACE); 
 }
+
+GLuint MeshModel3D::drawVAO(GLenum mode)
+{
+    if(!culled)
+        return 0;
+
+    update();
+    setDrawMode();
+
+    glBindVertexArray(vao->getHandle());
+    mode = defaultMode;
+    glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
+    
+    resetDrawMode();
+
+    return 1;
+}
+
+bool MeshModel3D::isCulled(){return culled;};
 
 void MeshModel3D::createUniforms()
 {
@@ -369,4 +395,106 @@ void Mesh::bindMap(int id, int location)
     maps[id].bind(location);
 }
 
+void InstancedMeshModel3D::allocate(size_t maxInstanceCount)
+{
+    if(!vao.get()) return;
 
+    allocatedInstance = maxInstanceCount;
+
+    instances = std::make_shared<ModelInstance*>(new ModelInstance[allocatedInstance]);
+
+    matricesBuffer = std::shared_ptr<VertexAttribute>(new VertexAttribute(
+        GenericSharedBuffer(new char[allocatedInstance*sizeof(mat4)]),
+        3, allocatedInstance, 16, GL_FLOAT, false
+        ));
+    
+    matricesBuffer->genBuffer();
+    matricesBuffer->sendAllToGPU();
+
+    // glBindVertexArray(vao->getHandle());
+    // glBindVertexBuffer(
+    //     3, 
+    //     matricesBuffer->getHandle(), 
+    //     0, 
+    //     sizeof(vec4));
+    
+    // glVertexAttribBinding(3, 3);
+    // matricesBuffer->setFormat();
+    glBindBuffer(GL_ARRAY_BUFFER, matricesBuffer->getHandle());
+    glBindVertexArray(vao->getHandle());
+    
+    const int beg = MESH_BASE_ATTRIBUTE_LOCATION_INSTANCE;
+    const int end = beg+3;
+    for(int i = beg; i <= end; i++)
+    {
+        glEnableVertexAttribArray(i);
+        glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (void*)((i-beg)*sizeof(vec4)));
+        glVertexAttribDivisor(i, 1);
+    }
+
+    glBindVertexArray(0);
+}   
+
+GLuint InstancedMeshModel3D::drawVAO(GLenum mode)
+{
+    update();
+    setDrawMode();
+
+    glBindVertexArray(vao->getHandle());
+    glDrawArraysInstanced(
+        defaultMode, 
+        0,
+        vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount(),
+        drawnInstance
+    );
+    
+    resetDrawMode();
+
+    return 1;
+}
+
+bool InstancedMeshModel3D::cull()
+{
+    return true;
+}
+
+ModelInstance* InstancedMeshModel3D::createInstance()
+{
+    if(createdInstance >= allocatedInstance)
+        return nullptr;
+
+    ModelInstance* newInstance = &(*instances.get())[createdInstance];
+    createdInstance++;
+    return newInstance;
+}
+
+void InstancedMeshModel3D::updateInstances()
+{
+    mat4 *m = (mat4*)matricesBuffer->getBufferAddr();
+
+    // bool bufferNeedUpdate = false;
+
+    drawnInstance = 0;
+
+    for(size_t i = 0; i < createdInstance; i++)
+    {
+        ModelInstance &inst = (*instances)[i];
+
+        if(inst.hide != ModelStateHideStatus::HIDE)
+        {
+            memcpy((void*)&m[i], (void*)&inst.modelMatrix, sizeof(mat4));
+            drawnInstance ++;
+        }
+    }
+
+    // matricesBuffer->sendAllToGPU();
+
+    glBindBuffer(GL_ARRAY_BUFFER, matricesBuffer->getHandle());
+    glBufferData(
+        GL_ARRAY_BUFFER, 
+        sizeof(mat4)*drawnInstance, 
+        matricesBuffer->getBufferAddr(), 
+        GL_STATIC_DRAW);
+    
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
