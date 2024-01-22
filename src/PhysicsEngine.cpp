@@ -40,9 +40,9 @@ void PhysicsEngine::update(float deltaTime)
             std::vector<Collision> newCollisionEvents;
             bodies[i]->update(deltaTime, bodies, newCollisionEvents);
 
-            for (size_t j = 0; j < newCollisionEvents.size(); j++)
+            for (auto collision : newCollisionEvents)
             {
-                collisionEvents.insert(newCollisionEvents[j]);
+                collisionEvents.insert(collision);
             }
         }
 
@@ -59,20 +59,16 @@ void PhysicsEngine::update(float deltaTime)
 
             float j = -(1.f + e) * normalVelocity / (1.f / it->body1->mass + 1.f / it->body2->mass);
 
-            // std::cout << "j: " << j << std::endl;
-            // std::cout << "normalVelocity: " << normalVelocity << std::endl;
-            // std::cout << "e: " << e << std::endl;
-
             vec3 impulse = j * normal;
-
-            // std::cout << "impulse: " << glm::to_string(impulse) << std::endl;
-            // std::cout << "penetration: " << it->penetration << std::endl;
 
             it->body1->velocity += impulse / it->body1->mass;
             it->body2->velocity -= impulse / it->body2->mass;
 
-            it->body1->position += normal * it->penetration / 2.f * (it->body1->isStatic ? 0.0f : 1.0f);
-            it->body2->position -= normal * it->penetration / 2.f * (it->body2->isStatic ? 0.0f : 1.0f);
+            std::cout << "penetration: " << it->penetration << std::endl;
+            std::cout << "diagonal: " << it->body1->collider->getBoundingBox().getDiagonal() << std::endl;
+
+            it->body1->position += normal * (float)pow(it->penetration, 3) * (it->body1->isStatic ? 0.0f : 1.0f);
+            it->body2->position -= normal * (float)pow(it->penetration, 3) * (it->body2->isStatic ? 0.0f : 1.0f);
 
             vec3 tangent = relativeVelocity - dot(relativeVelocity, normal) * normal;
             tangent = normalize(tangent);
@@ -153,13 +149,41 @@ void RigidBody::update(float deltaTime, std::vector<RigidBodyRef> bodies, std::v
         vec3 normal;
         if (this->collider->checkCollision(bodies[i]->collider, this->position, bodies[i]->position, penetration, normal))
         {
+            // normalize the penetration based on the size of the bounding boxes of the objects
+
+            float size1 = this->collider->getBoundingBox().getDiagonal();
+            float size2 = bodies[i]->collider->getBoundingBox().getDiagonal();
+            float size = std::max(size1, size2);
+
+            penetration *= size1 / size;
+
             Collision collision{newRigidBody(*this), bodies[i], normal, penetration};
-            collisionEvents.push_back(collision);
+            collision.ID = min(this->ID, bodies[i]->ID);
+
+            // temp solution
+            for (int i = 0; i < collisionEvents.size(); i++)
+            {
+                if (collisionEvents[i].ID == collision.ID)
+                {
+                    if (collisionEvents[i].penetration < collision.penetration)
+                    {
+                        collisionEvents[i] = collision;
+                    }
+                }
+                else
+                {
+                    collisionEvents.push_back(collision);
+                }
+            }
+            if (collisionEvents.size() == 0)
+            {
+                collisionEvents.push_back(collision);
+            }
         }
     }
 }
 
-Collider::Collider(ColliderType type) : type(type)
+Collider::Collider(ColliderType type, BoundingBox boundingBox) : type(type), boundingBox(boundingBox)
 {
 }
 
@@ -167,7 +191,7 @@ Collider::~Collider()
 {
 }
 
-SphereCollider::SphereCollider(float radius, vec3 center) : Collider(ColliderType::SPHERE),
+SphereCollider::SphereCollider(float radius, vec3 center) : Collider(ColliderType::SPHERE, {vec3(-radius), vec3(radius)}),
                                                             radius(radius),
                                                             center(center)
 {
@@ -214,7 +238,7 @@ bool SphereCollider::checkCollisionSphere(SphereCollider *other, vec3 positionSe
     return penetration > 0.f;
 }
 
-AABBCollider::AABBCollider(vec3 min, vec3 max) : Collider(ColliderType::AABB),
+AABBCollider::AABBCollider(vec3 min, vec3 max) : Collider(ColliderType::AABB, {min, max}),
                                                  min(min),
                                                  max(max)
 {
@@ -297,40 +321,15 @@ bool AABBCollider::checkCollisionAABB(AABBCollider *other, vec3 positionSelf, ve
     vec3 minB = other->min + positionOther;
     vec3 maxB = other->max + positionOther;
 
-    // swap A and B's min and max if necessary
-    if (minA.x > minB.x)
-    {
-        std::swap(minA.x, minB.x);
-        std::swap(maxA.x, maxB.x);
-    }
-    if (minA.y > minB.y)
-    {
-        std::swap(minA.y, minB.y);
-        std::swap(maxA.y, maxB.y);
-    }
-    if (minA.z > minB.z)
-    {
-        std::swap(minA.z, minB.z);
-        std::swap(maxA.z, maxB.z);
-    }
-
     // Check for overlap in each axis
-    bool collisionX = minA.x <= maxB.x && maxA.x >= minB.x;
-    bool collisionY = minA.y <= maxB.y && maxA.y >= minB.y;
-    bool collisionZ = minA.z <= maxB.z && maxA.z >= minB.z;
+    bool collisionX = maxA.x >= minB.x && minA.x <= maxB.x;
+    bool collisionY = maxA.y >= minB.y && minA.y <= maxB.y;
+    bool collisionZ = maxA.z >= minB.z && minA.z <= maxB.z;
+
     bool collision = collisionX && collisionY && collisionZ;
 
     if (collision)
     {
-
-        std::cout << "AABB collision" << std::endl;
-        std::cout << "minA: " << minA.y << std::endl;
-        std::cout << "maxA: " << maxA.y << std::endl;
-        std::cout << "minB: " << minB.y << std::endl;
-        std::cout << "maxB: " << maxB.y << std::endl;
-        std::cout << "positionSelf: " << glm::to_string(positionSelf) << std::endl;
-        std::cout << "positionOther: " << glm::to_string(positionOther) << std::endl;
-        std::cout << std::endl;
         // Calculate penetration depth and normal
         float penetrationX = std::min(maxA.x - minB.x, maxB.x - minA.x);
         float penetrationY = std::min(maxA.y - minB.y, maxB.y - minA.y);
@@ -352,18 +351,20 @@ bool AABBCollider::checkCollisionAABB(AABBCollider *other, vec3 positionSelf, ve
         { // penetrationZ
             normal = (positionSelf.z < positionOther.z) ? vec3(0, 0, -1) : vec3(0, 0, 1);
         }
+
+        // std::cout << "collision" << std::endl;
     }
     else
     {
-        std::cout << std::endl;
-        std::cout << "no AABB collision" << std::endl;
-        std::cout << "minA: " << minA.y << std::endl;
-        std::cout << "maxA: " << maxA.y << std::endl;
-        std::cout << "minB: " << minB.y << std::endl;
-        std::cout << "maxB: " << maxB.y << std::endl;
-        std::cout << "positionSelf: " << glm::to_string(positionSelf) << std::endl;
-        std::cout << "positionOther: " << glm::to_string(positionOther) << std::endl;
-        std::cout << std::endl;
+        // std::cout << std::endl;
+        // std::cout << "no AABB collision" << std::endl;
+        // std::cout << "minA: " << minA.y << std::endl;
+        // std::cout << "maxA: " << maxA.y << std::endl;
+        // std::cout << "minB: " << minB.y << std::endl;
+        // std::cout << "maxB: " << maxB.y << std::endl;
+        // std::cout << "positionSelf: " << glm::to_string(positionSelf) << std::endl;
+        // std::cout << "positionOther: " << glm::to_string(positionOther) << std::endl;
+        // std::cout << std::endl;
     }
 
     return collision;

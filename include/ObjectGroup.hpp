@@ -6,7 +6,7 @@
 #include <Mesh.hpp>
 #include <Light.hpp>
 
-#define ObjectGroupRef std::shared_ptr<ObjectGroup> 
+#define ObjectGroupRef std::shared_ptr<ObjectGroup>
 #define newObjectGroup std::make_shared<ObjectGroup>
 
 class Scene;
@@ -15,24 +15,24 @@ class ObjectGroup
 {
     friend Scene;
 
-    protected :
-        ObjectGroup* parent = NULL;
+protected:
+    ObjectGroup *parent = NULL;
 
-        std::deque<ModelStateRef> states;
-        std::deque<ObjectGroupRef> children;
-        std::deque<ModelRef> meshes;
-        std::deque<SceneLight> lights;
+    std::deque<ModelStateRef> states;
+    std::deque<ObjectGroupRef> children;
+    std::deque<ModelRef> meshes;
+    std::deque<SceneLight> lights;
 
-    public : 
-        ModelState3D state;
+public:
+    ModelState3D state;
 
-        virtual void update(bool forceUpdate = false);
-        void add(ModelRef meshe);
-        void add(SceneLight light);
-        void add(ObjectGroupRef group);
-        void add(ModelStateRef state);
+    virtual void update(bool forceUpdate = false);
+    void add(ModelRef meshe);
+    void add(SceneLight light);
+    void add(ObjectGroupRef group);
+    void add(ModelStateRef state);
 
+    std::deque<ModelRef> &getMeshes() { return meshes; };
 };
-
 
 #endif

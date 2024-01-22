@@ -26,7 +26,10 @@ struct Collision
     vec3 normal;
     float penetration;
 
-    bool operator==(const Collision &other) const
+    int ID;
+
+    bool
+    operator==(const Collision &other) const
     {
         return (body1 == other.body1 && body2 == other.body2) || (body1 == other.body2 && body2 == other.body1);
     }
@@ -44,7 +47,7 @@ struct PhysicsMaterial
     float damping;
     float angularDamping;
 
-    PhysicsMaterial(float restitution = 0.5f, float friction = 0.1f, float damping = 0.5f, float angularDamping = 0.5f) : restitution(restitution), friction(friction), damping(damping), angularDamping(angularDamping) {}
+    PhysicsMaterial(float restitution = 0.9f, float friction = 0.1f, float damping = 0.5f, float angularDamping = 0.5f) : restitution(restitution), friction(friction), damping(damping), angularDamping(angularDamping) {}
     ~PhysicsMaterial() {}
 };
 
@@ -136,19 +139,31 @@ enum ColliderType
     MESH    // Mesh collider
 };
 
+struct BoundingBox
+{
+    vec3 min;
+    vec3 max;
+
+    float getDiagonal() const { return length(max - min); };
+};
+
 class Collider
 {
-private:
+protected:
     ColliderType type;
 
+    BoundingBox boundingBox;
+
 public:
-    Collider(ColliderType type);
+    Collider(ColliderType type, BoundingBox boundingBox);
     ~Collider();
 
     ColliderType getType() { return type; };
 
     virtual bool checkCollision(Collider *other, vec3 positionSelf, vec3 positionOther, float &penetration, vec3 &normal) const = 0;
     virtual bool raycast(Ray ray, vec3 positionSelf, float maxLen, float &t) const = 0;
+
+    BoundingBox getBoundingBox() const { return boundingBox; };
 };
 
 class SphereCollider;

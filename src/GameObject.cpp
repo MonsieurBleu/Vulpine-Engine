@@ -32,10 +32,20 @@ void GameObject::update(float deltaTime)
 
             // no idea if this actually faster, it prevents an update if it is unnecessary
             // but it does branch so it might be slower overall if we have a lot of moving objects
-            if (objectGroup->state.position != pos)
-                objectGroup->state.setPosition(pos);
-            if (objectGroup->state.rotation != rot)
-                objectGroup->state.setRotation(rot);
+
+            // also there seems to be a problem with the object group state, setting it doesn't seem to update the meshes
+            // so insted we directly update the meshes inside the object group
+            // also this isn't ideal since we assume all the meshes have the same position within the object group which is obviously a problem
+            for (ModelRef mesh : objectGroup->getMeshes())
+            {
+                if (mesh->state.rotation != rot)
+                    mesh->state.setRotation(rot);
+
+                if (mesh->state.position != pos)
+                    mesh->state.setPosition(pos);
+            }
+
+            // std::cout << "pos: " << pos.x << ", " << pos.y << ", " << pos.z << std::endl;
         }
     }
 }
