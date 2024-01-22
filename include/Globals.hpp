@@ -42,6 +42,8 @@ class Globals
 
         int _windowHasFocus = false;
 
+        vec2 _scrollOffset = vec2(0);
+
     public :
 
         /**
@@ -87,6 +89,9 @@ class Globals
 
         bool mouseLeftClick();
         bool mouseLeftClickDown();
+
+        vec2 mouseScrollOffset();
+        void clearMouseScroll();
 
         /**
          * @brief Set the given pointer as text input user

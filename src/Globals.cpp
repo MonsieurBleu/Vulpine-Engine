@@ -24,6 +24,8 @@ void Globals::drawFullscreenQuad() {_fullscreenQuad.drawVAO();};
 
 bool Globals::mouseLeftClick(){return _mouseLeftClick;};
 bool Globals::mouseLeftClickDown(){return _mouseLeftClickDown;};
+vec2 Globals::mouseScrollOffset(){return _scrollOffset;};
+void Globals::clearMouseScroll(){_scrollOffset = vec2(0);};
 
 bool Globals::useTextInputs(void* user)
 {

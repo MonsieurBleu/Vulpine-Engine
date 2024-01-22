@@ -22,6 +22,7 @@ class App;
 
 class InputBuffer : private std::deque<GLFWKeyInfo>
 {
+    friend App;
     friend void giveCallbackToApp(GLFWKeyInfo input);
     void add(GLFWKeyInfo input);
 

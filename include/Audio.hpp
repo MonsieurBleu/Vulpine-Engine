@@ -97,7 +97,7 @@ class AudioSource
         AudioSource& setPitch(ALfloat pitch);
         AudioSource& setGain(ALfloat gain);
 
-        ALuint getHandle();
+        ALuint getHandle(){return handle;};
 };
 
 /*

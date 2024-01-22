@@ -128,6 +128,11 @@ App::App(GLFWwindow* window) :
     SSAO(renderBuffer),
     Bloom(renderBuffer)
 {
+    if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
+    {
+        std::cerr << "ERROR: Could not set Distance Model to AL_INVERSE_DISTANCE_CLAMPED" << std::endl;
+    }
+
     timestart = GetTimeMs();
 
     glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -261,6 +266,14 @@ App::App(GLFWwindow* window) :
         globals.textInputString.push_back(codepoint);
     });
     
+    glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
+    {
+        globals._scrollOffset = vec2(xoffset, yoffset);
+        GLFWKeyInfo i;
+        i.key = 0;
+        inputs.add(i);
+    });
+
     /// CENTER WINDOW
     glfwSetWindowPos(
         window, 
@@ -346,6 +359,20 @@ void App::mainloopStartRoutine()
 void App::mainloopPreRenderRoutine()
 {
     globals.currentCamera->updateProjectionViewMatrix();
+
+    vec3 camPos = globals.currentCamera->getPosition();   
+    vec3 camFront = globals.currentCamera->getDirection();
+    vec3 camDir[2] = 
+    {
+        globals.currentCamera->getDirection(),
+        cross(camFront, cross(camFront, vec3(0, 1, 0)))
+    };
+
+    //set current listener position
+    alListener3f(AL_POSITION, -camPos.x, camPos.y, -camPos.z);
+
+    //set current listener orientation
+    alListenerfv(AL_ORIENTATION, (float*)camDir);
 }
 
 void App::mainloopEndRoutine()
