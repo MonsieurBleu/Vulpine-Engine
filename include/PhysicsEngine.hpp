@@ -115,6 +115,8 @@ public:
     bool getIsStatic() const { return isStatic; };
     bool getGravity() const { return enableGravity; };
 
+    Collider *getCollider() const { return collider; };
+
     void setPosition(vec3 _position) { position = _position; };
     void setVelocity(vec3 _velocity) { velocity = _velocity; };
     void setAcceleration(vec3 _acceleration) { acceleration = _acceleration; };
