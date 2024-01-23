@@ -42,6 +42,7 @@ class Mesh
         bool invertFaces = false;
         bool depthWrite = true;
         bool noBackFaceCulling = false;
+        float maxDrawDistSquared = INFINITY;
 
         Mesh(){};
 

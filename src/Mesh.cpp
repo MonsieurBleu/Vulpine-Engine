@@ -97,9 +97,16 @@ bool MeshModel3D::cull()
     
     if(!state.frustumCulled)
         return culled = true;
+    
 
     const mat4 m = state.modelMatrix;
     vec3 center = vec3(m[3]);
+
+    vec3 camToCenter = center-globals.currentCamera->getPosition();
+    // if(dot(camToCenter, camToCenter) >= maxDrawDistSquared)
+    if(length(camToCenter) >= 300.f)
+        return culled = false;
+
     vec3 scale = vec3(
         length(vec3(m[0])),
         length(vec3(m[1])),
