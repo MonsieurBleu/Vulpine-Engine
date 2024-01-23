@@ -149,6 +149,9 @@ void RigidBody::update(float deltaTime, std::vector<RigidBodyRef> bodies, std::v
             continue;
         }
 
+        if (isStatic && bodies[i]->getIsStatic())
+            continue;
+
         float penetration;
         vec3 normal;
         if (this->collider->checkCollision(bodies[i]->collider, this->position, bodies[i]->position, penetration, normal))
