@@ -21,6 +21,14 @@ public:
 
     void update(float deltaTime);
 
-    ObjectGroupRef& getGroup(){return objectGroup;};
-    RigidBodyRef& getBody(){return rigidBody;};
+    ObjectGroupRef &getGroup() { return objectGroup; };
+    RigidBodyRef &getBody() { return rigidBody; };
+
+    vec3 getPosition();
+    void setPosition(vec3 position);
+
+    vec3 getRotation();
+    void setRotation(vec3 rotation);
+
+    void translate(vec3 translation);
 };

@@ -39,3 +39,43 @@ void GameObject::update(float deltaTime)
         }
     }
 }
+
+vec3 GameObject::getPosition()
+{
+    if (rigidBody != NULL)
+        return rigidBody->getPosition();
+    else
+        return objectGroup->state.position;
+}
+
+void GameObject::setPosition(vec3 position)
+{
+    if (rigidBody != NULL)
+        rigidBody->setPosition(position);
+    else
+        objectGroup->state.setPosition(position);
+}
+
+vec3 GameObject::getRotation()
+{
+    if (rigidBody != NULL)
+        return eulerAngles(rigidBody->getRotation());
+    else
+        return objectGroup->state.rotation;
+}
+
+void GameObject::setRotation(vec3 rotation)
+{
+    if (rigidBody != NULL)
+        rigidBody->setRotation(quat(rotation));
+    else
+        objectGroup->state.setRotation(rotation);
+}
+
+void GameObject::translate(vec3 translation)
+{
+    if (rigidBody != NULL)
+        rigidBody->setPosition(rigidBody->getPosition() + translation);
+    else
+        objectGroup->state.position += translation;
+}
