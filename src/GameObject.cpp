@@ -77,5 +77,5 @@ void GameObject::translate(vec3 translation)
     if (rigidBody != NULL)
         rigidBody->setPosition(rigidBody->getPosition() + translation);
     else
-        objectGroup->state.position += translation;
+        objectGroup->state.setPosition(objectGroup->state.position + translation);
 }
