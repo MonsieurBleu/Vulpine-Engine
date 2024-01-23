@@ -235,7 +235,7 @@ void Scene::generateShadowMaps()
             i->updateShadowCamera();
             i->shadowCamera.updateFrustum();
             globals.currentCamera = &i->shadowCamera;
-            cull();
+            //cull();
             depthOnlyDraw(i->shadowCamera);
             i->shadowMap.deactivate();
         }
