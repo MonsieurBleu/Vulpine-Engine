@@ -94,6 +94,8 @@ private:
     bool isStatic = false;
 
 public:
+    bool enabled = true;
+
     const int ID;
     static int IDCounter;
 
