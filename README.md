@@ -18,7 +18,7 @@ My goals with this project, are to learn how to make an application such as this
 The Vulpine Engine is supported for Windows and Linux environment with OpenGL 4.6 compatiblity. No Mac or Android/IOS support is planned or will ever be.
 
 This application uses different libraries :
-- [OpenGl](https://www.opengl.org/)
+- [OpenGL](https://www.opengl.org/)
 - [GLEW](https://github.com/nigels-com/glew)
 - [GLFW](https://github.com/glfw/glfw)
 - [GLM](https://github.com/g-truc/glm) 
@@ -172,7 +172,7 @@ This application uses different libraries :
    - [ ] Scene/Models Automatic Streaming
    - [ ] Shader Streaming
 
-### Physic 
+### Physics
 - [X] Base Physics Engine
 - [X] Constant Step Physics Thread
 - [X] Sphere Collider
