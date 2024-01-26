@@ -65,10 +65,10 @@
         
 - [ ] Culling
   - [ ] Frustum
-    - [X] Sphere
-    - [ ] AABB
+    - [X] Sphere Frustum Culling 
+    - [ ] AABB Frustum Culling 
     - [ ] Fast Parallelized Frustum Culling
-  - [ ]
+  - [ ] Efficient Occlusion Culling
 
 
 
