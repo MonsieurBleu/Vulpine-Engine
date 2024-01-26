@@ -119,6 +119,11 @@ RigidBody::~RigidBody()
 
 void RigidBody::update(float deltaTime, std::vector<RigidBodyRef> bodies, std::vector<Collision> &collisionEvents)
 {
+    if (!enabled)
+    {
+        return;
+    }
+
     // position and velocity update
     if (!isStatic)
     {
@@ -145,9 +150,13 @@ void RigidBody::update(float deltaTime, std::vector<RigidBodyRef> bodies, std::v
     for (size_t i = 0; i < bodies.size(); i++)
     {
         if (bodies[i]->ID == this->ID)
-        {
             continue;
-        }
+
+        if (!bodies[i]->enabled)
+            continue;
+
+        if (isStatic && bodies[i]->getIsStatic())
+            continue;
 
         float penetration;
         vec3 normal;

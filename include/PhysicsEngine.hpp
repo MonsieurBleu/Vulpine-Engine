@@ -94,6 +94,8 @@ private:
     bool isStatic = false;
 
 public:
+    bool enabled = true;
+
     const int ID;
     static int IDCounter;
 
@@ -113,6 +115,9 @@ public:
     PhysicsMaterial getMaterial() const { return material; };
     float getMass() const { return mass; };
     bool getIsStatic() const { return isStatic; };
+    bool getGravity() const { return enableGravity; };
+
+    Collider *getCollider() const { return collider; };
 
     void setPosition(vec3 _position) { position = _position; };
     void setVelocity(vec3 _velocity) { velocity = _velocity; };
@@ -123,6 +128,7 @@ public:
     void setMass(float _mass) { mass = _mass; };
     void setMaterial(PhysicsMaterial _material) { material = _material; };
     void setIsStatic(bool _isStatic) { isStatic = _isStatic; };
+    void setGravity(bool _enableGravity) { enableGravity = _enableGravity; };
 
     friend class PhysicsEngine;
     friend bool raycast(Ray ray, std::vector<RigidBodyRef> bodies, float maxLen, float &t, RigidBodyRef &body);
