@@ -22,13 +22,16 @@
   - [X] Point Light
   - [X] Tube Light
 
-- [ ] Colors & Buffer
+- [X] Colors & Buffer
   - [X] Easy Frame Buffer Creation & Usage
   - [X] HDR
+  - [X] sRGB Support (OpenGL native) 
 
  - [ ] Shadowing
-   - [X] Shadow Maps
+   - [X] Multi Shadow Maps Support
    - [X] Efficient Percentage Close Smooth Shadows
+   - [X] Directionnal Light Shadow Mapping
+   - [ ] Point Light Shadow Mapping 
    - [ ] Cascading Shadow Maps
 
 - [ ] Geometry Drawning 
@@ -63,14 +66,36 @@
   - [ ] For Directionnal Lights
   - [ ] Fast Non-Redundant Updates
         
-- [ ] Culling
+- [ ] Culling 
   - [ ] Frustum
     - [X] Sphere Frustum Culling 
     - [ ] AABB Frustum Culling 
     - [ ] Fast Parallelized Frustum Culling
   - [ ] Efficient Occlusion Culling
 
+### 2D 
+- [ ] Text
+  - [X] MSDF Font Rendering
+  - [X] Single String Batch
+  - [ ] Multi String Batch
+  - [ ] Multi Text Style Per Batch Support
+  - [ ] Automatic Text Resizing
+      
+- [ ] Fast Ui
+  - [X] Fast UI Batching
+  - [X] Value Menu Tab (TODO : Refactor this monstrosity)
+    - [X] Const & Input Support
+    - [ ] Output Support
+    - [X] Int
+    - [X] Float
+    - [X] Bollean
+    - [ ] String
+    - [X] Color : Hue, Saturation, Value, HexCode
+    - [X] Direction : Phi & Theta Angle
+    - [X] Angles
 
+### Inputs
+- [ ]
 
 ### Assets 
 - [ ] 3D
@@ -85,7 +110,7 @@
   - [X] Ktx Images Loading (KTX lib) 
   - [X] MipMaps (KTX lib)
   - [X] Basic CubeMap Loading
-  - [X] Font Atlas Msdf Loading
+  - [X] Font/CSV Atlas MSDF Loading
   - [ ] Level/Scene Atlas Generator
 
  - [ ] Audio
