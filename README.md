@@ -15,7 +15,7 @@ My goals with this project, are to learn how to make an application such as this
 
 ## Portability & Dependencies 
 
-The Vulpine Engine is supported for Windows and Linus environment with OpenGL 4.6 drivers. No Mac or Android/IOS support is planned or will ever be.
+The Vulpine Engine is supported for Windows and Linux environment with OpenGL 4.6 compatiblity. No Mac or Android/IOS support is planned or will ever be.
 
 This application uses different libraries :
 - [OpenGl](https://www.opengl.org/)
