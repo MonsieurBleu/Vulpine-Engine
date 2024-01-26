@@ -73,16 +73,20 @@
     - [ ] Fast Parallelized Frustum Culling
   - [ ] Efficient Occlusion Culling
 
-### 2D 
+- [ ] Scene/Group Loader
+- [ ] Map/Scene Editor 
+
+### 2D Rendering
 - [ ] Text
   - [X] MSDF Font Rendering
+  - [X] UFT Support
   - [X] Single String Batch
   - [ ] Multi String Batch
   - [ ] Multi Text Style Per Batch Support
   - [ ] Automatic Text Resizing
       
 - [ ] Fast Ui
-  - [X] Fast UI Batching
+  - [X] Fast UI Batching (TODO : Refactor this monstrosity)
   - [X] Value Menu Tab (TODO : Refactor this monstrosity)
     - [X] Const & Input Support
     - [ ] Output Support
@@ -97,8 +101,18 @@
 ### Inputs
 - [X] Easy Text Inputs With Clipboard Support & Single Source Security
 - [X] Inputs Handler
-- [X] Default GLFW Inputs Callbacks
-- [ ] Easy Custom Inputs Implementation  
+- [X] App's Default GLFW Inputs Callbacks
+- [ ] Easy Custom Inputs Implementation
+- [ ] Window Event Handler
+
+### Utils & Debug
+- [X] Clear OpenGl Message Callback
+- [X] Light Helpers (TODO : rework)
+- [X] Angle & Color Conversion Functions
+- [X] Precise Benchmark/Frame Timer
+- [X] Precise Limit Timer
+- [X] Default AppTime & SimulationTime Timers
+- [ ] Easier Accumulation Timer
 
 ### Assets 
 - [ ] 3D
@@ -107,6 +121,7 @@
   - [X] .obj Model Loading
   - [ ] Custom Fast Model Format
 
+      
  - [ ] Textures
   - [X] png/jpeg/gif Images Loading (STB lib)
   - [X] hdr Images Loading (STB lib)
@@ -135,6 +150,17 @@
    - [ ] Scene/Models Automatic Streaming
    - [ ] Shader Streaming
 
-
+### Physic 
+- [X] Base Physics Engine
+- [X] Constant Step Physics Thread
+- [X] Sphere Collider
+- [X] AABB Collider
+- [ ] OBB Collider
+- [ ] Easy Colliders Loading
+- [ ] Game Object Class
+  - [X] Base Class
+  - [ ] Multi Collider Support
+  - [ ] Model/Physics Following mode
+- [ ] Physics Culling/Clusering/Optimisation 
   
 
