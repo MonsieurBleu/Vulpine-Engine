@@ -95,7 +95,10 @@
     - [X] Angles
 
 ### Inputs
-- [ ]
+- [X] Easy Text Inputs With Clipboard Support & Single Source Security
+- [X] Inputs Handler
+- [X] Default GLFW Inputs Callbacks
+- [ ] Easy Custom Inputs Implementation  
 
 ### Assets 
 - [ ] 3D
