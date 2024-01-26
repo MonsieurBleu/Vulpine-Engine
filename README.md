@@ -52,8 +52,30 @@
   - [ ] FXAA
   - [ ] ... 
 
+### Scene Management 
+- [ ] Scene Hierarchy
+  - [X] Automatic Updates
+  - [X] Hide Status Automatic Propagation 
+  - [X] For Object Groups
+  - [X] For Meshes
+  - [X] For ModelSates/Instances (TODO : test)
+  - [ ] For Point/Tube Lights
+  - [ ] For Directionnal Lights
+  - [ ] Fast Non-Redundant Updates
+        
+- [ ] Culling
+  - [ ] Frustum
+    - [X] Sphere
+    - [ ] AABB
+    - [ ] Fast Parallelized Frustum Culling
+  - [ ]
+
+
+
 ### Assets 
 - [ ] 3D
+  - [X] Easy VAO Creation & Update
+  - [X] Automatic AABB Model Generation   
   - [X] .obj Model Loading
   - [ ] Custom Fast Model Format
 
@@ -73,7 +95,12 @@
    - [ ] Audio Effects (Reverb, etc...)
 
 - [ ] Shader
-  - [ ] Easy 
+  - [X] Shader Include (With Custom Librairies) 
+  - [X] Easy Fragment/Geometry/Vertex Shader Loading From Source File
+  - [ ] Shared Device & Host Constants/Defines
+  - [ ] Easy Tesselation Shader Loading From Source File
+  - [ ] Easy SPIR-V Loading
+  - [ ] Easy Compute Shader Loading 
 
 - [ ] Assets Streaming 
    - [ ] Audio Streaming
