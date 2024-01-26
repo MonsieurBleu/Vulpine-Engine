@@ -4,6 +4,29 @@
 <image width="400" height="400" src="https://github.com/MonsieurBleu/Game-Engine/assets/97893210/e051c85c-d509-4b99-ad3e-a5ffb777c521">
 </image></p>
 
+## Presentation
+
+The Vulpine Engine is a lightweight game engine made from scratch in C++ using OpenGL. This project aims to provide a solid and versatile foundation for 3D game development. The engine is built for developers who, like me, prefer a hands-on, code first approach with both hight-level built-in features and low-level fine tuning through direct API calls.
+
+
+## About The Creator 
+
+My goals with this project, are to learn how to make an application such as this one and to have a custom-made graphics/game engine for sevral of my personal and academical projects. This engine is and will always be open source and free for all uses.
+
+## Portability & Dependencies 
+
+The Vulpine Engine is supported for Windows and Linus environment with OpenGL 4.6 drivers. No Mac or Android/IOS support is planned or will ever be.
+
+This application uses different libraries :
+- [OpenGl](https://www.opengl.org/)
+- [GLEW](https://github.com/nigels-com/glew)
+- [GLFW](https://github.com/glfw/glfw)
+- [GLM](https://github.com/g-truc/glm) 
+- [KTX](https://github.com/KhronosGroup/KTX-Software)
+- [STB](https://github.com/nothings/stb)
+- [OpenAL Soft](https://github.com/kcat/openal-soft)
+- [Mini-Vobris](https://github.com/edubart/minivorbis)
+
 ## Features 
 
 ### Graphics 
@@ -120,12 +143,11 @@
   - [X] Automatic AABB Model Generation   
   - [X] .obj Model Loading
   - [ ] Custom Fast Model Format
-
       
  - [ ] Textures
   - [X] png/jpeg/gif Images Loading (STB lib)
   - [X] hdr Images Loading (STB lib)
-  - [X] Ktx Images Loading (KTX lib) 
+  - [X] KTX Images Loading (KTX lib) 
   - [X] MipMaps (KTX lib)
   - [X] Basic CubeMap Loading
   - [X] Font/CSV Atlas MSDF Loading
