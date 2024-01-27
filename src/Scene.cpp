@@ -1,6 +1,6 @@
 #include <Scene.hpp>
 #include <iostream>
-#include <Globals.hpp>
+#include <Globals.hpp> 
 #include <Helpers.hpp>
 
 Scene::Scene()

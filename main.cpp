@@ -7,4 +7,4 @@ int main()
     int ret = launchGame(&engine, winname);
     if(engine) delete engine;
     return ret;
-}
+} 

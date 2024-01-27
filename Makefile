@@ -3,15 +3,47 @@ CPPFLAGS = -Wall -Ofast -Wno-strict-aliasing -g
 ifeq ($(OS),Windows_NT)
 	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lsoft_oal
 	LINKFLAGS = libglfw3.a libglfw3dll.a 
+
+	ECHO = echo
+	BOLD = [1m
+	UNDERLINE = [4m
+	INVERSE = [7m
+	RESET = [0m
+	GREEN = [32m
+	RED = [31m
+	BLUE = [34m
+	CYAN = [36m
+	ORANGE = [31;1m
+
+	BUILD_FILE_VULPINE = $(ECHO) $(BOLD)$(ORANGE)$(UNDERLINE)Building Vulpine Module$(RESET)
+	BUILD_FILE_GAME    = $(ECHO) $(BOLD)$(CYAN)$(UNDERLINE)Building$(RESET)
+	LINKING_EXECUTABLE = $(ECHO) $(UNDERLINE)$(BOLD)$(BLUE)Linking$(RESET)
+
 else
 	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal
 	LINKFLAGS = 
+
+	ECHO = echo
+	BOLD = [1m
+	UNDERLINE = [4m
+	INVERSE = [7m
+	RESET = [0m
+	GREEN = [32m
+	RED = [31m
+	BLUE = [34m
+	CYAN = [36m
+	ORANGE = [31;1m
+
+	BUILD_FILE_VULPINE = $(ECHO) "$(BOLD)$(ORANGE)$(UNDERLINE)Building Vulpine Module$(RESET)"
+	BUILD_FILE_GAME    = $(ECHO) "$(BOLD)$(CYAN)$(UNDERLINE)Building$(RESET)"
+	LINKING_EXECUTABLE = $(ECHO) "$(UNDERLINE)$(BOLD)$(BLUE)Linking$(RESET)"
+
 endif
 
 INCLUDE = -Iinclude -IexternalLibs 
 ifeq ($(OS),Windows_NT)
 	EXEC = GameEngine.exe
-	RM = del /Q /F /S
+	RM = del /f /q
 else
 	EXEC = GameEngine
 	RM = rm -f
@@ -24,8 +56,9 @@ IDIR=include
 SDIR=src
 
 DEPDIR := .deps
-DEPFLAGS = -MT $@ -MMD -MP -MF $(DEPDIR)/$*.d
-DEPFLAGSMAIN = -MT $@ -MMD -MP -MF $(DEPDIR)/main.d
+DEPFLAGS_BASE = -MT $@ -MMD -MP -MF $(DEPDIR)
+DEPFLAGS = $(DEPFLAGS_BASE)/$*.d
+DEPFLAGSMAIN = $(DEPFLAGS_BASE)/main.d
 
 SOURCES := $(call rwildcard,$(SDIR),*.cpp)
 OBJ := $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
@@ -63,15 +96,18 @@ endif
 gameReinstall : gameClean game
 
 $(G_EXEC): $(G_OBJ) $(G_EOBJ)
-	$(CC) $(G_EOBJ) $(G_OBJ) $(LINKFLAGS) -o $(G_EXEC) $(LIBFLAGS)
+	@$(LINKING_EXECUTABLE) $@) $@
+	@$(CC) $(G_EOBJ) $(G_OBJ) $(LINKFLAGS) -o $(G_EXEC) $(LIBFLAGS)
 
 ../obj/main.o : ../main.cpp
 ../obj/main.o : ../main.cpp 
-	$(CC) -c $(CPPFLAGS) -I../include -Wdelete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
+	@$(BUILD_FILE_GAME) $<
+	@$(CC) -c $(CPPFLAGS) -I../include -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
 
 ../obj/%.o : ../src/%.cpp
 ../obj/%.o : ../src/%.cpp
-	$(CC) -c $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) -I../include $< -o $@ 
+	@$(BUILD_FILE_GAME) $<
+	@$(CC) -c $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) -I../include $< -o $@ 
 
 #/**************************************/
 
@@ -82,7 +118,8 @@ run :
 	$(EXEC)
 
 $(EXEC): $(OBJ)
-	$(CC) $(OBJ) $(LINKFLAGS) -o $(EXEC) $(LIBFLAGS)
+	@$(LINKING_EXECUTABLE) $@
+	@$(CC) $(OBJ) $(LINKFLAGS) -o $(EXEC) $(LIBFLAGS)
 
 install : $(EXEC)
 
@@ -90,16 +127,21 @@ reinstall : clean install
 
 obj/main.o : main.cpp
 obj/main.o : main.cpp $(DEPDIR)/main.d | $(DEPDIR)
-	$(CC) -c $(DEPFLAGSMAIN) $(CPPFLAGS) -Wdelete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
+	@$(BUILD_FILE_VULPINE) $<
+	@$(CC) -c $(DEPFLAGSMAIN) $(CPPFLAGS) -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
-	$(CC) -c $(CPPFLAGS) -fpermissive -w $(LIBFLAGS) $(INCLUDE)  $< -o $@
+	@$(BUILD_FILE_VULPINE) $<
+	@$(CC) -c $(CPPFLAGS) -fpermissive -w $(LIBFLAGS) $(INCLUDE)  $< -o $@
+
+obj/Audio.o : src/Audio.cpp
+	@$(BUILD_FILE_VULPINE) $<
+	@$(CC) -c $(DEPFLAGS_BASE)/Audio.d $(CPPFLAGS) $(LIBFLAGS) -Wno-unused-variable $(INCLUDE) $< -o $@ 
 
 obj/%.o : src/%.cpp
 obj/%.o : src/%.cpp $(DEPDIR)/%.d | $(DEPDIR)
-	$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) $< -o $@ 
-
-
+	@$(BUILD_FILE_VULPINE) $<
+	@$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) $< -o $@ 
 
 $(DEPDIR): ; @mkdir $@
 
@@ -113,11 +155,12 @@ include $(wildcard $(DEPFILES))
 
 
 
+
 clean : 
 ifeq ($(OS),Windows_NT)
-	$(RM) $(EXEC) obj\*.o $(DEPDIR)\*.d
+	@$(RM) $(EXEC) obj\*.o $(DEPDIR)\*.d 
 else
-	$(RM) $(EXEC) obj/*.o $(DEPDIR)/*.d
+	@$(RM) $(EXEC) obj/*.o $(DEPDIR)/*.d
 endif
 
 countlines :

@@ -6,7 +6,7 @@ std::string readFile(const std::string &filePath) // Mights just use a C approac
 {
     std::string content;
     std::ifstream fileStream(filePath, std::ios::in);
-
+ 
     if (!fileStream.is_open())
     {
         std::cerr << TERMINAL_ERROR << "Could not read file " << filePath << ". File does not exist." << TERMINAL_RESET << std::endl;

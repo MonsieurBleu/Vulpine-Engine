@@ -354,7 +354,7 @@ void App::mainloopStartRoutine()
     double mpx, mpy;
     glfwGetCursorPos(window, &mpx, &mpy);
     globals._mousePosition = vec2(mpx, mpy);
-}
+} 
 
 void App::mainloopPreRenderRoutine()
 {
