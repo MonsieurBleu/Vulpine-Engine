@@ -59,8 +59,10 @@ This application uses different libraries :
 
 - [ ] Geometry Drawning 
   - [X] Vao Drawning
+  - [X] Automatic Uniform & Maps Update
+  - [ ] Automatic UBO Updates 
   - [X] Single Instanced Vao Drawning
-  - [X] Multiple Instanced Vao Drawing
+  - [ ] Multiple Instanced Vao Drawing
   - [ ] Indirect/AZDO Vao Drawning
 
 - [ ] Rendering Techniques
