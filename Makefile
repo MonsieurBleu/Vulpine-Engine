@@ -13,7 +13,7 @@ ifeq ($(OS),Windows_NT)
 	RED = [31m
 	BLUE = [34m
 	CYAN = [36m
-	ORANGE = [31;1m
+	ORANGE = [38;5;208m
 
 	BUILD_FILE_VULPINE = $(ECHO) $(BOLD)$(ORANGE)$(UNDERLINE)Building Vulpine Module$(RESET)
 	BUILD_FILE_GAME    = $(ECHO) $(BOLD)$(CYAN)$(UNDERLINE)Building$(RESET)
@@ -96,30 +96,27 @@ endif
 gameReinstall : gameClean game
 
 $(G_EXEC): $(G_OBJ) $(G_EOBJ)
-	@$(LINKING_EXECUTABLE) $@) $@
+	@$(LINKING_EXECUTABLE) $@
 	@$(CC) $(G_EOBJ) $(G_OBJ) $(LINKFLAGS) -o $(G_EXEC) $(LIBFLAGS)
 
 ../obj/main.o : ../main.cpp
 ../obj/main.o : ../main.cpp 
-	@$(BUILD_FILE_GAME) $<
 	@$(CC) -c $(CPPFLAGS) -I../include -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
+	@$(BUILD_FILE_GAME) $<
 
 ../obj/%.o : ../src/%.cpp
 ../obj/%.o : ../src/%.cpp
-	@$(BUILD_FILE_GAME) $<
 	@$(CC) -c $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) -I../include $< -o $@ 
+	@$(BUILD_FILE_GAME) $<
 
 #/**************************************/
-
-
-
 
 run :
 	$(EXEC)
 
 $(EXEC): $(OBJ)
 	@$(LINKING_EXECUTABLE) $@
-	@$(CC) $(OBJ) $(LINKFLAGS) -o $(EXEC) $(LIBFLAGS)
+	@$(CC) $(OBJ) -o $@ $(LIBFLAGS) $(LINKFLAGS)
 
 install : $(EXEC)
 
@@ -127,21 +124,21 @@ reinstall : clean install
 
 obj/main.o : main.cpp
 obj/main.o : main.cpp $(DEPDIR)/main.d | $(DEPDIR)
-	@$(BUILD_FILE_VULPINE) $<
 	@$(CC) -c $(DEPFLAGSMAIN) $(CPPFLAGS) -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
+	@$(BUILD_FILE_VULPINE) $<
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
-	@$(BUILD_FILE_VULPINE) $<
 	@$(CC) -c $(CPPFLAGS) -fpermissive -w $(LIBFLAGS) $(INCLUDE)  $< -o $@
+	@$(BUILD_FILE_VULPINE) $<
 
 obj/Audio.o : src/Audio.cpp
-	@$(BUILD_FILE_VULPINE) $<
 	@$(CC) -c $(DEPFLAGS_BASE)/Audio.d $(CPPFLAGS) $(LIBFLAGS) -Wno-unused-variable $(INCLUDE) $< -o $@ 
+	@$(BUILD_FILE_VULPINE) $<
 
 obj/%.o : src/%.cpp
 obj/%.o : src/%.cpp $(DEPDIR)/%.d | $(DEPDIR)
-	@$(BUILD_FILE_VULPINE) $<
 	@$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) $< -o $@ 
+	@$(BUILD_FILE_VULPINE) $<
 
 $(DEPDIR): ; @mkdir $@
 
