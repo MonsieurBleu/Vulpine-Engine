@@ -68,12 +68,22 @@ Texture2D& Texture2D::bind(GLuint location)
     return *this;
 }
 
+Texture2D::~Texture2D()
+{
+    if(handle && handleRef.use_count() == 1)
+    {
+        glDeleteTextures(1, &handle);
+    }
+}
+
 Texture2D& Texture2D::generate()
 {
     if(!generated)
     {
         glGenTextures(1, &handle);
         glBindTexture(GL_TEXTURE_2D, handle);
+        
+        handleRef = std::make_shared<GLuint>(handle);
 
         glTexImage2D(
             GL_TEXTURE_2D,

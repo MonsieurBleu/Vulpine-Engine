@@ -75,18 +75,14 @@ extern ALCcontext* openALContext;
 class AudioSource
 {
     private : 
-        ALuint handle;
+        ALuint handle = 0;
+        std::shared_ptr<ALuint> handleRef;
         ALint state = AL_PAUSED;
-
-        /*
-            AudioSources are non cloneable and non assignables
-        */
-        AudioSource& operator=(const AudioSource& other) = delete;
-        AudioSource(const AudioSource& other) = delete;
 
     public :    
         AudioSource();
         ~AudioSource();
+        AudioSource& generate();
         AudioSource& play();
         AudioSource& pause();
         AudioSource& loop(bool doLoop = true);
@@ -109,9 +105,11 @@ class AudioFile
 {
     private : 
         ALuint handle;
+        std::shared_ptr<ALuint> handleRef;
         ALenum format;
 
     public : 
+        ~AudioFile();
         void loadOGG(const std::string &filePath);
         ALuint getHandle();
 };

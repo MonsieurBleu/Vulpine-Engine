@@ -28,6 +28,7 @@ class VertexAttribute
         uint64 bufferSize;
 
         GLuint handle = 0;
+        std::shared_ptr<GLuint> handleRef;
         GLuint location = 0;
         GenericSharedBuffer buffer;
 
@@ -44,6 +45,8 @@ class VertexAttribute
                    uint8  _perVertexSize,
                    GLenum _type,
                    bool   _copySource);
+
+        ~VertexAttribute();
 
         void updateData(GenericSharedBuffer _src, uint64 _vertexCount);
 
@@ -64,6 +67,7 @@ class VertexAttributeGroup
     private : 
 
         GLuint arrayHandle;
+        std::shared_ptr<GLuint> handleRef;
 
         bool handleCreated = false;
 
@@ -73,6 +77,8 @@ class VertexAttributeGroup
         vec3 AABBmax;
 
     public : 
+
+        ~VertexAttributeGroup();
 
         VertexAttributeGroup& genAABB();
         vec3 getAABBMin();

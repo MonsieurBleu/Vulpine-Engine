@@ -121,7 +121,17 @@ void VertexAttribute::updateData(GenericSharedBuffer _src, uint64 _vertexCount)
 
 void VertexAttribute::genBuffer()
 {
+    if(handle) return;
     glGenBuffers(1, &handle);
+    handleRef = std::make_shared<GLuint>(handle);
+}
+
+VertexAttribute::~VertexAttribute()
+{
+    if(handle && handleRef.use_count() == 1)
+    {
+        glDeleteBuffers(1, &handle);
+    }
 }
 
 void VertexAttribute::sendAllToGPU()
@@ -190,6 +200,8 @@ VertexAttributeGroup &VertexAttributeGroup::generate()
     glGenVertexArrays(1, &arrayHandle);
     glBindVertexArray(arrayHandle);
 
+    handleRef = std::make_shared<GLuint>(arrayHandle);
+
     forEach([](int i, VertexAttribute &attribute){
         glEnableVertexAttribArray(i);
         attribute.setFormat();
@@ -202,6 +214,14 @@ VertexAttributeGroup &VertexAttributeGroup::generate()
 
     return *this;
 };
+
+VertexAttributeGroup::~VertexAttributeGroup()
+{
+    if(arrayHandle && handleRef.use_count() == 1)
+    {
+        glDeleteVertexArrays(1, &arrayHandle);
+    }
+}
 
 VertexAttributeGroup &VertexAttributeGroup::genAABB()
 {

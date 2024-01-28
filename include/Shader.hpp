@@ -54,17 +54,13 @@ class ShaderProgram
         Shader frag;
         Shader geom;
 
-        static uint16 useCount[MAX_SHADER_HANDLE];
+        std::shared_ptr<GLuint> handle;
 
 
     public :
         ShaderUniformGroup uniforms;
 
-
-        ShaderProgram& operator=(const ShaderProgram& other);
-
         ShaderProgram(){};
-        ShaderProgram(const ShaderProgram& other);
         ~ShaderProgram();
 
         ShaderProgram(const std::string _fragPath, 

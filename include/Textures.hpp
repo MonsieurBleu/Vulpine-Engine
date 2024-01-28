@@ -4,7 +4,7 @@
 #include <GL/glew.h>
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
-
+#include <memory>
 #include <glm/glm.hpp>
 
 using namespace glm;
@@ -13,6 +13,7 @@ class Texture2D
 {
     private : 
         GLuint handle = 0;
+        std::shared_ptr<GLuint> handleRef;
 
         GLenum _internalFormat = GL_SRGB;
         GLenum _format = GL_RGB;
@@ -31,6 +32,7 @@ class Texture2D
     public :   
 
         Texture2D();
+        ~Texture2D();
 
         // TODO : add security when the texture is arleady generated
         Texture2D& setResolution(const ivec2 resolution);

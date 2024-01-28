@@ -4,7 +4,7 @@
 #include <iostream>
 #include "Shadinclude.hpp"
 
-uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
+// uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
 
 void Shader::prepareLoading(const std::string &path)
 {
@@ -137,7 +137,8 @@ ShaderError ShaderProgram::compileAndLink()
     if (!geom.get_Path().empty())
         glDeleteShader(geom.get_shader());
 
-    useCount[program]++;
+    // useCount[program]++;
+    handle = std::make_shared<GLuint>(program);
 
     timer.end();
 
@@ -183,31 +184,8 @@ ShaderProgram &ShaderProgram::addUniform(ShaderUniform newUniform)
 
 ShaderProgram::~ShaderProgram()
 {
-    if (program != NO_PROGRAM)
+    if (program != NO_PROGRAM && handle.use_count() == 1)
     {
-        uint16 &cnt = useCount[program];
-        cnt--;
-
-        if (!cnt)
-            glDeleteProgram(program);
+        glDeleteProgram(program);
     }
-}
-
-ShaderProgram::ShaderProgram(const ShaderProgram &other)
-{
-    *(this) = other;
-}
-
-ShaderProgram &ShaderProgram::operator=(const ShaderProgram &other)
-{
-    this->program = other.program;
-    this->uniforms = other.uniforms;
-    this->vert = other.vert;
-    this->frag = other.frag;
-    this->geom = other.geom;
-
-    if (program != NO_PROGRAM)
-        useCount[program]++;
-
-    return *this;
 }

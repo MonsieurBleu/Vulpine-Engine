@@ -97,6 +97,8 @@ void AudioFile::loadOGG(const std::string &filePath)
         goto exit;
     }
 
+    handleRef = std::make_shared<ALuint>(handle);
+
     if(ov_open_callbacks(fp, &vf, NULL, 0, OV_CALLBACKS_NOCLOSE) < 0)
     {
         std::cerr
@@ -144,19 +146,30 @@ exit:
     return;
 }   
 
-
 ALuint AudioFile::getHandle(){return handle;};
 
-
+AudioFile::~AudioFile()
+{
+    if(handle && handleRef.use_count() == 1)
+        alCall(alDeleteBuffers, 1, &handle);
+}
 
 AudioSource::AudioSource()
 {
-    alCall(alGenSources, 1, &handle);
+    // alCall(alGenSources, 1, &handle);
 }
 
 AudioSource::~AudioSource()
 {
+    if(handle && handleRef.use_count() == 1)
     alCall(alDeleteSources, 1, &handle);
+}
+
+AudioSource& AudioSource::generate()
+{
+    if(!handle)
+        alCall(alGenSources, 1, &handle);
+    return *this;
 }
 
 AudioSource& AudioSource::play() {alCall(alSourcePlay, handle); return *this;}
