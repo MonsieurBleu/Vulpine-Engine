@@ -169,7 +169,8 @@ This application uses different libraries :
   - [ ] Easy SPIR-V Loading
   - [ ] Easy Compute Shader Loading 
 
-- [ ] Assets Streaming 
+- [ ] Assets Streaming
+   - [X] Automatic & Secure Destroy Calls  
    - [ ] Audio Streaming
    - [ ] Scene/Models Automatic Streaming
    - [ ] Shader Streaming
