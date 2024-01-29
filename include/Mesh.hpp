@@ -11,7 +11,13 @@
 #define MESH_BASE_ATTRIBUTE_LOCATION_NORMAL   2
 #define MESH_BASE_ATTRIBUTE_LOCATION_INSTANCE 3
 
+/**
+ * @brief TODO : update
+ * 
+ */
 #define MESH_BASE_UNIFORM_LOCATION_MODEL_MATRIX 3
+
+#define MESH_BASE_UNIFORM_LOCATION_MAP 20
 
 // typedef std::shared_ptr<ShaderProgram> MeshMaterial;
 
@@ -68,6 +74,7 @@ class Mesh
         
         void bindAllMaps();
         void bindMap(int id, int location);
+        void setBindlessMaps();
 
         virtual GLuint draw(GLenum mode = GL_TRIANGLES);
         virtual GLuint drawVAO(GLenum mode = GL_TRIANGLES);

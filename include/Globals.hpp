@@ -8,6 +8,7 @@
 
 #include <codecvt>
 #include <iomanip>
+#include <Controller.hpp>
 
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
 
@@ -44,6 +45,9 @@ class Globals
 
         vec2 _scrollOffset = vec2(0);
 
+
+        Controller *_currentController = nullptr;
+
     public :
 
         /**
@@ -55,7 +59,8 @@ class Globals
          */
         // void operator=(const Globals&) = delete;
 
-        Camera *currentCamera;
+        Camera *currentCamera = nullptr;
+        const Controller * getController() const;
 
         const AppState state() const;
 

@@ -98,14 +98,14 @@ bool MeshModel3D::cull()
     if(!state.frustumCulled)
         return culled = true;
     
+    // return culled = false;
 
     const mat4 m = state.modelMatrix;
     vec3 center = vec3(m[3]);
 
-    vec3 camToCenter = center-globals.currentCamera->getPosition();
-    // if(dot(camToCenter, camToCenter) >= maxDrawDistSquared)
-    if(length(camToCenter) >= 300.f)
-        return culled = false;
+    // vec3 camToCenter = center-globals.currentCamera->getPosition();
+    // if(dot(camToCenter, camToCenter) >= 90000.f)
+    //     return culled = false;
 
     vec3 scale = vec3(
         length(vec3(m[0])),
@@ -135,6 +135,13 @@ void Mesh::bindAllMaps()
     for(size_t i = 0; i < maps.size(); i ++)
         if(maps[i].getHandle())
             maps[i].bind(mapsLocation[i]);
+}
+
+void Mesh::setBindlessMaps()
+{
+    for(size_t i = 0; i < maps.size(); i ++)
+        if(maps[i].getBindlessHandle())
+            glUniform1ui64ARB(MESH_BASE_UNIFORM_LOCATION_MAP+i, maps[i].getBindlessHandle());
 }
 
 void MeshModel3D::setDrawMode()

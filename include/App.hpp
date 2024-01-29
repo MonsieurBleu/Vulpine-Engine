@@ -8,6 +8,7 @@
 #include <Inputs.hpp>
 
 #include <RenderPass.hpp>
+#include <Controller.hpp>
 
 enum AppState
 {
@@ -45,6 +46,7 @@ class App
 
         virtual bool userInput(GLFWKeyInfo input);
         bool baseInput(GLFWKeyInfo input);
+        void setController(Controller *c);
 
         void setIcon(const std::string &filename);
 

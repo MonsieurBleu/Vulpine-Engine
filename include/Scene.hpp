@@ -20,7 +20,7 @@ struct MeshGroup
         return *this;
     }
 
-    uint draw();
+    uint draw(bool useBindlessTextures);
 };
 
 class Scene
@@ -63,6 +63,8 @@ class Scene
         uint getDrawCalls();
 
         MeshMaterial depthOnlyMaterial;
+
+        bool useBindlessTextures = false;
 };
 
 

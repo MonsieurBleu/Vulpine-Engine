@@ -64,7 +64,7 @@ void ShaderUniform::activate() const
         case _3iv : glUniform3iv(location, count, (int *) data); break;
         case _4iv : glUniform4iv(location, count, (int *) data); break;
 
-        case _1ui  : glUniform1ui(location, *(uint32*) data); break;
+        case _1ui  : glUniform1i(location, *((uint32*)&data)); break;
         case _2uiv : glUniform2uiv(location, count, (uint32 *) data); break;
         case _3uiv : glUniform3uiv(location, count, (uint32 *) data); break;
         case _4uiv : glUniform4uiv(location, count, (uint32 *) data); break;

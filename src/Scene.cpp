@@ -111,17 +111,29 @@ Scene& Scene::add(ObjectGroupRef group)
     return *this;
 }
 
-uint MeshGroup::draw()
+uint MeshGroup::draw(bool useBindlessTextures)
 {
     material->activate();
     
     uint drawcnt = 0;
-
-    for(auto i : meshes)
-    if(i->isCulled())
+    
+    if(useBindlessTextures)
     {
-        i->bindAllMaps();
-        drawcnt += i->drawVAO();
+        for(auto i : meshes)
+            if(i->isCulled())
+            {
+                i->setBindlessMaps();
+                drawcnt += i->drawVAO();
+            }
+    }
+    else
+    {
+        for(auto i : meshes)
+            if(i->isCulled())
+            {
+                i->bindAllMaps();
+                drawcnt += i->drawVAO();
+            }
     }
 
     material->deactivate();
@@ -151,11 +163,20 @@ uint Scene::draw()
     drawcnt = 0;
 
     for(auto i = meshes.begin(); i != meshes.end(); i++)
-        drawcnt += i->draw();
+        drawcnt += i->draw(useBindlessTextures);
     
     for(auto i : unsortedMeshes)
         if(i->isCulled())
-            drawcnt += i->draw();
+        {
+            if(useBindlessTextures)
+                i->setBindlessMaps();
+            else
+                i->bindAllMaps();
+            
+            i->getMaterial()->activate();
+            drawcnt += i->drawVAO();
+            i->getMaterial()->deactivate();
+        }
 
     ligthBuffer.reset();
     return drawcnt;
@@ -188,21 +209,38 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             ShaderUniform(camera.getPositionAddr(), 5).activate();
             ShaderUniform(camera.getDirectionAddr(), 6).activate();
 
-            if(cull)
+            // if(cull)
+            // {
+            //     for(auto j : i->meshes)
+            //         if(j->isCulled())
+            //         {
+            //             j->bindAllMaps();
+            //             j->drawVAO();
+            //         }
+            // }
+            // else
+            //     for(auto j : i->meshes)
+            //     {
+            //         j->bindAllMaps();
+            //         j->drawVAO();
+            //     }
+
+            if(useBindlessTextures)
             {
                 for(auto j : i->meshes)
-                    if(j->isCulled())
                     {
-                        j->bindAllMaps();
+                        j->setBindlessMaps();
                         j->drawVAO();
                     }
             }
             else
+            {
                 for(auto j : i->meshes)
                 {
                     j->bindAllMaps();
                     j->drawVAO();
                 }
+            }
 
             dom->deactivate();
         }

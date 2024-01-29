@@ -2,6 +2,8 @@
 #include <Globals.hpp>
 #include <MathsUtils.hpp>
 
+#include <Constants.hpp>
+
 SimpleUiTile::SimpleUiTile(ModelState3D state, UiTileType tileType, vec4 color)
     : ModelState3D(state), tileType(tileType), color(color)
 {
@@ -318,7 +320,7 @@ UFT32Stream& FastUI_value::toString(UFT32Stream& os)
                     float &v = *(float*)value;
                     f = radians(f);
                     v = mod == 0.f ? f : v*mod + f;
-                    v = glm::mod(v, (float)(2.f*M_PI));
+                    v = glm::mod(v, (float)(2.f*PI));
                 }
             }
                 break;

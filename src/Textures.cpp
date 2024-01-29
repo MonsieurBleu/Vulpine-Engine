@@ -214,5 +214,19 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
 
     generated = true;
 
+    bindlessHandle = glGetTextureHandleARB(handle);
+    glMakeTextureHandleResidentARB(bindlessHandle);
+    
     return *(this);
+}
+
+GLuint64 Texture2D::getBindlessHandle()
+{
+    // if(!bindlessHandle)
+    // {
+    //     bindlessHandle = glGetTextureHandleARB(handle);
+    //     glMakeTextureHandleResidentARB(bindlessHandle);
+    //     std::cout << "handle : " << bindlessHandle << "\n";
+    // }
+    return bindlessHandle;
 }

@@ -39,6 +39,8 @@
 
 #include <Audio.hpp>
 
+#include <Controller.hpp>
+
 //https://antongerdelan.net/opengl/hellotriangle.html
 
 std::mutex inputMutex;
@@ -67,6 +69,11 @@ bool App::userInput(GLFWKeyInfo input){return false;};
 bool App::baseInput(GLFWKeyInfo input)
 {
     bool used = false;
+
+    if(globals._currentController)
+        used = globals._currentController->inputs(input);
+
+    if(used) return true;
 
     if(input.action == GLFW_RELEASE)
     switch (input.key)
@@ -120,6 +127,16 @@ bool App::baseInput(GLFWKeyInfo input)
     }
 
     return used;
+}
+
+void App::setController(Controller *c)
+{
+    globals._currentController = c;
+    glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
+    {
+        if(globals._currentController)
+            globals._currentController->mouseEvent(vec2(dx, dy), window);
+    });
 }
 
 App::App(GLFWwindow* window) : 
@@ -221,43 +238,43 @@ App::App(GLFWwindow* window) :
 
     glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     
-    glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
-    {
-        static bool lastCameraFollow = !globals.currentCamera->getMouseFollow();
-        bool cameraFollow = globals.currentCamera->getMouseFollow();
+    // glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
+    // {
+    //     static bool lastCameraFollow = !globals.currentCamera->getMouseFollow();
+    //     bool cameraFollow = globals.currentCamera->getMouseFollow();
 
-        if(!lastCameraFollow && cameraFollow)
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-        else if(lastCameraFollow && !cameraFollow)
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    //     if(!lastCameraFollow && cameraFollow)
+    //         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    //     else if(lastCameraFollow && !cameraFollow)
+    //         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
-        lastCameraFollow = cameraFollow;
+    //     lastCameraFollow = cameraFollow;
 
-        if(globals.currentCamera->getMouseFollow())
-        {
-            /* TODO : replace this by a global function call, so that the camera 
-                      controller can be easly changed.
-            */
-            {
-                vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
-                vec2 sensibility(50.0);
-                vec2 dir = sensibility * (vec2(dx, dy)-center)/center;
+    //     if(globals.currentCamera->getMouseFollow())
+    //     {
+    //         /* TODO : replace this by a global function call, so that the camera 
+    //                   controller can be easly changed.
+    //         */
+    //         {
+    //             vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
+    //             vec2 sensibility(50.0);
+    //             vec2 dir = sensibility * (vec2(dx, dy)-center)/center;
 
-                float yaw = radians(-dir.x);
-                float pitch = radians(-dir.y);
+    //             float yaw = radians(-dir.x);
+    //             float pitch = radians(-dir.y);
 
-                vec3 up = vec3(0,1,0);
-                vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
-                front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
-                front = normalize(front);
+    //             vec3 up = vec3(0,1,0);
+    //             vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
+    //             front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
+    //             front = normalize(front);
 
-                front.y = clamp(front.y, -0.9f, 0.9f);
-                globals.currentCamera->setDirection(front);
+    //             front.y = clamp(front.y, -0.9f, 0.9f);
+    //             globals.currentCamera->setDirection(front);
 
-                glfwSetCursorPos(window, center.x, center.y);
-            }
-        }
-    });
+    //             glfwSetCursorPos(window, center.x, center.y);
+    //         }
+    //     }
+    // });
     
     glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codepoint)
     {
@@ -373,6 +390,9 @@ void App::mainloopPreRenderRoutine()
 
     //set current listener orientation
     alListenerfv(AL_ORIENTATION, (float*)camDir);
+
+    if(globals._currentController)
+        globals._currentController->update();
 }
 
 void App::mainloopEndRoutine()

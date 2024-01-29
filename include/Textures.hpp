@@ -13,6 +13,7 @@ class Texture2D
 {
     private : 
         GLuint handle = 0;
+        GLuint64 bindlessHandle = 0;
         std::shared_ptr<GLuint> handleRef;
 
         GLenum _internalFormat = GL_SRGB;
@@ -52,6 +53,7 @@ class Texture2D
         Texture2D& bind(GLuint location);
         
         GLuint getHandle(){return handle;};
+        GLuint64 getBindlessHandle();
         GLenum getAttachement(){return _attachement;};
         ivec2 getResolution(){return _resolution;};
         const ivec2* getResolutionAddr() const {return &_resolution;};
