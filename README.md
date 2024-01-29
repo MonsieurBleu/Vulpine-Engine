@@ -63,7 +63,9 @@ This application uses different libraries :
   - [ ] Automatic UBO Updates 
   - [X] Single Instanced Vao Drawning
   - [ ] Multiple Instanced Vao Drawing
-  - [ ] Indirect/AZDO Vao Drawning
+  - [ ] AZDO
+    - [ ] Bindless Textures   
+    - [ ] Indirect Vao Drawning
 
 - [ ] Rendering Techniques
   - [X] Foward Rendering
@@ -187,5 +189,11 @@ This application uses different libraries :
   - [ ] Multi Collider Support
   - [ ] Model/Physics Following mode
 - [ ] Physics Culling/Clusering/Optimisation 
-  
+
+### AI 
+- [ ] Path Finding Nodes
+- [ ] Path Finding Debugger
+- [ ] A* Path Finding Algorithm
+- [ ] Path Finding Nodes Generator From Level/World
+- [ ] Path Finding Dedicated Thread
 
