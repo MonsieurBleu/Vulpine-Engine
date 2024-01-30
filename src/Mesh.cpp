@@ -200,25 +200,7 @@ MeshModel3D& MeshModel3D::loadFromFolder(
     bool loadMaterialMap)
 {
     setVao(readOBJ(folderPath + "model.obj"));
-
-    // if(loadColorMap)
-    //     setMap(
-    //         Texture2D()
-    //             .loadFromFile((folderPath + "color.png").c_str())
-    //                 .setFormat(GL_RGBA)
-    //                 .setInternalFormat(GL_SRGB8_ALPHA8)
-    //                 .generate(), 
-    //         0);
-
-    // if(loadMaterialMap)
-    //     setMap(
-    //         Texture2D()
-    //             .loadFromFile((folderPath + "material.png").c_str())
-    //                 .setFormat(GL_RGBA)
-    //                 .setInternalFormat(GL_SRGB8_ALPHA8)
-    //                 .generate(), 
-    //         1);
-
+    
     if(loadColorMap)
         setMap(
             Texture2D().loadFromFileKTX((folderPath + "CE.ktx").c_str()),
