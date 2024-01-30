@@ -5,6 +5,8 @@
 
 using namespace glm;
 
+vec3 PhiThetaToDir(vec2 pt);
+
 vec2 getPhiTheta(vec3 v);
 
 vec3 setPhi(vec3 v, float p);

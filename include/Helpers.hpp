@@ -58,6 +58,27 @@ class TubeLightHelper : public ObjectGroup
         void update(bool forceUpdate = false) override;
 };
 
+class CubeHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        CubeHelper(const vec3 min, const vec3 max, vec3 _color = vec3(0, 1, 0));
+};
+
+typedef std::shared_ptr<CubeHelper> CubeHelperRef;
+
+class SphereHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        SphereHelper(vec3 _color = vec3(0, 1, 0), float radius = 1.f);
+};
+
+typedef std::shared_ptr<SphereHelper> SphereHelperRef;
 
 
 #endif

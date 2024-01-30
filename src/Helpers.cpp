@@ -2,6 +2,8 @@
 #include <Globals.hpp>
 #include <iostream>
 #include <Globals.hpp>
+#include <MathsUtils.hpp>
+#include <Constants.hpp>
 
 // PointLightHelper::PointLightHelper(ScenePointLight light) : light(light)
 // {
@@ -245,4 +247,185 @@ void TubeLightHelper::update(bool forceUpdate)
     vao->attributes[0].sendAllToGPU();
 
     this->ObjectGroup::update(forceUpdate);
+}
+
+CubeHelper::CubeHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3D(globals.basicMaterial)
+{
+    color = _color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    int nbOfPoints = 48;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = vec3(0);
+    }
+
+
+    // Face 1
+    pos[0] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[1] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+
+    pos[2] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[3] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+
+    pos[4] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[5] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+
+    pos[6] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[7] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+
+    // Face 2
+    pos[8] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+    pos[9] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    pos[10] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+    pos[11] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[12] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+    pos[13] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[14] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+    pos[15] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    // Connecting faces
+    pos[16] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[17] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+
+    pos[18] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+    pos[19] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    pos[20] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+    pos[21] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[22] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[23] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+
+
+    // Cross inside faces
+    // pos[24] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    // pos[25] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    // pos[26] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+    // pos[27] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+
+    // pos[28] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+    // pos[29] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+
+    // pos[30] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    // pos[31] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    // pos[32] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    // pos[33] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    // pos[34] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    // pos[35] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+
+    // pos[36] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+    // pos[37] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+
+    // pos[38] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+    // pos[39] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+    
+    // pos[40] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+    // pos[41] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+
+    // pos[42] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    // pos[43] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    // pos[44] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+    // pos[45] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+
+    // pos[46] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+    // pos[47] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
+
+SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basicMaterial)
+{
+    color = _color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    int stepU = 16;
+    int stepV = 16;
+    int nbOfPoints = stepU*stepV*4;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+
+    int id = 0;
+
+    // for(int i = 0; i < nbOfPoints; i++)
+    for(int j = 0; j < stepV; j++)
+    for(int i = 0; i < stepU; i++)
+    {
+        vec2 uv = vec2(
+            PI2*(float)i/(float)stepU,
+            PI2*(float)j/(float)stepV 
+        );
+
+        vec2 uv2 = vec2(
+            PI2*(float)i/(float)stepU,
+            PI2*(float)(j+1)/(float)stepV 
+        );
+
+        vec2 uv3 = vec2(
+            PI2*(float)(i+1)/(float)stepU,
+            PI2*(float)j/(float)stepV 
+        );  
+
+        pos[id] = PhiThetaToDir(uv)*radius;
+        nor[id] = vec3(2);
+        id++;
+        pos[id] = PhiThetaToDir(uv2)*radius;
+        nor[id] = vec3(2);
+        id++;
+
+        pos[id] = PhiThetaToDir(uv)*radius;
+        nor[id] = vec3(2);
+        id++;
+        pos[id] = PhiThetaToDir(uv3)*radius;
+        nor[id] = vec3(2);
+        id++;
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
 }
