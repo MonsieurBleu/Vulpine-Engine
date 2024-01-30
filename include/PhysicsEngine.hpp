@@ -52,7 +52,7 @@ class PhysicsEngine
 {
 private:
     std::vector<RigidBodyRef> bodies;
-    std::set<Collision> collisionEvents;
+    std::vector<Collision> collisionEvents;
 
 public:
     PhysicsEngine();

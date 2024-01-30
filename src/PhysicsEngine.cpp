@@ -42,7 +42,7 @@ void PhysicsEngine::update(float deltaTime)
 
             for (size_t j = 0; j < newCollisionEvents.size(); j++)
             {
-                collisionEvents.insert(newCollisionEvents[j]);
+                collisionEvents.push_back(newCollisionEvents[j]);
             }
         }
 
@@ -65,14 +65,14 @@ void PhysicsEngine::update(float deltaTime)
 
             vec3 impulse = j * normal;
 
-            // std::cout << "impulse: " << glm::to_string(impulse) << std::endl;
-            // std::cout << "penetration: " << it->penetration << std::endl;
+            std::cout << "impulse: " << glm::to_string(impulse) << std::endl;
+            std::cout << "penetration: " << it->penetration << std::endl;
 
             it->body1->velocity += impulse / it->body1->mass;
             it->body2->velocity -= impulse / it->body2->mass;
 
-            it->body1->position += normal * it->penetration / 2.f * (it->body1->isStatic ? 0.0f : 1.0f);
-            it->body2->position -= normal * it->penetration / 2.f * (it->body2->isStatic ? 0.0f : 1.0f);
+            it->body1->position += normal * it->penetration * (it->body1->isStatic ? 0.0f : 1.0f) * (it->body2->isStatic ? 2.0f : 1.0f);
+            it->body2->position -= normal * it->penetration * (it->body2->isStatic ? 0.0f : 1.0f) * (it->body1->isStatic ? 2.0f : 1.0f);
 
             vec3 tangent = relativeVelocity - dot(relativeVelocity, normal) * normal;
             tangent = normalize(tangent);
@@ -332,14 +332,6 @@ bool AABBCollider::checkCollisionAABB(AABBCollider *other, vec3 positionSelf, ve
     if (collision)
     {
 
-        std::cout << "AABB collision" << std::endl;
-        std::cout << "minA: " << minA.y << std::endl;
-        std::cout << "maxA: " << maxA.y << std::endl;
-        std::cout << "minB: " << minB.y << std::endl;
-        std::cout << "maxB: " << maxB.y << std::endl;
-        std::cout << "positionSelf: " << glm::to_string(positionSelf) << std::endl;
-        std::cout << "positionOther: " << glm::to_string(positionOther) << std::endl;
-        std::cout << std::endl;
         // Calculate penetration depth and normal
         float penetrationX = std::min(maxA.x - minB.x, maxB.x - minA.x);
         float penetrationY = std::min(maxA.y - minB.y, maxB.y - minA.y);
@@ -347,6 +339,16 @@ bool AABBCollider::checkCollisionAABB(AABBCollider *other, vec3 positionSelf, ve
 
         // Choose the smallest penetration as the true penetration
         penetration = std::min({penetrationX, penetrationY, penetrationZ});
+
+        std::cout << "AABB collision" << std::endl;
+        std::cout << "minA: " << minA.y << std::endl;
+        std::cout << "maxA: " << maxA.y << std::endl;
+        std::cout << "minB: " << minB.y << std::endl;
+        std::cout << "maxB: " << maxB.y << std::endl;
+        std::cout << "positionSelf: " << glm::to_string(positionSelf) << std::endl;
+        std::cout << "positionOther: " << glm::to_string(positionOther) << std::endl;
+        std::cout << "penetration: " << penetration << std::endl;
+        std::cout << std::endl;
 
         // Determine the collision normal based on the smallest penetration
         if (penetration == penetrationX)
