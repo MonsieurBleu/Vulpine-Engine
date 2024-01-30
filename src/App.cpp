@@ -300,6 +300,15 @@ App::App(GLFWwindow* window) :
     #ifdef INVERTED_Z
     glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
     #endif
+
+    glLineWidth(3.0);
+
+    globals.basicMaterial = MeshMaterial(
+        new ShaderProgram(
+            "shader/foward/basic.frag",
+            "shader/foward/basic.vert",
+            "",
+            globals.standartShaderUniform3D()));
 }
 
 void App::mainInput(double deltatime)
