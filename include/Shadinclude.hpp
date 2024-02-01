@@ -7,6 +7,8 @@
 #include <Constants.hpp>
 #include <Utils.hpp>
 
+#define SHADER_INCLUDE_FOLDER "shader/.include/"
+
 //	===========
 //	Shadinclude
 //	===========

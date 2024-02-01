@@ -1,24 +1,7 @@
 #include <Globals.hpp>
-#include <Utils.hpp>
-#include <string.h> // for memset
-#include <fstream>
-#include <Timer.hpp>
-#include <Sprites.hpp>
 #include <Uniforms.hpp>
-#include <Mesh.hpp>
-#include <Scene.hpp>
 #include <FrameBuffer.hpp>
-#include <random>
-#include <Light.hpp>
 #include <CompilingOptions.hpp>
-#include <Helpers.hpp>
-#include <GameObject.hpp>
-#include <Fonts.hpp>
-#include <FastUI.hpp>
-#include <CubeMap.hpp>
-#include <sstream>
-#include <iomanip>
-#include <codecvt>
 #include <stb/stb_image.h>
 #include <Audio.hpp>
 #include <Controller.hpp>
@@ -137,8 +120,6 @@ App::App(GLFWwindow* window) :
     {
         std::cerr << "ERROR: Could not set Distance Model to AL_INVERSE_DISTANCE_CLAMPED" << std::endl;
     }
-
-    timestart = GetTimeMs();
 
     glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
     {

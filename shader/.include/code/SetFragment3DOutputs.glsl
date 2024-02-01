@@ -1,1 +1,0 @@
-    fragNormal = viewNormal;

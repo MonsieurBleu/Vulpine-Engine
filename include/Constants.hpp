@@ -1,10 +1,6 @@
 #ifndef CONSTANTS_HPP
 #define CONSTANTS_HPP
 
-#include <string>
-
-#define SHADER_INCLUDE_FOLDER "shader/.include/"
-
 #define PI   3.141592653589793
 #define PI2  6.283185307179586
 #define iPI  0.318309886183790

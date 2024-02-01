@@ -23,7 +23,6 @@ class App
 
         AppState state = AppState::init;
         GLFWwindow* window;
-        uint64_t timestart;
 
         Camera camera;
 
