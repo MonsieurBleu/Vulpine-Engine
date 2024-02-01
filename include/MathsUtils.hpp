@@ -23,4 +23,6 @@ float getValue(vec3 c);
 
 float gold_noise3(vec3 coordinate, float seed);
 
+float random01Vec2(vec2 uv);
+
 #endif

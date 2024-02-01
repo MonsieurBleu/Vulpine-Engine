@@ -55,7 +55,7 @@ bool SpectatorController::inputs(GLFWKeyInfo& input)
     return false;
 }
 
-void SpectatorController::mouseEvent(vec2 dir, GLFWwindow* window)
+void Controller::mouseEvent(vec2 dir, GLFWwindow* window)
 {
     static bool lastCameraFollow = !globals.currentCamera->getMouseFollow();
     bool cameraFollow = globals.currentCamera->getMouseFollow();

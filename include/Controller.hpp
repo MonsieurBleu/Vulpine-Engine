@@ -25,7 +25,7 @@ class Controller
         /**
          * @brief Called each time the mouse mouve
          */
-        virtual void mouseEvent(vec2 dir, GLFWwindow* window){};
+        virtual void mouseEvent(vec2 dir, GLFWwindow* window);
 };
 
 class SpectatorController : public Controller
@@ -41,5 +41,4 @@ class SpectatorController : public Controller
         float sprintFactor = 15.0;
         void update();
         bool inputs(GLFWKeyInfo& input);
-        void mouseEvent(vec2 dir, GLFWwindow* window);
 };

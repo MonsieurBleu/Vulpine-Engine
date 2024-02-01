@@ -45,7 +45,6 @@ class Globals
 
         vec2 _scrollOffset = vec2(0);
 
-
         Controller *_currentController = nullptr;
 
     public :
@@ -97,6 +96,12 @@ class Globals
 
         vec2 mouseScrollOffset();
         void clearMouseScroll();
+
+        vec3 sceneChromaticAbbColor1 = vec3(0);
+        vec3 sceneChromaticAbbColor2 = vec3(0);
+        vec2 sceneChromaticAbbAngleAmplitude = vec2(0);
+        vec4 sceneVignette = vec4(0);
+        vec3 sceneHsvShift = vec4(0);
 
         /**
          * @brief Set the given pointer as text input user

@@ -53,6 +53,14 @@ std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
 void App::init()
 {
+    finalProcessingStage
+        .addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10))
+        .addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10))
+        .addUniform(ShaderUniform(&globals.sceneChromaticAbbColor1, 16))
+        .addUniform(ShaderUniform(&globals.sceneChromaticAbbColor2, 17))
+        .addUniform(ShaderUniform(&globals.sceneChromaticAbbAngleAmplitude, 18))
+        .addUniform(ShaderUniform(&globals.sceneVignette, 19))
+        .addUniform(ShaderUniform(&globals.sceneHsvShift, 20));
     return;
 }
 
@@ -429,13 +437,11 @@ void App::mainloop()
     bool vsync = false;
     glfwSwapInterval(0);
 
-    finalProcessingStage = ShaderProgram(
-        "shader/post-process/final composing.frag", 
-        "shader/post-process/basic.vert", 
-        "", 
-        globals.standartShaderUniform2D());
-    
-    finalProcessingStage.addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10));
+    // finalProcessingStage = ShaderProgram(
+    //     "shader/post-process/final composing.frag", 
+    //     "shader/post-process/basic.vert", 
+    //     "", 
+    //     globals.standartShaderUniform2D());
 
     /* 
     ScenePointLight redLight = newPointLight(

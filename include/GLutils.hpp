@@ -14,7 +14,7 @@
 
 #include <Utils.hpp>
 
-#define SHOW_GL_NOTIF
+// #define SHOW_GL_NOTIF
 #define PREVENT_GL_NOTIF_SPAM
 
 struct GLenum_t
