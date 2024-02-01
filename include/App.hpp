@@ -27,8 +27,6 @@ class App
 
         Camera camera;
 
-        void mainInput(double deltatime);
-
         RenderBuffer renderBuffer;
         FrameBuffer screenBuffer2D;
         SSAOPass SSAO;
