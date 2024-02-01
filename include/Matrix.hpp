@@ -22,14 +22,14 @@ class ModelState3D
         bool usingLookAt = false;
 
     public :
-        bool frustumCulled = true;
         vec3 position      = vec3(0.f);
         vec3 scale         = vec3(1.f);
         vec3 rotation      = vec3(0.f);
         vec3 lookAtPoint   = vec3(0.f);
-        float depth        = 0.f; // useless
         mat4 rotationMatrix = mat4(1.0);
         mat4 modelMatrix = mat4(1.0);
+        
+        bool frustumCulled = true;
         ModelStateHideStatus hide = ModelStateHideStatus::UNDEFINED;
 
     ModelState3D& scaleScalar(float newScale)

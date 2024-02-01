@@ -36,6 +36,8 @@ void GameObject::update(float deltaTime)
                 objectGroup->state.setPosition(pos);
             if (objectGroup->state.rotation != rot)
                 objectGroup->state.setRotation(rot);
+
+            objectGroup->update();
         }
     }
 }

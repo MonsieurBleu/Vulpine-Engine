@@ -49,6 +49,8 @@ class Globals
 
     public :
 
+        MeshMaterial basicMaterial;
+
         /**
          * Globals are not cloneable.
          */

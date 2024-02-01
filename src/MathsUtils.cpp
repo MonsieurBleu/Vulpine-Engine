@@ -1,6 +1,16 @@
 #include <MathsUtils.hpp>
 #include <Constants.hpp>
 
+vec3 PhiThetaToDir(vec2 pt)
+{
+    vec3 v;
+    v.y = sin(pt.y);
+    float phiS = cos(pt.y);
+    v.x = phiS*cos(pt.x);
+    v.z = phiS*sin(pt.x);
+    return v;
+}
+
 vec2 getPhiTheta(vec3 v)
 {
     float theta = asin(v.y);
