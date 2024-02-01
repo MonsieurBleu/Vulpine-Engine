@@ -562,13 +562,14 @@ void BenchTimer::setMenu(FastUI_valueMenu &menu)
     menu.push_back(
         // {FastUI_menuTitle(menu.ui, UFTconvert.from_bytes(name)), FastUI_valueTab(menu.ui, {
         {FastUI_menuTitle(menu.ui, name32), FastUI_valueTab(menu.ui, {
-            FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
-            FastUI_value((const float*)&avgTotal,   U"total avg\t", U" ms"),
-            FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),
-            FastUI_value((const float*)&elapsedTime,   U"elapsed time\t", U" s"),
-            FastUI_value((bool*)&paused,   U"paused\t", U""),
-            FastUI_value((const float*)&min,   U"min\t", U" ms"),
-            FastUI_value((const float*)&max,   U"max\t", U" ms")
+            FastUI_value((const float*)&avgLast,   U"Short avg\t", U" ms"),
+            FastUI_value((const float*)&avgTotal,   U"Total avg\t", U" ms"),
+            FastUI_value((const int*)&updateCounter,   U"Updates (frames)\t", U""),
+            FastUI_value((const float*)&elapsedTime,   U"Elapsed time\t", U" s"),
+            FastUI_value((bool*)&paused,   U"Paused\t", U""),
+            FastUI_value((const float*)&min,   U"Min\t", U" ms"),
+            FastUI_value((const float*)&max,   U"Max\t", U" ms"),
+            FastUI_value((float*)&speed,   U"Speed Factor\t")
         })}
     );
 }
@@ -579,13 +580,14 @@ void BenchTimer::setMenuConst(FastUI_valueMenu &menu) const
 
     menu.push_back(
         {FastUI_menuTitle(menu.ui, U"[const] "+name32), FastUI_valueTab(menu.ui, {
-            FastUI_value((const float*)&avgLast,   U"short avg\t", U" ms"),
-            FastUI_value((const float*)&avgTotal,   U"total avg\t", U" ms"),
-            FastUI_value((const int*)&updateCounter,   U"updates (frames)\t", U""),
-            FastUI_value((const float*)&elapsedTime,   U"elapsed time\t", U" s"),
-            FastUI_value((const bool*)&paused,   U"paused\t", U""),
-            FastUI_value((const float*)&min,   U"min\t", U" ms"),
-            FastUI_value((const float*)&max,   U"max\t", U" ms")
+            FastUI_value((const float*)&avgLast,   U"Short avg\t", U" ms"),
+            FastUI_value((const float*)&avgTotal,   U"Total avg\t", U" ms"),
+            FastUI_value((const int*)&updateCounter,   U"Updates (frames)\t", U""),
+            FastUI_value((const float*)&elapsedTime,   U"Elapsed time\t", U" s"),
+            FastUI_value((const bool*)&paused,   U"Paused\t", U""),
+            FastUI_value((const float*)&min,   U"Min\t", U" ms"),
+            FastUI_value((const float*)&max,   U"Max\t", U" ms"),
+            FastUI_value((float*)&speed,   U"Speed Factor\t")
         })}
     );
 }

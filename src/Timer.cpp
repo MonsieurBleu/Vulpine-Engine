@@ -52,7 +52,7 @@ void BenchTimer::end()
     if(paused) return;
 
     clockmicro::time_point now = clockmicro::now();
-    delta = now-lastStartTime;
+    delta = speed*(now-lastStartTime);
     lastTimeUpdate = now;
     deltaS = delta.count()*MS_TO_S;
     elapsedTime += deltaS;

@@ -47,6 +47,8 @@ class BenchTimer
         BenchTimer();
         BenchTimer(std::string name);
 
+        float speed = 1.0;
+
         void end();
         void start();
 
