@@ -65,8 +65,8 @@ void PhysicsEngine::update(float deltaTime)
 
             vec3 impulse = j * normal;
 
-            std::cout << "impulse: " << glm::to_string(impulse) << std::endl;
-            std::cout << "penetration: " << it->penetration << std::endl;
+            // std::cout << "impulse: " << glm::to_string(impulse) << std::endl;
+            // std::cout << "penetration: " << it->penetration << std::endl;
 
             it->body1->velocity += impulse / it->body1->mass;
             it->body2->velocity -= impulse / it->body2->mass;
