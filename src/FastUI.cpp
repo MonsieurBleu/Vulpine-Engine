@@ -146,6 +146,9 @@ FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : Fa
 
 UFT32Stream& FastUI_value::toString(UFT32Stream& os)
 {
+    if(constValue)
+        os << U"**";
+
     os << textPrev;
 
     if(constValue || !globals.canUseTextInputs(this))
@@ -356,7 +359,8 @@ UFT32Stream& FastUI_value::toString(UFT32Stream& os)
         os << ti;
     }
 
-    
+    if(constValue)
+        os << U"**";
 
     return os;
 }
@@ -579,7 +583,7 @@ void BenchTimer::setMenuConst(FastUI_valueMenu &menu) const
     std::u32string name32 = name.size() ? UFTconvert.from_bytes(name) : U"untitled";
 
     menu.push_back(
-        {FastUI_menuTitle(menu.ui, U"*"+name32+U"*"), FastUI_valueTab(menu.ui, {
+        {FastUI_menuTitle(menu.ui, U"**"+name32+U"**"), FastUI_valueTab(menu.ui, {
             FastUI_value((const float*)&avgLast,   U"Short avg\t", U" ms"),
             FastUI_value((const float*)&avgTotal,   U"Total avg\t", U" ms"),
             FastUI_value((const int*)&updateCounter,   U"Updates (frames)\t", U""),
@@ -587,7 +591,7 @@ void BenchTimer::setMenuConst(FastUI_valueMenu &menu) const
             FastUI_value((const bool*)&paused,   U"Paused\t", U""),
             FastUI_value((const float*)&min,   U"Min\t", U" ms"),
             FastUI_value((const float*)&max,   U"Max\t", U" ms"),
-            FastUI_value((float*)&speed,   U"Speed Factor\t")
+            FastUI_value((const float*)&speed,   U"Speed Factor\t")
         })}
     );
 }

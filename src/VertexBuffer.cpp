@@ -143,7 +143,23 @@ void VertexAttribute::sendAllToGPU()
 void VertexAttribute::setFormat()
 {
     glBindVertexBuffer(location, handle, 0, perValuesSize * perVertexSize);
-    glVertexAttribFormat(location, perVertexSize, type, GL_FALSE, 0);
+    
+    switch (type)
+    {
+    case GL_FLOAT :
+        glVertexAttribFormat(location, perVertexSize, type, GL_FALSE, 0);
+        break;
+    
+    case GL_UNSIGNED_INT :
+    case GL_INT :
+        glVertexAttribIFormat(location, perVertexSize, type, 0);
+        break;
+
+    default:
+        break;
+    }
+
+    
 }
 
 char *VertexAttribute::getBufferAddr() { return buffer.get(); };

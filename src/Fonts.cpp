@@ -261,7 +261,7 @@ void SingleStringBatch::batchText()
     for (size_t i = 0; i < size; i++)
     {
     
-        switch (*(uint64*)&text[i])
+        switch (*(uint64*)(&text[i]))
         {
             case STYLE_ID_BOLD : 
                 currentStyle ^= CHARSTYLE_BOLD; 

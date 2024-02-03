@@ -10,8 +10,7 @@ typedef unsigned int UFT8;
 #define CHARSTYLE_BOLD 0b1
 #define CHARSTYLE_ITALIC 0b10
 
-
-#define STYLE_ID_BOLD 0x2a2a
+#define STYLE_ID_BOLD 0x0000002a0000002aU 
 
 /*
     All of this module is based on :
