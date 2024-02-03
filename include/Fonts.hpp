@@ -7,6 +7,12 @@
 
 typedef unsigned int UFT8;
 
+#define CHARSTYLE_BOLD 0b1
+#define CHARSTYLE_ITALIC 0b10
+
+
+#define STYLE_ID_BOLD 0x2a2a
+
 /*
     All of this module is based on :
         https://github.com/Chlumsky/msdf-atlas-gen#atlas-types

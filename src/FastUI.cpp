@@ -579,7 +579,7 @@ void BenchTimer::setMenuConst(FastUI_valueMenu &menu) const
     std::u32string name32 = name.size() ? UFTconvert.from_bytes(name) : U"untitled";
 
     menu.push_back(
-        {FastUI_menuTitle(menu.ui, U"[const] "+name32), FastUI_valueTab(menu.ui, {
+        {FastUI_menuTitle(menu.ui, U"*"+name32+U"*"), FastUI_valueTab(menu.ui, {
             FastUI_value((const float*)&avgLast,   U"Short avg\t", U" ms"),
             FastUI_value((const float*)&avgTotal,   U"Total avg\t", U" ms"),
             FastUI_value((const int*)&updateCounter,   U"Updates (frames)\t", U""),

@@ -238,17 +238,20 @@ void SingleStringBatch::batchText()
     int usedChar = 0;
     if (!size)
         return;
+
     depthWrite = false;
-    // invertFaces = true;
     state.frustumCulled = false;
 
     GenericSharedBuffer positions(new char[sizeof(vec3) * 6 * size]);
     GenericSharedBuffer uvs(new char[sizeof(vec2) * 6 * size]);
+    GenericSharedBuffer style(new char[sizeof(uint) * 6 * size]);
     vec3 *p = (vec3 *)positions.get();
     vec2 *u = (vec2 *)uvs.get();
+    uint *s = (uint *)style.get();
 
     vec2 b = vec2(0);
     vec3 c = vec3(b, 0.f);
+    uint currentStyle = 0;
 
     textSize = vec2(0);
 
@@ -257,31 +260,49 @@ void SingleStringBatch::batchText()
 
     for (size_t i = 0; i < size; i++)
     {
+    
+        switch (*(uint64*)&text[i])
+        {
+            case STYLE_ID_BOLD : 
+                currentStyle ^= CHARSTYLE_BOLD; 
+                i++;
+                continue;
+                break;
+
+            default:break;
+        }
+
         switch (text[i])
         {
-        case U'\n':
-            c.x = b.x;
-            c.y -= charSize;
-            continue;
-            break;
+            case U'\n':
+                c.x = b.x;
+                c.y -= charSize;
+                continue;
+                break;
 
-        case U'\t':
-            c.x = (c.x - mod(c.x, tabulationSize)) + tabulationSize;
-            continue;
-            break;
+            case U'\t':
+                c.x = (c.x - mod(c.x, tabulationSize)) + tabulationSize;
+                continue;
+                break;
 
-        case U'\f':
-            c.x = (c.x - mod(c.x, smallTabulationSize)) + smallTabulationSize;
-            continue;
-            break;
+            case U'\f':
+                c.x = (c.x - mod(c.x, smallTabulationSize)) + smallTabulationSize;
+                continue;
+                break;
+            
+            case U'*':
+                currentStyle ^= CHARSTYLE_ITALIC;
+                continue;
+                break;
 
-        default:
-            break;
+            default:break;
         }
 
         size_t id = usedChar * 6;
+
         if (text[i] >= 256)
             continue;
+
         const FontCharInfo &info = font->getInfo(text[i]);
 
         if (text[i] != U' ')
@@ -302,9 +323,7 @@ void SingleStringBatch::batchText()
             u[id + 4] = u[id + 2];
             u[id + 5] = u[id + 1];
 
-            // float maxy = abs(info.planeBottom)*charSize;
-            // if(maxy > textSize.y)
-            //     textSize.y = maxy;
+            s[id] = s[id+1] = s[id+2] = s[id+3] = s[id+4] = s[id+5] = currentStyle;
 
             c.x += charSize * info.advance;
             textSize = max(textSize, abs(vec2(c.x, info.planeBottom * charSize)));
@@ -321,8 +340,11 @@ void SingleStringBatch::batchText()
     {
         setVao(
             MeshVao(
-                new VertexAttributeGroup({VertexAttribute(positions, 0, usedChar * 6, 3, GL_FLOAT, false),
-                                          VertexAttribute(uvs, 1, usedChar * 6, 2, GL_FLOAT, false)})));
+                new VertexAttributeGroup({
+                    VertexAttribute(positions, 0, usedChar * 6, 3, GL_FLOAT, false),
+                    VertexAttribute(uvs, 1, usedChar * 6, 2, GL_FLOAT, false),
+                    VertexAttribute(style, 2, usedChar * 6, 1, GL_UNSIGNED_INT, false)
+        })));
 
         vao->generate();
     }
@@ -330,6 +352,7 @@ void SingleStringBatch::batchText()
     {
         vao->attributes[0].updateData(positions, usedChar * 6);
         vao->attributes[1].updateData(uvs, usedChar * 6);
+        vao->attributes[2].updateData(style, usedChar * 6);
     }
 }
 
