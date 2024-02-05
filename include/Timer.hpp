@@ -74,6 +74,8 @@ class BenchTimer
 
         const float* getElapsedTimeAddr() const;
 
+        uint64_t getUpdateCounter(){return updateCounter;};
+
         // std::ostream& operator<<(std::ostream& os);
 
         void setMenu(FastUI_valueMenu &menu);
