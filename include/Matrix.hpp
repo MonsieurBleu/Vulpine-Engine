@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 
 enum ModelStateHideStatus
@@ -12,49 +13,48 @@ enum ModelStateHideStatus
     UNDEFINED
 };
 
-
 using namespace glm;
 // TODO : FIX LOOKAT
 class ModelState3D
 {
-    private :
-        bool needUpdate = true;
-        bool usingLookAt = false;
+private:
+    bool needUpdate = true;
+    bool usingLookAt = false;
 
-    public :
-        vec3 position      = vec3(0.f);
-        vec3 scale         = vec3(1.f);
-        vec3 rotation      = vec3(0.f);
-        vec3 lookAtPoint   = vec3(0.f);
-        mat4 rotationMatrix = mat4(1.0);
-        mat4 modelMatrix = mat4(1.0);
-        
-        bool frustumCulled = true;
-        ModelStateHideStatus hide = ModelStateHideStatus::UNDEFINED;
+public:
+    vec3 position = vec3(0.f);
+    vec3 scale = vec3(1.f);
+    vec3 rotation = vec3(0.f);
+    vec3 lookAtPoint = vec3(0.f);
+    mat4 rotationMatrix = mat4(1.0);
+    mat4 modelMatrix = mat4(1.0);
 
-    ModelState3D& scaleScalar(float newScale)
+    bool frustumCulled = true;
+    ModelStateHideStatus hide = ModelStateHideStatus::UNDEFINED;
+
+    ModelState3D &scaleScalar(float newScale)
     {
         scale = vec3(newScale);
         needUpdate = true;
         return *this;
     }
 
-    ModelState3D& setScale(vec3 newScale)
+    ModelState3D &setScale(vec3 newScale)
     {
         scale = newScale;
         needUpdate = true;
         return *this;
     }
 
-    ModelState3D& setPosition(vec3 newPosition)
+    ModelState3D &setPosition(vec3 newPosition)
     {
         position = newPosition;
         needUpdate = true;
         return *this;
     }
 
-    ModelState3D& setRotation(vec3 newRotation)
-    {   
+    ModelState3D &setRotation(vec3 newRotation)
+    {
         rotation = newRotation;
 
         // rotationMatrix = rotate(mat4(1.0), rotation.x, vec3(1.0, 0.0, 0.0));
@@ -68,25 +68,24 @@ class ModelState3D
         return *this;
     }
 
-    ModelState3D& lookAt(vec3 newLookPoint)
+    ModelState3D &lookAt(vec3 newLookPoint)
     {
         usingLookAt = true;
         lookAtPoint = newLookPoint;
         return *this;
     }
 
-    ModelState3D& disableLookAt()
+    ModelState3D &disableLookAt()
     {
         usingLookAt = false;
         return *this;
-    } 
-
+    }
 
     bool update()
     {
-        if(needUpdate)
+        if (needUpdate)
         {
-            if(usingLookAt)
+            if (usingLookAt)
                 rotationMatrix = glm::lookAt(position, lookAtPoint, vec3(0, 1, 0));
             else
                 rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
@@ -102,9 +101,9 @@ class ModelState3D
         }
 
         return false;
-    }   
+    }
 
-    ModelState3D& forceUpdate()
+    ModelState3D &forceUpdate()
     {
         rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
         mat4 scaleMatrix = glm::scale(mat4(1.0), scale);
@@ -124,8 +123,8 @@ typedef std::shared_ptr<ModelState3D> ModelStateRef;
 // class ModelMatrix3D : mat4
 // {
 
-//     public : 
-    
+//     public :
+
 //     ModelMatrix3D(ModelState3D state)
 //     {
 //         this->update(state);
@@ -134,7 +133,7 @@ typedef std::shared_ptr<ModelState3D> ModelStateRef;
 //     ModelMatrix3D& update(ModelState3D state)
 //     {
 
-//         // float mat[16] = 
+//         // float mat[16] =
 //         // {
 //         //     state.scale.x   ,  0.f             ,  0.f             ,  0.f,
 //         //     0.f             ,  state.scale.y   ,  0.f             ,  0.f,
@@ -147,6 +146,5 @@ typedef std::shared_ptr<ModelState3D> ModelStateRef;
 //         return *this;
 //     }
 // };
-
 
 #endif

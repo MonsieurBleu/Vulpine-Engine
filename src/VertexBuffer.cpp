@@ -1,5 +1,6 @@
 #include <iostream>
 #include <VertexBuffer.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <string.h>
 
@@ -121,14 +122,15 @@ void VertexAttribute::updateData(GenericSharedBuffer _src, uint64 _vertexCount)
 
 void VertexAttribute::genBuffer()
 {
-    if(handle) return;
+    if (handle)
+        return;
     glGenBuffers(1, &handle);
     handleRef = std::make_shared<GLuint>(handle);
 }
 
 VertexAttribute::~VertexAttribute()
 {
-    if(handle && handleRef.use_count() == 1)
+    if (handle && handleRef.use_count() == 1)
     {
         glDeleteBuffers(1, &handle);
     }
@@ -143,23 +145,21 @@ void VertexAttribute::sendAllToGPU()
 void VertexAttribute::setFormat()
 {
     glBindVertexBuffer(location, handle, 0, perValuesSize * perVertexSize);
-    
+
     switch (type)
     {
-    case GL_FLOAT :
+    case GL_FLOAT:
         glVertexAttribFormat(location, perVertexSize, type, GL_FALSE, 0);
         break;
-    
-    case GL_UNSIGNED_INT :
-    case GL_INT :
+
+    case GL_UNSIGNED_INT:
+    case GL_INT:
         glVertexAttribIFormat(location, perVertexSize, type, 0);
         break;
 
     default:
         break;
     }
-
-    
 }
 
 char *VertexAttribute::getBufferAddr() { return buffer.get(); };
@@ -208,21 +208,21 @@ VertexAttributeGroup &VertexAttributeGroup::generate()
     if (generated)
         return *this;
 
-    forEach([](int i, VertexAttribute &attribute){
+    forEach([](int i, VertexAttribute &attribute)
+            {
         attribute.genBuffer();
-        attribute.sendAllToGPU();
-    });
+        attribute.sendAllToGPU(); });
 
     glGenVertexArrays(1, &arrayHandle);
     glBindVertexArray(arrayHandle);
 
     handleRef = std::make_shared<GLuint>(arrayHandle);
 
-    forEach([](int i, VertexAttribute &attribute){
+    forEach([](int i, VertexAttribute &attribute)
+            {
         glEnableVertexAttribArray(i);
         attribute.setFormat();
-        glVertexAttribBinding(i, attribute.getLocation());
-    });
+        glVertexAttribBinding(i, attribute.getLocation()); });
 
     genAABB();
 
@@ -233,7 +233,7 @@ VertexAttributeGroup &VertexAttributeGroup::generate()
 
 VertexAttributeGroup::~VertexAttributeGroup()
 {
-    if(arrayHandle && handleRef.use_count() == 1)
+    if (arrayHandle && handleRef.use_count() == 1)
     {
         glDeleteVertexArrays(1, &arrayHandle);
     }

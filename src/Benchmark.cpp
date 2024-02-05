@@ -1,4 +1,5 @@
 #include "Benchmark.hpp"
+#include "Globals.hpp"
 
 int BenchmarkMetricDefintion::INDEX_COUNTER = 0;
 
@@ -119,15 +120,98 @@ void Benchmark::removeMetric(std::string name)
     std::cout << "No metric with name " << name << std::endl;
 }
 
-// void Benchmark::tick() {
-//     for (auto &metric : metrics)
-//     {
-//         if (metric.freq == EVERY_TICK)
-//         {
-//             BenchmarkMetric m;
-//             m.value = metric.callback();
-//             m.tick = metric.lastTick++;
-//             data[metric.index].push_back(m);
-//         }
-//     }
-// }
+void Benchmark::tick()
+{
+    for (auto &metric : metrics)
+    {
+        int tick = globals.appTime.getUpdateCounter();
+        float time = globals.appTime.getElapsedTime();
+        switch (metric.freq)
+        {
+        case EVERY_TICK:
+        {
+            BenchmarkMetric m;
+            m.value = metric.callback();
+            m.tick = tick;
+            data[metric.index].push_back(m);
+            break;
+        }
+
+        case EVERY_100_TICKS:
+        {
+            if (tick % 100 == 0)
+            {
+                BenchmarkMetric m;
+                m.value = metric.callback();
+                m.tick = tick;
+                data[metric.index].push_back(m);
+            }
+            break;
+        }
+
+        case EVERY_1000_TICKS:
+        {
+            if (tick % 1000 == 0)
+            {
+                BenchmarkMetric m;
+                m.value = metric.callback();
+                m.tick = tick;
+                data[metric.index].push_back(m);
+            }
+            break;
+        }
+
+        case EVERY_SECOND:
+        {
+            if (time - metric.lastTime > 1.0)
+            {
+                BenchmarkMetric m;
+                m.value = metric.callback();
+                m.time = time;
+                data[metric.index].push_back(m);
+                metric.lastTime = time;
+            }
+            break;
+        }
+
+        case EVERY_10_SECONDS:
+        {
+            if (time - metric.lastTime > 10.0)
+            {
+                BenchmarkMetric m;
+                m.value = metric.callback();
+                m.time = time;
+                data[metric.index].push_back(m);
+                metric.lastTime = time;
+            }
+            break;
+        }
+
+        case EVERY_MINUTE:
+        {
+            if (time - metric.lastTime > 60.0)
+            {
+                BenchmarkMetric m;
+                m.value = metric.callback();
+                m.time = time;
+                data[metric.index].push_back(m);
+                metric.lastTime = time;
+            }
+            break;
+        }
+
+        case EVERY_100_MILLISECONDS:
+        {
+            if (time - metric.lastTime > 0.1)
+            {
+                BenchmarkMetric m;
+                m.value = metric.callback();
+                m.time = time;
+                data[metric.index].push_back(m);
+                metric.lastTime = time;
+            }
+            break;
+        }
+        }
+    }
+}
