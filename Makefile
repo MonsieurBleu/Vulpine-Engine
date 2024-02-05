@@ -32,7 +32,7 @@ else
 	RED = [31m
 	BLUE = [34m
 	CYAN = [36m
-	ORANGE = [31;1m
+	ORANGE = [38;5;208m
 
 	BUILD_FILE_VULPINE = $(ECHO) "$(BOLD)$(ORANGE)$(UNDERLINE)Building Vulpine Module$(RESET)"
 	BUILD_FILE_GAME    = $(ECHO) "$(BOLD)$(CYAN)$(UNDERLINE)Building$(RESET)"
