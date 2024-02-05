@@ -43,7 +43,7 @@ endif
 INCLUDE = -Iinclude -IexternalLibs 
 ifeq ($(OS),Windows_NT)
 	EXEC = GameEngine.exe
-	RM = del /f /q
+	RM = del /s /f /q
 else
 	EXEC = GameEngine
 	RM = rm -f
