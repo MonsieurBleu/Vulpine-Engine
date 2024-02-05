@@ -5,6 +5,7 @@
 #include <functional>
 #include <iostream>
 #include <fstream>
+#include <limits.h>
 
 enum callbackFreq
 {
@@ -18,7 +19,7 @@ enum callbackFreq
     EVERY_100_MILLISECONDS,
 };
 
-typedef int (*metric_callback)();
+typedef int64_t (*metric_callback)();
 
 struct BenchmarkMetricDefintion
 {
@@ -28,21 +29,15 @@ struct BenchmarkMetricDefintion
     callbackFreq freq;
     metric_callback callback;
 
-    union
-    {
-        int lastTick = 0;
-        float lastTime;
-    };
+    float lastTime = 0;
 };
 
 struct BenchmarkMetric
 {
-    int value;
-    union
-    {
-        int tick = 0;
-        float time;
-    };
+    int64_t value;
+
+    int tick = 0;
+    float time = 0;
 };
 
 class Benchmark
@@ -60,7 +55,7 @@ public:
     void printLast();
     void printAll();
     void printMetric(std::string name);
-    void saveCSV(std::string filename);
+    void saveCSV();
     void clearData();
     void clearAll();
     void clearMetric(std::string name);
