@@ -13,7 +13,7 @@ class Texture2D
 {
     private : 
         GLuint handle = 0;
-        GLuint64 bindlessHandle = 0;
+        std::shared_ptr<GLuint> bindlessHandleRef;
         std::shared_ptr<GLuint> handleRef;
 
         GLenum _internalFormat = GL_SRGB;
