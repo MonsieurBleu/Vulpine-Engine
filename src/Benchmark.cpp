@@ -23,14 +23,14 @@ void Benchmark::addMetric(std::string name, callbackFreq freq, metric_callback c
     data.push_back(std::deque<BenchmarkMetric>());
 }
 
-void Benchmark::printMetricLast(BenchmarkMetricDefintion metric)
+void Benchmark::printMetricLast(BenchmarkMetricDefintion metric) const
 {
     BenchmarkMetric d = data[metric.index].back();
     std::cout << metric.name << "[" << ((int)(metric.freq) > 2 ? d.time : d.tick) << "]"
               << " : " << d.value << std::endl;
 }
 
-void Benchmark::printMetricAll(BenchmarkMetricDefintion metric)
+void Benchmark::printMetricAll(BenchmarkMetricDefintion metric) const
 {
     std::cout << metric.name << " : " << std::endl;
     for (auto d : data[metric.index])
@@ -39,7 +39,7 @@ void Benchmark::printMetricAll(BenchmarkMetricDefintion metric)
     }
 }
 
-void Benchmark::printLast()
+void Benchmark::printLast() const
 {
     for (auto metric : metrics)
     {
@@ -47,7 +47,7 @@ void Benchmark::printLast()
     }
 }
 
-void Benchmark::printAll()
+void Benchmark::printAll() const
 {
     for (auto metric : metrics)
     {
@@ -55,7 +55,7 @@ void Benchmark::printAll()
     }
 }
 
-void Benchmark::printMetric(std::string name)
+void Benchmark::printMetric(std::string name) const
 {
     for (auto metric : metrics)
     {
@@ -223,7 +223,7 @@ void Benchmark::tick()
     }
 }
 
-void Benchmark::saveCSV()
+void Benchmark::saveCSV() const
 {
     std::ofstream file;
     file.open("output/benchmark.csv", std::ios::out | std::ios::trunc);
@@ -259,7 +259,7 @@ void Benchmark::saveCSV()
         }
     }
 
-    std::vector<int> indices(metrics.size() + 1, 0);
+    std::vector<int> indices(metrics.size(), 0);
 
     for (int tick = startTick; tick <= maxTick; tick++)
     {
@@ -269,12 +269,12 @@ void Benchmark::saveCSV()
         // this is going to be slow, but whatever
         for (auto &metric : metrics)
         {
-            if (data[metric.index].size() > 0)
+            if (data[metric.index].size() > 0 && indices[metric.index] < data[metric.index].size())
             {
-                if (data[metric.index][indices[metric.index + 1]].tick == tick)
+                if (data[metric.index][indices[metric.index]].tick == tick)
                 {
                     hasValue = true;
-                    time = data[metric.index][indices[metric.index + 1]].time;
+                    time = data[metric.index][indices[metric.index]].time;
                     break;
                 }
             }

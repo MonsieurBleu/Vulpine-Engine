@@ -46,16 +46,16 @@ private:
     std::vector<BenchmarkMetricDefintion> metrics;
     std::vector<std::deque<BenchmarkMetric>> data;
 
-    void printMetricLast(BenchmarkMetricDefintion metric);
-    void printMetricAll(BenchmarkMetricDefintion metric);
+    void printMetricLast(BenchmarkMetricDefintion metric) const;
+    void printMetricAll(BenchmarkMetricDefintion metric) const;
 
 public:
     Benchmark(){};
     void addMetric(std::string name, callbackFreq freq, metric_callback callback);
-    void printLast();
-    void printAll();
-    void printMetric(std::string name);
-    void saveCSV();
+    void printLast() const;
+    void printAll() const;
+    void printMetric(std::string name) const;
+    void saveCSV() const;
     void clearData();
     void clearAll();
     void clearMetric(std::string name);
