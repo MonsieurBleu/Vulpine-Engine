@@ -270,13 +270,12 @@ void Benchmark::saveCSV() const
 {
     std::ofstream file;
     file.open("output/benchmark.csv", std::ios::out | std::ios::trunc);
-    file << "tick,time (s),";
+    file << "tick,time,";
     for (unsigned int i = 0; i < metrics.size() - 1; i++)
     {
         file << metrics[i].name << ",";
     }
     file << metrics[metrics.size() - 1].name << std::endl;
-    file << std::endl;
 
     int startTick = INT_MAX;
     for (auto &metric : metrics)
@@ -312,7 +311,7 @@ void Benchmark::saveCSV() const
         // this is going to be slow, but whatever
         for (auto &metric : metrics)
         {
-            if (data[metric.index].size() > 0 && indices[metric.index] < data[metric.index].size())
+            if (data[metric.index].size() > 0 && indices[metric.index] < (int)data[metric.index].size())
             {
                 if (data[metric.index][indices[metric.index]].tick == tick)
                 {
@@ -365,7 +364,7 @@ void Benchmark::saveCSV() const
                 file << std::endl;
             }
 
-            file << std::endl;
+            // file << std::endl;
         }
     }
 }
