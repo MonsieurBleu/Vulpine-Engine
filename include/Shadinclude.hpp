@@ -70,9 +70,12 @@ MISCELLANEOUS
 class Shadinclude
 {
 public:
+	static std::string shaderDefines;
+
 	// Return the source code of the complete shader
-	static std::string load(std::string path, std::string includeIndentifier = "#include")
+	static std::string load(std::string path, bool originalFile = true, std::string includeIndentifier = "#include")
 	{
+
 		includeIndentifier += ' ';
 		static bool isRecursiveCall = false;
 
@@ -86,6 +89,7 @@ public:
 		}
 
 		std::string lineBuffer;
+		int lineCnt = 0;
 		while (std::getline(file, lineBuffer))
 		{
 			// Look for the new shader include identifier
@@ -107,14 +111,22 @@ public:
 				// By using recursion, the new include file can be extracted
 				// and inserted at this location in the shader source code
 				isRecursiveCall = true;
-				fullSourceCode += load(lineBuffer);
+				fullSourceCode += load(lineBuffer, false);
 
 				// Do not add this line to the shader source code, as the include
 				// path would generate a compilation issue in the final source code
 				continue;
 			}
 
+			if(originalFile && lineCnt == 1)
+			{
+				fullSourceCode += shaderDefines  + '\n';
+
+				std::cout << fullSourceCode;
+			}
+
 			fullSourceCode += lineBuffer + '\n';
+			lineCnt ++;
 		}
 
 		// Only add the null terminator at the end of the complete file,

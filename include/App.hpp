@@ -10,6 +10,8 @@
 #include <RenderPass.hpp>
 #include <Controller.hpp>
 
+#include <Shadinclude.hpp>
+
 enum AppState
 {
     quit,
@@ -38,6 +40,8 @@ class App
         void mainloopStartRoutine();
         void mainloopPreRenderRoutine();
         void mainloopEndRoutine();
+
+        void activateMainSceneBindlessTextures();
 
         vec3 ambientLight;
 

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <App.hpp>
 #include <tgmath.h>
 
 #include <glm/gtx/string_cast.hpp>

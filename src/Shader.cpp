@@ -4,6 +4,8 @@
 #include <iostream>
 #include "Shadinclude.hpp"
 
+std::string Shadinclude::shaderDefines;
+
 // uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
 
 void Shader::prepareLoading(const std::string &path)
