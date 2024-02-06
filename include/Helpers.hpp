@@ -81,4 +81,15 @@ class SphereHelper : public MeshModel3D
 typedef std::shared_ptr<SphereHelper> SphereHelperRef;
 
 
+class ClusteredFrustumHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        ClusteredFrustumHelper(Camera cam, vec3 _color = vec3(0, 1, 0));
+};
+
+typedef std::shared_ptr<ClusteredFrustumHelper> ClusteredFrustumHelperRef;
+
 #endif

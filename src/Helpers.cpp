@@ -429,3 +429,96 @@ SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basi
 
     setVao(vao);
 }
+
+vec3 viewToWorld(vec4 pos, const mat4& m)
+{
+    pos = m * pos;
+    return vec3(pos)/pos.w;
+}
+
+ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam, vec3 _color) : MeshModel3D(globals.basicMaterial)
+{
+    color = _color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    const int stepD = 8;
+    const int stepX = 8;
+    const int stepY = 4;
+    float vFar = 1e4;
+
+    int nbOfPoints = (stepY +1)*(stepX +1)*stepD*16;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+
+    // float k = depth;
+    // k = 0.001/k;
+    // k -= mod(k, 1.0/nbSlice.z);
+    // if(k > 1.0) k = 0.0;
+
+    mat4 m = inverse(cam.updateProjectionViewMatrix());
+
+    int id = 0;
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);;
+        pos[i] = vec3(1e12);
+    }
+
+    for(int i = 0; i < stepD; i++)
+    {
+        float z = (float)stepD/((float)i*vFar);
+        float z2 = (float)stepD/((float)(i+1)*vFar);
+
+        for(int j = 0; j <= stepX; j++)
+        for(int k = 0; k <= stepY; k++)
+        {
+            float x = 1.0 - 2.0*(float)j/(float)stepX;
+            float y = 1.0 - 2.0*(float)k/(float)stepY;
+
+            vec3 p1 = viewToWorld(vec4(-x, -y, z, 1.0), m);
+            vec3 p2 = viewToWorld(vec4( x, -y, z, 1.0), m);
+            vec3 p3 = viewToWorld(vec4(-x,  y, z, 1.0), m);
+            vec3 p4 = viewToWorld(vec4( x,  y, z, 1.0), m);
+
+            vec3 p1n = i ? viewToWorld(vec4(-x, -y, z2, 1.0), m) : cam.getPosition();
+            vec3 p2n = i ? viewToWorld(vec4( x, -y, z2, 1.0), m) : cam.getPosition();
+            vec3 p3n = i ? viewToWorld(vec4(-x,  y, z2, 1.0), m) : cam.getPosition();
+            vec3 p4n = i ? viewToWorld(vec4( x,  y, z2, 1.0), m) : cam.getPosition();
+
+            pos[id++] = p1; pos[id++] = p2;
+            pos[id++] = p1; pos[id++] = p3;
+            pos[id++] = p3; pos[id++] = p4;
+            pos[id++] = p4; pos[id++] = p2;
+
+            if(i != stepD-1)
+            {
+                pos[id++] = p1; pos[id++] = p1n;
+                pos[id++] = p2; pos[id++] = p2n;
+                pos[id++] = p3; pos[id++] = p3n;
+                pos[id++] = p4; pos[id++] = p4n;
+            }
+        }
+
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
