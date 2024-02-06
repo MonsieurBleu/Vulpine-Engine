@@ -3,7 +3,7 @@
 
 int BenchmarkMetricDefintion::INDEX_COUNTER = 0;
 
-void Benchmark::addMetric(std::string name, callbackFreq freq, metric_callback callback)
+void Benchmark::addMetric(std::string name, callbackFreq freq, metric_callback_int callback)
 {
     // check if name already in use
     for (auto metric : metrics)
@@ -18,7 +18,29 @@ void Benchmark::addMetric(std::string name, callbackFreq freq, metric_callback c
     BenchmarkMetricDefintion metric;
     metric.name = name;
     metric.freq = freq;
-    metric.callback = callback;
+    metric.callback_int = callback;
+    metric.isFloat = false;
+    metrics.push_back(metric);
+    data.push_back(std::deque<BenchmarkMetric>());
+}
+
+void Benchmark::addMetric(std::string name, callbackFreq freq, metric_callback_float callback)
+{
+    // check if name already in use
+    for (auto metric : metrics)
+    {
+        if (metric.name == name)
+        {
+            std::cout << "Metric with name " << name << " already exists" << std::endl;
+            return;
+        }
+    }
+
+    BenchmarkMetricDefintion metric;
+    metric.name = name;
+    metric.freq = freq;
+    metric.callback_float = callback;
+    metric.isFloat = true;
     metrics.push_back(metric);
     data.push_back(std::deque<BenchmarkMetric>());
 }
@@ -27,7 +49,7 @@ void Benchmark::printMetricLast(BenchmarkMetricDefintion metric) const
 {
     BenchmarkMetric d = data[metric.index].back();
     std::cout << metric.name << "[" << ((int)(metric.freq) > 2 ? d.time : d.tick) << "]"
-              << " : " << d.value << std::endl;
+              << " : " << (metric.isFloat ? d.value_float : d.value_int) << std::endl;
 }
 
 void Benchmark::printMetricAll(BenchmarkMetricDefintion metric) const
@@ -35,7 +57,7 @@ void Benchmark::printMetricAll(BenchmarkMetricDefintion metric) const
     std::cout << metric.name << " : " << std::endl;
     for (auto d : data[metric.index])
     {
-        std::cout << "    " << ((int)(metric.freq) > 2 ? d.time : d.tick) << " : " << d.value << std::endl;
+        std::cout << "    " << ((int)(metric.freq) > 2 ? d.time : d.tick) << " : " << (metric.isFloat ? d.value_float : d.value_int) << std::endl;
     }
 }
 
@@ -131,7 +153,10 @@ void Benchmark::tick()
         case EVERY_TICK:
         {
             BenchmarkMetric m;
-            m.value = metric.callback();
+            if (metric.isFloat)
+                m.value_float = metric.callback_float();
+            else
+                m.value_int = metric.callback_int();
             m.tick = tick;
             m.time = time;
             data[metric.index].push_back(m);
@@ -143,7 +168,10 @@ void Benchmark::tick()
             if (tick % 100 == 0)
             {
                 BenchmarkMetric m;
-                m.value = metric.callback();
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
                 m.tick = tick;
                 m.time = time;
                 data[metric.index].push_back(m);
@@ -156,7 +184,10 @@ void Benchmark::tick()
             if (tick % 1000 == 0)
             {
                 BenchmarkMetric m;
-                m.value = metric.callback();
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
                 m.tick = tick;
                 m.time = time;
                 data[metric.index].push_back(m);
@@ -169,7 +200,10 @@ void Benchmark::tick()
             if (time - metric.lastTime > 1.0)
             {
                 BenchmarkMetric m;
-                m.value = metric.callback();
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
                 m.time = time;
                 m.tick = tick;
                 data[metric.index].push_back(m);
@@ -183,7 +217,10 @@ void Benchmark::tick()
             if (time - metric.lastTime > 10.0)
             {
                 BenchmarkMetric m;
-                m.value = metric.callback();
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
                 m.time = time;
                 m.tick = tick;
                 data[metric.index].push_back(m);
@@ -197,7 +234,10 @@ void Benchmark::tick()
             if (time - metric.lastTime > 60.0)
             {
                 BenchmarkMetric m;
-                m.value = metric.callback();
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
                 m.time = time;
                 m.tick = tick;
                 data[metric.index].push_back(m);
@@ -211,7 +251,10 @@ void Benchmark::tick()
             if (time - metric.lastTime > 0.1)
             {
                 BenchmarkMetric m;
-                m.value = metric.callback();
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
                 m.time = time;
                 m.tick = tick;
                 data[metric.index].push_back(m);
@@ -290,7 +333,7 @@ void Benchmark::saveCSV() const
                 {
                     if (data[metrics[i].index][indices[metrics[i].index]].tick == tick)
                     {
-                        file << data[metrics[i].index][indices[metrics[i].index]].value << ",";
+                        file << (metrics[i].isFloat ? data[metrics[i].index][indices[metrics[i].index]].value_float : data[metrics[i].index][indices[metrics[i].index]].value_int) << ",";
                         indices[metrics[i].index]++;
                     }
                     else
@@ -309,7 +352,7 @@ void Benchmark::saveCSV() const
             {
                 if (data[metrics[metrics.size() - 1].index][indices[metrics[metrics.size() - 1].index]].tick == tick)
                 {
-                    file << data[metrics[metrics.size() - 1].index][indices[metrics[metrics.size() - 1].index]].value << std::endl;
+                    file << (metrics[metrics.size() - 1].isFloat ? data[metrics[metrics.size() - 1].index][indices[metrics[metrics.size() - 1].index]].value_float : data[metrics[metrics.size() - 1].index][indices[metrics[metrics.size() - 1].index]].value_int) << std::endl;
                     indices[metrics[metrics.size() - 1].index]++;
                 }
                 else

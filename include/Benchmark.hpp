@@ -19,7 +19,8 @@ enum callbackFreq
     EVERY_100_MILLISECONDS,
 };
 
-typedef int64_t (*metric_callback)();
+typedef int64_t (*metric_callback_int)();
+typedef double (*metric_callback_float)();
 
 struct BenchmarkMetricDefintion
 {
@@ -27,14 +28,21 @@ struct BenchmarkMetricDefintion
     int index = INDEX_COUNTER++;
     std::string name;
     callbackFreq freq;
-    metric_callback callback;
+    metric_callback_int callback_int = nullptr;
+    metric_callback_float callback_float = nullptr;
+
+    bool isFloat = false;
 
     float lastTime = 0;
 };
 
 struct BenchmarkMetric
 {
-    int64_t value;
+    union
+    {
+        int64_t value_int;
+        double value_float;
+    };
 
     int tick = 0;
     float time = 0;
@@ -51,7 +59,8 @@ private:
 
 public:
     Benchmark(){};
-    void addMetric(std::string name, callbackFreq freq, metric_callback callback);
+    void addMetric(std::string name, callbackFreq freq, metric_callback_int callback);
+    void addMetric(std::string name, callbackFreq freq, metric_callback_float callback);
     void printLast() const;
     void printAll() const;
     void printMetric(std::string name) const;
