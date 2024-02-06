@@ -13,6 +13,11 @@ The Vulpine Engine is a lightweight game engine made from scratch in C++ using O
 
 My goals with this project, are to learn how to make an application such as this one and to have a custom-made graphics/game engine for sevral of my personal and academical projects. This engine is and will always be open source and free for all uses.
 
+## Project Built With Vulpine 
+
+- [Game Repo Example](https://github.com/MonsieurBleu/Vulpine-Engine-Game-Repo-Example) a simple game built with the engine to showcase how to setup things.
+- ["Les bois de Vulpigniac"](https://github.com/MonsieurBleu/Renerds-Code-Game-Jam-2024) made for the Code Game Jam 2024.
+
 ## Portability & Dependencies 
 
 The Vulpine Engine is supported for Windows and Linux environment with OpenGL 4.6 compatiblity. No Mac or Android/IOS support is planned or will ever be.
