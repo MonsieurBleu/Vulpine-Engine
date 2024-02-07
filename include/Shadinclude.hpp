@@ -119,11 +119,7 @@ public:
 			}
 
 			if(originalFile && lineCnt == 1)
-			{
 				fullSourceCode += shaderDefines  + '\n';
-
-				std::cout << fullSourceCode;
-			}
 
 			fullSourceCode += lineBuffer + '\n';
 			lineCnt ++;

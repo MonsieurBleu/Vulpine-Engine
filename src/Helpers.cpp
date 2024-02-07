@@ -90,20 +90,22 @@ PointLightHelperMODEL::PointLightHelperMODEL(ScenePointLight light) : light(ligh
 
 PointLightHelper::PointLightHelper(ScenePointLight light) : light(light)
 {
-    static MeshMaterial mat(new ShaderProgram(
-                "shader/foward rendering/basic.frag", 
-                "shader/foward rendering/basic.vert", 
-                "", 
-                globals.standartShaderUniform3D()
-                ));
+    // static MeshMaterial mat(new ShaderProgram(
+    //             "shader/foward rendering/basic.frag", 
+    //             "shader/foward rendering/basic.vert", 
+    //             "", 
+    //             globals.standartShaderUniform3D()
+    //             ));
 
-    static MeshVao geo = readOBJ("ressources/helpers/PointLight.obj", true);
+    // static MeshVao geo = readOBJ("ressources/helpers/PointLight.obj", true);
 
-    helper = newModel(
-        mat,
-        geo,
-        ModelState3D().scaleScalar(1.0)
-    );
+    // helper = newModel(
+    //     mat,
+    //     geo,
+    //     ModelState3D().scaleScalar(1.0)
+    // );
+
+    helper = SphereHelperRef(new SphereHelper(vec3(1, 0, 1)));
 
     add(helper);
 }
@@ -447,12 +449,12 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam, vec3 _color) : MeshMo
     noBackFaceCulling = true;
     defaultMode = GL_LINES;
 
-    const int stepD = 8;
-    const int stepX = 8;
+    const int stepD = 6; //8
+    const int stepX = 4;
     const int stepY = 4;
-    float vFar = 1e4;
+    float vFar = 5e3;
 
-    int nbOfPoints = (stepY +1)*(stepX +1)*stepD*16;
+    int nbOfPoints = (stepY +1)*(stepX +1)*(stepD+1)*6;
     GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
     GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
 
@@ -475,9 +477,9 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam, vec3 _color) : MeshMo
         pos[i] = vec3(1e12);
     }
 
-    for(int i = 0; i < stepD; i++)
+    for(int i = 0; i <= stepD; i++)
     {
-        float z = (float)stepD/((float)i*vFar);
+        float z = (float)stepD/(max((float)i, 1e-5f)*vFar);
         float z2 = (float)stepD/((float)(i+1)*vFar);
 
         for(int j = 0; j <= stepX; j++)
@@ -489,27 +491,16 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam, vec3 _color) : MeshMo
             vec3 p1 = viewToWorld(vec4(-x, -y, z, 1.0), m);
             vec3 p2 = viewToWorld(vec4( x, -y, z, 1.0), m);
             vec3 p3 = viewToWorld(vec4(-x,  y, z, 1.0), m);
-            vec3 p4 = viewToWorld(vec4( x,  y, z, 1.0), m);
-
-            vec3 p1n = i ? viewToWorld(vec4(-x, -y, z2, 1.0), m) : cam.getPosition();
-            vec3 p2n = i ? viewToWorld(vec4( x, -y, z2, 1.0), m) : cam.getPosition();
-            vec3 p3n = i ? viewToWorld(vec4(-x,  y, z2, 1.0), m) : cam.getPosition();
-            vec3 p4n = i ? viewToWorld(vec4( x,  y, z2, 1.0), m) : cam.getPosition();
 
             pos[id++] = p1; pos[id++] = p2;
             pos[id++] = p1; pos[id++] = p3;
-            pos[id++] = p3; pos[id++] = p4;
-            pos[id++] = p4; pos[id++] = p2;
 
-            if(i != stepD-1)
+            if(i != stepD)
             {
-                pos[id++] = p1; pos[id++] = p1n;
-                pos[id++] = p2; pos[id++] = p2n;
-                pos[id++] = p3; pos[id++] = p3n;
-                pos[id++] = p4; pos[id++] = p4n;
+                pos[id++] = p1; 
+                pos[id++] = viewToWorld(vec4(-x, -y, z2, 1.0), m);
             }
         }
-
     }
 
     MeshVao vao(new 

@@ -10,8 +10,6 @@
 #include <RenderPass.hpp>
 #include <Controller.hpp>
 
-#include <Shadinclude.hpp>
-
 enum AppState
 {
     quit,

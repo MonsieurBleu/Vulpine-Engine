@@ -5,6 +5,7 @@
 #include <stb/stb_image.h>
 #include <Audio.hpp>
 #include <Controller.hpp>
+#include <Shadinclude.hpp>
 
 std::mutex inputMutex;
 std::mutex physicsMutex;
@@ -138,7 +139,7 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
 
 void App::activateMainSceneBindlessTextures()
 {
-    scene.useBindlessTextures = false;
+    scene.useBindlessTextures = true;
     Shadinclude::shaderDefines += "#define ARB_BINDLESS_TEXTURE\n";
 }
 

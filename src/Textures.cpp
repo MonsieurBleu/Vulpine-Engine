@@ -101,7 +101,9 @@ Texture2D& Texture2D::generate()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode); 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
+
+        bindlessHandleRef = std::make_shared<GLuint>(0);
 
         generated = true;
     }
@@ -216,9 +218,6 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
 
     generated = true;
 
-    // bindlessHandle = glGetTextureHandleARB(handle);
-    // glMakeTextureHandleResidentARB(bindlessHandle);
-    // handleRef = std::make_shared<GLuint>(handle);
     bindlessHandleRef = std::make_shared<GLuint>(0);
     
     return *(this);
@@ -230,8 +229,6 @@ GLuint64 Texture2D::getBindlessHandle()
     {
         *bindlessHandleRef = glGetTextureHandleARB(handle);
         glMakeTextureHandleResidentARB(*bindlessHandleRef);
-        
-        std::cout << "handle : " << *bindlessHandleRef << "\n";
     }
     return *bindlessHandleRef;
 }
