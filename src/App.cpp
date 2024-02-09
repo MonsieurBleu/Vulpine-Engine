@@ -1,3 +1,4 @@
+#include <App.hpp>
 #include <Globals.hpp>
 #include <Uniforms.hpp>
 #include <FrameBuffer.hpp>

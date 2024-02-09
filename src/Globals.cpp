@@ -1,4 +1,5 @@
 #include <Globals.hpp>
+#include <App.hpp>
 
 const AppState Globals::state() const {return _state;};
 

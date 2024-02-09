@@ -156,6 +156,9 @@ void Scene::genLightBuffer()
     
     ligthBuffer.update();
     ligthBuffer.activate(0);
+
+    if(useClusteredLighting)
+        clusteredLight.activate(1);
 }
 
 uint Scene::draw()
@@ -336,4 +339,15 @@ void Scene::cull()
 
     for(auto i : unsortedMeshes)
         i->cull();
+}
+
+void Scene::activateClusteredLighting(ivec3 dimention)
+{
+    useClusteredLighting = true;
+    clusteredLight.allocate(dimention);
+}
+
+void Scene::deactivateClusteredLighting()
+{
+    useClusteredLighting = false;
 }
