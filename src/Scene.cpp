@@ -230,7 +230,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
                 for(auto j : i->meshes)
                     {
                         j->setBindlessMaps();
-                        j->drawVAO();
+                        j->drawVAO(true);
                     }
             }
             else
@@ -238,7 +238,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
                 for(auto j : i->meshes)
                 {
                     j->bindAllMaps();
-                    j->drawVAO();
+                    j->drawVAO(true);
                 }
             }
 

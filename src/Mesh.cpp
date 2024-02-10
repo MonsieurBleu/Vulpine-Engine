@@ -29,13 +29,11 @@ MeshMaterial::~MeshMaterial()
     // }
 }
 
-GLuint Mesh::drawVAO(GLenum mode)
+GLuint Mesh::drawVAO(bool depthOnly)
 {
     glBindVertexArray(vao->getHandle());
-    // if(!mode)
-    mode = defaultMode;
 
-    glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
+    glDrawArrays(defaultMode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
     return 1;
 }
@@ -125,7 +123,7 @@ bool MeshModel3D::cull()
 void MeshModel3D::update()
 {
     state.update(); // can be removed if the scene arleady do the update
-    uniforms.update();
+    baseUniforms.update();
 }
 
 void Mesh::bindAllMaps()
@@ -162,17 +160,17 @@ void MeshModel3D::resetDrawMode()
         glEnable(GL_CULL_FACE);
 }
 
-GLuint MeshModel3D::drawVAO(GLenum mode)
+GLuint MeshModel3D::drawVAO(bool depthOnly)
 {
     if (!culled)
         return 0;
 
     update();
+    if(!depthOnly) uniforms.update();
     setDrawMode();
 
     glBindVertexArray(vao->getHandle());
-    mode = defaultMode;
-    glDrawArrays(mode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
+    glDrawArrays(defaultMode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
     resetDrawMode();
 
@@ -183,11 +181,12 @@ bool MeshModel3D::isCulled() { return culled; };
 
 void MeshModel3D::createUniforms()
 {
-    uniforms = ShaderUniformGroup(
+    baseUniforms = ShaderUniformGroup(
         {ShaderUniform(&state.modelMatrix, MESH_MODEL_UNIFORM_MATRIX),
-         ShaderUniform(&state.rotationMatrix, MESH_MODEL_UNIFORM_ROTATION),
-         ShaderUniform(&state.scale, MESH_MODEL_UNIFORM_SCALE),
-         ShaderUniform(&state.position, MESH_MODEL_UNIFORM_POSITION)});
+        //  ShaderUniform(&state.rotationMatrix, MESH_MODEL_UNIFORM_ROTATION),
+        //  ShaderUniform(&state.scale, MESH_MODEL_UNIFORM_SCALE),
+        //  ShaderUniform(&state.position, MESH_MODEL_UNIFORM_POSITION)
+         });
 }
 
 MeshModel3D &MeshModel3D::loadFromFolder(
@@ -423,9 +422,10 @@ void InstancedMeshModel3D::allocate(size_t maxInstanceCount)
     glBindVertexArray(0);
 }
 
-GLuint InstancedMeshModel3D::drawVAO(GLenum mode)
+GLuint InstancedMeshModel3D::drawVAO(bool depthOnly)
 {
     update();
+    if(!depthOnly) uniforms.update();
     setDrawMode();
 
     glBindVertexArray(vao->getHandle());
