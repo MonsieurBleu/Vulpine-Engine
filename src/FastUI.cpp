@@ -1,7 +1,7 @@
 #include <FastUI.hpp>
 #include <Globals.hpp>
 #include <MathsUtils.hpp>
-
+#include <Scene.hpp>
 #include <Constants.hpp>
 
 SimpleUiTile::SimpleUiTile(ModelState3D state, UiTileType tileType, vec4 color)

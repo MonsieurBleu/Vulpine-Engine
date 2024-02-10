@@ -10,12 +10,7 @@
 #include <RenderPass.hpp>
 #include <Controller.hpp>
 
-enum AppState
-{
-    quit,
-    init,
-    run 
-};
+#include <Enums.hpp>
 
 class App
 {

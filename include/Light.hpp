@@ -10,6 +10,7 @@
 using namespace glm;
 
 #define MAX_LIGHT_COUNTER 0xff
+#define MAX_LIGHT_PER_CLUSTER 16
 #define LIGHT_SHADOW_ACTIVATED 1
 
 class ObjectGroup;
@@ -147,6 +148,7 @@ class LightBuffer
     public :
 
         LightBuffer();
+        ~LightBuffer();
         LightBuffer& add(Light light);
         void send();
         void activate(int location);
@@ -157,6 +159,23 @@ class LightBuffer
 std::ostream& operator<<(std::ostream& os, const Light &l);
 std::basic_ostringstream<char32_t>& operator<<(std::basic_ostringstream<char32_t>& os, const Light &l);
 
+class ClusteredLightBuffer
+{
+    private : 
+        uint handle = 0;
+        std::shared_ptr<int[]> buffer;
+        ivec3 dimention;
+        int size;
 
+    public : 
+        ClusteredLightBuffer();
+        ~ClusteredLightBuffer();
+
+        void allocate(ivec3 dim);
+        void send();
+        void activate(int location);
+        
+        int* get(){return buffer.get();};
+};
 
 #endif

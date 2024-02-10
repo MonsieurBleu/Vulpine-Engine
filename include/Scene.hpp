@@ -30,6 +30,8 @@ class Scene
         std::deque<ModelRef> unsortedMeshes;
 
         LightBuffer ligthBuffer;
+        ClusteredLightBuffer clusteredLight;
+
         std::deque<SceneLight> lights;
         std::deque<ObjectGroupRef> groups;
 
@@ -37,6 +39,8 @@ class Scene
         void removeGroupElement(ObjectGroupRef group);
 
         uint drawcnt = 0;
+
+        bool useClusteredLighting = false;
 
     public :
         Scene();
@@ -65,6 +69,8 @@ class Scene
         MeshMaterial depthOnlyMaterial;
 
         bool useBindlessTextures = false;
+        void activateClusteredLighting(ivec3 dimention = ivec3(16, 9, 16));
+        void deactivateClusteredLighting();
 };
 
 
