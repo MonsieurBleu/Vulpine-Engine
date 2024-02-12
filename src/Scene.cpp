@@ -149,10 +149,10 @@ void Scene::updateAllObjects()
 
 void Scene::genLightBuffer()
 {
-    for(auto i = lights.begin(); i != lights.end(); i++)
+    for(auto i : lights)
     {
-        lightBuffer.add(**i);
-        (*i)->bindShadowMap();
+        lightBuffer.add(*i);
+        i->bindShadowMap();
     }
     
     lightBuffer.update();
@@ -164,7 +164,6 @@ void Scene::genLightBuffer()
         clusteredLight.update();
         clusteredLight.activate(1);
     }
-    
 }
 
 void Scene::generateLightClusters()
@@ -270,7 +269,8 @@ void Scene::generateLightClusters()
     ******/
 
     /****** Per Light Optimized Culling ******/
-    for(int i = 0; i < MAX_LIGHT_PER_CLUSTER*dim.x*dim.y*dim.z; i++)
+    int buffSize = MAX_LIGHT_PER_CLUSTER*dim.x*dim.y*dim.z;
+    for(int i = 0; i < buffSize; i+= MAX_LIGHT_PER_CLUSTER)
         buff[i] = lmax;
 
     for(int i = 0; i < lmax; i++)
@@ -286,34 +286,52 @@ void Scene::generateLightClusters()
         vec4 zSp2 = vec4(0, 0, l._position.z - l._direction.x, 1) * pm;
         float zId2 = 100.f*(zSp2.w/zSp2.z)*dimf.z/vFar;
         int maxZ = clamp((int)(zId2)+1, 0, dim.z);
+        
+        if(!maxZ) continue;
 
-        vec4 xSp = vec4(l._position.x, l._position.y, l._position.z, 1) * pm;
-        float xId = ((xSp.x/xSp.w) + 1.f)*0.5*dimf.x;
-        int minX = clamp((int)(xId), 0, dim.x);
+        // vec4 xSp = vec4(l._position.x - l._direction.x, l._position.y, l._position.z - l._direction.x, 1) * pm;
+        // float xId = (0.1f*(xSp.x/xSp.w) + 1.f)*0.5*dimf.x;
+        // int minX = dim.x-clamp((int)(xId)+2, 0, dim.x);
 
-        std::cout << xSp.x << "\n";
+        // vec4 xSp2 = vec4(l._position.x + l._direction.x, l._position.y, l._position.z - l._direction.x, 1) * pm;
+        // float xId2 = (0.1f*(xSp2.x/xSp2.w) + 1.f)*0.5*dimf.x;
+        // int maxX = dim.x-clamp((int)(xId2)-2, 0, dim.x);
+        // std::cout << minX << "\n";
 
+        bool lastOneCulledX = false;
+        int culledSwitchX = 0;
         for(int x = 0; x < dim.x; x++)
-        for(int y = 0; y < dim.y; y++)
-        for(int z = minZ; z < maxZ; z++)
         {
-            aabbID = x*dim.z*dim.y + y*dim.z + z;
-            vec3 minP = AABBs[aabbID].first;
-            vec3 maxP = AABBs[aabbID].second;
+            bool oneCulledX = false;
 
-            const vec3 p = vec3(l._position);
-            const vec3 closest = p-max(minP, min(maxP, p));
-            bool culled = dot(closest, closest) <= l._direction.x*l._direction.x;
-
-            if(culled)
+            for(int y = 0; y < dim.y; y++)
+            for(int z = minZ; z < maxZ; z++)
             {
-                int cid = MAX_LIGHT_PER_CLUSTER*aabbID;
-                const int maxCID = cid + MAX_LIGHT_PER_CLUSTER;
-                while(buff[cid] != lmax && cid < maxCID) cid++;
-                
-                buff[cid] = i;
-                buff[cid+1] = lmax;
+                aabbID = x*dim.z*dim.y + y*dim.z + z;
+                vec3 minP = AABBs[aabbID].first;
+                vec3 maxP = AABBs[aabbID].second;
+
+                const vec3 p = vec3(l._position);
+                const vec3 closest = p-max(minP, min(maxP, p));
+                bool culled = dot(closest, closest) <= l._direction.x*l._direction.x;
+
+                if(culled)
+                {
+                    oneCulledX = true;
+                    int cid = MAX_LIGHT_PER_CLUSTER*aabbID;
+                    const int maxCID = cid + MAX_LIGHT_PER_CLUSTER;
+                    while(buff[cid] != lmax && cid < maxCID) cid++;
+                    
+                    buff[cid] = i;
+                    buff[cid+1] = lmax;
+                }
             }
+
+            culledSwitchX += lastOneCulledX != oneCulledX ? 1 : 0;
+            if(culledSwitchX >= 2)
+                break;
+
+            lastOneCulledX = oneCulledX;
         }
     }
 

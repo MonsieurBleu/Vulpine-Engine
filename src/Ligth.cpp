@@ -116,8 +116,9 @@ LightBuffer::~LightBuffer()
 }
 
 void LightBuffer::send()
-{
-    add(Light());
+{   
+    Light end;
+    add(end);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(LightInfos)*MAX_LIGHT_COUNTER, buffer.get(), GL_DYNAMIC_COPY);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
@@ -128,7 +129,7 @@ void LightBuffer::activate(int location)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, handle);
 }
 
-LightBuffer& LightBuffer::add(Light light)
+LightBuffer& LightBuffer::add(Light &light)
 {
     if(currentID >= MAX_LIGHT_COUNTER)
         return *this;
@@ -146,7 +147,8 @@ void LightBuffer::reset()
 
 void LightBuffer::update()
 {
-    add(Light());
+    Light end;
+    add(end);
     glNamedBufferSubData(handle, 0, sizeof(LightInfos)*currentID, buffer.get());
 }
 

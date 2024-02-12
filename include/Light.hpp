@@ -9,8 +9,8 @@
 
 using namespace glm;
 
-#define MAX_LIGHT_COUNTER 0x1000
-#define MAX_LIGHT_PER_CLUSTER 1024
+#define MAX_LIGHT_COUNTER 0b100000000000000
+#define MAX_LIGHT_PER_CLUSTER 128
 #define LIGHT_SHADOW_ACTIVATED 1
 
 class ObjectGroup;
@@ -149,7 +149,7 @@ class LightBuffer
 
         LightBuffer();
         ~LightBuffer();
-        LightBuffer& add(Light light);
+        LightBuffer& add(Light &light);
         void send();
         void activate(int location);
         void reset();
