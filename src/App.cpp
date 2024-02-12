@@ -144,6 +144,12 @@ void App::activateMainSceneBindlessTextures()
     Shadinclude::shaderDefines += "#define ARB_BINDLESS_TEXTURE\n";
 }
 
+void App::activateMainSceneClusteredLighting(ivec3 dimention)
+{
+    scene.activateClusteredLighting(dimention);
+    Shadinclude::shaderDefines += "#define USE_CLUSTERED_RENDERING\n";
+}
+
 void App::setIcon(const std::string &filename)
 {
     GLFWimage image[1]; 

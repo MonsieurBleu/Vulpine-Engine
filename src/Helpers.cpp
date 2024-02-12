@@ -432,13 +432,7 @@ SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basi
     setVao(vao);
 }
 
-vec3 viewToWorld(vec4 pos, const mat4& m)
-{
-    pos = m * pos;
-    return vec3(pos)/pos.w;
-}
-
-ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam, vec3 _color) : MeshModel3D(globals.basicMaterial)
+ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _color) : MeshModel3D(globals.basicMaterial)
 {
     color = _color;
     createUniforms();
@@ -449,9 +443,9 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam, vec3 _color) : MeshMo
     noBackFaceCulling = true;
     defaultMode = GL_LINES;
 
-    const int stepD = 6; //8
-    const int stepX = 4;
-    const int stepY = 4;
+    const int stepD = dim.z; //8
+    const int stepX = dim.x;
+    const int stepY = dim.y;
     float vFar = 5e3;
 
     int nbOfPoints = (stepY +1)*(stepX +1)*(stepD+1)*6;
@@ -481,6 +475,16 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam, vec3 _color) : MeshMo
     {
         float z = (float)stepD/(max((float)i, 1e-5f)*vFar);
         float z2 = (float)stepD/((float)(i+1)*vFar);
+
+        // z = log(-z/0.1)/log(1 + 2*tan(35)/(float)stepY);
+        // z2 = log(-z2/0.1)/log(1 + 2*tan(35)/(float)stepY);
+
+        // z = (float)stepD/max((float)i, 1e-5f);
+        // z2 = (float)stepD/((float)(i+1));
+
+        // z = pow(z, 0.5)/vFar;
+        // z2 = pow(z2, 0.5)/vFar;
+
 
         for(int j = 0; j <= stepX; j++)
         for(int k = 0; k <= stepY; k++)

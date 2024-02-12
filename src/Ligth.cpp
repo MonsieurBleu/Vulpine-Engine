@@ -173,7 +173,7 @@ void ClusteredLightBuffer::allocate(ivec3 dim)
 void ClusteredLightBuffer::send()
 {
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(int)*MAX_LIGHT_PER_CLUSTER, buffer.get(), GL_DYNAMIC_COPY);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, size*sizeof(int)*MAX_LIGHT_PER_CLUSTER, buffer.get(), GL_DYNAMIC_COPY);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
@@ -181,6 +181,12 @@ void ClusteredLightBuffer::activate(int location)
 {
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, handle);
 }
+
+void ClusteredLightBuffer::update()
+{
+    glNamedBufferSubData(handle, 0, size*MAX_LIGHT_PER_CLUSTER*sizeof(int), buffer.get());
+}
+
 
 LightInfos Light::getInfos() const
 {

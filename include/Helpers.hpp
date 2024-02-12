@@ -74,7 +74,7 @@ class ClusteredFrustumHelper : public MeshModel3D
 
     public : 
         vec3 color;
-        ClusteredFrustumHelper(Camera cam, vec3 _color = vec3(0, 1, 0));
+        ClusteredFrustumHelper(Camera cam, ivec3 dim = ivec3(16, 9, 24), vec3 _color = vec3(0, 1, 0));
 };
 
 typedef std::shared_ptr<ClusteredFrustumHelper> ClusteredFrustumHelperRef;
