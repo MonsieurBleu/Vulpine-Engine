@@ -10,12 +10,7 @@
 #include <RenderPass.hpp>
 #include <Controller.hpp>
 
-enum AppState
-{
-    quit,
-    init,
-    run 
-};
+#include <Enums.hpp>
 
 class App
 {
@@ -38,6 +33,9 @@ class App
         void mainloopStartRoutine();
         void mainloopPreRenderRoutine();
         void mainloopEndRoutine();
+
+        void activateMainSceneBindlessTextures();
+        void activateMainSceneClusteredLighting(ivec3 dimention);
 
         vec3 ambientLight;
 

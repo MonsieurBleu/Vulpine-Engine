@@ -3,7 +3,6 @@
 
 #include <deque>
 #include <Fonts.hpp>
-#include <Scene.hpp>
 
 #include <ObjectGroup.hpp>
 

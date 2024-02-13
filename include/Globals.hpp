@@ -1,7 +1,6 @@
 #ifndef GLOBALS_HPP
 #define GLOBALS_HPP
 
-#include <App.hpp>
 #include <Timer.hpp>
 
 #include <Mesh.hpp>
@@ -9,6 +8,8 @@
 #include <codecvt>
 #include <iomanip>
 #include <Controller.hpp>
+
+#include <Enums.hpp>
 
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
 

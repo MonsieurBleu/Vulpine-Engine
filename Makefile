@@ -20,7 +20,7 @@ ifeq ($(OS),Windows_NT)
 	LINKING_EXECUTABLE = $(ECHO) $(UNDERLINE)$(BOLD)$(BLUE)Linking$(RESET)
 
 else
-	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal
+	LIBFLAGS = -L./ -lGLEW -lglfw3 -lGL -lktx -lopenal -lX11
 	LINKFLAGS = 
 
 	ECHO = echo

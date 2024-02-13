@@ -77,7 +77,7 @@ class Mesh
         void setBindlessMaps();
 
         virtual GLuint draw(GLenum mode = GL_TRIANGLES);
-        virtual GLuint drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual GLuint drawVAO(bool depthOnly = false);
 
         virtual bool cull();
 };
@@ -133,6 +133,7 @@ class MeshModel3D : public Mesh
 
         ModelState3D state;
         ShaderUniformGroup uniforms;
+        ShaderUniformGroup baseUniforms;
 
         MeshModel3D& loadFromFolder(
             const std::string folderPath, 
@@ -142,7 +143,7 @@ class MeshModel3D : public Mesh
         void update();
         void setDrawMode();
         void resetDrawMode();
-        virtual GLuint drawVAO(GLenum mode = GL_TRIANGLES);
+        virtual GLuint drawVAO(bool depthOnly = false);
         virtual bool cull();
         bool isCulled();
 };
@@ -179,7 +180,7 @@ class InstancedMeshModel3D : public MeshModel3D
         void updateInstances();
         ModelInstance* createInstance();
 
-        GLuint drawVAO(GLenum mode = GL_TRIANGLES) final;
+        GLuint drawVAO(bool depthOnly = false) final;
         bool cull() final;
 };
 

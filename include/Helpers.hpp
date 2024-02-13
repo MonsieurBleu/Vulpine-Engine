@@ -19,19 +19,6 @@ class PointLightHelperMODEL : public MeshModel3D
         // void preDrawRoutine() override;
 };
 
-class PointLightHelper : public ObjectGroup
-{
-    private : 
-
-        const ScenePointLight light;
-
-    public :
-        ModelRef helper;
-
-        PointLightHelper(ScenePointLight light);
-        void update(bool forceUpdate = false) override;
-};
-
 class DirectionalLightHelper : public ObjectGroup
 {
     private : 
@@ -80,5 +67,31 @@ class SphereHelper : public MeshModel3D
 
 typedef std::shared_ptr<SphereHelper> SphereHelperRef;
 
+
+class ClusteredFrustumHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        ClusteredFrustumHelper(Camera cam, ivec3 dim = ivec3(16, 9, 24), vec3 _color = vec3(0, 1, 0));
+};
+
+typedef std::shared_ptr<ClusteredFrustumHelper> ClusteredFrustumHelperRef;
+
+class PointLightHelper : public ObjectGroup
+{
+    private : 
+
+        const ScenePointLight light;
+
+    public :
+        SphereHelperRef helper;
+
+        PointLightHelper(ScenePointLight light);
+        void update(bool forceUpdate = false) override;
+};
+
+typedef std::shared_ptr<PointLightHelper> PointLightHelperRef;
 
 #endif

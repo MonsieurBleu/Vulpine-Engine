@@ -27,4 +27,6 @@ float gold_noise3(vec3 coordinate, float seed);
 
 float random01Vec2(vec2 uv);
 
+vec3 viewToWorld(vec4 pos, const mat4& m);
+
 #endif

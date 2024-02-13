@@ -110,12 +110,18 @@ LightBuffer::LightBuffer()
     glGenBuffers(1, &handle);
 }
 
-void LightBuffer::send()
+LightBuffer::~LightBuffer()
 {
-    add(Light());
+    glDeleteBuffers(1, &handle);
+}
+
+void LightBuffer::send()
+{   
+    Light end;
+    add(end);
     glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
     glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(LightInfos)*MAX_LIGHT_COUNTER, buffer.get(), GL_DYNAMIC_COPY);
-    
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void LightBuffer::activate(int location)
@@ -123,7 +129,7 @@ void LightBuffer::activate(int location)
     glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, handle);
 }
 
-LightBuffer& LightBuffer::add(Light light)
+LightBuffer& LightBuffer::add(Light &light)
 {
     if(currentID >= MAX_LIGHT_COUNTER)
         return *this;
@@ -141,9 +147,48 @@ void LightBuffer::reset()
 
 void LightBuffer::update()
 {
-    add(Light());
+    Light end;
+    add(end);
     glNamedBufferSubData(handle, 0, sizeof(LightInfos)*currentID, buffer.get());
 }
+
+
+ClusteredLightBuffer::ClusteredLightBuffer()
+{
+}
+
+ClusteredLightBuffer::~ClusteredLightBuffer	()
+{
+    if(handle)
+        glDeleteBuffers(1, &handle);
+}
+
+void ClusteredLightBuffer::allocate(ivec3 dim)
+{
+    if(!handle) glGenBuffers(1, &handle);
+    dimention = dim;
+    size = dim.x*dim.y*dim.z;
+    buffer = std::shared_ptr<int[]>(new int[size*MAX_LIGHT_PER_CLUSTER]);
+    memset(buffer.get(), -1, size*MAX_LIGHT_PER_CLUSTER*sizeof(int));
+}
+
+void ClusteredLightBuffer::send()
+{
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, size*sizeof(int)*MAX_LIGHT_PER_CLUSTER, buffer.get(), GL_DYNAMIC_COPY);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+}
+
+void ClusteredLightBuffer::activate(int location)
+{
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, handle);
+}
+
+void ClusteredLightBuffer::update()
+{
+    glNamedBufferSubData(handle, 0, size*MAX_LIGHT_PER_CLUSTER*sizeof(int), buffer.get());
+}
+
 
 LightInfos Light::getInfos() const
 {

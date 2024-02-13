@@ -1,3 +1,4 @@
+#include <App.hpp>
 #include <Globals.hpp>
 #include <Uniforms.hpp>
 #include <FrameBuffer.hpp>
@@ -5,6 +6,7 @@
 #include <stb/stb_image.h>
 #include <Audio.hpp>
 #include <Controller.hpp>
+#include <Shadinclude.hpp>
 
 std::mutex inputMutex;
 std::mutex physicsMutex;
@@ -16,107 +18,7 @@ std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
 void App::init()
 {
-    finalProcessingStage
-        .addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10))
-        .addUniform(ShaderUniform(Bloom.getIsEnableAddr(), 10))
-        .addUniform(ShaderUniform(&globals.sceneChromaticAbbColor1, 16))
-        .addUniform(ShaderUniform(&globals.sceneChromaticAbbColor2, 17))
-        .addUniform(ShaderUniform(&globals.sceneChromaticAbbAngleAmplitude, 18))
-        .addUniform(ShaderUniform(&globals.sceneVignette, 19))
-        .addUniform(ShaderUniform(&globals.sceneHsvShift, 20));
-    return;
-}
-
-void App::setIcon(const std::string &filename)
-{
-    GLFWimage image[1]; 
-    image[0].pixels = stbi_load(filename.c_str(), &image[0].width, &image[0].height, 0, 4);
-    glfwSetWindowIcon(window, 1, image); 
-    stbi_image_free(image[0].pixels);
-}
-
-bool App::userInput(GLFWKeyInfo input){return false;};
-
-bool App::baseInput(GLFWKeyInfo input)
-{
-    bool used = false;
-
-    if(globals._currentController)
-        used = globals._currentController->inputs(input);
-
-    if(used) return true;
-
-    if(input.action == GLFW_RELEASE)
-    switch (input.key)
-    {
-        case GLFW_MOUSE_BUTTON_LEFT:
-            globals._mouseLeftClickDown = false;
-            used = true;
-            break;
-        
-        default: break;
-    }
-
-    if(input.action == GLFW_PRESS)
-    switch (input.key)
-    {
-        case GLFW_MOUSE_BUTTON_LEFT :
-            globals._mouseLeftClick = true;
-            globals._mouseLeftClickDown = true;
-            used = true;
-            break;
-        
-        case GLFW_KEY_V :
-            if(input.mods&GLFW_MOD_CONTROL)
-            {
-                if(globals.isTextInputsActive())
-                {
-                    globals.textInputString += UFTconvert.from_bytes(glfwGetClipboardString(window));
-                    used = true;
-                }
-            }
-            break;
-        
-        case GLFW_KEY_ENTER :
-            if(globals.isTextInputsActive())
-            {
-                globals.textInputString.push_back(U'\n');
-                used = true;
-            }
-            break;
-
-        case GLFW_KEY_DELETE :
-        case GLFW_KEY_BACKSPACE :
-            if(globals.isTextInputsActive() && !globals.textInputString.empty())
-            {
-                globals.textInputString.pop_back();
-                used = true;
-            }
-            break;
-        
-        default: break;
-    }
-
-    return used;
-}
-
-void App::setController(Controller *c)
-{
-    globals._currentController = c;
-    glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
-    {
-        if(globals._currentController)
-            globals._currentController->mouseEvent(vec2(dx, dy), window);
-    });
-}
-
-App::App(GLFWwindow* window) : 
-    window(window), 
-    renderBuffer(globals.renderSizeAddr()),
-    SSAO(renderBuffer),
-    Bloom(renderBuffer)
-{
-    if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
+if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     {
         std::cerr << "ERROR: Could not set Distance Model to AL_INVERSE_DISTANCE_CLAMPED" << std::endl;
     }
@@ -234,6 +136,227 @@ App::App(GLFWwindow* window) :
             "shader/foward/basic.vert",
             "",
             globals.standartShaderUniform3D()));
+}
+
+void App::activateMainSceneBindlessTextures()
+{
+    scene.useBindlessTextures = true;
+    Shadinclude::shaderDefines += "#define ARB_BINDLESS_TEXTURE\n";
+}
+
+void App::activateMainSceneClusteredLighting(ivec3 dimention)
+{
+    scene.activateClusteredLighting(dimention);
+    Shadinclude::shaderDefines += "#define USE_CLUSTERED_RENDERING\n";
+}
+
+void App::setIcon(const std::string &filename)
+{
+    GLFWimage image[1]; 
+    image[0].pixels = stbi_load(filename.c_str(), &image[0].width, &image[0].height, 0, 4);
+    glfwSetWindowIcon(window, 1, image); 
+    stbi_image_free(image[0].pixels);
+}
+
+bool App::userInput(GLFWKeyInfo input){return false;};
+
+bool App::baseInput(GLFWKeyInfo input)
+{
+    bool used = false;
+
+    if(globals._currentController)
+        used = globals._currentController->inputs(input);
+
+    if(used) return true;
+
+    if(input.action == GLFW_RELEASE)
+    switch (input.key)
+    {
+        case GLFW_MOUSE_BUTTON_LEFT:
+            globals._mouseLeftClickDown = false;
+            used = true;
+            break;
+        
+        default: break;
+    }
+
+    if(input.action == GLFW_PRESS)
+    switch (input.key)
+    {
+        case GLFW_MOUSE_BUTTON_LEFT :
+            globals._mouseLeftClick = true;
+            globals._mouseLeftClickDown = true;
+            used = true;
+            break;
+        
+        case GLFW_KEY_V :
+            if(input.mods&GLFW_MOD_CONTROL)
+            {
+                if(globals.isTextInputsActive())
+                {
+                    globals.textInputString += UFTconvert.from_bytes(glfwGetClipboardString(window));
+                    used = true;
+                }
+            }
+            break;
+        
+        case GLFW_KEY_ENTER :
+            if(globals.isTextInputsActive())
+            {
+                globals.textInputString.push_back(U'\n');
+                used = true;
+            }
+            break;
+
+        case GLFW_KEY_DELETE :
+        case GLFW_KEY_BACKSPACE :
+            if(globals.isTextInputsActive() && !globals.textInputString.empty())
+            {
+                globals.textInputString.pop_back();
+                used = true;
+            }
+            break;
+        
+        default: break;
+    }
+
+    return used;
+}
+
+void App::setController(Controller *c)
+{
+    globals._currentController = c;
+    glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
+    {
+        if(globals._currentController)
+            globals._currentController->mouseEvent(vec2(dx, dy), window);
+    });
+}
+
+App::App(GLFWwindow* window) : 
+    window(window), 
+    renderBuffer(globals.renderSizeAddr()),
+    SSAO(renderBuffer),
+    Bloom(renderBuffer)
+{
+    // if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
+    // {
+    //     std::cerr << "ERROR: Could not set Distance Model to AL_INVERSE_DISTANCE_CLAMPED" << std::endl;
+    // }
+
+    // glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
+    // {
+    //     giveCallbackToApp(GLFWKeyInfo{window, key, scancode, action, mods});
+    // });
+
+    // glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods){
+    //     giveCallbackToApp(GLFWKeyInfo{window, button, button, action, mods});
+    // });
+
+    // /*
+    //     TODO : 
+    //         Test if the videoMode automaticlly update
+    // */
+    // globals._videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+    // glfwGetWindowSize(window, &globals._windowSize.x, &globals._windowSize.y);
+    // globals._renderSize = ivec2(globals._windowSize.x*globals._renderScale, globals._windowSize.y*globals._renderScale);
+
+    // globals._standartShaderUniform2D =
+    // {
+    //     ShaderUniform(globals.windowSizeAddr(), 0),
+    //     ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
+    // };
+
+    // globals._standartShaderUniform3D =
+    // {
+    //     ShaderUniform(globals.windowSizeAddr(),               0),
+    //     ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
+    //     ShaderUniform(camera.getProjectionViewMatrixAddr(),   2),
+    //     ShaderUniform(camera.getViewMatrixAddr(),             3),
+    //     ShaderUniform(camera.getProjectionMatrixAddr(),       4),
+    //     ShaderUniform(camera.getPositionAddr(),               5),
+    //     ShaderUniform(camera.getDirectionAddr(),              6),
+    //     ShaderUniform(&ambientLight,                         15),
+    // };
+
+    // globals._fullscreenQuad.setVao(
+    //     MeshVao(new VertexAttributeGroup(
+    //         {
+    //             VertexAttribute(
+    //                 GenericSharedBuffer(
+    //                     (char *)new float[12]{-1.0f,  1.0f, 1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f, 1.0f, -1.0f, -1.0f}
+    //                     ),
+    //                 0, 
+    //                 6, 
+    //                 2, 
+    //                 GL_FLOAT, 
+    //                 false
+    //             )
+    //         }
+    //     )));
+    
+    // globals._fullscreenQuad.getVao()->generate();
+    // renderBuffer.generate();
+    // SSAO.setup();
+    // Bloom.setup();
+
+    // screenBuffer2D
+    //     .addTexture(
+    //         Texture2D().
+    //             setResolution(globals.windowSize())
+    //             .setInternalFormat(GL_SRGB8_ALPHA8)
+    //             .setFormat(GL_RGBA)
+    //             .setPixelType(GL_UNSIGNED_BYTE)
+    //             .setFilter(GL_LINEAR)
+    //             .setWrapMode(GL_CLAMP_TO_EDGE)
+    //             .setAttachement(GL_COLOR_ATTACHMENT0))
+    //     .addTexture(
+    //         Texture2D() 
+    //             .setResolution(globals.windowSize())
+    //             .setInternalFormat(GL_DEPTH_COMPONENT)
+    //             .setFormat(GL_DEPTH_COMPONENT)
+    //             .setPixelType(GL_UNSIGNED_BYTE)
+    //             .setFilter(GL_LINEAR)
+    //             .setWrapMode(GL_CLAMP_TO_EDGE)
+    //             .setAttachement(GL_DEPTH_ATTACHMENT))
+    //     .generate();
+
+    // globals.currentCamera = &camera;
+
+    // glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    
+    // glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codepoint)
+    // {
+    //     globals.textInputString.push_back(codepoint);
+    // });
+    
+    // glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
+    // {
+    //     globals._scrollOffset = vec2(xoffset, yoffset);
+    //     GLFWKeyInfo i;
+    //     i.key = 0;
+    //     inputs.add(i);
+    // });
+
+    // /// CENTER WINDOW
+    // glfwSetWindowPos(
+    //     window, 
+    //     (globals.screenResolution().x - globals.windowWidth())/2, 
+    //     (globals.screenResolution().y - globals.windowHeight())/2);
+
+    // #ifdef INVERTED_Z
+    // glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+    // #endif
+
+    // glLineWidth(3.0);
+
+    // globals.basicMaterial = MeshMaterial(
+    //     new ShaderProgram(
+    //         "shader/foward/basic.frag",
+    //         "shader/foward/basic.vert",
+    //         "",
+    //         globals.standartShaderUniform3D()));
 }
 
 void App::mainloopStartRoutine()

@@ -85,7 +85,7 @@ void AudioFile::loadOGG(const std::string &filePath)
             << TERMINAL_ERROR << "\n";
         perror("\tloadOGG");
         std::cerr << TERMINAL_RESET;
-        fclose(fp);
+        // fclose(fp);
         goto exit;
     }
 

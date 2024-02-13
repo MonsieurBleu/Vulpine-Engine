@@ -34,3 +34,5 @@ obj/*.obj
 .vscode
 
 GameEngine
+
+externalLibs

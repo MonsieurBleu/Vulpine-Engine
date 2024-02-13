@@ -90,20 +90,22 @@ PointLightHelperMODEL::PointLightHelperMODEL(ScenePointLight light) : light(ligh
 
 PointLightHelper::PointLightHelper(ScenePointLight light) : light(light)
 {
-    static MeshMaterial mat(new ShaderProgram(
-                "shader/foward rendering/basic.frag", 
-                "shader/foward rendering/basic.vert", 
-                "", 
-                globals.standartShaderUniform3D()
-                ));
+    // static MeshMaterial mat(new ShaderProgram(
+    //             "shader/foward rendering/basic.frag", 
+    //             "shader/foward rendering/basic.vert", 
+    //             "", 
+    //             globals.standartShaderUniform3D()
+    //             ));
 
-    static MeshVao geo = readOBJ("ressources/helpers/PointLight.obj", true);
+    // static MeshVao geo = readOBJ("ressources/helpers/PointLight.obj", true);
 
-    helper = newModel(
-        mat,
-        geo,
-        ModelState3D().scaleScalar(1.0)
-    );
+    // helper = newModel(
+    //     mat,
+    //     geo,
+    //     ModelState3D().scaleScalar(1.0)
+    // );
+
+    helper = SphereHelperRef(new SphereHelper(vec3(1, 0, 1)));
 
     add(helper);
 }
@@ -417,6 +419,92 @@ SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basi
         pos[id] = PhiThetaToDir(uv3)*radius;
         nor[id] = vec3(2);
         id++;
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
+
+ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _color) : MeshModel3D(globals.basicMaterial)
+{
+    color = _color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    const int stepD = dim.z; //8
+    const int stepX = dim.x;
+    const int stepY = dim.y;
+    float vFar = 5e3;
+
+    int nbOfPoints = (stepY +1)*(stepX +1)*(stepD+1)*6;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+
+    // float k = depth;
+    // k = 0.001/k;
+    // k -= mod(k, 1.0/nbSlice.z);
+    // if(k > 1.0) k = 0.0;
+
+    mat4 m = inverse(cam.updateProjectionViewMatrix());
+
+    int id = 0;
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);;
+        pos[i] = vec3(1e12);
+    }
+
+    for(int i = 0; i <= stepD; i++)
+    {
+        float z = (float)stepD/(max((float)i, 1e-5f)*vFar);
+        float z2 = (float)stepD/((float)(i+1)*vFar);
+
+        // z = log(-z/0.1)/log(1 + 2*tan(35)/(float)stepY);
+        // z2 = log(-z2/0.1)/log(1 + 2*tan(35)/(float)stepY);
+
+        // z = (float)stepD/max((float)i, 1e-5f);
+        // z2 = (float)stepD/((float)(i+1));
+
+        // z = pow(z, 0.5)/vFar;
+        // z2 = pow(z2, 0.5)/vFar;
+
+
+        for(int j = 0; j <= stepX; j++)
+        for(int k = 0; k <= stepY; k++)
+        {
+            float x = 1.0 - 2.0*(float)j/(float)stepX;
+            float y = 1.0 - 2.0*(float)k/(float)stepY;
+
+            vec3 p1 = viewToWorld(vec4(-x, -y, z, 1.0), m);
+            vec3 p2 = viewToWorld(vec4( x, -y, z, 1.0), m);
+            vec3 p3 = viewToWorld(vec4(-x,  y, z, 1.0), m);
+
+            pos[id++] = p1; pos[id++] = p2;
+            pos[id++] = p1; pos[id++] = p3;
+
+            if(i != stepD)
+            {
+                pos[id++] = p1; 
+                pos[id++] = viewToWorld(vec4(-x, -y, z2, 1.0), m);
+            }
+        }
     }
 
     MeshVao vao(new 
