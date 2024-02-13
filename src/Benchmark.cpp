@@ -268,9 +268,25 @@ void Benchmark::tick()
 
 void Benchmark::saveCSV() const
 {
+    // get unix timestamp
+    std::time_t t = std::time(0);
+    std::tm *now = std::localtime(&t);
+    std::string filename = "benchmark_" +
+                           std::to_string(now->tm_year + 1900) + "-" +
+                           std::to_string(now->tm_mon + 1) + "-" +
+                           std::to_string(now->tm_mday) + "_" +
+                           std::to_string(now->tm_hour) + "-" +
+                           std::to_string(now->tm_min) + "-" +
+                           std::to_string(now->tm_sec) + ".csv";
+
+    saveCSV(filename);
+}
+
+void Benchmark::saveCSV(std::string filename) const
+{
     std::ofstream file;
-    file.open("output/benchmark.csv", std::ios::out | std::ios::trunc);
-    file << "tick,time (s),";
+    file.open(std::string("output/") + filename, std::ios::out | std::ios::trunc);
+    file << "tick,time,";
     for (unsigned int i = 0; i < metrics.size() - 1; i++)
     {
         file << metrics[i].name << ",";

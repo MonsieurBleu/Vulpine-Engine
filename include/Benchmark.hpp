@@ -65,6 +65,7 @@ public:
     void printAll() const;
     void printMetric(std::string name) const;
     void saveCSV() const;
+    void saveCSV(std::string filename) const;
     void clearData();
     void clearAll();
     void clearMetric(std::string name);
