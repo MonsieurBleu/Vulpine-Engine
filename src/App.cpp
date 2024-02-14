@@ -144,9 +144,11 @@ void App::activateMainSceneBindlessTextures()
     Shadinclude::shaderDefines += "#define ARB_BINDLESS_TEXTURE\n";
 }
 
-void App::activateMainSceneClusteredLighting(ivec3 dimention)
+void App::activateMainSceneClusteredLighting(ivec3 dimention, float vFar)
 {
-    scene.activateClusteredLighting(dimention);
+    scene.activateClusteredLighting(dimention, vFar);
+    globals._standartShaderUniform3D.push_back(ShaderUniform(&scene.getClusteredLight().ivFar, 13));
+    globals._standartShaderUniform3D.push_back(ShaderUniform(&scene.getClusteredLight().dim(), 14));
     Shadinclude::shaderDefines += "#define USE_CLUSTERED_RENDERING\n";
 }
 

@@ -35,7 +35,7 @@ class App
         void mainloopEndRoutine();
 
         void activateMainSceneBindlessTextures();
-        void activateMainSceneClusteredLighting(ivec3 dimention);
+        void activateMainSceneClusteredLighting(ivec3 dimention, float vFar);
 
         vec3 ambientLight;
 

@@ -71,8 +71,10 @@ class Scene
         MeshMaterial depthOnlyMaterial;
 
         bool useBindlessTextures = false;
-        void activateClusteredLighting(ivec3 dimention = ivec3(16, 9, 24));
+        void activateClusteredLighting(ivec3 dimention = ivec3(16, 9, 24), float vFar = 5e3);
         void deactivateClusteredLighting();
+
+        ClusteredLightBuffer& getClusteredLight(){return clusteredLight;};
 };
 
 

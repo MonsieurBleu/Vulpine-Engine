@@ -34,6 +34,7 @@ Scene::Scene()
     //                 .setIntensity(1)
     //                 .setSize(vec3(2, 1, 1))));
 
+    
 
     lightBuffer.send();
 
@@ -168,13 +169,12 @@ void Scene::genLightBuffer()
 
 void Scene::generateLightClusters()
 {
-    const float vFar = 5e3;
+    const float vFar = clusteredLight.vFar;
 
     const ivec3 dim = clusteredLight.dim();
     const vec3 dimf = vec3(dim);
     const vec3 idim = 2.f/vec3(dim);
     int* buff = clusteredLight.get();
-    int clusterOff = 0;
 
     LightInfos* lbuff = lightBuffer.get();
     const int lmax = lightBuffer.maxID();
@@ -182,7 +182,7 @@ void Scene::generateLightClusters()
     const mat4 vm = globals.currentCamera->getViewMatrix();
     const mat4 im = inverse(globals.currentCamera->getProjectionMatrix());
 
-    const mat pm = globals.currentCamera->getProjectionMatrix();
+    const mat4 pm = globals.currentCamera->getProjectionMatrix();
 
     /* Transforming all lights to view coordinates */
     LightInfos* lbuffv = new LightInfos[lmax];
@@ -233,6 +233,7 @@ void Scene::generateLightClusters()
     }
 
     /****** Per Cluster Culling 
+    int clusterOff = 0;
     aabbID = 0;
     for(float x = 1.f; x <= dimf.x; x++)
     for(float y = 1.f; y <= dimf.y; y++)
@@ -518,11 +519,14 @@ void Scene::cull()
         i->cull();
 }
 
-void Scene::activateClusteredLighting(ivec3 dimention)
+void Scene::activateClusteredLighting(ivec3 dimention, float vFar)
 {
     useClusteredLighting = true;
     clusteredLight.allocate(dimention);
     clusteredLight.send();
+
+    clusteredLight.vFar = vFar;
+    clusteredLight.ivFar = 1.f/vFar;
 }
 
 void Scene::deactivateClusteredLighting()

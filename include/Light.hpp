@@ -171,6 +171,10 @@ class ClusteredLightBuffer
         int size;
 
     public : 
+
+        float vFar = 5e3;
+        float ivFar = 1.f/5e3;
+
         ClusteredLightBuffer();
         ~ClusteredLightBuffer();
 
@@ -180,7 +184,7 @@ class ClusteredLightBuffer
         void update();
         
         int* get(){return buffer.get();};
-        ivec3 dim(){return dimention;};
+        const ivec3 & dim(){return dimention;};
         int gridSize(){return size;};
 };
 
