@@ -17,6 +17,8 @@ enum callbackFreq
     EVERY_10_SECONDS,
     EVERY_MINUTE,
     EVERY_100_MILLISECONDS,
+    EVERY_500_MILLISECONDS,
+    EVERY_250_MILLISECONDS
 };
 
 typedef int64_t (*metric_callback_int)();
@@ -72,4 +74,6 @@ public:
     void removeMetric(std::string name);
 
     void tick();
+
+    static char *defaultFilename;
 };
