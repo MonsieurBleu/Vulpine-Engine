@@ -69,13 +69,13 @@ This application uses different libraries :
   - [X] Single Instanced Vao Drawning
   - [ ] Multiple Instanced Vao Drawing
   - [ ] AZDO
-    - [ ] Bindless Textures   
+    - [X] Bindless Textures   
     - [ ] Indirect Vao Drawning
 
 - [ ] Rendering Techniques
   - [X] Foward Rendering
   - [ ] Deffered Rendering
-  - [ ] Clustured Rendering  
+  - [X] Clustured Rendering  
 
 - [ ] Post Process
   - [X] SSAO
@@ -94,7 +94,8 @@ This application uses different libraries :
   - [X] For Object Groups
   - [X] For Meshes
   - [X] For ModelSates/Instances (TODO : test)
-  - [ ] For Point/Tube Lights
+  - [X] For Point Lights
+  - [ ] For Tube Lights
   - [ ] For Directionnal Lights
   - [ ] Fast Non-Redundant Updates
         
@@ -121,7 +122,6 @@ This application uses different libraries :
   - [X] Fast UI Batching (TODO : Refactor this monstrosity)
   - [X] Value Menu Tab (TODO : Refactor this monstrosity)
     - [X] Const & Input Support
-    - [ ] Output Support
     - [X] Int
     - [X] Float
     - [X] Bollean
