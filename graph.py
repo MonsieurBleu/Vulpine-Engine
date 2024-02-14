@@ -5,41 +5,45 @@ import sys
 import argparse
 import re
 import os
+import glob
 
 path = ""
 
 
 def getMostRecentBenchmarkFile():
     root = "build/output/"
-    files = os.listdir(root)
-    files = [i for i in files if i.endswith(
-        ".csv") and i.startswith("benchmark")]
+    files = list(filter(os.path.isfile, glob.glob(root + "*.csv")))
+    files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+    return files[0]
 
-    filesAndStamps = {}
+    # files = [i for i in files if i.endswith(
+    #     ".csv") and i.startswith("benchmark")]
 
-    for i in files:
-        m = re.search(
-            r"(?<=benchmark_)(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)(?=\.csv)", i)
+    # filesAndStamps = {}
 
-        if m:
-            timestamp = (int(m.group(1)) - 1970) * 31556926
-            timestamp += int(m.group(2)) * 2629743
-            timestamp += int(m.group(3)) * 86400
-            timestamp += int(m.group(4)) * 3600
-            timestamp += int(m.group(5)) * 60
-            timestamp += int(m.group(6))
+    # for i in files:
+    #     m = re.search(
+    #         r"(?<=benchmark_)(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)(?=\.csv)", i)
 
-            filesAndStamps[i] = timestamp
+    #     if m:
+    #         timestamp = (int(m.group(1)) - 1970) * 31556926
+    #         timestamp += int(m.group(2)) * 2629743
+    #         timestamp += int(m.group(3)) * 86400
+    #         timestamp += int(m.group(4)) * 3600
+    #         timestamp += int(m.group(5)) * 60
+    #         timestamp += int(m.group(6))
 
-    if (len(filesAndStamps) == 0):
-        print("No benchmark files found")
-        sys.exit(1)
+    #         filesAndStamps[i] = timestamp
 
-    mostRecent = max(filesAndStamps.values())
-    mostRecentFile = [k for k, v in filesAndStamps.items()
-                      if v == mostRecent][0]
+    # if (len(filesAndStamps) == 0):
+    #     print("No benchmark files found")
+    #     sys.exit(1)
 
-    return os.path.join(root, mostRecentFile)
+    # mostRecent = max(filesAndStamps.values())
+    # mostRecentFile = [k for k, v in filesAndStamps.items()
+    #                   if v == mostRecent][0]
+
+    # return os.path.join(root, mostRecentFile)
 
 
 parser = argparse.ArgumentParser(
@@ -51,6 +55,12 @@ parser.add_argument('graphs', type=str, nargs='+',
 parser.add_argument('--file', type=str, nargs='*', default=[getMostRecentBenchmarkFile()],
                     help='The csv file(s) to read the data from')
 
+parser.add_argument('--xOffset', type=int, default=0,
+                    help='The offset to add to the x axis')
+
+parser.add_argument('--list', action='store_true',
+                    help='List the columns in the file')
+
 args = parser.parse_args()
 
 paths = args.file
@@ -60,6 +70,12 @@ paths = args.file
 dfs = []
 for path in paths:
     dfs.append(pd.read_csv(path))
+
+if (args.list):
+    for i in range(len(dfs)):
+        print(f"File {i}: {args.file[i]}")
+        print(dfs[i].columns)
+    sys.exit(0)
 
 # plot the data, with x-axis as the time and y axis as the rest of the columns, excluding the first one
 # label the y axis with the column names
@@ -75,10 +91,10 @@ def plot(dfs, argDf, title, x, *y, yLabels, xLabel=None, yLabel=None):
     # df.plot(x=x, y=list(y), title=title, ax=f.gca())
     series = []
     for i in range(len(y)):
-        series.append(dfs[argDf[i]][y[i]])
+        series.append(dfs[argDf[i]][y[i]][args.xOffset:])
 
     for i in range(len(y)):
-        plt.plot(dfs[argDf[i]][x], series[i], label=yLabels[i])
+        plt.plot(dfs[argDf[i]][x][args.xOffset:], series[i], label=yLabels[i])
 
     plt.title(title)
     plt.legend()
@@ -174,7 +190,8 @@ for graph in args.graphs:
                 sys.exit(1)
 
     dfIndices = yDfs
-    if (len(dfIndices) == 1):
+
+    if (len(args.file) == 1):
         ylabels = [f"{y[i]}" for i in range(len(y))]
     else:
         ylabels = [

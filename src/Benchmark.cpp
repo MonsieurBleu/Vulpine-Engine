@@ -2,6 +2,7 @@
 #include "Globals.hpp"
 
 int BenchmarkMetricDefintion::INDEX_COUNTER = 0;
+char *Benchmark::defaultFilename = nullptr;
 
 void Benchmark::addMetric(std::string name, callbackFreq freq, metric_callback_int callback)
 {
@@ -262,24 +263,65 @@ void Benchmark::tick()
             }
             break;
         }
+        case EVERY_500_MILLISECONDS:
+        {
+            if (time - metric.lastTime > 0.5)
+            {
+                BenchmarkMetric m;
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
+                m.time = time;
+                m.tick = tick;
+                data[metric.index].push_back(m);
+                metric.lastTime = time;
+            }
+            break;
+        }
+
+        case EVERY_250_MILLISECONDS:
+        {
+            if (time - metric.lastTime > 0.25)
+            {
+                BenchmarkMetric m;
+                if (metric.isFloat)
+                    m.value_float = metric.callback_float();
+                else
+                    m.value_int = metric.callback_int();
+                m.time = time;
+                m.tick = tick;
+                data[metric.index].push_back(m);
+                metric.lastTime = time;
+            }
+            break;
+        }
         }
     }
 }
 
 void Benchmark::saveCSV() const
 {
-    // get unix timestamp
-    std::time_t t = std::time(0);
-    std::tm *now = std::localtime(&t);
-    std::string filename = "benchmark_" +
-                           std::to_string(now->tm_year + 1900) + "-" +
-                           std::to_string(now->tm_mon + 1) + "-" +
-                           std::to_string(now->tm_mday) + "_" +
-                           std::to_string(now->tm_hour) + "-" +
-                           std::to_string(now->tm_min) + "-" +
-                           std::to_string(now->tm_sec) + ".csv";
+    if (defaultFilename == nullptr)
+    {
 
-    saveCSV(filename);
+        // get unix timestamp
+        std::time_t t = std::time(0);
+        std::tm *now = std::localtime(&t);
+        std::string filename = "benchmark_" +
+                               std::to_string(now->tm_year + 1900) + "-" +
+                               std::to_string(now->tm_mon + 1) + "-" +
+                               std::to_string(now->tm_mday) + "_" +
+                               std::to_string(now->tm_hour) + "-" +
+                               std::to_string(now->tm_min) + "-" +
+                               std::to_string(now->tm_sec) + ".csv";
+
+        saveCSV(filename);
+    }
+    else
+    {
+        saveCSV(std::string(defaultFilename));
+    }
 }
 
 void Benchmark::saveCSV(std::string filename) const
