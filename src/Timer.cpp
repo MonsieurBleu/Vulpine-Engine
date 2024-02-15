@@ -93,7 +93,7 @@ std::ostream& operator<<(std::ostream& os, BenchTimer e)
 
     os << TERMINAL_INFO <<"\tupdateCounter  : " << TERMINAL_NOTIF << e.updateCounter << "\n";
     os << TERMINAL_INFO <<"\tlastTimeUpdate : " << TERMINAL_NOTIF << e.lastTimeUpdate.time_since_epoch().count() << "\n";
-
+    os << TERMINAL_RESET;
     return os;
 }
 
