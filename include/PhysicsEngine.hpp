@@ -104,7 +104,7 @@ public:
     RigidBody(vec3 position = vec3(0.0f), vec3 velocity = vec3(0.0f), quat rotation = vec3(0.0f), vec3 angularVelocity = vec3(0.0f), Collider *collider = nullptr, PhysicsMaterial mat = PhysicsMaterial(), float mass = 1.0f, bool enableGravity = true);
     ~RigidBody();
 
-    void update(float deltaTime, std::vector<RigidBodyRef> bodies, std::vector<Collision> &collisionEvents);
+    void update(float deltaTime, std::vector<RigidBodyRef> &bodies, std::vector<Collision> &collisionEvents);
 
     vec3 getPosition() const { return position; };
     vec3 getVelocity() const { return velocity; };

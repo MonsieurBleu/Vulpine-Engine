@@ -4,7 +4,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 int RigidBody::IDCounter = 0;
-vec3 RigidBody::gravity = vec3(0.f, -9.81f, 0.f);
+vec3 RigidBody::gravity = vec3(0.f, -9.807, 0.f);
 
 PhysicsEngine::PhysicsEngine()
 {
@@ -68,11 +68,21 @@ void PhysicsEngine::update(float deltaTime)
             // std::cout << "impulse: " << glm::to_string(impulse) << std::endl;
             // std::cout << "penetration: " << it->penetration << std::endl;
 
-            it->body1->velocity += impulse / it->body1->mass;
-            it->body2->velocity -= impulse / it->body2->mass;
+            // it->body1->velocity += impulse / it->body1->mass;
+            // it->body2->velocity -= impulse / it->body2->mass;
+            // it->body1->position += normal * it->penetration * (it->body1->isStatic ? 0.0f : 1.0f) * (it->body2->isStatic ? 1.0f : 1.0f);
+            // it->body2->position -= normal * it->penetration * (it->body2->isStatic ? 0.0f : 1.0f) * (it->body1->isStatic ? 1.0f : 1.0f);
 
-            it->body1->position += normal * it->penetration * (it->body1->isStatic ? 0.0f : 1.0f) * (it->body2->isStatic ? 2.0f : 1.0f);
-            it->body2->position -= normal * it->penetration * (it->body2->isStatic ? 0.0f : 1.0f) * (it->body1->isStatic ? 2.0f : 1.0f);
+
+            it->body1->position += normal * it->penetration * (it->body1->isStatic ? 0.0f : 1.0f);
+            it->body2->position -= normal * it->penetration * (it->body2->isStatic ? 0.0f : 1.0f);
+            
+            if(!it->body1->isStatic)
+            it->body1->velocity -= normal * normalVelocity;
+
+            if(!it->body2->isStatic)
+            it->body2->velocity += normal * normalVelocity;
+
 
             vec3 tangent = relativeVelocity - dot(relativeVelocity, normal) * normal;
             tangent = normalize(tangent);
@@ -117,7 +127,7 @@ RigidBody::~RigidBody()
 {
 }
 
-void RigidBody::update(float deltaTime, std::vector<RigidBodyRef> bodies, std::vector<Collision> &collisionEvents)
+void RigidBody::update(float deltaTime, std::vector<RigidBodyRef> &bodies, std::vector<Collision> &collisionEvents)
 {
     if (!enabled)
     {
@@ -127,17 +137,17 @@ void RigidBody::update(float deltaTime, std::vector<RigidBodyRef> bodies, std::v
     // position and velocity update
     if (!isStatic)
     {
-        if (enableGravity)
-        {
-            acceleration += gravity;
-        }
+        vec3 gravityAcceleration = enableGravity ? gravity/mass : vec3(0);
 
-        velocity += acceleration * deltaTime * (1.0f - material.damping);
+        // std::cout << (1.0f - material.damping) << "\n";
+
+        velocity = velocity * (1.0f - material.damping) + (acceleration+gravityAcceleration)*deltaTime;
+        // std::cout << gravity.y << " " << velocity.y << "\n";
         position += velocity * deltaTime;
 
         // std::cout << "velocity: " << glm::to_string(velocity) << std::endl;
 
-        acceleration = vec3(0.f);
+        // acceleration = vec3(0.f);
 
         // rotation and angular velocity update
         angularVelocity += torque * deltaTime * material.angularDamping;
@@ -215,10 +225,10 @@ bool SphereCollider::checkCollisionSphere(SphereCollider *other, vec3 positionSe
     float distance = glm::distance(positionSelf, positionOther);
     penetration = radius + other->radius - distance;
     normal = glm::normalize(positionSelf - positionOther);
-    std::cout << "distance: " << distance << std::endl;
-    std::cout << "position self: " << glm::to_string(positionSelf) << std::endl;
-    std::cout << "position other: " << glm::to_string(positionOther) << std::endl
-              << std::endl;
+    // std::cout << "distance: " << distance << std::endl;
+    // std::cout << "position self: " << glm::to_string(positionSelf) << std::endl;
+    // std::cout << "position other: " << glm::to_string(positionOther) << std::endl
+    //           << std::endl;
 
     return penetration > 0.f;
 }
@@ -255,44 +265,28 @@ bool AABBCollider::checkCollision(Collider *other, vec3 positionSelf, vec3 posit
     }
 }
 
-// collision detection between sphere and AABB
+/*
+    NOTES POUR VALENTIN (DE BLUE)
+        ==> La position de l'AABB et de la sphère ont étés inversés dans la majorité 
+            des appels à cette fonction, faudra faire gaffe aux autres fonctions du
+            genre
+        
+        ==> L'entrée "positionAABB" est égale au max de l'AABB, je ne sais pas comment
+        Luna l'a gérer mais cette entrée est mal gérée dans les appels à cette fonction
+*/
 bool checkCollisionSphereAABB(const SphereCollider *sphere, const AABBCollider *AABB, vec3 positionSphere, vec3 positionAABB, float &penetration, vec3 &normal)
 {
-    vec3 closestPoint = positionSphere;
-
-    // not ideal
-    for (int i = 0; i < 3; ++i)
-    {
-        float v = positionSphere[i];
-        if (v < AABB->getMin()[i] + positionAABB[i])
-            v = AABB->getMin()[i] + positionAABB[i];
-        if (v > AABB->getMax()[i] + positionAABB[i])
-            v = AABB->getMax()[i] + positionAABB[i];
-        closestPoint[i] = v;
-    }
-
-    vec3 sphereToClosest = closestPoint - positionSphere;
-    float distance = glm::length(sphereToClosest);
-
+    vec3 maxP = AABB->getMax();
+    vec3 minP = AABB->getMin();
+    std::cout << AABB->getMin().y << " " << positionAABB.y << " " << positionSphere.y << "\n";
+    vec3 closestPoint = max(minP, min(maxP, positionSphere)) - positionSphere;
+    float distance = glm::length(closestPoint);
     bool collision = distance <= sphere->getRadius();
 
     if (collision)
     {
         penetration = sphere->getRadius() - distance;
-        if (distance != 0)
-        {
-            normal = -glm::normalize(sphereToClosest);
-        }
-        else
-        {
-            // If the sphere's center is exactly at the closest point (unlikely, but possible)
-            normal = vec3(1, 0, 0); // Default normal, can be any unit vector
-        }
-
-        // std::cout << "collision" << std::endl;
-        // std::cout << "penetration: " << penetration << std::endl;
-        // std::cout << "normal: " << glm::to_string(normal) << std::endl
-        //           << std::endl;
+        normal = distance >= 1e-6f ? glm::normalize(closestPoint) : vec3(1, 0, 0);
     }
 
     return collision;
@@ -382,12 +376,12 @@ bool AABBCollider::checkCollisionAABB(AABBCollider *other, vec3 positionSelf, ve
 
 bool AABBCollider::checkCollisionSphere(SphereCollider *other, vec3 positionSelf, vec3 positionOther, float &penetration, vec3 &normal) const
 {
-    return checkCollisionSphereAABB(other, this, positionSelf, positionOther, penetration, normal);
+    return checkCollisionSphereAABB(other, this, positionOther, positionSelf, penetration, normal);
 }
 
 bool SphereCollider::checkCollisionAABB(AABBCollider *other, vec3 positionSelf, vec3 positionOther, float &penetration, vec3 &normal) const
 {
-    return checkCollisionSphereAABB(this, other, positionOther, positionSelf, penetration, normal);
+    return checkCollisionSphereAABB(this, other, positionSelf, positionOther, penetration, normal);
 }
 
 bool raycast(Ray ray, std::vector<RigidBodyRef> bodies, float maxLen, float &t, RigidBodyRef &body)
