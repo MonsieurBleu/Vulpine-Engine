@@ -31,8 +31,15 @@ class MeshMaterial : public std::shared_ptr<ShaderProgram>
 };
 
 
-typedef std::shared_ptr<VertexAttributeGroup> MeshVao;
+class MeshVao : public std::shared_ptr<VertexAttributeGroup>
+{
+    public : 
+        MeshVao(){};
+        MeshVao(VertexAttributeGroup *ptr);
 
+        uint nbFaces = 0;
+        GenericSharedBuffer faces;  
+};
 
 class Mesh
 {
@@ -170,6 +177,9 @@ class InstancedMeshModel3D : public MeshModel3D
         std::shared_ptr<ModelInstance*> instances;
 
     public :
+
+        InstancedMeshModel3D(MeshMaterial material, MeshVao vao)
+            : MeshModel3D(material, vao){};
 
         void allocate(size_t maxInstanceCount);
         /**

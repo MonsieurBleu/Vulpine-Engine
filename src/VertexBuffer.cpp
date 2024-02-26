@@ -164,10 +164,10 @@ void VertexAttribute::setFormat()
 
 char *VertexAttribute::getBufferAddr() { return buffer.get(); };
 
-VertexAttributeGroup::VertexAttributeGroup(std::vector<VertexAttribute> &newAttributes)
-{
-    add(newAttributes);
-}
+// VertexAttributeGroup::VertexAttributeGroup(const std::vector<VertexAttribute> &newAttributes)
+// {
+//     add(newAttributes);
+// }
 
 VertexAttributeGroup::VertexAttributeGroup(std::vector<VertexAttribute> newAttributes)
 {
@@ -224,7 +224,8 @@ VertexAttributeGroup &VertexAttributeGroup::generate()
         attribute.setFormat();
         glVertexAttribBinding(i, attribute.getLocation()); });
 
-    genAABB();
+    if(AABBmax.x == 1e12f)
+        genAABB();
 
     generated = true;
 

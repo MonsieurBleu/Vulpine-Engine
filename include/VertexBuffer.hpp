@@ -73,8 +73,8 @@ class VertexAttributeGroup
 
         bool generated = false;
 
-        vec3 AABBmin;
-        vec3 AABBmax;
+        vec3 AABBmin = vec3(-1e12f);
+        vec3 AABBmax = vec3(1e12f);
 
     public : 
 
@@ -83,11 +83,12 @@ class VertexAttributeGroup
         VertexAttributeGroup& genAABB();
         vec3 getAABBMin();
         vec3 getAABBMax();
+        void setAABB(vec3 min, vec3 max){AABBmax = max; AABBmin = min;};
 
         std::vector<VertexAttribute> attributes;
 
+        // VertexAttributeGroup(const std::vector<VertexAttribute> &newAttributes);
         VertexAttributeGroup(std::vector<VertexAttribute> newAttributes);
-        VertexAttributeGroup(std::vector<VertexAttribute> &newAttributes);
 
         void add(std::vector<VertexAttribute> &newAttributes);
         void add(VertexAttribute newAttribute);

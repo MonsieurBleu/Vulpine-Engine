@@ -15,6 +15,11 @@ using namespace glm;
 //     vao = mesh.vao;
 // }
 
+MeshVao::MeshVao(VertexAttributeGroup *ptr)
+    : std::shared_ptr<VertexAttributeGroup>(ptr)
+{
+}
+
 MeshMaterial::MeshMaterial(ShaderProgram *material, ShaderProgram *depthOnlyMaterial)
     : std::shared_ptr<ShaderProgram>(material), depthOnly(depthOnlyMaterial)
 {
@@ -170,7 +175,11 @@ GLuint MeshModel3D::drawVAO(bool depthOnly)
     setDrawMode();
 
     glBindVertexArray(vao->getHandle());
-    glDrawArrays(defaultMode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
+
+    if(vao.faces.get())
+        glDrawElements(defaultMode, vao.nbFaces,  GL_UNSIGNED_INT, vao.faces.get());
+    else
+        glDrawArrays(defaultMode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
     resetDrawMode();
 
@@ -429,11 +438,15 @@ GLuint InstancedMeshModel3D::drawVAO(bool depthOnly)
     setDrawMode();
 
     glBindVertexArray(vao->getHandle());
-    glDrawArraysInstanced(
-        defaultMode,
-        0,
-        vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount(),
-        drawnInstance);
+
+    if(vao.faces.get())
+        glDrawElementsInstanced(defaultMode, vao.nbFaces, GL_UNSIGNED_INT, vao.faces.get(), drawnInstance);
+    else
+        glDrawArraysInstanced(
+            defaultMode,
+            0,
+            vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount(),
+            drawnInstance);
 
     resetDrawMode();
 
