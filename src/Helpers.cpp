@@ -517,3 +517,71 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _col
 
     setVao(vao);
 }
+
+SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(state)
+{
+    int nbOfPoints = 16;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = vec3(0);
+    }
+
+    const float b = 0.01;
+    const float t = 0.15;
+
+    int id = 0;
+    pos[id++] = vec3( b, 0,  b); pos[id++] = vec3(-b, 0,  b);
+    pos[id++] = vec3( b, 0,  b); pos[id++] = vec3( b, 0, -b);
+    pos[id++] = vec3(-b, 0,  b); pos[id++] = vec3(-b, 0, -b);
+    pos[id++] = vec3( b, 0, -b); pos[id++] = vec3(-b, 0, -b);
+
+    pos[id++] = vec3( b, 0,  b); pos[id++] = vec3( 0, t,  0);
+    pos[id++] = vec3(-b, 0,  b); pos[id++] = vec3( 0, t,  0);
+    pos[id++] = vec3( b, 0, -b); pos[id++] = vec3( 0, t,  0);
+    pos[id++] = vec3(-b, 0, -b); pos[id++] = vec3( 0, t,  0);
+
+    // pos[id++] = vec3( b, 0,  0); pos[id++] = vec3( 0, t,  0);
+    // pos[id++] = vec3(-0, 0,  b); pos[id++] = vec3( 0, t,  0);
+    // pos[id++] = vec3( b, 0, -0); pos[id++] = vec3( 0, t,  0);
+    // pos[id++] = vec3(-0, 0, -b); pos[id++] = vec3( 0, t,  0);
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    ModelRef boneHelper = newModel(globals.basicMaterial, vao);
+    boneHelper->uniforms.add(ShaderUniform(&color, 20));
+
+    boneHelper->noBackFaceCulling = true;
+    boneHelper->defaultMode = GL_LINES;
+    boneHelper->depthWrite = false;
+
+    int s = state.size();
+    for(int i = 0; i < s; i++)
+    {
+        bones.push_back(boneHelper->copyWithSharedMesh());
+        add(bones.back());
+    }
+};
+
+void SkeletonHelper::update(bool forceUpdate)
+{
+    int s = state.size();
+    for(int i = 0; i < s; i++)
+    {
+        bones[i]->state.modelMatrix = state[i];
+    }
+
+    ObjectGroup::update();
+}

@@ -2,6 +2,7 @@
 #define HELPERS_HPP
 
 #include <ObjectGroup.hpp>
+#include <Skeleton.hpp>
 
 class PointLightHelperMODEL : public MeshModel3D
 {
@@ -93,5 +94,20 @@ class PointLightHelper : public ObjectGroup
 };
 
 typedef std::shared_ptr<PointLightHelper> PointLightHelperRef;
+
+class SkeletonHelper : public ObjectGroup
+{
+    private : 
+        std::vector<ModelRef> bones;
+        const SkeletonAnimationState &state;
+
+    public :
+        vec3 color = vec3(1, 0, 0);
+        SkeletonHelper(const SkeletonAnimationState &state);
+
+        void update(bool forceUpdate = true) override;
+};
+
+typedef std::shared_ptr<SkeletonHelper> SkeletonHelperRef;
 
 #endif

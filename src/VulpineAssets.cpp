@@ -38,7 +38,7 @@ MeshVao loadVulpineMesh(const std::string &filename)
 
     const float v1size = h.verticesCount*sizeof(float);
 
-    GenericSharedBuffer faces = getChunk(file, h.facesCount*3*sizeof(float));
+    GenericSharedBuffer faces = getChunk(file, h.facesCount*sizeof(ivec3));
 
     std::vector<VertexAttribute> attributes;
 
@@ -54,10 +54,10 @@ MeshVao loadVulpineMesh(const std::string &filename)
     if(h.type == VulpineMesh_Type::ELEMENTS_SKINNED)
     {
         GenericSharedBuffer weights = getChunk(file, 4*v1size);
-        attributes.push_back(VertexAttribute(weights, 4, h.verticesCount, 4, GL_FLOAT, false));
+        attributes.push_back(VertexAttribute(weights, 6, h.verticesCount, 4, GL_FLOAT, false));
 
         GenericSharedBuffer weightsID = getChunk(file, 4*v1size);
-        attributes.push_back(VertexAttribute(weights, 5, h.verticesCount, 4, GL_UNSIGNED_INT, false));
+        attributes.push_back(VertexAttribute(weightsID, 5, h.verticesCount, 4, GL_INT, false));
     }
 
     if(!file.good())
@@ -113,36 +113,22 @@ void Skeleton::load(const std::string &filename)
         << TERMINAL_RESET;
         return;
     }
-}
 
-const SkeletonBone& Skeleton::operator[](int i)
-{
-    return at(i);
-}
+    tmpInv.resize(h.bonesCount);
 
-
-void Skeleton::applyGraph(SkeletonAnimationState &state)
-{
-    if(state.size() != size()) return;
-
-    traverse([this, &state](int i, SkeletonBone &b) -> void
+    for(size_t i = 0; i < h.bonesCount; i++)
     {
-        state[i] = b.t * state[i];
-        if(i) state[i] = state[at(i).parent] * state[i];
-    });
-}
+        SkeletonBone &b = at(i);
 
-void Skeleton::traverse(std::function<void(int, SkeletonBone &)> f)
-{
-    const size_t s = size();
-    uint16 stack[s] = {0};
-    int back = 1;
+        tmpInv[i] = b.t;
 
-    for(size_t i = 0; i < s; i++)
-    {
-        for(int c = 0; c < 15 && at(stack[i]).children[c]; c++)
-            stack[back++] = at(stack[i]).children[c];
-        
-        f(stack[i], at(stack[i]));
+        if(b.parent >= 0)
+            tmpInv[i] = tmpInv[b.parent] * b.t;
     }
+
+    for(size_t i = 0; i < h.bonesCount; i++)
+        tmpInv[i] = inverse(tmpInv[i]);
 }
+
+
+

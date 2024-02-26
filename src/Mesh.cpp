@@ -381,6 +381,11 @@ ModelRef MeshModel3D::copyWithSharedMesh()
     ModelRef m = newModel(material, vao);
     m->maps = maps;
     m->mapsLocation = mapsLocation;
+    m->invertFaces = invertFaces;
+    m->noBackFaceCulling = noBackFaceCulling;
+    m->defaultMode = defaultMode;
+    m->state.frustumCulled = state.frustumCulled;
+    m->depthWrite = depthWrite;
     return m;
 }
 

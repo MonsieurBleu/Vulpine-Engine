@@ -220,7 +220,7 @@ VertexAttributeGroup &VertexAttributeGroup::generate()
 
     forEach([](int i, VertexAttribute &attribute)
             {
-        glEnableVertexAttribArray(i);
+        glEnableVertexAttribArray(attribute.getLocation());
         attribute.setFormat();
         glVertexAttribBinding(i, attribute.getLocation()); });
 

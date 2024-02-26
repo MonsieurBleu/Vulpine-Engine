@@ -16,12 +16,24 @@ struct SkeletonBone
 };
 
 class SkeletonAnimationState : public std::vector<mat4>
-{};
+{
+    private : 
+        uint handle = 0;
+
+    public : 
+        SkeletonAnimationState();
+        ~SkeletonAnimationState();
+
+        void send();
+        void update();
+        void activate(int location);
+};  
 
 
 class Skeleton : protected std::vector<SkeletonBone>
 {
     private :
+        std::vector<mat4> tmpInv;
      
     public : 
         const SkeletonBone& operator[](int i);
@@ -30,6 +42,18 @@ class Skeleton : protected std::vector<SkeletonBone>
 
         void applyGraph(SkeletonAnimationState &state);
 
+        /*
+            Stackless cache optimized layered graph traversal
+
+            This method traverse the graph layer by layer.
+            This can be used to apply graph hierarcy to any
+            element.
+
+            This method is very barebones due to the specific
+            arangement of the vulpineSkeleton bones in memory.
+            It can be replaced by a simple for loop on all
+            elements.
+        */
         void traverse(std::function<void(int, SkeletonBone &)> f);
 };
 

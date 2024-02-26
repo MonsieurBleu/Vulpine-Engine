@@ -37,7 +37,7 @@ class SpectatorController : public Controller
         int rightFactor = 0;
 
     public : 
-        float speed = 10.0;
+        float speed = 2.0;
         float sprintFactor = 15.0;
         void update();
         bool inputs(GLFWKeyInfo& input);
