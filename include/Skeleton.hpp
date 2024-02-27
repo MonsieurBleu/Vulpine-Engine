@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <string>
-
+#include <memory>
 #include <functional>
 
 #include <glm/glm.hpp>
@@ -15,20 +15,7 @@ struct SkeletonBone
     int children[15] = {0};
 };
 
-class SkeletonAnimationState : public std::vector<mat4>
-{
-    private : 
-        uint handle = 0;
-
-    public : 
-        SkeletonAnimationState();
-        ~SkeletonAnimationState();
-
-        void send();
-        void update();
-        void activate(int location);
-};  
-
+class SkeletonAnimationState;
 
 class Skeleton : protected std::vector<SkeletonBone>
 {
@@ -37,6 +24,7 @@ class Skeleton : protected std::vector<SkeletonBone>
      
     public : 
         const SkeletonBone& operator[](int i);
+        mat4 getDefaultInv(int i){return tmpInv[i];};
         void load(const std::string &filename);
         int getSize(){return size();};
 
@@ -57,4 +45,21 @@ class Skeleton : protected std::vector<SkeletonBone>
         void traverse(std::function<void(int, SkeletonBone &)> f);
 };
 
+typedef std::shared_ptr<Skeleton> SkeletonRef;
+
+class SkeletonAnimationState : public std::vector<mat4>
+{
+    private : 
+        uint handle = 0;
+
+    public : 
+        SkeletonAnimationState();
+        ~SkeletonAnimationState();
+
+        SkeletonRef skeleton;
+
+        void send();
+        void update();
+        void activate(int location);
+};  
 

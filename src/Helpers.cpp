@@ -567,6 +567,7 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
     boneHelper->defaultMode = GL_LINES;
     boneHelper->depthWrite = false;
 
+
     int s = state.size();
     for(int i = 0; i < s; i++)
     {
@@ -580,7 +581,7 @@ void SkeletonHelper::update(bool forceUpdate)
     int s = state.size();
     for(int i = 0; i < s; i++)
     {
-        bones[i]->state.modelMatrix = state[i];
+        bones[i]->state.modelMatrix = state[i] * inverse(state.skeleton->getDefaultInv(i));
     }
 
     ObjectGroup::update();

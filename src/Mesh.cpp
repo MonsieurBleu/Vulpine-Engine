@@ -386,6 +386,7 @@ ModelRef MeshModel3D::copyWithSharedMesh()
     m->defaultMode = defaultMode;
     m->state.frustumCulled = state.frustumCulled;
     m->depthWrite = depthWrite;
+    m->uniforms = uniforms;
     return m;
 }
 
