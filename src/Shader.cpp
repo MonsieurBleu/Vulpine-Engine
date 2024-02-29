@@ -22,6 +22,10 @@ void Shader::prepareLoading(const std::string &path)
         type = GL_VERTEX_SHADER;
     else if (extension == "geom")
         type = GL_GEOMETRY_SHADER;
+    else if (extension == "tesc")
+        type = GL_TESS_EVALUATION_SHADER;
+    else if (extension == "tese")
+        type = GL_TESS_CONTROL_SHADER;
 }
 
 ShaderError Shader::refresh()
@@ -68,7 +72,36 @@ ShaderError Shader::refresh()
 
 ShaderProgram::ShaderProgram(const std::string _fragPath,
                              const std::string _vertPath,
+                             std::vector<ShaderUniform> uniforms)
+    : uniforms(uniforms)
+{
+    frag.prepareLoading(_fragPath);
+
+    vert.prepareLoading(_vertPath);
+
+    compileAndLink();
+}
+
+ShaderProgram::ShaderProgram(const std::string _fragPath,
+                             const std::string _vertPath,
                              const std::string _geomPath,
+                             std::vector<ShaderUniform> uniforms)
+    : uniforms(uniforms)
+{
+    frag.prepareLoading(_fragPath);
+    
+    vert.prepareLoading(_vertPath);
+
+    if (!_geomPath.empty())
+        geom.prepareLoading(_geomPath);
+
+    compileAndLink();
+}
+
+ShaderProgram::ShaderProgram(const std::string _fragPath,
+                             const std::string _vertPath, 
+                             const std::string _tescPath,
+                             const std::string _tesePath,
                              std::vector<ShaderUniform> uniforms)
     : uniforms(uniforms)
 {
@@ -77,11 +110,15 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
     if (!_vertPath.empty())
         vert.prepareLoading(_vertPath);
 
-    if (!_geomPath.empty())
-        geom.prepareLoading(_geomPath);
+    if (!_tescPath.empty())
+        tesc.prepareLoading(_tescPath);
+
+    if (!_tesePath.empty())
+        tesc.prepareLoading(_tesePath);
 
     compileAndLink();
 }
+
 
 ShaderError ShaderProgram::compileAndLink()
 {
@@ -92,6 +129,9 @@ ShaderError ShaderProgram::compileAndLink()
     ShaderError serrf = frag.refresh();
     ShaderError serrv = ShaderOk;
     ShaderError serrg = ShaderOk;
+    ShaderError serrtc = ShaderOk;
+    ShaderError serrte = ShaderOk;
+
 
     if (!vert.get_Path().empty())
         serrv = vert.refresh();
@@ -99,7 +139,13 @@ ShaderError ShaderProgram::compileAndLink()
     if (!geom.get_Path().empty())
         serrg = geom.refresh();
 
-    if (serrf != ShaderOk || serrv != ShaderOk || serrg != ShaderOk)
+    if (!tesc.get_Path().empty())
+        serrv = tesc.refresh();
+
+    if (!tese.get_Path().empty())
+        serrg = tese.refresh();
+
+    if (serrf != ShaderOk || serrv != ShaderOk || serrg != ShaderOk || serrtc != ShaderOk || serrte != ShaderOk)
         return ShaderCompileError;
 
     ///// CREATING PROGRAM AND LINKING EVERYTHING
@@ -112,6 +158,12 @@ ShaderError ShaderProgram::compileAndLink()
 
     if (!geom.get_Path().empty())
         glAttachShader(program, geom.get_shader());
+
+    if (!tese.get_Path().empty())
+        glAttachShader(program, tese.get_shader());
+
+    if (!tesc.get_Path().empty())
+        glAttachShader(program, tesc.get_shader());
 
     glLinkProgram(program);
 

@@ -53,6 +53,8 @@ class ShaderProgram
         Shader vert;
         Shader frag;
         Shader geom;
+        Shader tesc;
+        Shader tese;
 
         std::shared_ptr<GLuint> handle;
 
@@ -64,8 +66,18 @@ class ShaderProgram
         ~ShaderProgram();
 
         ShaderProgram(const std::string _fragPath, 
-                      const std::string _vertPath = "", 
-                      const std::string _geomPath = "",
+                      const std::string _vertPath, 
+                      std::vector<ShaderUniform> uniforms = {});
+
+        ShaderProgram(const std::string _fragPath, 
+                      const std::string _vertPath, 
+                      const std::string _geomPath,
+                      std::vector<ShaderUniform> uniforms = {});
+
+        ShaderProgram(const std::string _fragPath, 
+                      const std::string _vertPath, 
+                      const std::string _tescPath,
+                      const std::string _tesePath,
                       std::vector<ShaderUniform> uniforms = {});
 
         ShaderError compileAndLink();
