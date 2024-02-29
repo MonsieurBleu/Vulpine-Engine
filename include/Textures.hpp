@@ -1,5 +1,4 @@
-#ifndef TEXTURES_HPP
-#define TEXTURES_HPP
+#pragma once
 
 #include <GL/glew.h>
 #define GLFW_DLL
@@ -58,5 +57,3 @@ class Texture2D
         ivec2 getResolution(){return _resolution;};
         const ivec2* getResolutionAddr() const {return &_resolution;};
 };
-
-#endif
