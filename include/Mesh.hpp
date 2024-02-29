@@ -147,6 +147,11 @@ class MeshModel3D : public Mesh
             bool loadColorMap = true, 
             bool loadMaterialMap = true);
 
+        MeshModel3D &loadFromFolderVulpine(
+            const std::string folderPath, 
+            bool loadColorMap = true, 
+            bool loadMaterialMap = true);
+
         void update();
         void setDrawMode();
         void resetDrawMode();

@@ -7,6 +7,8 @@
 
 #include <Globals.hpp>
 
+#include <VulpineAssets.hpp>
+
 using namespace glm;
 
 // Mesh::Mesh(Mesh& mesh)
@@ -204,6 +206,26 @@ MeshModel3D &MeshModel3D::loadFromFolder(
     bool loadMaterialMap)
 {
     setVao(readOBJ(folderPath + "model.obj"));
+    
+    if(loadColorMap)
+        setMap(
+            Texture2D().loadFromFileKTX((folderPath + "CE.ktx").c_str()),
+            0);
+
+    if (loadMaterialMap)
+        setMap(
+            Texture2D().loadFromFileKTX((folderPath + "NRM.ktx").c_str()),
+            1);
+
+    return (*this);
+}
+
+MeshModel3D &MeshModel3D::loadFromFolderVulpine(
+    const std::string folderPath,
+    bool loadColorMap,
+    bool loadMaterialMap)
+{
+    setVao(loadVulpineMesh(folderPath + "model.vulpineMesh"));
     
     if(loadColorMap)
         setMap(
