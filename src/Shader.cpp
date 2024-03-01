@@ -22,9 +22,9 @@ void Shader::prepareLoading(const std::string &path)
         type = GL_VERTEX_SHADER;
     else if (extension == "geom")
         type = GL_GEOMETRY_SHADER;
-    else if (extension == "tesc")
-        type = GL_TESS_EVALUATION_SHADER;
     else if (extension == "tese")
+        type = GL_TESS_EVALUATION_SHADER;
+    else if (extension == "tesc")
         type = GL_TESS_CONTROL_SHADER;
 }
 
@@ -114,7 +114,7 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
         tesc.prepareLoading(_tescPath);
 
     if (!_tesePath.empty())
-        tesc.prepareLoading(_tesePath);
+        tese.prepareLoading(_tesePath);
 
     compileAndLink();
 }
@@ -159,11 +159,12 @@ ShaderError ShaderProgram::compileAndLink()
     if (!geom.get_Path().empty())
         glAttachShader(program, geom.get_shader());
 
+    if (!tesc.get_Path().empty())
+        glAttachShader(program, tesc.get_shader());
+
     if (!tese.get_Path().empty())
         glAttachShader(program, tese.get_shader());
 
-    if (!tesc.get_Path().empty())
-        glAttachShader(program, tesc.get_shader());
 
     glLinkProgram(program);
 
