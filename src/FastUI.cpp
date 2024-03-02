@@ -622,3 +622,36 @@ void DirectionLight::setMenu(FastUI_valueMenu &menu, std::u32string name)
         })}
     );
 }
+
+void MeshModel3D::setMenu(FastUI_valueMenu &menu, std::u32string name)
+{
+    menu.push_back(
+        {FastUI_menuTitle(menu.ui, name), FastUI_valueTab(menu.ui, {
+            FastUI_value(U"State"),
+            FastUI_value((bool*)&state, U"\fUpdate\t"),
+            FastUI_value(U"\fPosition\t"),
+            FastUI_value(&state.position.x,   U"\f\fx\t"),
+            FastUI_value(&state.position.y,   U"\f\fy\t"),
+            FastUI_value(&state.position.z,   U"\f\fz\t"),
+            FastUI_value(U"\fScale\t"),
+            FastUI_value(&state.scale.x,   U"\f\fx\t"),
+            FastUI_value(&state.scale.y,   U"\f\fy\t"),
+            FastUI_value(&state.scale.z,   U"\f\fz\t"),
+            FastUI_value(U"\fRotation\t"),
+            FastUI_value(&state.rotation.x,   U"\f\fx\t", U"°", FUI_floatAngle),
+            FastUI_value(&state.rotation.y,   U"\f\fy\t", U"°", FUI_floatAngle),
+            FastUI_value(&state.rotation.z,   U"\f\fz\t", U"°", FUI_floatAngle),
+            FastUI_value(U"Tesselation Parameters"),            
+            FastUI_value(&lodTessLevelDistance.x,   U"\fMin Tessellation\t", U" levels"),
+            FastUI_value(&lodTessLevelDistance.y,   U"\fMax Tessellation\t", U" levels"),
+            FastUI_value(&lodTessLevelDistance.z,   U"\fMin Distance\t", U"m"),
+            FastUI_value(&lodTessLevelDistance.w,   U"\fMax Distance\t", U"m"),
+            FastUI_value(U"Displacement Mapping Factors"),        
+            FastUI_value(&lodHeightDispFactors.x,   U"\fUV Scale\t"),
+            FastUI_value(&lodHeightDispFactors.y,   U"\fMax Height\t", U"m"),
+            FastUI_value(U"Height Mapping Factors"),        
+            FastUI_value(&lodHeightDispFactors.z,   U"\fUV Scale\t"),
+            FastUI_value(&lodHeightDispFactors.w,   U"\fMax Height\t", U"m"),
+        })}
+    );
+}
