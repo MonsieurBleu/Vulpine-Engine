@@ -138,15 +138,7 @@ DirectionalLightHelper::DirectionalLightHelper(SceneDirectionalLight light) : li
 
     vao->generate();
 
-    static MeshMaterial material = 
-    MeshMaterial(
-        new ShaderProgram(
-            "shader/foward rendering/basic.frag", 
-            "shader/foward rendering/basic.vert", 
-            "", 
-            globals.standartShaderUniform3D()
-            )
-        );
+    static MeshMaterial material = globals.basicMaterial;
 
     helper = newModel(
         material,
@@ -155,6 +147,7 @@ DirectionalLightHelper::DirectionalLightHelper(SceneDirectionalLight light) : li
     );
 
     helper->defaultMode = GL_LINES;
+    helper->state.frustumCulled = false;
 
     add(helper);
 }

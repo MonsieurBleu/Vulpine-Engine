@@ -387,7 +387,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             ShaderUniform(camera.getProjectionViewMatrixAddr(), 2).activate();
             ShaderUniform(camera.getViewMatrixAddr(), 3).activate();
             ShaderUniform(camera.getProjectionMatrixAddr(), 4).activate();
-            ShaderUniform(camera.getPositionAddr(), 5).activate();
+            // ShaderUniform(camera.getPositionAddr(), 5).activate();
             ShaderUniform(camera.getDirectionAddr(), 6).activate();
 
             // if(cull)
