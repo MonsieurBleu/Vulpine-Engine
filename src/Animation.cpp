@@ -37,7 +37,7 @@ AnimationRef Animation::load(const std::string &filename)
     }
 
     std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes(header.animatedBoneNumber, std::vector<AnimationKeyframeDataMatrix>());
-    for (int i = 0; i < header.animatedBoneNumber; i++)
+    for (uint i = 0; i < header.animatedBoneNumber; i++)
     {
         AnimationBoneData boneData;
         fread(&boneData, sizeof(AnimationBoneData), 1, file);
@@ -65,7 +65,7 @@ void Animation::apply(float time, SkeletonAnimationState &state) const
         return;
     }
 
-    for (int i = 0; i < keyframes.size(); i++)
+    for (uint i = 0; i < keyframes.size(); i++)
     {
         if (keyframes[i].size() == 0 || i != 12)
         {
