@@ -17,7 +17,7 @@ My goals with this project, are to learn how to make an application such as this
 
 - [Game Repo Example](https://github.com/MonsieurBleu/Vulpine-Engine-Game-Repo-Example) a simple game built with the engine to showcase how to setup things.
 - ["Les bois de Vulpigniac"](https://github.com/MonsieurBleu/Renerds-Code-Game-Jam-2024) made for the Code Game Jam 2024.
-- [Height Maps](https://github.com/MonsieurBleu/Height-Maps) first implemntation of terrain rendering 
+- [Height Maps](https://github.com/MonsieurBleu/Height-Maps) first implemntation of terrain rendering.
 
 ## Portability & Dependencies 
 
