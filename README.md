@@ -42,23 +42,23 @@ Important modules :
 Project structure with Vulpine :
 ```
 my-project/
+├── Engine/      <===== Vulpine Engine submodule
 ├── build/
-│  ├─ shader/  <===== VESL submodule
-│  ├─ ressources/
-│  ├─ saves/
-│  ├─ Game.exe
-├─ Engine/     <===== Vulpine Engine submodule
-├─ include/
-│  ├─ Game.hpp
-├─ obj/
-│  ├─ Game.o
-├─ src/
-│  ├─ Game.cpp
-├─ .gitattributes
-├─ .gitignore
-├─ .gitmodules
-├─ Makefile
-├─ main.cpp
+│   ├── ressources/
+│   ├── saves/
+│   ├── shader/  <===== VESL submodule
+│   └── Game.exe
+├── include/
+│   └── Game.hpp
+├── obj/
+│   └── Game.o
+├── src/
+│   └── Game.cpp
+├── .gitattributes
+├── .gitignore
+├── .gitmodules
+├── Makefile
+└── main.cpp
 ```
 
 
