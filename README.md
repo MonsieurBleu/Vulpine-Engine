@@ -151,7 +151,7 @@ This application uses different libraries :
   - [X] Easy VAO Creation & Update
   - [X] Automatic AABB Model Generation   
   - [X] .obj Model Loading
-  - [ ] Custom Fast Model Format
+  - [X] Custom Fast Model Format
       
  - [ ] Textures
   - [X] png/jpeg/gif Images Loading (STB lib)
@@ -172,7 +172,7 @@ This application uses different libraries :
   - [X] Shader Include (With Custom Librairies) 
   - [X] Easy Fragment/Geometry/Vertex Shader Loading From Source File
   - [ ] Shared Device & Host Constants/Defines
-  - [ ] Easy Tesselation Shader Loading From Source File
+  - [X] Easy Tesselation Shader Loading From Source File
   - [ ] Easy SPIR-V Loading
   - [ ] Easy Compute Shader Loading 
 
