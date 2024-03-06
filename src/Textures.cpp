@@ -201,15 +201,46 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
         KTX_TEXTURE_CREATE_NO_FLAGS,
         &kTexture);
 
-    glGenTextures(1, &handle);
-    result = ktxTexture_GLUpload(kTexture, &handle, &target, &glerror);
-    
     if(result)
     {
         std::cout 
         << TERMINAL_ERROR << "Error loading file "
         << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". Errore code : " << glerror
+        << TERMINAL_ERROR << ". Errore code : " << result
+        << TERMINAL_RESET << "\n";
+    }
+
+    ktxTexture2 *kTexture2 = (ktxTexture2 *)kTexture;
+    if(ktxTexture_NeedsTranscoding(kTexture))
+    {
+        ktx_texture_transcode_fmt_e tf;
+    
+        // Using VkGetPhysicalDeviceFeatures or GL_COMPRESSED_TEXTURE_FORMATS or
+        // extension queries, determine what compressed texture formats are
+        // supported and pick a format. For example
+
+        khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(kTexture2);
+        if (colorModel == KHR_DF_MODEL_UASTC) {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        } else if (colorModel == KHR_DF_MODEL_ETC1S) {
+            tf = KTX_TTF_ETC;
+        } else {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        };
+
+        result = ktxTexture2_TranscodeBasis(kTexture2, tf, 0);
+    }
+
+    glGenTextures(1, &handle);
+    result = ktxTexture_GLUpload(kTexture, &handle, &target, &glerror);
+
+    
+    if(result)
+    {
+        std::cout 
+        << TERMINAL_ERROR << "Error uploading file to GPU "
+        << TERMINAL_FILENAME << filename 
+        << TERMINAL_ERROR << ". Errore code : " << result
         << TERMINAL_RESET << "\n";
     }
 

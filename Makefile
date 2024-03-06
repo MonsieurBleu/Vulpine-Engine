@@ -161,4 +161,4 @@ else
 endif
 
 countlines :
-	find ./ -type f \( -iname \*.cpp -o -iname \*.hpp -o -iname \*.frag -o -iname \*.vert -o -iname \*.geom \) | sed 's/.*/"&"/' | xargs  wc -l
+	find ./ -type f \( -iname \*.cpp -o -iname \*.hpp -o -iname \*.frag -o -iname \*.vert -o -iname \*.geom -o -iname \*.glsl -o -iname \*.tese -o -iname \*.tesc \) | sed 's/.*/"&"/' | xargs  wc -l

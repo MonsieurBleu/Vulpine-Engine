@@ -25,7 +25,7 @@ MeshVao loadVulpineMesh(const std::string &filename)
         << TERMINAL_ERROR << "Error loading file : "
         << TERMINAL_FILENAME << filename
         << TERMINAL_ERROR << "\n";
-        perror("\treadOBJ");
+        perror("\tloadVulpineMesh");
 
         std::cerr << "\tThe loader will return an empty object.\n"<< TERMINAL_RESET;
 

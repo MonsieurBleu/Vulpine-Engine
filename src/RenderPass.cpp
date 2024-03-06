@@ -110,14 +110,16 @@ void SSAOPass::render(Camera &camera)
         globals.drawFullscreenQuad();
         FBO.deactivate();
 
-        bindResults({vec2(0, AO_RESULTS_BINDING_LOCATION)});
+        // bindResults({vec2(0, AO_RESULTS_BINDING_LOCATION)});
     }
-    else if(needClear)
+    else
+    // if(needClear)
     {
         FBO.activate();
         glClear(0);
         FBO.deactivate();
     }
+    bindResults({vec2(0, AO_RESULTS_BINDING_LOCATION)});
 }
 
 BloomPass::BloomPass(RenderBuffer& inputsBuffer) : inputs(inputsBuffer)

@@ -240,6 +240,25 @@ MeshModel3D &MeshModel3D::loadFromFolderVulpine(
     return (*this);
 }
 
+void MeshModel3D::tessHeighFactors(float uvScale, float heightFactor)
+{
+    lodHeightDispFactors.z = uvScale;
+    lodHeightDispFactors.w = heightFactor;
+}
+
+void MeshModel3D::tessDisplacementFactors(float uvScale, float displacementFactor)
+{
+    lodHeightDispFactors.x = uvScale;
+    lodHeightDispFactors.y = displacementFactor;
+}
+
+void MeshModel3D::tessActivate(vec2 minmaxTessLevel, vec2 minmaxDistance)
+{
+    lodTessLevelDistance = vec4(minmaxTessLevel, minmaxDistance);
+    baseUniforms.add(ShaderUniform(&lodHeightDispFactors, 11));
+    baseUniforms.add(ShaderUniform(&lodTessLevelDistance, 12));
+}
+
 MeshVao readOBJ(const std::string filePath, bool useVertexColors)
 {
     FILE *obj = fopen(filePath.c_str(), "r");
