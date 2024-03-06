@@ -17,6 +17,7 @@ My goals with this project, are to learn how to make an application such as this
 
 - [Game Repo Example](https://github.com/MonsieurBleu/Vulpine-Engine-Game-Repo-Example) a simple game built with the engine to showcase how to setup things.
 - ["Les bois de Vulpigniac"](https://github.com/MonsieurBleu/Renerds-Code-Game-Jam-2024) made for the Code Game Jam 2024.
+- [Height Maps](https://github.com/MonsieurBleu/Height-Maps) first implemntation of terrain rendering.
 
 ## Portability & Dependencies 
 
@@ -31,6 +32,35 @@ This application uses different libraries :
 - [STB](https://github.com/nothings/stb)
 - [OpenAL Soft](https://github.com/kcat/openal-soft)
 - [Mini-Vobris](https://github.com/edubart/minivorbis)
+
+## Instalation & usage 
+
+Important modules :
+- [Vulpine Engine Shader Library](https://github.com/MonsieurBleu/VESL--Vulpine-Engine-Shader-Library)
+- [Vulpine Engine Assets Convertor](https://github.com/MonsieurBleu/VEAC-Vulpine-Engine-Asset-Convertor)
+
+Project structure with Vulpine :
+```
+my-project/
+├── build/
+│  ├─ shader/  <===== VESL submodule
+│  ├─ ressources/
+│  ├─ saves/
+│  ├─ Game.exe
+├─ Engine/     <===== Vulpine Engine submodule
+├─ include/
+│  ├─ Game.hpp
+├─ obj/
+│  ├─ Game.o
+├─ src/
+│  ├─ Game.cpp
+├─ .gitattributes
+├─ .gitignore
+├─ .gitmodules
+├─ Makefile
+├─ main.cpp
+```
+
 
 ## Features 
 
@@ -147,11 +177,22 @@ This application uses different libraries :
 - [ ] Easier Accumulation Timer
 
 ### Assets 
+- [X] Vulpine Engine Asset Convertor
+  - [X] Assimp integration  
+  - [X] KTX2 integration 
+  - [X] .vulpineMesh
+  - [X] .vulpineSkeleton
+  - [ ] .vulpineAnimation
+  - [ ] .vulpineNavigationGraph
+  - [ ] .vulpineBody
+  - [ ] .vulpineLights
+  - [ ] .vulpineScene
+
 - [ ] 3D
   - [X] Easy VAO Creation & Update
   - [X] Automatic AABB Model Generation   
   - [X] .obj Model Loading
-  - [ ] Custom Fast Model Format
+  - [X] Custom Fast Model Format
       
  - [ ] Textures
   - [X] png/jpeg/gif Images Loading (STB lib)
@@ -172,7 +213,7 @@ This application uses different libraries :
   - [X] Shader Include (With Custom Librairies) 
   - [X] Easy Fragment/Geometry/Vertex Shader Loading From Source File
   - [ ] Shared Device & Host Constants/Defines
-  - [ ] Easy Tesselation Shader Loading From Source File
+  - [X] Easy Tesselation Shader Loading From Source File
   - [ ] Easy SPIR-V Loading
   - [ ] Easy Compute Shader Loading 
 
