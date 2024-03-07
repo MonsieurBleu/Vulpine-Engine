@@ -28,32 +28,18 @@ void ObjectGroup::update(bool forceUpdate)
 
     for(auto i = meshes.begin(); i != meshes.end(); i++)
     {
-        if(globalUpdate || (*i)->state.update())
-            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
+        if((*i)->state.update() || globalUpdate)
+            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.modelMatrix;
         
         ManageHideStatus((*i)->state.hide, state.hide);
     }
-
-    // auto j = lightsDummys.begin();
-    // for(auto i = lights.begin(); 
-    //     i != lights.end() && j != lightsDummys.end(); 
-    //     i++, j++)
-    // {
-    //     // need to be rework
-    //     // (*i)->infos._position = state.modelMatrix * (*j)->infos._position;
-        
-    //     // if((*i)->infos._infos.a == POINT_LIGHT)
-    //     //     (*i)->infos._direction.x = (*j)->infos._direction.x * state.scale.x;
-
-    //     (*i)->applyModifier(state);
-    // }
 
     for(auto i = lights.begin(); i != lights.end(); i++)
         (*i)->applyModifier(state);
 
     for(auto i : states)
     {
-        if(globalUpdate || i->update())
+        if(i->update() || globalUpdate)
             i->modelMatrix = state.modelMatrix * i->forceUpdate().modelMatrix;
         
         ManageHideStatus(i->hide, state.hide);
@@ -61,8 +47,8 @@ void ObjectGroup::update(bool forceUpdate)
 
     for(auto i = children.begin(); i != children.end(); i++)
     {
-        if(globalUpdate || (*i)->state.update())
-            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
+        if((*i)->state.update() || globalUpdate)
+            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.modelMatrix;
 
         ManageHideStatus((*i)->state.hide, state.hide);
         (*i)->update(true);
