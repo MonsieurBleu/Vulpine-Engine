@@ -574,7 +574,7 @@ void SkeletonHelper::update(bool forceUpdate)
     int s = state.size();
     for(int i = 0; i < s; i++)
     {
-        bones[i]->state.modelMatrix = state[i] * inverse(state.skeleton->getDefaultInv(i));
+        bones[i]->state.modelMatrix = state[i] * inverse(state.skeleton->operator[](i).t);
     }
 
     ObjectGroup::update();

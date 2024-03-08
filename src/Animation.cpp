@@ -6,9 +6,13 @@
 
 #include "Utils.hpp"
 
-AnimationRef Animation::load(const std::string &filename)
+#include <iostream>
+#include <fstream>
+
+AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
 {
-    FILE *file = fopen(filename.c_str(), "rb");
+    // FILE *file = fopen(filename.c_str(), "rb");
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file)
     {
         std::cerr << TERMINAL_ERROR
@@ -22,7 +26,8 @@ AnimationRef Animation::load(const std::string &filename)
     }
 
     AnimationFileHeader header;
-    fread(&header, sizeof(AnimationFileHeader), 1, file);
+    // fread(&header, sizeof(AnimationFileHeader), 1, file);
+    file.read((char *)&header, sizeof(AnimationFileHeader));
 
     if (header.magicNumber != 0x494e4156)
     {
@@ -36,20 +41,23 @@ AnimationRef Animation::load(const std::string &filename)
         return nullptr;
     }
 
-    std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes(header.animatedBoneNumber, std::vector<AnimationKeyframeDataMatrix>());
+    std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes(skeleton->getSize(), std::vector<AnimationKeyframeDataMatrix>());
     for (uint i = 0; i < header.animatedBoneNumber; i++)
     {
         AnimationBoneData boneData;
-        fread(&boneData, sizeof(AnimationBoneData), 1, file);
+        // fread(&boneData, sizeof(AnimationBoneData), 1, file);
+        file.read((char *)&boneData, sizeof(AnimationBoneData));
 
         keyframes[boneData.boneID].resize(boneData.keyframeNumber);
-        fread(keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeDataMatrix), boneData.keyframeNumber, file);
+        // fread(keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeDataMatrix), boneData.keyframeNumber, file);
+        file.read((char *)keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeDataMatrix)*boneData.keyframeNumber);
     }
 
-    fclose(file);
+    // fclose(file);
+    file.close();
 
     std::string name = header.animationName;
-    AnimationRef anim = std::make_shared<Animation>(header.type, name, header.duration, keyframes);
+    AnimationRef anim = std::make_shared<Animation>(header.type, name, header.duration, keyframes, skeleton);
     return anim;
 }
 
@@ -65,15 +73,17 @@ void Animation::apply(float time, SkeletonAnimationState &state) const
         return;
     }
 
+    time = mod(time, 30.f);
+
     for (uint i = 0; i < keyframes.size(); i++)
     {
-        if (keyframes[i].size() == 0 || i != 12)
+        if (keyframes[i].size() == 0)
         {
             state[i] = mat4(1);
             continue;
         }
 
-        int j = 0;
+        uint j = 0;
         for (; j < keyframes[i].size(); j++)
         {
             if (keyframes[i][j].time > time)
@@ -88,11 +98,5 @@ void Animation::apply(float time, SkeletonAnimationState &state) const
         {
             state[i] = keyframes[i][j - 1].matrix;
         }
-
-        std::cout << keyframes[i][j].matrix[0].x << " " << keyframes[i][j].matrix[0].y << " " << keyframes[i][j].matrix[0].z << " " << keyframes[i][j].matrix[0].w << std::endl;
-        std::cout << keyframes[i][j].matrix[1].x << " " << keyframes[i][j].matrix[1].y << " " << keyframes[i][j].matrix[1].z << " " << keyframes[i][j].matrix[1].w << std::endl;
-        std::cout << keyframes[i][j].matrix[2].x << " " << keyframes[i][j].matrix[2].y << " " << keyframes[i][j].matrix[2].z << " " << keyframes[i][j].matrix[2].w << std::endl;
-        std::cout << keyframes[i][j].matrix[3].x << " " << keyframes[i][j].matrix[3].y << " " << keyframes[i][j].matrix[3].z << " " << keyframes[i][j].matrix[3].w << std::endl
-                  << std::endl;
     }
 }

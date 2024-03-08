@@ -88,11 +88,18 @@ private:
 
     std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes;
 
-public:
-    Animation(AnimationType type, const std::string &name, float length, std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes)
-        : animType(type), name(name), length(length), keyframes(keyframes) {}
+    SkeletonRef skeleton;
 
-    static AnimationRef load(const std::string &filename);
+public:
+    Animation(
+        AnimationType type, 
+        const std::string &name, 
+        float length, 
+        std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes,
+        SkeletonRef skeleton)
+        : animType(type), name(name), length(length), keyframes(keyframes), skeleton(skeleton) {}
+
+    static AnimationRef load(SkeletonRef skeleton, const std::string &filename);
 
     AnimationType getType() const { return animType; }
     const std::string getName() const { return name; }

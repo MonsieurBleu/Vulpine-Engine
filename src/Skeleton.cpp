@@ -4,10 +4,14 @@
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
+#include <string.h>
+
 const SkeletonBone& Skeleton::operator[](int i)
 {
     return at(i);
 }
+
+#include <iostream>
 
 void Skeleton::applyGraph(SkeletonAnimationState &state)
 {
@@ -18,17 +22,11 @@ void Skeleton::applyGraph(SkeletonAnimationState &state)
     for(size_t i = 0; i < s; i++)
     {
         SkeletonBone &b = at(i);
-        state[i] = b.t * state[i];
-
         if(b.parent >= 0) state[i] = state[b.parent] * state[i];
-
-        // std::cout << i << " " << to_string(vec3(state[i] * vec4(0, 0, 0, 1))) << "\n";
     }
 
     for(size_t i = 0; i < s; i++)
-    {
-        state[i] = state[i] * tmpInv[i];
-    }
+        state[i] = state[i] * at(i).t;
 }
 
 void Skeleton::traverse(std::function<void(int, SkeletonBone &)> f)

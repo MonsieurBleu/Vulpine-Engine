@@ -113,21 +113,6 @@ void Skeleton::load(const std::string &filename)
         << TERMINAL_RESET;
         return;
     }
-
-    tmpInv.resize(h.bonesCount);
-
-    for(size_t i = 0; i < h.bonesCount; i++)
-    {
-        SkeletonBone &b = at(i);
-
-        tmpInv[i] = b.t;
-
-        if(b.parent >= 0)
-            tmpInv[i] = tmpInv[b.parent] * b.t;
-    }
-
-    for(size_t i = 0; i < h.bonesCount; i++)
-        tmpInv[i] = inverse(tmpInv[i]);
 }
 
 
