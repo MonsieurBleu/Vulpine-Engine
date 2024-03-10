@@ -26,25 +26,25 @@ void ObjectGroup::update(bool forceUpdate)
     bool globalUpdate = state.update();
     globalUpdate |= forceUpdate;
 
-    for(auto i = meshes.begin(); i != meshes.end(); i++)
+    if(globalUpdate)
     {
-        if((*i)->state.update() || globalUpdate)
-            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.modelMatrix;
-        
-        ManageHideStatus((*i)->state.hide, state.hide);
-    }
+        for(auto i = meshes.begin(); i != meshes.end(); i++)
+        {
+            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
+            ManageHideStatus((*i)->state.hide, state.hide);
+        }
 
-    for(auto i = lights.begin(); i != lights.end(); i++)
-        (*i)->applyModifier(state);
+        for(auto i = lights.begin(); i != lights.end(); i++)
+            (*i)->applyModifier(state);
 
-    for(auto i : states)
-    {
-        if(i->update() || globalUpdate)
+        for(auto i : states)
+        {
             i->modelMatrix = state.modelMatrix * i->forceUpdate().modelMatrix;
-        
-        ManageHideStatus(i->hide, state.hide);
-    }
+            ManageHideStatus(i->hide, state.hide);
+        }
 
+    }
+    
     for(auto i = children.begin(); i != children.end(); i++)
     {
         if((*i)->state.update() || globalUpdate)
@@ -53,6 +53,7 @@ void ObjectGroup::update(bool forceUpdate)
         ManageHideStatus((*i)->state.hide, state.hide);
         (*i)->update(true);
     }
+
 }
 
 void ObjectGroup::add(ModelRef meshe)

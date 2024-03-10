@@ -470,7 +470,7 @@ void FastUI_valueMenu::batch()
         e.tab.batch();
         e.tab->state.scaleScalar(1.0);
         e.tab->state.setPosition(vec3(0, -titleOffset.y, 0));
-        e.tab->state.hide = ModelStateHideStatus::HIDE;
+        e.tab->state.setHideStatus(ModelStateHideStatus::HIDE);
         g->add(dynamic_cast<ObjectGroupRef&>(e.tab));
     }
 
@@ -484,13 +484,13 @@ void FastUI_valueMenu::setCurrentTab(int id)
     // if(currentTab == id) return;
     if(currentTab >= 0)
     {
-        elements[currentTab].tab->state.hide = ModelStateHideStatus::HIDE;
+        elements[currentTab].tab->state.setHideStatus(ModelStateHideStatus::HIDE);
         elements[currentTab].title.changeBackgroundColor(ui.colorTitleBackground);
     }
     if(currentTab != id)
     {
         currentTab = id;
-        elements[currentTab].tab->state.hide = ModelStateHideStatus::SHOW;
+        elements[currentTab].tab->state.setHideStatus(ModelStateHideStatus::SHOW);
         elements[currentTab].title.changeBackgroundColor(ui.colorCurrentTitleBackground);
     }
     else
