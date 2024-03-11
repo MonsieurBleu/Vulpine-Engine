@@ -187,8 +187,7 @@ class ShaderUniform
         // ============| FLOATS 2D
 
         ShaderUniform(const vec2 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_2fv)
             {
@@ -205,8 +204,7 @@ class ShaderUniform
         // ============| FLOATS 3D
 
         ShaderUniform(const vec3 data, int location = UNIFORM_NO_LOCATION) 
-            : data(additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_3fv)
             {
@@ -221,13 +219,12 @@ class ShaderUniform
 
         // ============| FLOATS 4D
 
-        ShaderUniform(const vec4 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+        ShaderUniform(const vec4 cdata, int location = UNIFORM_NO_LOCATION) 
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_4fv)
             {
-                memcpy(additionalData, (void*)&data, sizeof(vec4));
+                memcpy(additionalData, (void*)&cdata, sizeof(vec4));
             };
 
         ShaderUniform(const vec4 *data, int location = UNIFORM_NO_LOCATION) 
@@ -255,8 +252,7 @@ class ShaderUniform
         // ============| INTS 2D
 
         ShaderUniform(const ivec2 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_2iv)
             {
@@ -273,8 +269,7 @@ class ShaderUniform
         // ============| INTS 3D
 
         ShaderUniform(const ivec3 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_3iv)
             {
@@ -290,8 +285,7 @@ class ShaderUniform
         // ============| INTS 4D
 
         ShaderUniform(const ivec4 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_4iv)
             {
@@ -322,8 +316,7 @@ class ShaderUniform
         // ============| UNSIGNED INTS 2D
 
         ShaderUniform(const uivec2 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_2uiv)
             {
@@ -340,8 +333,7 @@ class ShaderUniform
         // ============| UNSIGNED INTS 3D
 
         ShaderUniform(const uivec3 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_3uiv)
             {
@@ -357,8 +349,7 @@ class ShaderUniform
         // ============| UNSIGNED INTS 4D
 
         ShaderUniform(const uivec4 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_4uiv)
             {
@@ -373,8 +364,7 @@ class ShaderUniform
         
         // ============| MATRIX 2
         ShaderUniform(const mat2 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(Matrix2fv)
             {
@@ -389,8 +379,7 @@ class ShaderUniform
 
         // ============| MATRIX 3
         ShaderUniform(const mat3 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(Matrix3fv)
             {
@@ -405,8 +394,7 @@ class ShaderUniform
 
         // ============| MATRIX 4
         ShaderUniform(const mat4 data, int location = UNIFORM_NO_LOCATION) 
-            : data(&additionalData), 
-              dataState(copiedInAdditionalData),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(Matrix4fv)
             {
@@ -420,7 +408,7 @@ class ShaderUniform
               type(Matrix4fv) {};
 
         // ShaderUniform(const ModelMatrix3D data, int location = UNIFORM_NO_LOCATION) 
-        //     : data(&additionalData), 
+        //     :   
         //       dataState(copiedInAdditionalData),
         //       location(location),
         //       type(Matrix4fv)

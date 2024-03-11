@@ -63,7 +63,7 @@ void PhysicsEngine::update(float deltaTime)
             // std::cout << "normalVelocity: " << normalVelocity << std::endl;
             // std::cout << "e: " << e << std::endl;
 
-            vec3 impulse = j * normal;
+            // vec3 impulse = j * normal;
 
             // std::cout << "impulse: " << glm::to_string(impulse) << std::endl;
             // std::cout << "penetration: " << it->penetration << std::endl;
