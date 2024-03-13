@@ -19,7 +19,7 @@ const std::string TERMINAL_WARNING  = "\e[38;5;208m";
 const std::string TERMINAL_NOTIF    = "\e[1;36m";
 
 
-#define FILE_ERROR_MESSAGE(filename, message) std::cout \
+#define FILE_ERROR_MESSAGE(filename, message) std::cerr \
     << TERMINAL_ERROR << "Error \xBF loading file " \
     << TERMINAL_TIMER << filename \
     << TERMINAL_ERROR << " from "\
@@ -35,6 +35,7 @@ const std::string TERMINAL_NOTIF    = "\e[1;36m";
 */
 std::string readFile(const std::string& filePath);
 std::string getFileExtension(const std::string &fileName);
+const char* getFileExtensionC(const char* fileName);
 
 
 /// CHRONO

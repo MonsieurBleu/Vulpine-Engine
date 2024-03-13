@@ -80,6 +80,7 @@ class Mesh
         Mesh& setMaterial(MeshMaterial _material);
         Mesh& setVao(MeshVao _vao);
         Mesh& setMap(Texture2D texture, int location);
+        Mesh& setMap(int location, Texture2D texture);
         Mesh& removeMap(int location);
         
         void bindAllMaps();

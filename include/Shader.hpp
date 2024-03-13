@@ -11,6 +11,8 @@
 
 #define NO_PROGRAM 0xFFFFFF
 
+// #define SHOW_SHADER_PROGRAM_LOADING
+
 enum ShaderError
 {
     ShaderOk,

@@ -185,7 +185,6 @@ ShaderError ShaderProgram::compileAndLink()
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 
     if (logLength > 0 && result != GL_TRUE)
-    // if(logLength > 0)
     {
         char programError[logLength];
         glGetProgramInfoLog(program, logLength, NULL, programError);
@@ -208,6 +207,7 @@ ShaderError ShaderProgram::compileAndLink()
 
     timer.end();
 
+    #ifdef SHOW_SHADER_PROGRAM_LOADING
     std::cout
         << TERMINAL_OK
         << "Shader Program (id " << program << ") "
@@ -219,6 +219,7 @@ ShaderError ShaderProgram::compileAndLink()
         << " linked successfully in "
         << TERMINAL_TIMER << timer.getElapsedTime() * 1000.f << " ms\n"
         << TERMINAL_RESET;
+    #endif
 
     return ShaderOk;
 }

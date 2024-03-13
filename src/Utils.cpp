@@ -40,7 +40,18 @@ std::string getFileExtension(const std::string &fileName)
     }
 
     return result;
-};
+}
+
+const char* getFileExtensionC(const char* fileName)
+{   
+    int i = 0;
+    while(fileName[i] != '\0') i++;
+
+    while(i > 0 && fileName[i] != '.')
+        i--;
+    
+    return fileName + i + (i ? 1 : 0);
+}
 
 void checkHeap()
 {

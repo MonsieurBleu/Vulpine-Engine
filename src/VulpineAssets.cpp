@@ -21,14 +21,7 @@ MeshVao loadVulpineMesh(const char *filename)
 
     if(!file)
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error loading file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n";
-        perror("\tloadVulpineMesh");
-
-        std::cerr << "\tThe loader will return an empty object.\n"<< TERMINAL_RESET;
-
+        FILE_ERROR_MESSAGE(filename, strerror(errno) << "! The loader will return an empty object.")
         return MeshVao();
     }
 
@@ -62,12 +55,7 @@ MeshVao loadVulpineMesh(const char *filename)
 
     if(!file.good())
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error reading vulpineMesh file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n\tThe loader will return an empty object.\n"
-        << TERMINAL_RESET;
-
+        FILE_ERROR_MESSAGE(filename, "The file is probably corrupted or don't follow vulpineMesh specifications. The loader will return an empty object.")
         return MeshVao();
     }
 
@@ -87,14 +75,7 @@ void Skeleton::load(const std::string &filename)
 
     if(!file)
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error loading file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n";
-        perror("\tSkeleton::load");
-
-        std::cerr << "\tThe loader will return an empty object.\n"<< TERMINAL_RESET;
-
+        FILE_ERROR_MESSAGE(filename, strerror(errno) << "! The loader will return an empty object.");
         return;
     }
 
@@ -106,11 +87,7 @@ void Skeleton::load(const std::string &filename)
 
     if(!file.good())
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error reading vulpineSkeleton file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n\tThe loader will return an empty object.\n"
-        << TERMINAL_RESET;
+        FILE_ERROR_MESSAGE(filename, "The file is probably corrupted or don't follow vulpineSkeleton specifications. The loader will return an empty object.")
         return;
     }
 }
