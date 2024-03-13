@@ -225,7 +225,7 @@ MeshModel3D &MeshModel3D::loadFromFolderVulpine(
     bool loadColorMap,
     bool loadMaterialMap)
 {
-    setVao(loadVulpineMesh(folderPath + "model.vulpineMesh"));
+    setVao(loadVulpineMesh((folderPath + "model.vulpineMesh").c_str()));
     
     if(loadColorMap)
         setMap(

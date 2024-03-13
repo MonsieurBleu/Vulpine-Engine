@@ -15,7 +15,7 @@ GenericSharedBuffer getChunk(std::ifstream &file, uint size)
     return buff;
 };
 
-MeshVao loadVulpineMesh(const std::string &filename)
+MeshVao loadVulpineMesh(const char *filename)
 {
     std::ifstream file(filename, std::ios::in | std::ios::binary);
 

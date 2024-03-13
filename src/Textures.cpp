@@ -120,30 +120,17 @@ Texture2D& Texture2D::loadFromFile(const char* filename)
 
     if(!fileStatus)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can't load image " 
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". This file either don't exist or the format is not supported.\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : this file either don't exist or the format is not supported!");
+        return *(this);
     }
 
     _pixelSource = stbi_load(filename, &_resolution.x, &_resolution.y, &n, 0);
 
     if(!_pixelSource)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can load info but can't load pixels of image " 
-        << TERMINAL_FILENAME << filename << "\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : can load info but can't load pixels of the image!");
+        return *(this);
     }
-
-    timer.end();
-    std::cout 
-    << TERMINAL_OK << "Successfully loaded image "
-    << TERMINAL_FILENAME << filename 
-    << TERMINAL_OK << " in " 
-    << TERMINAL_TIMER << timer.getElapsedTime() << " s\n"
-    << TERMINAL_RESET;
 
     return *(this);
 }
@@ -157,11 +144,8 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
 
     if(!fileStatus)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can't load image " 
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". This file either don't exist or the format is not supported.\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : this file either don't exist or the format is not supported!");
+        return *(this);
     }
 
     _pixelSource = stbi_loadf(filename, &_resolution.x, &_resolution.y, &n, 0);
@@ -169,10 +153,8 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
 
     if(!_pixelSource)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can load info but can't load pixels of image " 
-        << TERMINAL_FILENAME << filename << "\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : can load info but can't load pixels of the image!");
+        return *(this);
     }
 
     // timer.end();
@@ -203,11 +185,8 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
 
     if(result)
     {
-        std::cout 
-        << TERMINAL_ERROR << "Error loading file "
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". Errore code : " << result
-        << TERMINAL_RESET << "\n";
+        FILE_ERROR_MESSAGE(filename, "KTX error code : " << result);
+        return *this;
     }
 
     ktxTexture2 *kTexture2 = (ktxTexture2 *)kTexture;
@@ -237,11 +216,8 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
     
     if(result)
     {
-        std::cout 
-        << TERMINAL_ERROR << "Error uploading file to GPU "
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". Errore code : " << result
-        << TERMINAL_RESET << "\n";
+        FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " << result);
+        return *this;
     }
 
     // don't work but technilcy need that in the future

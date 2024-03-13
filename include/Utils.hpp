@@ -8,7 +8,8 @@
 
 
 /// TERMINAL
-const std::string TERMINAL_ERROR    = "\e[1;31m"; //"\033[91m";
+const std::string TERMINAL_UNDERLINE = "\033[4m";
+const std::string TERMINAL_ERROR    = "\e[1;31m";
 const std::string TERMINAL_INFO     = "\033[94m";
 const std::string TERMINAL_OK       = "\033[92m";
 const std::string TERMINAL_RESET    = "\033[0m";
@@ -16,6 +17,16 @@ const std::string TERMINAL_TIMER    = "\033[93m";
 const std::string TERMINAL_FILENAME = "\033[95m";
 const std::string TERMINAL_WARNING  = "\e[38;5;208m";
 const std::string TERMINAL_NOTIF    = "\e[1;36m";
+
+
+#define FILE_ERROR_MESSAGE(filename, message) std::cout \
+    << TERMINAL_ERROR << "Error \xBF loading file " \
+    << TERMINAL_TIMER << filename \
+    << TERMINAL_ERROR << " from "\
+    << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
+    << TERMINAL_RESET << TERMINAL_ERROR << "\n      \xC0\xC4\xC4 "\
+    << TERMINAL_WARNING << message \
+    << TERMINAL_RESET << "\n\n";
 
 
 /// FILES

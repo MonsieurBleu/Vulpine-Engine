@@ -22,7 +22,7 @@ struct VulpineMesh_Header
     uint stencil[23];
 };
 
-MeshVao loadVulpineMesh(const std::string &filename);
+MeshVao loadVulpineMesh(const char *filename);
 
 struct VulpineSkeleton_Header
 {
