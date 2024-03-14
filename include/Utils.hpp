@@ -24,7 +24,8 @@ const std::string TERMINAL_NOTIF    = "\e[1;36m";
     << TERMINAL_TIMER << filename \
     << TERMINAL_ERROR << " from "\
     << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
-    << TERMINAL_RESET << TERMINAL_ERROR << "\n      \xC0\xC4\xC4 "\
+    << TERMINAL_RESET << TERMINAL_ERROR << " at file " << __FILE__ << ":" << __LINE__ \
+    << "\n      \xC0\xC4\xC4 "\
     << TERMINAL_WARNING << message \
     << TERMINAL_RESET << "\n\n";
 

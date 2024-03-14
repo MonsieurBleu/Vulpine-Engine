@@ -229,8 +229,7 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
         return *this;
     }
 
-    // don't work but technilcy need that in the future
-    // ktxTexture_Destroy(handle);
+    ktxTexture_Destroy(kTexture);
 
     generated = true;
 
@@ -238,6 +237,66 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
     
     return *(this);
 }
+
+Texture2D& Texture2D::loadFromFileKTX_IO(const char* filename)
+{
+    ktxTexture* kTexture;
+    KTX_error_code result;
+    // ktx_size_t offset;
+    // ktx_uint32_t level, layer, faceSlice; 
+    GLenum target, glerror;
+
+    result = ktxTexture_CreateFromNamedFile(
+        filename,
+        KTX_TEXTURE_CREATE_NO_FLAGS,
+        &kTexture);
+
+    if(result)
+    {
+        FILE_ERROR_MESSAGE(filename, "KTX error code : " << result);
+        return *this;
+    }
+
+    ktxTexture2 *kTexture2 = (ktxTexture2 *)kTexture;
+    if(ktxTexture_NeedsTranscoding(kTexture))
+    {
+        ktx_texture_transcode_fmt_e tf;
+    
+        // Using VkGetPhysicalDeviceFeatures or GL_COMPRESSED_TEXTURE_FORMATS or
+        // extension queries, determine what compressed texture formats are
+        // supported and pick a format. For example
+
+        khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(kTexture2);
+        if (colorModel == KHR_DF_MODEL_UASTC) {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        } else if (colorModel == KHR_DF_MODEL_ETC1S) {
+            tf = KTX_TTF_ETC;
+        } else {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        };
+
+        result = ktxTexture2_TranscodeBasis(kTexture2, tf, 0);
+    }
+
+    // glGenTextures(1, &handle);
+    // result = ktxTexture_GLUpload(kTexture, &handle, &target, &glerror);
+
+    
+    // if(result)
+    // {
+    //     FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " << result);
+    //     return *this;
+    // }
+
+    // ktxTexture_Destroy(kTexture);
+
+    // generated = true;
+
+    // bindlessHandleRef = std::make_shared<GLuint>(0);
+    
+    return *(this);
+}
+
 
 GLuint64 Texture2D::getBindlessHandle()
 {
