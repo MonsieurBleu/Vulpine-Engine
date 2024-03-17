@@ -32,6 +32,8 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
         giveCallbackToApp(GLFWKeyInfo{window, button, button, action, mods});
     });
 
+    globals._gameScene = &scene;
+
     /*
         TODO : 
             Test if the videoMode automaticlly update

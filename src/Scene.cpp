@@ -269,7 +269,8 @@ void Scene::generateLightClusters()
     }
     ******/
 
-    /****** Per Light Optimized Culling ******/
+    /****** Per Light Optimized Culling 
+    ******/
     int buffSize = MAX_LIGHT_PER_CLUSTER*dim.x*dim.y*dim.z;
     for(int i = 0; i < buffSize; i+= MAX_LIGHT_PER_CLUSTER)
         buff[i] = lmax;

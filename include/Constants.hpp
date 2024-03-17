@@ -8,5 +8,6 @@
 #define E    2.718281828459045
 #define PHI  1.618033988749894
 #define SQR2 1.414213562373095
+#define G    9.80665 
 
 #endif

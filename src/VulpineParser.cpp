@@ -20,11 +20,6 @@ void VulpineTextBuff::loadFromFile(const char *filename)
 
     if(!file.good())
     {
-        std::cerr 
-        << TERMINAL_ERROR    << "Error : VulpineTextBuff::loadFromFile can't open file "
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR    << "\n\tThe buffer will be empty.\n"
-        << TERMINAL_RESET ;
         FILE_ERROR_MESSAGE(filename, "Can't open file. The buffer will be empty.")
         return;
     }
