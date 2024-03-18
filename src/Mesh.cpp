@@ -174,9 +174,6 @@ void MeshModel3D::resetDrawMode()
 
 GLuint MeshModel3D::drawVAO(bool depthOnly)
 {
-    if (!culled)
-        return 0;
-
     update();
     if(!depthOnly) uniforms.update();
     setDrawMode();
@@ -275,6 +272,7 @@ ModelRef MeshModel3D::copyWithSharedMesh()
     m->state.frustumCulled = state.frustumCulled;
     m->depthWrite = depthWrite;
     m->uniforms = uniforms;
+    m->state = state;
     return m;
 }
 

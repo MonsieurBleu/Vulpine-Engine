@@ -26,6 +26,8 @@ void ObjectGroup::update(bool forceUpdate)
     bool globalUpdate = state.update();
     globalUpdate |= forceUpdate;
 
+    
+
     if(globalUpdate)
     {
         for(auto i = meshes.begin(); i != meshes.end(); i++)
@@ -34,8 +36,7 @@ void ObjectGroup::update(bool forceUpdate)
             ManageHideStatus((*i)->state.hide, state.hide);
         }
 
-        for(auto i = lights.begin(); i != lights.end(); i++)
-            (*i)->applyModifier(state);
+        for(auto &i : lights) i->applyModifier(state);
 
         for(auto i : states)
         {
@@ -77,4 +78,32 @@ void ObjectGroup::add(ObjectGroupRef group)
 void ObjectGroup::add(ModelStateRef state)
 {
     states.push_back(state);
+}
+
+ObjectGroupRef ObjectGroup::copy()
+{
+    ObjectGroupRef g = newObjectGroup();
+
+    g->children.resize(children.size());
+    g->states.resize(states.size());
+    g->meshes.resize(meshes.size());
+    g->lights.resize(lights.size());
+
+    int i = 0;
+    for(auto &c : children) g->children[i++] = c->copy();
+    i = 0;
+    for(auto &c : states) g->states[i++] = ModelStateRef(new ModelState3D(*c));
+    i = 0;
+    for(auto &c : lights)
+        switch (c->getInfos()._infos.a)
+        {
+            case TUBE_LIGHT : g->lights[i++] = SceneTubeLight(new TubeLight(dynamic_cast<TubeLight&>(*c))); break;
+            case POINT_LIGHT : g->lights[i++] = ScenePointLight(new PointLight(dynamic_cast<PointLight&>(*c))); break;
+            case DIRECTIONAL_LIGHT : g->lights[i++] = SceneDirectionalLight(new DirectionLight(dynamic_cast<DirectionLight&>(*c))); break;
+            default:break;
+        }
+    i = 0;
+    for(auto &c : meshes) g->meshes[i++] = c->copyWithSharedMesh();
+
+    return g;
 }

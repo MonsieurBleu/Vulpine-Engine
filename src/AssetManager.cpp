@@ -201,33 +201,74 @@ Texture2D& Loader<Texture2D>::loadFromInfos()
 }
 
 template<>
-ModelRef& Loader<ModelRef>::loadFromInfos()
+MeshModel3D& Loader<MeshModel3D>::loadFromInfos()
 {
     EARLY_RETURN_IF_LOADED
 
-    r = newModel();
+    // r = newModel();
 
     while (NEW_VALUE)
     {
         char *member = buff->read();
 
         if(!strcmp(member, "mesh"))
-            r->setVao(LOAD_VALUE(MeshVao));
+            r.setVao(LOAD_VALUE(MeshVao));
         else
         if(!strcmp(member, "material"))
-            r->setMaterial(LOAD_VALUE(MeshMaterial));
+            r.setMaterial(LOAD_VALUE(MeshMaterial));
         else
         if(!strcmp(member, "texture"))
         {
             int location = fromStr<int>(buff->read());
-            r->setMap(location, LOAD_VALUE(Texture2D));
+            r.setMap(location, LOAD_VALUE(Texture2D));
         }
         else
         if(!strcmp(member, "state"))
-            LOAD_MODEL_STATE_3D(r->state)
+            LOAD_MODEL_STATE_3D(r.state)
         else
             FILE_ERROR_MESSAGE(name, "ModelRef member '" << member << "' not recognized.");
     } 
+
+    EXIT_ROUTINE_AND_RETURN 
+}
+
+
+template<>
+ObjectGroup& Loader<ObjectGroup>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+
+    while (NEW_VALUE)
+    {
+        char *member = buff->read();
+
+        if(!strcmp(member, "groups"))
+            while (NEW_VALUE)
+                r.add(newObjectGroup(std::move(LOAD_VALUE(ObjectGroup))));
+        else
+        if(!strcmp(member, "meshes"))
+            while (NEW_VALUE)
+                r.add(LOAD_VALUE(MeshModel3D).copyWithSharedMesh());
+        else
+        if(!strcmp(member, "state"))
+            LOAD_MODEL_STATE_3D(r.state)
+        else
+        if(!strcmp(member, "pointLights"))
+            while (NEW_VALUE)
+            {
+                ScenePointLight l = newPointLight();
+
+                unsigned int colorI = strtol(buff->read(), nullptr, 16);
+                l->setColor(vec3((colorI&0xFF0000)>>16, (colorI&0x00FF00)>>8, colorI&0x0000FF)/255.f)
+                    .setIntensity(fromStr<float>(buff->read()))
+                    .setRadius(fromStr<float>(buff->read()))
+                    .setPosition(fromStr<vec3>(buff->read()));
+                    
+                r.add(l);
+            }
+        else
+            FILE_ERROR_MESSAGE(name, "ObjectGroupRef member '" << member << "' not recognized.");
+    }
 
     EXIT_ROUTINE_AND_RETURN 
 }
@@ -249,7 +290,7 @@ ObjectGroupRef& Loader<ObjectGroupRef>::loadFromInfos()
         else
         if(!strcmp(member, "meshes"))
             while (NEW_VALUE)
-                r->add(LOAD_VALUE(ModelRef));
+                r->add(newModel(LOAD_VALUE(MeshModel3D)));
         else
         if(!strcmp(member, "state"))
             LOAD_MODEL_STATE_3D(r->state)

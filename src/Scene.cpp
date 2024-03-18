@@ -121,7 +121,7 @@ uint MeshGroup::draw(bool useBindlessTextures)
     
     if(useBindlessTextures)
     {
-        for(auto i : meshes)
+        for(auto &i : meshes)
             if(i->isCulled())
             {
                 i->setBindlessMaps();
@@ -130,7 +130,7 @@ uint MeshGroup::draw(bool useBindlessTextures)
     }
     else
     {
-        for(auto i : meshes)
+        for(auto &i : meshes)
             if(i->isCulled())
             {
                 i->bindAllMaps();
@@ -344,10 +344,10 @@ uint Scene::draw()
 {
     drawcnt = 0;
 
-    for(auto i = meshes.begin(); i != meshes.end(); i++)
-        drawcnt += i->draw(useBindlessTextures);
+    for(auto &i : meshes)
+        drawcnt += i.draw(useBindlessTextures);
     
-    for(auto i : unsortedMeshes)
+    for(auto &i : unsortedMeshes)
         if(i->isCulled())
         {
             if(useBindlessTextures)

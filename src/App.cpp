@@ -143,6 +143,7 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
 void App::activateMainSceneBindlessTextures()
 {
     scene.useBindlessTextures = true;
+    // scene2D.useBindlessTextures = true;
     Shadinclude::shaderDefines += "#define ARB_BINDLESS_TEXTURE\n";
 }
 
@@ -439,4 +440,9 @@ void App::mainloop()
 
         ... Main loop end cleanup (example : joining physics thread)
     */
+}
+
+App::~App()
+{
+    globals._gameScene = nullptr;
 }
