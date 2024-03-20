@@ -146,6 +146,13 @@ class Entity
         };
 
         template<typename T>
+        bool& hasComp()
+        {
+            // assert(ids[Component<T>::category] != NO_ENTITY);
+            return Component<T>::elements[ids[Component<T>::category]].enabled;
+        };
+
+        template<typename T>
         void set(const T& data)
         {
             Component<T>::insert(*this, data);
@@ -210,5 +217,6 @@ void ManageGarbage()
         {
             list[i].enabled = false;
             list[i].clean();
+            list[i].data = T();
         }
 };
