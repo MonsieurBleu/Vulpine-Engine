@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <limits.h>
+#include <cstdint>
 
 enum callbackFreq
 {
