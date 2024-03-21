@@ -29,6 +29,8 @@ class Node {
         Link neighbors[MAX_NEIGHBORS]; // storing the id of neighbors
         int neighborsN; // number of neighbors
 
+        void rearrangeNeighbors();
+
 
     public:
 
@@ -42,6 +44,7 @@ class Node {
         int getNeighborsN() const {return neighborsN;};
 
         void connectNode(int, double);
+        void deconnectNode(int);
 
         void print();
         
@@ -63,7 +66,9 @@ class NavGraph {
         NavGraph(int);
 
         int addNode(vec3);
+        void removeNode(int);
         void connectNodes(int, int);
+        void deconnectNodes(int, int);
 
         void shortestPath(int, int, Path); // A* algorithm
         void reconstructPath(int*, int, int, Path);
