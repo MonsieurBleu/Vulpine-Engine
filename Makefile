@@ -82,8 +82,6 @@ else
 	G_EXEC = ../build/Game
 endif
 
-default: $(EXEC)
-
 game: $(G_EXEC)
 
 gameClean : 
