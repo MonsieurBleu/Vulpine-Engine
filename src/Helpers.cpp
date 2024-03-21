@@ -244,6 +244,47 @@ void TubeLightHelper::update(bool forceUpdate)
     this->ObjectGroup::update(forceUpdate);
 }
 
+LineHelper::LineHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3D(globals.basicMaterial)
+{
+    color = _color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    int nbOfPoints = 2;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = vec3(0);
+    }
+
+    // Face 1
+    pos[0] = min;
+    pos[1] = max;
+
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
+
+
 CubeHelper::CubeHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3D(globals.basicMaterial)
 {
     color = _color;
@@ -579,3 +620,30 @@ void SkeletonHelper::update(bool forceUpdate)
 
     ObjectGroup::update();
 }
+
+NavGraphHelper::NavGraphHelper(NavGraphRef graph) : graph(graph)
+{
+    auto &nodes = graph->getNodes();
+
+    for(auto &n : nodes)
+    {
+        SphereHelperRef sphere(new SphereHelper(vec3(0, 1, 0), 0.1));
+        sphere->state.setPosition(n.getPosition());
+        add(sphere);
+
+        int size = n.getNeighborsN();
+        for(int i = 0; i < size; i++)
+        {
+            Link l = n.getLink(i);
+            
+            add(
+                LineHelperRef(
+                    new LineHelper(
+                        n.getPosition(),
+                        nodes[l.id].getPosition(),
+                        vec3(0, 1, 0)))
+            );
+        }
+        
+    }
+};

@@ -3,6 +3,7 @@
 
 #include <ObjectGroup.hpp>
 #include <Skeleton.hpp>
+#include <NavGraph.hpp>
 
 class PointLightHelperMODEL : public MeshModel3D
 {
@@ -45,6 +46,17 @@ class TubeLightHelper : public ObjectGroup
         TubeLightHelper(SceneTubeLight light);
         void update(bool forceUpdate = false) override;
 };
+
+class LineHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        LineHelper(const vec3 min, const vec3 max, vec3 _color = vec3(0, 1, 0));
+};
+
+typedef std::shared_ptr<LineHelper> LineHelperRef;
 
 class CubeHelper : public MeshModel3D
 {
@@ -109,5 +121,31 @@ class SkeletonHelper : public ObjectGroup
 };
 
 typedef std::shared_ptr<SkeletonHelper> SkeletonHelperRef;
+
+
+class NavGraphHelper : public ObjectGroup
+{
+    private : 
+
+        NavGraphRef graph;
+
+    public : 
+
+        NavGraphHelper(NavGraphRef graph);
+        
+        // void update(bool forceUpdate = true) override;
+};  
+
+
+typedef std::shared_ptr<NavGraphHelper> NavGraphHelperRef;
+
+class PathHelper : public ObjectGroup
+{
+    private : 
+
+
+    public : 
+        
+};
 
 #endif
