@@ -1,5 +1,4 @@
-#ifndef HELPERS_HPP
-#define HELPERS_HPP
+#pragma once
 
 #include <ObjectGroup.hpp>
 #include <Skeleton.hpp>
@@ -147,5 +146,3 @@ class PathHelper : public ObjectGroup
     public : 
         
 };
-
-#endif
