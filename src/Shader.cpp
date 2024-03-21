@@ -8,8 +8,10 @@ std::string Shadinclude::shaderDefines;
 
 // uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
 
-void Shader::prepareLoading(const std::string &path)
+void Shader::prepareLoading(const std::string &path, const std::string &defines)
 {
+    this->defines = defines;
+
     startbenchrono();
 
     Path = path;
@@ -22,9 +24,9 @@ void Shader::prepareLoading(const std::string &path)
         type = GL_VERTEX_SHADER;
     else if (extension == "geom")
         type = GL_GEOMETRY_SHADER;
-    else if (extension == "tesc")
-        type = GL_TESS_EVALUATION_SHADER;
     else if (extension == "tese")
+        type = GL_TESS_EVALUATION_SHADER;
+    else if (extension == "tesc")
         type = GL_TESS_CONTROL_SHADER;
 }
 
@@ -33,7 +35,7 @@ ShaderError Shader::refresh()
     shader = glCreateShader(type);
 
     // std::string code = readFile(Path);
-    std::string code = Shadinclude::load(Path, "#include");
+    std::string code = Shadinclude::load(Path, "#include ", defines);
 
     if (code.empty())
         return ShaderNoFile;
@@ -67,17 +69,24 @@ ShaderError Shader::refresh()
         return ShaderCompileError;
     }
 
+    // std::cout << "==================================================\n\n";
+    // std::cout << Path << "\n";
+    // std::cout << glcode << "\n";
+    // std::cout << "==================================================\n\n";
+
+
     return ShaderOk;
 }
 
 ShaderProgram::ShaderProgram(const std::string _fragPath,
                              const std::string _vertPath,
-                             std::vector<ShaderUniform> uniforms)
+                             std::vector<ShaderUniform> uniforms,
+                             const std::string &defines)
     : uniforms(uniforms)
 {
-    frag.prepareLoading(_fragPath);
+    frag.prepareLoading(_fragPath, defines);
 
-    vert.prepareLoading(_vertPath);
+    vert.prepareLoading(_vertPath, defines);
 
     compileAndLink();
 }
@@ -85,15 +94,16 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
 ShaderProgram::ShaderProgram(const std::string _fragPath,
                              const std::string _vertPath,
                              const std::string _geomPath,
-                             std::vector<ShaderUniform> uniforms)
+                             std::vector<ShaderUniform> uniforms,
+                             const std::string &defines)
     : uniforms(uniforms)
 {
-    frag.prepareLoading(_fragPath);
+    frag.prepareLoading(_fragPath, defines);
     
-    vert.prepareLoading(_vertPath);
+    vert.prepareLoading(_vertPath, defines);
 
     if (!_geomPath.empty())
-        geom.prepareLoading(_geomPath);
+        geom.prepareLoading(_geomPath, defines);
 
     compileAndLink();
 }
@@ -102,19 +112,20 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
                              const std::string _vertPath, 
                              const std::string _tescPath,
                              const std::string _tesePath,
-                             std::vector<ShaderUniform> uniforms)
+                             std::vector<ShaderUniform> uniforms,
+                             const std::string &defines)
     : uniforms(uniforms)
 {
-    frag.prepareLoading(_fragPath);
+    frag.prepareLoading(_fragPath, defines);
 
     if (!_vertPath.empty())
-        vert.prepareLoading(_vertPath);
+        vert.prepareLoading(_vertPath, defines);
 
     if (!_tescPath.empty())
-        tesc.prepareLoading(_tescPath);
+        tesc.prepareLoading(_tescPath, defines);
 
     if (!_tesePath.empty())
-        tesc.prepareLoading(_tesePath);
+        tese.prepareLoading(_tesePath, defines);
 
     compileAndLink();
 }
@@ -159,11 +170,12 @@ ShaderError ShaderProgram::compileAndLink()
     if (!geom.get_Path().empty())
         glAttachShader(program, geom.get_shader());
 
+    if (!tesc.get_Path().empty())
+        glAttachShader(program, tesc.get_shader());
+
     if (!tese.get_Path().empty())
         glAttachShader(program, tese.get_shader());
 
-    if (!tesc.get_Path().empty())
-        glAttachShader(program, tesc.get_shader());
 
     glLinkProgram(program);
 
@@ -173,7 +185,6 @@ ShaderError ShaderProgram::compileAndLink()
     glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logLength);
 
     if (logLength > 0 && result != GL_TRUE)
-    // if(logLength > 0)
     {
         char programError[logLength];
         glGetProgramInfoLog(program, logLength, NULL, programError);
@@ -196,6 +207,7 @@ ShaderError ShaderProgram::compileAndLink()
 
     timer.end();
 
+    #ifdef SHOW_SHADER_PROGRAM_LOADING
     std::cout
         << TERMINAL_OK
         << "Shader Program (id " << program << ") "
@@ -207,6 +219,7 @@ ShaderError ShaderProgram::compileAndLink()
         << " linked successfully in "
         << TERMINAL_TIMER << timer.getElapsedTime() * 1000.f << " ms\n"
         << TERMINAL_RESET;
+    #endif
 
     return ShaderOk;
 }

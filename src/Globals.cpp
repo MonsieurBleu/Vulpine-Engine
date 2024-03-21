@@ -30,6 +30,8 @@ bool Globals::mouseLeftClickDown(){return _mouseLeftClickDown;};
 vec2 Globals::mouseScrollOffset(){return _scrollOffset;};
 void Globals::clearMouseScroll(){_scrollOffset = vec2(0);};
 
+Scene *Globals::getScene() const {return _gameScene;};
+
 bool Globals::useTextInputs(void* user)
 {
     textInputString.clear();

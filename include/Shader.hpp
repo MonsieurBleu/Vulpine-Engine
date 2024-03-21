@@ -11,6 +11,8 @@
 
 #define NO_PROGRAM 0xFFFFFF
 
+// #define SHOW_SHADER_PROGRAM_LOADING
+
 enum ShaderError
 {
     ShaderOk,
@@ -25,6 +27,7 @@ class Shader
         GLuint type;
         GLuint shader = NO_PROGRAM;
         std::string Path;
+        std::string defines;
 
     public :
         Shader(){};
@@ -35,11 +38,12 @@ class Shader
         //    .frag for fragment shaders
         // You then can load the shader using the refresh() method
         // This method is only needed to be called once
-        void prepareLoading(const std::string& Path);
+        void prepareLoading(const std::string& Path, const std::string &defines = "");
         ShaderError refresh();
 
         GLuint get_shader(){return shader;};
         const std::string &get_Path(){return Path;};
+
 };
 
 #define MAX_SHADER_HANDLE 0x1000
@@ -67,18 +71,21 @@ class ShaderProgram
 
         ShaderProgram(const std::string _fragPath, 
                       const std::string _vertPath, 
-                      std::vector<ShaderUniform> uniforms = {});
+                      std::vector<ShaderUniform> uniforms = {},
+                      const std::string &defines = "");
 
         ShaderProgram(const std::string _fragPath, 
                       const std::string _vertPath, 
                       const std::string _geomPath,
-                      std::vector<ShaderUniform> uniforms = {});
+                      std::vector<ShaderUniform> uniforms = {},
+                      const std::string &defines = "");
 
         ShaderProgram(const std::string _fragPath, 
                       const std::string _vertPath, 
                       const std::string _tescPath,
                       const std::string _tesePath,
-                      std::vector<ShaderUniform> uniforms = {});
+                      std::vector<ShaderUniform> uniforms = {},
+                      const std::string &defines = "");
 
         ShaderError compileAndLink();
         ShaderError reset();

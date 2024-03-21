@@ -8,7 +8,7 @@
 #include <codecvt>
 #include <iomanip>
 #include <Controller.hpp>
-
+#include <Scene.hpp>
 #include <Enums.hpp>
 
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
@@ -47,8 +47,12 @@ private:
 
     Controller *_currentController = nullptr;
 
+    Scene *_gameScene;
+
 public:
     MeshMaterial basicMaterial;
+
+    Scene *getScene() const; 
 
     /**
      * Globals are not cloneable.

@@ -16,7 +16,7 @@ class ObjectGroup
     friend Scene;
 
 protected:
-    ObjectGroup *parent = NULL;
+    ObjectGroup *parent = NULL; // unused
 
     std::deque<ModelStateRef> states;
     std::deque<ObjectGroupRef> children;
@@ -31,6 +31,8 @@ public:
     void add(SceneLight light);
     void add(ObjectGroupRef group);
     void add(ModelStateRef state);
+
+    ObjectGroupRef copy();
 };
 
 #endif

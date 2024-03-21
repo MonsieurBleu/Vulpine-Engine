@@ -47,6 +47,7 @@ class App
 
     public :
         App(GLFWwindow* window);
+        ~App();
 
         void init();
 

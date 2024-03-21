@@ -24,6 +24,9 @@
 class MeshMaterial : public std::shared_ptr<ShaderProgram>
 {
     public : 
+        MeshMaterial(std::shared_ptr<ShaderProgram> mat) : std::shared_ptr<ShaderProgram>(mat)
+        {};
+
         MeshMaterial(ShaderProgram* material = NULL, ShaderProgram* depthOnlyMaterial = NULL);
         std::shared_ptr<ShaderProgram> depthOnly;
         
@@ -77,6 +80,7 @@ class Mesh
         Mesh& setMaterial(MeshMaterial _material);
         Mesh& setVao(MeshVao _vao);
         Mesh& setMap(Texture2D texture, int location);
+        Mesh& setMap(int location, Texture2D texture);
         Mesh& removeMap(int location);
         
         void bindAllMaps();
@@ -101,6 +105,8 @@ class Mesh
 #define InstancedModelRef std::shared_ptr<InstancedMeshModel3D> 
 #define newInstancedModel std::make_shared<InstancedMeshModel3D>
 
+class FastUI_valueMenu;
+
 /*
     A special type of Mesh that contains additionnal 
     uniforms who will be updated at each drawcall 
@@ -115,6 +121,9 @@ class MeshModel3D : public Mesh
         void createUniforms();
 
         bool culled = true;
+
+        vec4 lodHeightDispFactors = vec4(0);
+        vec4 lodTessLevelDistance = vec4(0);
 
     public :
         MeshModel3D() : Mesh()
@@ -158,6 +167,12 @@ class MeshModel3D : public Mesh
         virtual GLuint drawVAO(bool depthOnly = false);
         virtual bool cull();
         bool isCulled();
+
+        void tessHeighFactors(float uvScale, float heightFactor);
+        void tessDisplacementFactors(float uvScale, float displacementFactor);
+        void tessActivate(vec2 minmaxTessLevel, vec2 minmaxDistance);
+
+        void setMenu(FastUI_valueMenu &menu, std::u32string name);
 };
 
 class ModelInstance : public ModelState3D
@@ -200,5 +215,6 @@ class InstancedMeshModel3D : public MeshModel3D
 };
 
 MeshVao readOBJ(const std::string filePath, bool useVertexColors = false);
+
 
 #endif

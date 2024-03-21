@@ -15,20 +15,13 @@ GenericSharedBuffer getChunk(std::ifstream &file, uint size)
     return buff;
 };
 
-MeshVao loadVulpineMesh(const std::string &filename)
+MeshVao loadVulpineMesh(const char *filename)
 {
     std::ifstream file(filename, std::ios::in | std::ios::binary);
 
     if(!file)
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error loading file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n";
-        perror("\treadOBJ");
-
-        std::cerr << "\tThe loader will return an empty object.\n"<< TERMINAL_RESET;
-
+        FILE_ERROR_MESSAGE(filename, strerror(errno) << "! The loader will return an empty object.")
         return MeshVao();
     }
 
@@ -62,12 +55,7 @@ MeshVao loadVulpineMesh(const std::string &filename)
 
     if(!file.good())
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error reading vulpineMesh file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n\tThe loader will return an empty object.\n"
-        << TERMINAL_RESET;
-
+        FILE_ERROR_MESSAGE(filename, "The file is probably corrupted or don't follow vulpineMesh specifications. The loader will return an empty object.")
         return MeshVao();
     }
 
@@ -87,14 +75,7 @@ void Skeleton::load(const std::string &filename)
 
     if(!file)
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error loading file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n";
-        perror("\tSkeleton::load");
-
-        std::cerr << "\tThe loader will return an empty object.\n"<< TERMINAL_RESET;
-
+        FILE_ERROR_MESSAGE(filename, strerror(errno) << "! The loader will return an empty object.");
         return;
     }
 
@@ -106,28 +87,9 @@ void Skeleton::load(const std::string &filename)
 
     if(!file.good())
     {
-        std::cerr
-        << TERMINAL_ERROR << "Error reading vulpineSkeleton file : "
-        << TERMINAL_FILENAME << filename
-        << TERMINAL_ERROR << "\n\tThe loader will return an empty object.\n"
-        << TERMINAL_RESET;
+        FILE_ERROR_MESSAGE(filename, "The file is probably corrupted or don't follow vulpineSkeleton specifications. The loader will return an empty object.")
         return;
     }
-
-    tmpInv.resize(h.bonesCount);
-
-    for(size_t i = 0; i < h.bonesCount; i++)
-    {
-        SkeletonBone &b = at(i);
-
-        tmpInv[i] = b.t;
-
-        if(b.parent >= 0)
-            tmpInv[i] = tmpInv[b.parent] * b.t;
-    }
-
-    for(size_t i = 0; i < h.bonesCount; i++)
-        tmpInv[i] = inverse(tmpInv[i]);
 }
 
 

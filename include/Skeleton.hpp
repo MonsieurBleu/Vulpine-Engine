@@ -20,11 +20,9 @@ class SkeletonAnimationState;
 class Skeleton : protected std::vector<SkeletonBone>
 {
     private :
-        std::vector<mat4> tmpInv;
      
     public : 
         const SkeletonBone& operator[](int i);
-        mat4 getDefaultInv(int i){return tmpInv[i];};
         void load(const std::string &filename);
         int getSize(){return size();};
 

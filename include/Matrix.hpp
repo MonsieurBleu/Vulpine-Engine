@@ -32,6 +32,13 @@ public:
     bool frustumCulled = true;
     ModelStateHideStatus hide = ModelStateHideStatus::UNDEFINED;
 
+    ModelState3D &setHideStatus(ModelStateHideStatus h)
+    {
+        hide = h;
+        needUpdate = true;
+        return *this;
+    }
+
     ModelState3D &scaleScalar(float newScale)
     {
         scale = vec3(newScale);
@@ -85,17 +92,7 @@ public:
     {
         if (needUpdate)
         {
-            if (usingLookAt)
-                rotationMatrix = glm::lookAt(position, lookAtPoint, vec3(0, 1, 0));
-            else
-                rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
-
-            mat4 scaleMatrix = glm::scale(mat4(1.0), scale);
-            mat4 translateMatrix = translate(mat4(1.0), position);
-
-            modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
-
-            needUpdate = false;
+            forceUpdate();
 
             return true;
         }
@@ -105,7 +102,10 @@ public:
 
     ModelState3D &forceUpdate()
     {
-        rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+        if (usingLookAt)
+            rotationMatrix = glm::lookAt(position, lookAtPoint, vec3(0, 1, 0));
+        else
+            rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
         mat4 scaleMatrix = glm::scale(mat4(1.0), scale);
         mat4 translateMatrix = translate(mat4(1.0), position);
 

@@ -1,5 +1,5 @@
 CC = g++
-CPPFLAGS = -Wall -Ofast -Wno-strict-aliasing -g --std=c++23
+CPPFLAGS = -Wall -Wno-strict-aliasing -g -Ofast --std=c++23 
 ifeq ($(OS),Windows_NT)
 	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lsoft_oal
 	LINKFLAGS = libglfw3.a libglfw3dll.a 
@@ -159,4 +159,4 @@ else
 endif
 
 countlines :
-	find ./ -type f \( -iname \*.cpp -o -iname \*.hpp -o -iname \*.frag -o -iname \*.vert -o -iname \*.geom \) | sed 's/.*/"&"/' | xargs  wc -l
+	find ./ -type f \( -iname \*.cpp -o -iname \*.hpp -o -iname \*.frag -o -iname \*.vert -o -iname \*.geom -o -iname \*.glsl -o -iname \*.tese -o -iname \*.tesc \) | sed 's/.*/"&"/' | xargs  wc -l

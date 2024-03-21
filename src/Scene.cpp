@@ -121,7 +121,7 @@ uint MeshGroup::draw(bool useBindlessTextures)
     
     if(useBindlessTextures)
     {
-        for(auto i : meshes)
+        for(auto &i : meshes)
             if(i->isCulled())
             {
                 i->setBindlessMaps();
@@ -130,7 +130,7 @@ uint MeshGroup::draw(bool useBindlessTextures)
     }
     else
     {
-        for(auto i : meshes)
+        for(auto &i : meshes)
             if(i->isCulled())
             {
                 i->bindAllMaps();
@@ -269,7 +269,8 @@ void Scene::generateLightClusters()
     }
     ******/
 
-    /****** Per Light Optimized Culling ******/
+    /****** Per Light Optimized Culling 
+    ******/
     int buffSize = MAX_LIGHT_PER_CLUSTER*dim.x*dim.y*dim.z;
     for(int i = 0; i < buffSize; i+= MAX_LIGHT_PER_CLUSTER)
         buff[i] = lmax;
@@ -343,10 +344,10 @@ uint Scene::draw()
 {
     drawcnt = 0;
 
-    for(auto i = meshes.begin(); i != meshes.end(); i++)
-        drawcnt += i->draw(useBindlessTextures);
+    for(auto &i : meshes)
+        drawcnt += i.draw(useBindlessTextures);
     
-    for(auto i : unsortedMeshes)
+    for(auto &i : unsortedMeshes)
         if(i->isCulled())
         {
             if(useBindlessTextures)
@@ -376,6 +377,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
     {
         for(auto i = meshes.begin(); i != meshes.end(); i++)
         {
+
             if(i->material.depthOnly)
                 i->material.depthOnly->activate();
             else
@@ -387,7 +389,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             ShaderUniform(camera.getProjectionViewMatrixAddr(), 2).activate();
             ShaderUniform(camera.getViewMatrixAddr(), 3).activate();
             ShaderUniform(camera.getProjectionMatrixAddr(), 4).activate();
-            ShaderUniform(camera.getPositionAddr(), 5).activate();
+            // ShaderUniform(camera.getPositionAddr(), 5).activate();
             ShaderUniform(camera.getDirectionAddr(), 6).activate();
 
             // if(cull)
@@ -409,6 +411,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             if(useBindlessTextures)
             {
                 for(auto j : i->meshes)
+                    if(j->isCulled())
                     {
                         j->setBindlessMaps();
                         j->drawVAO(true);
@@ -417,10 +420,11 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             else
             {
                 for(auto j : i->meshes)
-                {
-                    j->bindAllMaps();
-                    j->drawVAO(true);
-                }
+                    if(j->isCulled())
+                    {
+                        j->bindAllMaps();
+                        j->drawVAO(true);
+                    }
             }
 
             dom->deactivate();

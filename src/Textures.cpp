@@ -107,6 +107,15 @@ Texture2D& Texture2D::generate()
 
         generated = true;
     }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, handle);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
+    }
     
     return *this;
 }
@@ -120,30 +129,17 @@ Texture2D& Texture2D::loadFromFile(const char* filename)
 
     if(!fileStatus)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can't load image " 
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". This file either don't exist or the format is not supported.\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : this file either don't exist or the format is not supported!");
+        return *(this);
     }
 
     _pixelSource = stbi_load(filename, &_resolution.x, &_resolution.y, &n, 0);
 
     if(!_pixelSource)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can load info but can't load pixels of image " 
-        << TERMINAL_FILENAME << filename << "\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : can load info but can't load pixels of the image!");
+        return *(this);
     }
-
-    timer.end();
-    std::cout 
-    << TERMINAL_OK << "Successfully loaded image "
-    << TERMINAL_FILENAME << filename 
-    << TERMINAL_OK << " in " 
-    << TERMINAL_TIMER << timer.getElapsedTime() << " s\n"
-    << TERMINAL_RESET;
 
     return *(this);
 }
@@ -157,11 +153,8 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
 
     if(!fileStatus)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can't load image " 
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". This file either don't exist or the format is not supported.\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : this file either don't exist or the format is not supported!");
+        return *(this);
     }
 
     _pixelSource = stbi_loadf(filename, &_resolution.x, &_resolution.y, &n, 0);
@@ -169,10 +162,8 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
 
     if(!_pixelSource)
     {
-        std::cerr 
-        << TERMINAL_ERROR << "Texture2D::loadFromFile : stb error, can load info but can't load pixels of image " 
-        << TERMINAL_FILENAME << filename << "\n"
-        << TERMINAL_RESET; 
+        FILE_ERROR_MESSAGE(filename, "STB error : can load info but can't load pixels of the image!");
+        return *(this);
     }
 
     // timer.end();
@@ -201,20 +192,44 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
         KTX_TEXTURE_CREATE_NO_FLAGS,
         &kTexture);
 
+    if(result)
+    {
+        FILE_ERROR_MESSAGE(filename, "KTX error code : " << result);
+        return *this;
+    }
+
+    ktxTexture2 *kTexture2 = (ktxTexture2 *)kTexture;
+    if(ktxTexture_NeedsTranscoding(kTexture))
+    {
+        ktx_texture_transcode_fmt_e tf;
+    
+        // Using VkGetPhysicalDeviceFeatures or GL_COMPRESSED_TEXTURE_FORMATS or
+        // extension queries, determine what compressed texture formats are
+        // supported and pick a format. For example
+
+        khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(kTexture2);
+        if (colorModel == KHR_DF_MODEL_UASTC) {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        } else if (colorModel == KHR_DF_MODEL_ETC1S) {
+            tf = KTX_TTF_ETC;
+        } else {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        };
+
+        result = ktxTexture2_TranscodeBasis(kTexture2, tf, 0);
+    }
+
     glGenTextures(1, &handle);
     result = ktxTexture_GLUpload(kTexture, &handle, &target, &glerror);
+
     
     if(result)
     {
-        std::cout 
-        << TERMINAL_ERROR << "Error loading file "
-        << TERMINAL_FILENAME << filename 
-        << TERMINAL_ERROR << ". Errore code : " << glerror
-        << TERMINAL_RESET << "\n";
+        FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " << result);
+        return *this;
     }
 
-    // don't work but technilcy need that in the future
-    // ktxTexture_Destroy(handle);
+    ktxTexture_Destroy(kTexture);
 
     generated = true;
 
@@ -222,6 +237,66 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
     
     return *(this);
 }
+
+Texture2D& Texture2D::loadFromFileKTX_IO(const char* filename)
+{
+    ktxTexture* kTexture;
+    KTX_error_code result;
+    // ktx_size_t offset;
+    // ktx_uint32_t level, layer, faceSlice; 
+    GLenum target, glerror;
+
+    result = ktxTexture_CreateFromNamedFile(
+        filename,
+        KTX_TEXTURE_CREATE_NO_FLAGS,
+        &kTexture);
+
+    if(result)
+    {
+        FILE_ERROR_MESSAGE(filename, "KTX error code : " << result);
+        return *this;
+    }
+
+    ktxTexture2 *kTexture2 = (ktxTexture2 *)kTexture;
+    if(ktxTexture_NeedsTranscoding(kTexture))
+    {
+        ktx_texture_transcode_fmt_e tf;
+    
+        // Using VkGetPhysicalDeviceFeatures or GL_COMPRESSED_TEXTURE_FORMATS or
+        // extension queries, determine what compressed texture formats are
+        // supported and pick a format. For example
+
+        khr_df_model_e colorModel = ktxTexture2_GetColorModel_e(kTexture2);
+        if (colorModel == KHR_DF_MODEL_UASTC) {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        } else if (colorModel == KHR_DF_MODEL_ETC1S) {
+            tf = KTX_TTF_ETC;
+        } else {
+            tf = KTX_TTF_ASTC_4x4_RGBA;
+        };
+
+        result = ktxTexture2_TranscodeBasis(kTexture2, tf, 0);
+    }
+
+    // glGenTextures(1, &handle);
+    // result = ktxTexture_GLUpload(kTexture, &handle, &target, &glerror);
+
+    
+    // if(result)
+    // {
+    //     FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " << result);
+    //     return *this;
+    // }
+
+    // ktxTexture_Destroy(kTexture);
+
+    // generated = true;
+
+    // bindlessHandleRef = std::make_shared<GLuint>(0);
+    
+    return *(this);
+}
+
 
 GLuint64 Texture2D::getBindlessHandle()
 {

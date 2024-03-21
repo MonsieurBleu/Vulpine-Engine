@@ -15,6 +15,7 @@
 #include <Utils.hpp>
 
 // #define SHOW_GL_NOTIF
+// #define SHOW_GL_WARNING
 #define PREVENT_GL_NOTIF_SPAM
 
 struct GLenum_t
@@ -181,6 +182,11 @@ void GLAPIENTRY MessageCallback(GLenum _source,
 
 #ifndef SHOW_GL_NOTIF
     if (_severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+        return;
+#endif
+
+#ifndef SHOW_GL_WARNING
+    if (_severity == GL_DEBUG_SEVERITY_MEDIUM)
         return;
 #endif
 
