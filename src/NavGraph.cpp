@@ -1,6 +1,5 @@
 #include <NavGraph.hpp>
 #include <iostream>
-// #include <glm/gtx/norm.hpp>
 
 Node::Node(int _id, vec3 _position) {
 
@@ -56,6 +55,24 @@ void Node::print() {
 
 }
 
+void Path::update(NavGraphRef graph) {
+
+    get()->clear();
+    graph->shortestPath(start, dest, *this);
+
+}
+
+// FLAG_COUT
+void Path::print() {
+
+    std::cout << "Path is ";
+    for(int node : *get()) {
+        std::cout << node << " ";
+    }
+    std::cout << "\n";
+
+}
+
 NavGraph::NavGraph(int _id) {
 
     id = _id;
@@ -91,7 +108,7 @@ void NavGraph::connectNodes(int id_node1, int id_node2) {
 }
 
 // A star implementation, using direct distance as the heuristic (supposedly admissible and consistent)
-std::deque<int> NavGraph::shortestPath(int start, int end) {
+void NavGraph::shortestPath(int start, int end, Path path) {
 
     // pseudo-map used to reconstruct the path, we store the node we came from if the neighbor is add to the frontier
     int* cameFrom = new int[nodesN]();
@@ -130,7 +147,8 @@ std::deque<int> NavGraph::shortestPath(int start, int end) {
             delete [] gScore;
             delete [] fScore;
             delete [] insideFrontier;
-            return reconstructPath(cameFrom, current, start);
+            reconstructPath(cameFrom, current, start, path);
+            return;
 
         }
         insideFrontier[current] = false;
@@ -175,15 +193,13 @@ std::deque<int> NavGraph::shortestPath(int start, int end) {
 
 }
 
-std::deque<int> NavGraph::reconstructPath(int* cameFrom, int current, int start) {
+void NavGraph::reconstructPath(int* cameFrom, int current, int start, Path path) {
 
-    std::deque<int> path;
-    path.push_back(current);
+    path->push_back(current);
     while(current != start) {
         current = cameFrom[current];
-        path.push_front(current);
+        path->push_front(current);
     }
-    return path;
 
 }
 
@@ -198,17 +214,6 @@ void NavGraph::print() {
 
     }
 
-    std::cout << "\n";
-
-}
-
-// FLAG_COUT
-void printPath(std::deque<int> path) {
-
-    std::cout << "Path is ";
-    for(int node : path) {
-        std::cout << node << " ";
-    }
     std::cout << "\n";
 
 }
