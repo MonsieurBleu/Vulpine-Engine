@@ -377,6 +377,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
     {
         for(auto i = meshes.begin(); i != meshes.end(); i++)
         {
+
             if(i->material.depthOnly)
                 i->material.depthOnly->activate();
             else
@@ -410,6 +411,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             if(useBindlessTextures)
             {
                 for(auto j : i->meshes)
+                    if(j->isCulled())
                     {
                         j->setBindlessMaps();
                         j->drawVAO(true);
@@ -418,10 +420,11 @@ void Scene::depthOnlyDraw(Camera &camera, bool cull)
             else
             {
                 for(auto j : i->meshes)
-                {
-                    j->bindAllMaps();
-                    j->drawVAO(true);
-                }
+                    if(j->isCulled())
+                    {
+                        j->bindAllMaps();
+                        j->drawVAO(true);
+                    }
             }
 
             dom->deactivate();
