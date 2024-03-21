@@ -17,6 +17,48 @@ Node::~Node() {
 
 }
 
+void Node::rearrangeNeighbors() {
+
+    bool isValid = true;
+    do {
+
+        isValid = true;
+        for(int i = 0; i < MAX_NEIGHBORS-1; i++) {
+
+            if(neighbors[i].id == -1 && neighbors[i+1].id != -1) {
+
+                isValid = false;
+                neighbors[i].id = neighbors[i+1].id;
+                neighbors[i+1].id = -1;
+                neighbors[i].cost = neighbors[i+1].cost;
+                neighbors[i+1].cost = 0.;
+
+            }
+
+        }
+
+    } while(!isValid);
+
+    neighborsN = 0;
+    for(int i = 0; i < MAX_NEIGHBORS; i++) {
+        if(neighbors[i].id != -1) neighborsN++;
+    }
+
+}
+
+void Node::deconnectNode(int id_other) {
+
+    for(int i = 0; i < neighborsN; i++) {
+        if(neighbors[i].id == id_other) {
+            neighbors[i].id = -1;
+            neighbors[i].cost = 0.;
+            break;
+        }
+    }
+    rearrangeNeighbors();
+
+}
+
 void Node::connectNode(int id_other, double cost) {
 
     if(neighborsN >= MAX_NEIGHBORS) {
@@ -104,6 +146,21 @@ void NavGraph::connectNodes(int id_node1, int id_node2) {
 
     nodes[id_node1].connectNode(id_node2, cost);
     nodes[id_node2].connectNode(id_node1, cost);
+
+}
+
+void NavGraph::deconnectNodes(int id_node1, int id_node2) {
+
+    if(id_node1 >= nodesN || id_node2 >= nodesN) {
+        
+        // FLAG_CERR
+        std::cerr << "Can't deconnect nodes, indexes provided are out of range.\n";
+        return;
+
+    }
+
+    nodes[id_node1].deconnectNode(id_node2);
+    nodes[id_node2].deconnectNode(id_node1);
 
 }
 
