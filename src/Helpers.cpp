@@ -398,6 +398,52 @@ CubeHelper::CubeHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3
     setVao(vao);
 }
 
+void CubeHelper::updateData(const vec3 min, const vec3 max)
+{
+    vec3 *pos = (vec3*)getVao()->attributes[0].getBufferAddr();
+
+    // Face 1
+    pos[0] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[1] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+
+    pos[2] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[3] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+
+    pos[4] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[5] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+
+    pos[6] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[7] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+
+    // Face 2
+    pos[8] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+    pos[9] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    pos[10] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+    pos[11] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[12] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+    pos[13] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[14] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+    pos[15] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    // Connecting faces
+    pos[16] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[17] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+
+    pos[18] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+    pos[19] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    pos[20] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+    pos[21] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[22] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[23] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+
+    getVao()->attributes[0].sendAllToGPU();
+}
+
 SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basicMaterial)
 {
     color = _color;
@@ -647,3 +693,42 @@ NavGraphHelper::NavGraphHelper(NavGraphRef graph) : graph(graph)
         
     }
 };
+
+
+PathHelper::PathHelper(Path path, NavGraphRef graph) : path(path), graph(graph)
+{ 
+    const vec3 color = vec3(1, 0.5, 0);
+    for(int i = 0; i < maxPath; i++)
+    {
+        add(CubeHelperRef(new CubeHelper(
+            vec3(0), vec3(0), color
+        )));
+    }
+}
+
+void PathHelper::update(bool forceUpdate)
+{
+    auto &nodes = graph->getNodes();
+    const float size = 0.025;
+
+    for(auto i : meshes)
+    {
+        i->state.setHideStatus(HIDE);
+        i->state.frustumCulled = false;
+    }
+
+    for(int i = 1; i < path->size(); i++)
+    {
+        vec3 v1 = nodes[path->at(i-1)].getPosition()  + vec3(-size);
+        vec3 v2 = nodes[path->at(i)].getPosition()    + vec3(size);
+
+        ((CubeHelper*)(meshes[i].get()))->state.setHideStatus(SHOW);
+        
+        ((CubeHelper*)(meshes[i].get()))->updateData(
+            min(v1, v2), max(v1, v2)
+        );
+
+    }
+
+    ObjectGroup::update(forceUpdate);
+}

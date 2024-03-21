@@ -63,7 +63,10 @@ class CubeHelper : public MeshModel3D
 
     public : 
         vec3 color;
+        
         CubeHelper(const vec3 min, const vec3 max, vec3 _color = vec3(0, 1, 0));
+
+        void updateData(const vec3 min, const vec3 max);
 };
 
 typedef std::shared_ptr<CubeHelper> CubeHelperRef;
@@ -141,8 +144,14 @@ typedef std::shared_ptr<NavGraphHelper> NavGraphHelperRef;
 class PathHelper : public ObjectGroup
 {
     private : 
+        Path path; 
+        NavGraphRef graph;
 
+        static inline int maxPath = 32;
 
     public : 
-        
+        PathHelper(Path path, NavGraphRef graph);
+        void update(bool forceUpdate = true) override;
 };
+
+typedef std::shared_ptr<PathHelper> PathHelperRef;
