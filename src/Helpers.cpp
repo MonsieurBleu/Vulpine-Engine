@@ -732,3 +732,97 @@ void PathHelper::update(bool forceUpdate)
 
     ObjectGroup::update(forceUpdate);
 }
+
+CapsuleHelper::CapsuleHelper(
+    vec3 pos1, 
+    vec3 pos2, 
+    float radius, 
+    vec3 color) 
+        : MeshModel3D(globals.basicMaterial), color(color) 
+{
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+    state.frustumCulled = false;
+
+    int nbOfPoints = 8 + 16*16;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = vec3(0);
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+
+    updateData(pos1, pos2, radius);
+}   
+
+void addHalfCIrcle(vec3 *pos, vec3 x, vec3 y, vec3 center, int &id)
+{
+    const int res = 16;
+    for(int i = 1; i <= res; i++)
+    {
+        float a = PI*(float)i/(float)res;
+        float b = PI*(float)(i-1)/(float)res;
+        
+        pos[id++] = center + x*cos(a) + y*sin(a);
+        pos[id++] = center + x*cos(b) + y*sin(b);
+    }
+}
+
+void CapsuleHelper::updateData(const vec3 pos1, const vec3 pos2, const float radius)
+{
+    vec3 *pos = (vec3*)getVao()->attributes[0].getBufferAddr();
+
+    int id = 0;
+
+    vec3 dir = normalize(pos1 - pos2);
+    vec3 r(dir.x, dir.z, dir.y);
+    vec3 l(dir.y, dir.x, dir.z);
+
+    r = abs(dot(dir, vec3(0, 1, 0))) < 0.9 ? cross(dir, vec3(0, 1, 0)) : cross(dir, vec3(0, 0, 1));
+    l = cross(dir, r);
+
+    r = normalize(r);
+    l = normalize(l);
+
+    pos[id++] = pos1 + radius*r;
+    pos[id++] = pos2 + radius*r;
+
+    pos[id++] = pos1 - radius*r;
+    pos[id++] = pos2 - radius*r;
+
+    pos[id++] = pos1 + radius*l;
+    pos[id++] = pos2 + radius*l;
+
+    pos[id++] = pos1 - radius*l;
+    pos[id++] = pos2 - radius*l;
+
+    addHalfCIrcle(pos, l*radius, r*radius, pos2, id);
+    addHalfCIrcle(pos, l*-radius, r*-radius, pos2, id);
+    addHalfCIrcle(pos, l*radius, dir*-radius, pos2, id);
+    addHalfCIrcle(pos, r*radius, dir*-radius, pos2, id);
+
+
+    addHalfCIrcle(pos, l*radius, r*radius, pos1, id);
+    addHalfCIrcle(pos, l*-radius, r*-radius, pos1, id);
+    addHalfCIrcle(pos, l*radius, dir*radius, pos1, id);
+    addHalfCIrcle(pos, r*radius, dir*radius, pos1, id);
+
+    getVao()->attributes[0].sendAllToGPU();
+}

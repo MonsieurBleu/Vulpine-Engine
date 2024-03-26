@@ -82,6 +82,18 @@ class SphereHelper : public MeshModel3D
 
 typedef std::shared_ptr<SphereHelper> SphereHelperRef;
 
+class CapsuleHelper : public MeshModel3D
+{
+    private : 
+
+    public : 
+        vec3 color;
+        CapsuleHelper(vec3 pos1 = vec3(0), vec3 pos2 = vec3(0, 1, 0), float radius = 0.5, vec3 color = vec3(0, 1, 0));
+
+        void updateData(const vec3 pos1, const vec3 pos2, const float radius);
+};
+
+typedef std::shared_ptr<CapsuleHelper> CapsuleHelperRef;
 
 class ClusteredFrustumHelper : public MeshModel3D
 {
