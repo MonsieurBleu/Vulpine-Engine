@@ -177,7 +177,7 @@ void Scene::generateLightClusters()
     int* buff = clusteredLight.get();
 
     LightInfos* lbuff = lightBuffer.get();
-    const int lmax = lightBuffer.maxID();
+    const int lmax = lightBuffer.maxID()-1;
 
     const mat4 vm = globals.currentCamera->getViewMatrix();
     const mat4 im = inverse(globals.currentCamera->getProjectionMatrix());
@@ -272,6 +272,7 @@ void Scene::generateLightClusters()
     /****** Per Light Optimized Culling 
     ******/
     int buffSize = MAX_LIGHT_PER_CLUSTER*dim.x*dim.y*dim.z;
+
     for(int i = 0; i < buffSize; i+= MAX_LIGHT_PER_CLUSTER) 
         buff[i] = lmax;
 
