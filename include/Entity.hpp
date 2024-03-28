@@ -61,6 +61,7 @@ class Component
             T data;
             Entity *entity;
             bool enabled = false;
+            int entityListID = -1;
             void init(){};
             void clean(){};
         };
@@ -118,7 +119,7 @@ class Entity
                     if(ids[i] < ComponentGlobals::lastFreeID[i])
                         ComponentGlobals::lastFreeID[i] = ids[i];
 
-                    if(ids[i] == ComponentGlobals::maxID[i])
+                    if(ids[i] == ComponentGlobals::maxID[i]-1)
                         ComponentGlobals::maxID[i]--;
                 }
         };
@@ -126,13 +127,13 @@ class Entity
         std::string toStr()
         {
             std::stringstream ss;
-            ss << TERMINAL_OK << "Entity {\n";
+            ss << TERMINAL_OK << "Entity {";
             
-            ss << TERMINAL_NOTIF << TERMINAL_UNDERLINE << comp<EntityInfos>().name << TERMINAL_RESET << "\n"; 
+            ss << TERMINAL_NOTIF << TERMINAL_UNDERLINE << comp<EntityInfos>().name << TERMINAL_RESET << " "; 
         
             for(auto &i : ComponentCategoryMap)
                 if(i.second != ComponentCategory::END)
-                    ss << "  " << TERMINAL_FILENAME << i.first << "\t" << TERMINAL_TIMER << ids[i.second] << "\n";
+                    ss << "  " << TERMINAL_FILENAME << i.first << "[" << TERMINAL_TIMER << ids[i.second] << "]";
 
             ss << TERMINAL_OK << "}\n" << TERMINAL_RESET;
             return ss.str();
@@ -180,7 +181,7 @@ void Component<T>::insert(Entity &entity, const T& data)
         ComponentGlobals::maxID[category] = std::max(ComponentGlobals::maxID[category], lastFreeID);
     }
 
-    elements[id] = {data, &entity, true};
+    elements[id] = {data, &entity, true, entity.ids[ENTITY_LIST]};
     elements[id].init();
 };
 
@@ -212,11 +213,14 @@ void ManageGarbage()
     int maxID = ComponentGlobals::maxID[Component<T>::category];
     int size = list.size();
 
-    for(int i = 0; i < size && i < maxID; i++)
-        if(!elist[i].enabled && list[i].enabled)
+    for(int i = 0; i < size && i <= maxID; i++)
+    {        
+
+        if(list[i].enabled && !elist[list[i].entityListID].enabled)
         {
             list[i].enabled = false;
             list[i].clean();
             list[i].data = T();
         }
+    }
 };

@@ -74,3 +74,5 @@ bool Globals::getTextInputs(void* user, std::u32string& buff)
 }
 
 int Globals::windowHasFocus(){return _windowHasFocus;};
+
+

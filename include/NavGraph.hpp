@@ -29,6 +29,8 @@ class Node {
         Link neighbors[MAX_NEIGHBORS]; // storing the id of neighbors
         int neighborsN; // number of neighbors
 
+        void rearrangeNeighbors();
+
 
     public:
 
@@ -42,14 +44,14 @@ class Node {
         int getNeighborsN() const {return neighborsN;};
 
         void connectNode(int, double);
+        void deconnectNode(int);
 
         void print();
         
 
 };
 
-class Path : std::shared_ptr<std::deque<int>>
-{};
+class Path;
 
 class NavGraph {
 
@@ -64,10 +66,12 @@ class NavGraph {
         NavGraph(int);
 
         int addNode(vec3);
+        void removeNode(int);
         void connectNodes(int, int);
+        void deconnectNodes(int, int);
 
-        std::deque<int> shortestPath(int, int); // A* algorithm
-        std::deque<int> reconstructPath(int*, int, int);
+        void shortestPath(int, int, Path); // A* algorithm
+        void reconstructPath(int*, int, int, Path);
 
         const std::vector<Node>& getNodes(){return nodes;};
 
@@ -77,4 +81,19 @@ class NavGraph {
 
 typedef std::shared_ptr<NavGraph> NavGraphRef;
 
-void printPath(std::deque<int>);
+class Path : public std::shared_ptr<std::deque<int>>
+{
+    private:
+
+        int start;
+        int dest;
+
+    public:
+
+        Path(int _start, int _dest): std::shared_ptr<std::deque<int>>(new std::deque<int>), start(_start), dest(_dest){};
+        ~Path(){};
+        
+        void update(NavGraphRef);
+        void print();
+        
+};

@@ -398,6 +398,52 @@ CubeHelper::CubeHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3
     setVao(vao);
 }
 
+void CubeHelper::updateData(const vec3 min, const vec3 max)
+{
+    vec3 *pos = (vec3*)getVao()->attributes[0].getBufferAddr();
+
+    // Face 1
+    pos[0] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[1] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+
+    pos[2] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[3] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+
+    pos[4] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[5] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+
+    pos[6] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[7] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+
+    // Face 2
+    pos[8] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+    pos[9] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    pos[10] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+    pos[11] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[12] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+    pos[13] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[14] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+    pos[15] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    // Connecting faces
+    pos[16] = min*vec3(1, 1, 1) + max*(vec3(0, 0, 0));
+    pos[17] = min*vec3(0, 1, 1) + max*(vec3(1, 0, 0));
+
+    pos[18] = min*vec3(1, 0, 1) + max*(vec3(0, 1, 0));
+    pos[19] = min*vec3(0, 0, 1) + max*(vec3(1, 1, 0));
+
+    pos[20] = min*vec3(1, 1, 0) + max*(vec3(0, 0, 1));
+    pos[21] = min*vec3(0, 1, 0) + max*(vec3(1, 0, 1));
+
+    pos[22] = min*vec3(1, 0, 0) + max*(vec3(0, 1, 1));
+    pos[23] = min*vec3(0, 0, 0) + max*(vec3(1, 1, 1));
+
+    getVao()->attributes[0].sendAllToGPU();
+}
+
 SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basicMaterial)
 {
     color = _color;
@@ -647,3 +693,149 @@ NavGraphHelper::NavGraphHelper(NavGraphRef graph) : graph(graph)
         
     }
 };
+
+
+PathHelper::PathHelper(Path path, NavGraphRef graph) : path(path), graph(graph)
+{ 
+    const vec3 color = vec3(1, 0.5, 0);
+    for(int i = 0; i < maxPath; i++)
+    {
+        add(CubeHelperRef(new CubeHelper(
+            vec3(0), vec3(0), color
+        )));
+    }
+}
+
+void PathHelper::update(bool forceUpdate)
+{
+    auto &nodes = graph->getNodes();
+    const float size = 0.025;
+
+    for(auto i : meshes)
+    {
+        i->state.setHideStatus(HIDE);
+        i->state.frustumCulled = false;
+    }
+
+    for(size_t i = 1; i < path->size(); i++)
+    {
+        vec3 v1 = nodes[path->at(i-1)].getPosition()  + vec3(-size);
+        vec3 v2 = nodes[path->at(i)].getPosition()    + vec3(size);
+
+        ((CubeHelper*)(meshes[i].get()))->state.setHideStatus(SHOW);
+        
+        ((CubeHelper*)(meshes[i].get()))->updateData(
+            min(v1, v2), max(v1, v2)
+        );
+
+    }
+
+    ObjectGroup::update(forceUpdate);
+}
+
+CapsuleHelper::CapsuleHelper(
+        vec3  *pos1, 
+        vec3  *pos2, 
+        float *radius, 
+        vec3  color)
+        : 
+            MeshModel3D(globals.basicMaterial), 
+            pos1(pos1),
+            pos2(pos2),
+            radius(radius),
+            color(color) 
+{
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+    state.frustumCulled = false;
+
+    int nbOfPoints = 8 + 16*16;
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = vec3(0);
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+
+    updateData(*pos1, *pos2, *radius);
+}   
+
+void addHalfCIrcle(vec3 *pos, vec3 x, vec3 y, vec3 center, int &id)
+{
+    const int res = 16;
+    for(int i = 1; i <= res; i++)
+    {
+        float a = PI*(float)i/(float)res;
+        float b = PI*(float)(i-1)/(float)res;
+        
+        pos[id++] = center + x*cos(a) + y*sin(a);
+        pos[id++] = center + x*cos(b) + y*sin(b);
+    }
+}
+
+#include <glm/gtx/string_cast.hpp>
+
+void CapsuleHelper::update()
+{
+    updateData(*pos1, *pos2, *radius);
+    MeshModel3D::update();
+};
+
+void CapsuleHelper::updateData(const vec3 pos1, const vec3 pos2, const float radius)
+{
+    vec3 *pos = (vec3*)getVao()->attributes[0].getBufferAddr();
+
+    int id = 0;
+
+    vec3 dir = normalize(pos1 - pos2);
+    vec3 r(dir.x, dir.z, dir.y);
+    vec3 l(dir.y, dir.x, dir.z);
+
+    r = abs(dot(dir, vec3(0, 1, 0))) < 0.9 ? cross(dir, vec3(0, 1, 0)) : cross(dir, vec3(0, 0, 1));
+    l = cross(dir, r);
+
+    r = normalize(r);
+    l = normalize(l);
+
+    pos[id++] = pos1 + radius*r;
+    pos[id++] = pos2 + radius*r;
+
+    pos[id++] = pos1 - radius*r;
+    pos[id++] = pos2 - radius*r;
+
+    pos[id++] = pos1 + radius*l;
+    pos[id++] = pos2 + radius*l;
+
+    pos[id++] = pos1 - radius*l;
+    pos[id++] = pos2 - radius*l;
+
+    addHalfCIrcle(pos, l*radius, r*radius, pos2, id);
+    addHalfCIrcle(pos, l*-radius, r*-radius, pos2, id);
+    addHalfCIrcle(pos, l*radius, dir*-radius, pos2, id);
+    addHalfCIrcle(pos, r*radius, dir*-radius, pos2, id);
+
+
+    addHalfCIrcle(pos, l*radius, r*radius, pos1, id);
+    addHalfCIrcle(pos, l*-radius, r*-radius, pos1, id);
+    addHalfCIrcle(pos, l*radius, dir*radius, pos1, id);
+    addHalfCIrcle(pos, r*radius, dir*radius, pos1, id);
+
+    getVao()->attributes[0].sendAllToGPU();
+}

@@ -63,7 +63,10 @@ class CubeHelper : public MeshModel3D
 
     public : 
         vec3 color;
+        
         CubeHelper(const vec3 min, const vec3 max, vec3 _color = vec3(0, 1, 0));
+
+        void updateData(const vec3 min, const vec3 max);
 };
 
 typedef std::shared_ptr<CubeHelper> CubeHelperRef;
@@ -79,6 +82,28 @@ class SphereHelper : public MeshModel3D
 
 typedef std::shared_ptr<SphereHelper> SphereHelperRef;
 
+class CapsuleHelper : public MeshModel3D
+{
+    private : 
+
+        vec3  *pos1;
+        vec3  *pos2;
+        float *radius;
+
+    public : 
+        vec3 color;
+        CapsuleHelper(
+            vec3  *pos1, 
+            vec3  *pos2, 
+            float *radius, 
+            vec3  color = vec3(0, 1, 0));
+
+        void update();
+
+        void updateData(const vec3 pos1, const vec3 pos2, const float radius);
+};
+
+typedef std::shared_ptr<CapsuleHelper> CapsuleHelperRef;
 
 class ClusteredFrustumHelper : public MeshModel3D
 {
@@ -141,8 +166,14 @@ typedef std::shared_ptr<NavGraphHelper> NavGraphHelperRef;
 class PathHelper : public ObjectGroup
 {
     private : 
+        Path path; 
+        NavGraphRef graph;
 
+        static inline int maxPath = 32;
 
     public : 
-        
+        PathHelper(Path path, NavGraphRef graph);
+        void update(bool forceUpdate = true) override;
 };
+
+typedef std::shared_ptr<PathHelper> PathHelperRef;

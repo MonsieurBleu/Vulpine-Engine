@@ -1,6 +1,5 @@
 #include <NavGraph.hpp>
 #include <iostream>
-// #include <glm/gtx/norm.hpp>
 
 Node::Node(int _id, vec3 _position) {
 
@@ -15,6 +14,48 @@ Node::Node(int _id, vec3 _position) {
 }
 
 Node::~Node() {
+
+}
+
+void Node::rearrangeNeighbors() {
+
+    bool isValid = true;
+    do {
+
+        isValid = true;
+        for(int i = 0; i < MAX_NEIGHBORS-1; i++) {
+
+            if(neighbors[i].id == -1 && neighbors[i+1].id != -1) {
+
+                isValid = false;
+                neighbors[i].id = neighbors[i+1].id;
+                neighbors[i+1].id = -1;
+                neighbors[i].cost = neighbors[i+1].cost;
+                neighbors[i+1].cost = 0.;
+
+            }
+
+        }
+
+    } while(!isValid);
+
+    neighborsN = 0;
+    for(int i = 0; i < MAX_NEIGHBORS; i++) {
+        if(neighbors[i].id != -1) neighborsN++;
+    }
+
+}
+
+void Node::deconnectNode(int id_other) {
+
+    for(int i = 0; i < neighborsN; i++) {
+        if(neighbors[i].id == id_other) {
+            neighbors[i].id = -1;
+            neighbors[i].cost = 0.;
+            break;
+        }
+    }
+    rearrangeNeighbors();
 
 }
 
@@ -56,6 +97,24 @@ void Node::print() {
 
 }
 
+void Path::update(NavGraphRef graph) {
+
+    get()->clear();
+    graph->shortestPath(start, dest, *this);
+
+}
+
+// FLAG_COUT
+void Path::print() {
+
+    std::cout << "Path is ";
+    for(int node : *get()) {
+        std::cout << node << " ";
+    }
+    std::cout << "\n";
+
+}
+
 NavGraph::NavGraph(int _id) {
 
     id = _id;
@@ -90,8 +149,23 @@ void NavGraph::connectNodes(int id_node1, int id_node2) {
 
 }
 
+void NavGraph::deconnectNodes(int id_node1, int id_node2) {
+
+    if(id_node1 >= nodesN || id_node2 >= nodesN) {
+        
+        // FLAG_CERR
+        std::cerr << "Can't deconnect nodes, indexes provided are out of range.\n";
+        return;
+
+    }
+
+    nodes[id_node1].deconnectNode(id_node2);
+    nodes[id_node2].deconnectNode(id_node1);
+
+}
+
 // A star implementation, using direct distance as the heuristic (supposedly admissible and consistent)
-std::deque<int> NavGraph::shortestPath(int start, int end) {
+void NavGraph::shortestPath(int start, int end, Path path) {
 
     // pseudo-map used to reconstruct the path, we store the node we came from if the neighbor is add to the frontier
     int* cameFrom = new int[nodesN]();
@@ -130,7 +204,8 @@ std::deque<int> NavGraph::shortestPath(int start, int end) {
             delete [] gScore;
             delete [] fScore;
             delete [] insideFrontier;
-            return reconstructPath(cameFrom, current, start);
+            reconstructPath(cameFrom, current, start, path);
+            return;
 
         }
         insideFrontier[current] = false;
@@ -175,15 +250,13 @@ std::deque<int> NavGraph::shortestPath(int start, int end) {
 
 }
 
-std::deque<int> NavGraph::reconstructPath(int* cameFrom, int current, int start) {
+void NavGraph::reconstructPath(int* cameFrom, int current, int start, Path path) {
 
-    std::deque<int> path;
-    path.push_back(current);
+    path->push_back(current);
     while(current != start) {
         current = cameFrom[current];
-        path.push_front(current);
+        path->push_front(current);
     }
-    return path;
 
 }
 
@@ -198,17 +271,6 @@ void NavGraph::print() {
 
     }
 
-    std::cout << "\n";
-
-}
-
-// FLAG_COUT
-void printPath(std::deque<int> path) {
-
-    std::cout << "Path is ";
-    for(int node : path) {
-        std::cout << node << " ";
-    }
     std::cout << "\n";
 
 }

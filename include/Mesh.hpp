@@ -161,7 +161,7 @@ class MeshModel3D : public Mesh
             bool loadColorMap = true, 
             bool loadMaterialMap = true);
 
-        void update();
+        virtual void update();
         void setDrawMode();
         void resetDrawMode();
         virtual GLuint drawVAO(bool depthOnly = false);
