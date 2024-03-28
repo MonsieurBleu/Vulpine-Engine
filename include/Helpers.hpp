@@ -86,9 +86,19 @@ class CapsuleHelper : public MeshModel3D
 {
     private : 
 
+        vec3  *pos1;
+        vec3  *pos2;
+        float *radius;
+
     public : 
         vec3 color;
-        CapsuleHelper(vec3 pos1 = vec3(0), vec3 pos2 = vec3(0, 1, 0), float radius = 0.5, vec3 color = vec3(0, 1, 0));
+        CapsuleHelper(
+            vec3  *pos1, 
+            vec3  *pos2, 
+            float *radius, 
+            vec3  color = vec3(0, 1, 0));
+
+        void update();
 
         void updateData(const vec3 pos1, const vec3 pos2, const float radius);
 };

@@ -734,11 +734,16 @@ void PathHelper::update(bool forceUpdate)
 }
 
 CapsuleHelper::CapsuleHelper(
-    vec3 pos1, 
-    vec3 pos2, 
-    float radius, 
-    vec3 color) 
-        : MeshModel3D(globals.basicMaterial), color(color) 
+        vec3  *pos1, 
+        vec3  *pos2, 
+        float *radius, 
+        vec3  color)
+        : 
+            MeshModel3D(globals.basicMaterial), 
+            pos1(pos1),
+            pos2(pos2),
+            radius(radius),
+            color(color) 
 {
     createUniforms();
     uniforms.add(ShaderUniform(&color, 20));
@@ -769,7 +774,7 @@ CapsuleHelper::CapsuleHelper(
 
     setVao(vao);
 
-    updateData(pos1, pos2, radius);
+    updateData(*pos1, *pos2, *radius);
 }   
 
 void addHalfCIrcle(vec3 *pos, vec3 x, vec3 y, vec3 center, int &id)
@@ -784,6 +789,14 @@ void addHalfCIrcle(vec3 *pos, vec3 x, vec3 y, vec3 center, int &id)
         pos[id++] = center + x*cos(b) + y*sin(b);
     }
 }
+
+#include <glm/gtx/string_cast.hpp>
+
+void CapsuleHelper::update()
+{
+    updateData(*pos1, *pos2, *radius);
+    MeshModel3D::update();
+};
 
 void CapsuleHelper::updateData(const vec3 pos1, const vec3 pos2, const float radius)
 {
