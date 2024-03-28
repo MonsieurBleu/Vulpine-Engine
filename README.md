@@ -64,6 +64,11 @@ my-project/
 
 ## Features 
 
+### Game Logic
+- [X] Entity Conpoment System
+- [ ] States Machine
+- [ ] Script Utils
+  
 ### Graphics 
 - [X] Cameras
   - [X] Perspective Camera
@@ -169,39 +174,42 @@ my-project/
 
 ### Utils & Debug
 - [X] Clear OpenGl Message Callback
-- [X] Light Helpers (TODO : rework)
+- [X] Lights/Physics/PathFinding Helpers
 - [X] Angle & Color Conversion Functions
 - [X] Precise Benchmark/Frame Timer
 - [X] Precise Limit Timer
 - [X] Default AppTime & SimulationTime Timers
-- [ ] Easier Accumulation Timer
+- [X] Error/Warning Message Macros
+- [X] Mapped Enum Maccros 
 
 ### Assets 
+- [X] Asset Manager With Easy Text Based Constructor & Duplication Detection Optimization
+
 - [X] Vulpine Engine Asset Convertor
   - [X] Assimp integration  
   - [X] KTX2 integration 
   - [X] .vulpineMesh
   - [X] .vulpineSkeleton
-  - [ ] .vulpineAnimation
+  - [X] .vulpineAnimation
   - [ ] .vulpineNavigationGraph
   - [ ] .vulpineBody
   - [ ] .vulpineLights
   - [ ] .vulpineScene
 
-- [ ] 3D
+- [X] 3D
   - [X] Easy VAO Creation & Update
   - [X] Automatic AABB Model Generation   
   - [X] .obj Model Loading
   - [X] Custom Fast Model Format
       
- - [ ] Textures
+ - [X] Textures
   - [X] png/jpeg/gif Images Loading (STB lib)
   - [X] hdr Images Loading (STB lib)
   - [X] KTX Images Loading (KTX lib) 
   - [X] MipMaps (KTX lib)
   - [X] Basic CubeMap Loading
   - [X] Font/CSV Atlas MSDF Loading
-  - [ ] Level/Scene Atlas Generator
+  - [ ] (optional) Level/Scene Atlas Generator
 
  - [ ] Audio
    - [X] .ogg Files loading
@@ -237,9 +245,8 @@ my-project/
 - [ ] Physics Culling/Clusering/Optimisation 
 
 ### AI 
-- [ ] Path Finding Nodes
-- [ ] Path Finding Debugger
-- [ ] A* Path Finding Algorithm
+- [X] Path Finding Nodes
+- [X] Path Finding Debugger
+- [X] A* Path Finding Algorithm
 - [ ] Path Finding Nodes Generator From Level/World
-- [ ] Path Finding Dedicated Thread
 
