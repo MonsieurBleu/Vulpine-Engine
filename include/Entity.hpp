@@ -119,7 +119,7 @@ class Entity
                     if(ids[i] < ComponentGlobals::lastFreeID[i])
                         ComponentGlobals::lastFreeID[i] = ids[i];
 
-                    if(ids[i] == ComponentGlobals::maxID[i])
+                    if(ids[i] == ComponentGlobals::maxID[i]-1)
                         ComponentGlobals::maxID[i]--;
                 }
         };
@@ -215,7 +215,6 @@ void ManageGarbage()
 
     for(int i = 0; i < size && i <= maxID; i++)
     {        
-        if(Component<T>::category == GRAPHIC)
 
         if(list[i].enabled && !elist[list[i].entityListID].enabled)
         {
