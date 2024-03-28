@@ -717,7 +717,7 @@ void PathHelper::update(bool forceUpdate)
         i->state.frustumCulled = false;
     }
 
-    for(int i = 1; i < path->size(); i++)
+    for(size_t i = 1; i < path->size(); i++)
     {
         vec3 v1 = nodes[path->at(i-1)].getPosition()  + vec3(-size);
         vec3 v2 = nodes[path->at(i)].getPosition()    + vec3(size);

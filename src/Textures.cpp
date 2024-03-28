@@ -244,7 +244,7 @@ Texture2D& Texture2D::loadFromFileKTX_IO(const char* filename)
     KTX_error_code result;
     // ktx_size_t offset;
     // ktx_uint32_t level, layer, faceSlice; 
-    GLenum target, glerror;
+    // GLenum target, glerror;
 
     result = ktxTexture_CreateFromNamedFile(
         filename,
