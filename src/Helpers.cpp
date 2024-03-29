@@ -746,7 +746,7 @@ CapsuleHelper::CapsuleHelper(
             color(color) 
 {
     createUniforms();
-    uniforms.add(ShaderUniform(&color, 20));
+    uniforms.add(ShaderUniform(&this->color, 20));
     noBackFaceCulling = true;
     defaultMode = GL_LINES;
     state.frustumCulled = false;
