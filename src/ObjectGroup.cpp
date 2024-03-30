@@ -80,6 +80,16 @@ void ObjectGroup::add(ModelStateRef state)
     states.push_back(state);
 }
 
+void ObjectGroup::remove(ModelRef mesh)
+{
+    for(auto i = meshes.begin(); i < meshes.end(); i++)
+        if(i->get() == mesh.get())
+        {
+            meshes.erase(i);
+            return;
+        }
+}
+
 ObjectGroupRef ObjectGroup::copy()
 {
     ObjectGroupRef g = newObjectGroup();

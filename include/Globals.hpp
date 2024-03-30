@@ -10,6 +10,7 @@
 #include <Controller.hpp>
 #include <Scene.hpp>
 #include <Enums.hpp>
+#include <Fonts.hpp>
 
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
 
@@ -45,13 +46,13 @@ private:
 
     vec2 _scrollOffset = vec2(0);
 
-    Controller *_currentController = nullptr;
 
     Scene *_gameScene;
 
 public:
-    MeshMaterial basicMaterial;
+    // MeshMaterial basicMaterial;
 
+    Controller *_currentController = nullptr;
     Scene *getScene() const; 
 
     /**
@@ -63,6 +64,7 @@ public:
      */
     // void operator=(const Globals&) = delete;
 
+    FontRef baseFont;
     Camera *currentCamera = nullptr;
     const Controller *getController() const;
 

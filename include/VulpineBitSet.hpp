@@ -41,6 +41,12 @@ struct VulpineBitSet
         bytes[byte] |= 1<<(i%8);
     };
 
+    void setFalse(int i)
+    {
+        const int byte = i/8;
+        bytes[byte] &= ~(1<<(i%8));
+    };
+
     template<typename ... args>
     void setTrue(args&&... arg)
     {

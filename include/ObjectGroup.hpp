@@ -32,6 +32,8 @@ public:
     void add(ObjectGroupRef group);
     void add(ModelStateRef state);
 
+    void remove(ModelRef mesh);
+
     ObjectGroupRef copy();
 };
 

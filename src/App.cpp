@@ -7,6 +7,7 @@
 #include <Audio.hpp>
 #include <Controller.hpp>
 #include <Shadinclude.hpp>
+#include <AssetManager.hpp>
 
 std::mutex inputMutex;
 std::mutex physicsMutex;
@@ -57,7 +58,7 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
         ShaderUniform(camera.getViewMatrixAddr(),             3),
         ShaderUniform(camera.getProjectionMatrixAddr(),       4),
         ShaderUniform(camera.getPositionAddr(),               5),
-        ShaderUniform(camera.getDirectionAddr(),              6),
+        // ShaderUniform(camera.getDirectionAddr(),              6),
         ShaderUniform(&ambientLight,                         15),
     };
 
@@ -132,12 +133,16 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
 
     glLineWidth(3.0);
 
-    globals.basicMaterial = MeshMaterial(
-        new ShaderProgram(
-            "shader/foward/basic.frag",
-            "shader/foward/basic.vert",
-            "",
-            globals.standartShaderUniform3D()));
+    // globals.basicMaterial = MeshMaterial(
+    //     new ShaderProgram(
+    //         "shader/foward/basic.frag",
+    //         "shader/foward/basic.vert",
+    //         "",
+    //         globals.standartShaderUniform3D()));
+    
+    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicHelper.vulpineMaterial");
+    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicFont3D.vulpineMaterial");
+    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial");
 }
 
 void App::activateMainSceneBindlessTextures()
@@ -179,7 +184,7 @@ bool App::baseInput(GLFWKeyInfo input)
     {
         case GLFW_MOUSE_BUTTON_LEFT:
             globals._mouseLeftClickDown = false;
-            used = true;
+            // used = true;
             break;
         
         default: break;
@@ -191,7 +196,7 @@ bool App::baseInput(GLFWKeyInfo input)
         case GLFW_MOUSE_BUTTON_LEFT :
             globals._mouseLeftClick = true;
             globals._mouseLeftClickDown = true;
-            used = true;
+            // used = true;
             break;
         
         case GLFW_KEY_V :

@@ -336,6 +336,14 @@ void SingleStringBatch::batchText()
 
     textSize = vec2(textSize.x, -c.y + textSize.y);
 
+    if(align == CENTERED)
+    {
+        for(int i = 0; i < usedChar*6; i++)
+        {
+            p[i] -= vec3(c.x*0.5, 0, 0);
+        }
+    }
+
     if (!vao.get() || !vao->getHandle())
     {
         setVao(

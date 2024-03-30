@@ -104,9 +104,11 @@ MeshMaterial& Loader<MeshMaterial>::loadFromInfos()
 
     r = LOAD_VALUE(std::shared_ptr<ShaderProgram>);
 
-    if(NEW_VALUE) r.depthOnly = LOAD_VALUE(std::shared_ptr<ShaderProgram>);
-
-    LOADER_ASSERT(END_VALUE)
+    if(NEW_VALUE)
+    {
+        r.depthOnly = LOAD_VALUE(std::shared_ptr<ShaderProgram>);
+        LOADER_ASSERT(END_VALUE)
+    }
     EXIT_ROUTINE_AND_RETURN
 }
 

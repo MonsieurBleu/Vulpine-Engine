@@ -3,6 +3,9 @@
 #include <ObjectGroup.hpp>
 #include <Skeleton.hpp>
 #include <NavGraph.hpp>
+#include <Fonts.hpp>
+#include <AssetManager.hpp>
+#include <Globals.hpp>
 
 class PointLightHelperMODEL : public MeshModel3D
 {
@@ -177,3 +180,44 @@ class PathHelper : public ObjectGroup
 };
 
 typedef std::shared_ptr<PathHelper> PathHelperRef;
+
+template<typename T>
+class ValueHelper : public SingleStringBatch
+{
+    private : 
+
+    public : 
+        T &val;
+        std::u32string baseText;
+        vec3 color;
+        ValueHelper(T &val, const std::u32string &btext, vec3 color) : val(val), baseText(btext), color(color)
+        {
+            setMaterial(Loader<MeshMaterial>::get("BasicFont3D"));
+            text = btext;
+            setFont(globals.baseFont);
+            uniforms.add(ShaderUniform(&this->color, 20));
+            align = CENTERED;
+            batchText();
+            state.frustumCulled = false;
+            noBackFaceCulling = true;
+            depthWrite = true;
+        };
+        void update()
+        {
+            UFT32Stream s;
+            s << baseText; s << val;
+            text = s.str();
+            batchText();
+
+            SingleStringBatch::update();
+        }
+};
+
+template<typename T>
+class ValueHelperRef : public std::shared_ptr<ValueHelper<T>>
+{
+    public :
+        ValueHelperRef(){};
+        ValueHelperRef(ValueHelper<T> *ptr) : std::shared_ptr<ValueHelper<T>>(ptr){};
+};
+
