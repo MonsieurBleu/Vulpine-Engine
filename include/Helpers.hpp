@@ -200,7 +200,6 @@ class ValueHelper : public SingleStringBatch
             batchText();
             state.frustumCulled = false;
             noBackFaceCulling = true;
-            depthWrite = true;
         };
         void update()
         {
