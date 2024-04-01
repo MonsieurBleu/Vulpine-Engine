@@ -90,10 +90,12 @@ private:
     SkeletonRef skeleton;
 
 public:
+    Animation(){};
+
     Animation(
         const std::string &name,
         float length,
-        std::vector<std::vector<AnimationKeyframeData>> keyframes,
+        std::vector<std::vector<AnimationKeyframeData>> &keyframes,
         SkeletonRef skeleton)
         : name(name), length(length), keyframes(keyframes), skeleton(skeleton)
     {

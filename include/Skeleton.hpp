@@ -54,6 +54,7 @@ private:
     uint handle = 0;
 
 public:
+    SkeletonAnimationState(SkeletonRef s);
     SkeletonAnimationState();
     ~SkeletonAnimationState();
 

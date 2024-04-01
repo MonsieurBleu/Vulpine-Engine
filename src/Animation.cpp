@@ -42,7 +42,11 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
         return nullptr;
     }
 
-    std::vector<std::vector<AnimationKeyframeData>> keyframes(skeleton->getSize(), std::vector<AnimationKeyframeData>());
+    AnimationRef anim = std::make_shared<Animation>();
+    // std::vector<std::vector<AnimationKeyframeData>> keyframes(skeleton->getSize(), std::vector<AnimationKeyframeData>());
+    auto &keyframes = anim->keyframes;
+    keyframes.resize(skeleton->getSize());
+    
     for (uint i = 0; i < header.animatedBoneNumber; i++)
     {
         AnimationBoneData boneData;
@@ -50,6 +54,9 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
         file.read((char *)&boneData, sizeof(AnimationBoneData));
 
         keyframes[boneData.boneID].resize(boneData.keyframeNumber);
+
+        std::cout << boneData.keyframeNumber << "\n";
+
         // fread(keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeData), boneData.keyframeNumber, file);
         file.read((char *)keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeData) * boneData.keyframeNumber);
     }
@@ -58,7 +65,11 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
     file.close();
 
     std::string name = header.animationName;
-    AnimationRef anim = std::make_shared<Animation>(name, header.duration, keyframes, skeleton);
+    // AnimationRef anim = std::make_shared<Animation>(name, header.duration, keyframes, skeleton);
+    anim->currentKeyframeIndex.resize(keyframes.size(), 0);
+    anim->length = header.duration;
+    anim->name = name;
+    anim->skeleton = skeleton;
     return anim;
 }
 

@@ -88,6 +88,11 @@ SkeletonAnimationState::SkeletonAnimationState()
     glGenBuffers(1, &handle);
 }
 
+SkeletonAnimationState::SkeletonAnimationState(SkeletonRef s) : std::vector<mat4>(s->getSize()), skeleton(s)
+{
+    glGenBuffers(1, &handle);
+};
+
 SkeletonAnimationState::~SkeletonAnimationState()
 {
     if (handle)

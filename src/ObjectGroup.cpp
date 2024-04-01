@@ -98,6 +98,7 @@ ObjectGroupRef ObjectGroup::copy()
     g->states.resize(states.size());
     g->meshes.resize(meshes.size());
     g->lights.resize(lights.size());
+    g->state = state.forceUpdate();
 
     int i = 0;
     for(auto &c : children) g->children[i++] = c->copy();

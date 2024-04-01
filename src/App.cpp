@@ -142,7 +142,8 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     
     Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicHelper.vulpineMaterial");
     Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicFont3D.vulpineMaterial");
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial");
+    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial"); 
+    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/animatedPBR.vulpineMaterial");
 }
 
 void App::activateMainSceneBindlessTextures()
