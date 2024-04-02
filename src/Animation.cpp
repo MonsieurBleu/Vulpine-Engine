@@ -55,8 +55,6 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
 
         keyframes[boneData.boneID].resize(boneData.keyframeNumber);
 
-        std::cout << boneData.keyframeNumber << "\n";
-
         // fread(keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeData), boneData.keyframeNumber, file);
         file.read((char *)keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeData) * boneData.keyframeNumber);
     }
@@ -93,6 +91,15 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time)
         if (keyframes[i].size() == 0)
         {
             data[i] = {vec3(0), quat(1, 0, 0, 0), vec3(1)};
+            continue;
+        }
+
+        if (keyframes[i].size() == 1)
+        {
+            data[i].rotation = keyframes[i][0].rotation;
+            data[i].translation = keyframes[i][0].translation;
+            data[i].scale = keyframes[i][0].scale;
+            // data[i].time = keyframes[i][0].time;
             continue;
         }
 

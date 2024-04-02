@@ -7,6 +7,9 @@
 #include <string.h>
 #include "Animation.hpp"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 const SkeletonBone &Skeleton::operator[](int i)
 {
     return at(i);
@@ -54,6 +57,7 @@ void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<A
         vec3 trans = data.translation;
         quat r = data.rotation;
         vec3 s = data.scale;
+        
         for (int j = 1; j < animations.size(); j++)
         {
             if (keyframes[j].size() == 0)
@@ -71,6 +75,7 @@ void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<A
         t = translate(t, trans);
         t = t * mat4_cast(r);
         t = scale(t, s);
+
 
         (*this)[i] = t;
     }

@@ -17,7 +17,7 @@ struct SkeletonBone
 
 class SkeletonAnimationState;
 
-class Skeleton : protected std::vector<SkeletonBone>
+class Skeleton : public std::vector<SkeletonBone>
 {
 private:
 public:
