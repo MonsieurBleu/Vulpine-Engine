@@ -32,33 +32,35 @@ void Skeleton::applyGraph(SkeletonAnimationState &state)
     }
 
     for (size_t i = 0; i < s; i++)
+    {
         state[i] = state[i] * at(i).t;
+    }
 }
 
 void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<AnimationRef, float>> animations)
 {
     std::vector<std::vector<keyframeData>> keyframes(animations.size(), std::vector<keyframeData>());
 
-    for (int i = 0; i < animations.size(); i++)
+    for (size_t i = 0; i < animations.size(); i++)
     {
         keyframes[i] = animations[i].first->getCurrentFrames(time);
     }
 
     std::vector<float> factors(animations.size());
-    for (int i = 0; i < animations.size(); i++)
+    for (size_t i = 0; i < animations.size(); i++)
     {
         factors[i] = animations[i].second;
     }
 
     // horrible horrible code
-    for (int i = 0; i < size(); i++)
+    for (size_t i = 0; i < size(); i++)
     {
         keyframeData data = keyframes[0][i];
         vec3 trans = data.translation;
         quat r = data.rotation;
         vec3 s = data.scale;
         
-        for (int j = 1; j < animations.size(); j++)
+        for (size_t j = 1; j < animations.size(); j++)
         {
             if (keyframes[j].size() == 0)
                 continue;
@@ -88,35 +90,47 @@ void Skeleton::traverse(std::function<void(int, SkeletonBone &)> f)
         f(i, at(i));
 }
 
+void SkeletonAnimationState::generate()
+{
+    glGenBuffers(1, handle.get());
+}
+
 SkeletonAnimationState::SkeletonAnimationState()
 {
-    glGenBuffers(1, &handle);
 }
 
 SkeletonAnimationState::SkeletonAnimationState(SkeletonRef s) : std::vector<mat4>(s->getSize()), skeleton(s)
 {
-    glGenBuffers(1, &handle);
+    handle = std::make_shared<uint>();
+    std::fill(this->begin(), this->end(), mat4(1));
+    generate();
+    send(); 
 };
 
 SkeletonAnimationState::~SkeletonAnimationState()
 {
-    if (handle)
-        glDeleteBuffers(1, &handle);
+    if(handle.get() && *handle && handle.use_count() == 1)
+        glDeleteBuffers(1, handle.get());    
 }
 
 void SkeletonAnimationState::send()
 {
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
-    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(mat4) * size(), data(), GL_DYNAMIC_COPY);
-    glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    if(handle.get() && *handle)
+    {
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, *handle);
+        glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(mat4) * size(), data(), GL_DYNAMIC_COPY);
+        glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
+    }
 }
 
 void SkeletonAnimationState::update()
 {
-    glNamedBufferSubData(handle, 0, sizeof(mat4) * size(), data());
+    if(handle.get() && *handle)
+        glNamedBufferSubData(*handle, 0, sizeof(mat4) * size(), data());
 }
 
 void SkeletonAnimationState::activate(int location)
 {
-    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, handle);
+    if(handle.get() && *handle)
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, *handle);
 }

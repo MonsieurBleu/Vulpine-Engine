@@ -645,7 +645,7 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
 
     boneHelper->noBackFaceCulling = true;
     boneHelper->defaultMode = GL_LINES;
-    boneHelper->depthWrite = false;
+    // boneHelper->depthWrite = false;
 
 
     int s = state.size();

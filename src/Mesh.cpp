@@ -1,13 +1,12 @@
-#include <Mesh.hpp>
 
 #include <iostream>
 #include <fstream>
 
+#include <Mesh.hpp>
 #include <Utils.hpp>
-
 #include <Globals.hpp>
-
 #include <VulpineAssets.hpp>
+#include <Skeleton.hpp>
 
 using namespace glm;
 
@@ -136,6 +135,8 @@ void MeshModel3D::update()
 {
     state.update(); // can be removed if the scene arleady do the update
     baseUniforms.update();
+    if(animation)
+        animation->activate(2);
 }
 
 void Mesh::bindAllMaps()

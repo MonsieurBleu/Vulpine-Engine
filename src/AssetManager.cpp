@@ -4,6 +4,7 @@
 #include <Globals.hpp>
 #include <Constants.hpp>
 #include <Utils.hpp>
+#include <Skeleton.hpp>
 
 #define PRINT_LOADER_DEBUG_CREATE std::cout \
     << TERMINAL_INFO << "Creating object " \
@@ -315,4 +316,16 @@ ObjectGroupRef& Loader<ObjectGroupRef>::loadFromInfos()
     }
 
     EXIT_ROUTINE_AND_RETURN 
+}
+
+template<>
+SkeletonRef& Loader<SkeletonRef>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+    LOADER_ASSERT(NEW_VALUE)
+
+    r = std::make_shared<Skeleton>();
+    r->load(buff->read());
+
+    EXIT_ROUTINE_AND_RETURN
 }

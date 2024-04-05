@@ -42,6 +42,7 @@ class MeshVao : public std::shared_ptr<VertexAttributeGroup>
 
         uint nbFaces = 0;
         GenericSharedBuffer faces;  
+        bool animated = false;
 };
 
 class Mesh
@@ -106,6 +107,7 @@ class Mesh
 #define newInstancedModel std::make_shared<InstancedMeshModel3D>
 
 class FastUI_valueMenu;
+class SkeletonAnimationState;
 
 /*
     A special type of Mesh that contains additionnal 
@@ -126,6 +128,7 @@ class MeshModel3D : public Mesh
         vec4 lodTessLevelDistance = vec4(0);
 
     public :
+
         MeshModel3D() : Mesh()
             {createUniforms();};
 
@@ -144,12 +147,12 @@ class MeshModel3D : public Mesh
             : Mesh(material, vao), state(state)
             {createUniforms();};
 
-
         ModelRef copyWithSharedMesh();
 
         ModelState3D state;
         ShaderUniformGroup uniforms;
         ShaderUniformGroup baseUniforms;
+        SkeletonAnimationState *animation = nullptr;
 
         MeshModel3D& loadFromFolder(
             const std::string folderPath, 

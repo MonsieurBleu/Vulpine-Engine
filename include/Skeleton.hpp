@@ -22,7 +22,7 @@ class Skeleton : public std::vector<SkeletonBone>
 private:
 public:
     const SkeletonBone &operator[](int i);
-    void load(const std::string &filename);
+    void load(const char* filename);
     int getSize() { return size(); };
 
     void applyGraph(SkeletonAnimationState &state);
@@ -51,7 +51,8 @@ typedef std::shared_ptr<Animation> AnimationRef;
 class SkeletonAnimationState : public std::vector<mat4>
 {
 private:
-    uint handle = 0;
+    // uint handle = 0;
+    std::shared_ptr<uint> handle;
 
 public:
     SkeletonAnimationState(SkeletonRef s);
@@ -68,6 +69,7 @@ public:
      */
     void applyAnimations(float time, std::vector<std::pair<AnimationRef, float>> animations);
 
+    void generate();
     void send();
     void update();
     void activate(int location);

@@ -80,6 +80,16 @@ void ObjectGroup::add(ModelStateRef state)
     states.push_back(state);
 }
 
+void ObjectGroup::setAnimation(SkeletonAnimationState *animation)
+{
+    for(auto &i : meshes)
+        if(i->getVao().animated)
+            i->animation = animation;
+
+    for(auto &i : children)
+        i->setAnimation(animation);
+}
+
 void ObjectGroup::remove(ModelRef mesh)
 {
     for(auto i = meshes.begin(); i < meshes.end(); i++)
