@@ -1,8 +1,11 @@
-#ifndef HELPERS_HPP
-#define HELPERS_HPP
+#pragma once
 
 #include <ObjectGroup.hpp>
 #include <Skeleton.hpp>
+#include <NavGraph.hpp>
+#include <Fonts.hpp>
+#include <AssetManager.hpp>
+#include <Globals.hpp>
 
 class PointLightHelperMODEL : public MeshModel3D
 {
@@ -46,13 +49,27 @@ class TubeLightHelper : public ObjectGroup
         void update(bool forceUpdate = false) override;
 };
 
+class LineHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        LineHelper(const vec3 min, const vec3 max, vec3 _color = vec3(0, 1, 0));
+};
+
+typedef std::shared_ptr<LineHelper> LineHelperRef;
+
 class CubeHelper : public MeshModel3D
 {
     private :
 
     public : 
         vec3 color;
+        
         CubeHelper(const vec3 min, const vec3 max, vec3 _color = vec3(0, 1, 0));
+
+        void updateData(const vec3 min, const vec3 max);
 };
 
 typedef std::shared_ptr<CubeHelper> CubeHelperRef;
@@ -68,6 +85,28 @@ class SphereHelper : public MeshModel3D
 
 typedef std::shared_ptr<SphereHelper> SphereHelperRef;
 
+class CapsuleHelper : public MeshModel3D
+{
+    private : 
+
+        vec3  *pos1;
+        vec3  *pos2;
+        float *radius;
+
+    public : 
+        vec3 color;
+        CapsuleHelper(
+            vec3  *pos1, 
+            vec3  *pos2, 
+            float *radius, 
+            vec3  color = vec3(0, 1, 0));
+
+        void update();
+
+        void updateData(const vec3 pos1, const vec3 pos2, const float radius);
+};
+
+typedef std::shared_ptr<CapsuleHelper> CapsuleHelperRef;
 
 class ClusteredFrustumHelper : public MeshModel3D
 {
@@ -121,4 +160,73 @@ class PolyhedronHelper : public MeshModel3D
 
 typedef std::shared_ptr<PolyhedronHelper> PolyhedronHelperRef;
 
-#endif
+class NavGraphHelper : public ObjectGroup
+{
+    private : 
+
+        NavGraphRef graph;
+
+    public : 
+
+        NavGraphHelper(NavGraphRef graph);
+        
+        // void update(bool forceUpdate = true) override;
+};  
+
+
+typedef std::shared_ptr<NavGraphHelper> NavGraphHelperRef;
+
+class PathHelper : public ObjectGroup
+{
+    private : 
+        Path path; 
+        NavGraphRef graph;
+
+        static inline int maxPath = 32;
+
+    public : 
+        PathHelper(Path path, NavGraphRef graph);
+        void update(bool forceUpdate = true) override;
+};
+
+typedef std::shared_ptr<PathHelper> PathHelperRef;
+
+template<typename T>
+class ValueHelper : public SingleStringBatch
+{
+    private : 
+
+    public : 
+        T &val;
+        std::u32string baseText;
+        vec3 color;
+        ValueHelper(T &val, const std::u32string &btext, vec3 color) : val(val), baseText(btext), color(color)
+        {
+            setMaterial(Loader<MeshMaterial>::get("BasicFont3D"));
+            text = btext;
+            setFont(globals.baseFont);
+            uniforms.add(ShaderUniform(&this->color, 20));
+            align = CENTERED;
+            batchText();
+            state.frustumCulled = false;
+            noBackFaceCulling = true;
+        };
+        void update()
+        {
+            UFT32Stream s;
+            s << baseText; s << val;
+            text = s.str();
+            batchText();
+
+            SingleStringBatch::update();
+        }
+};
+
+template<typename T>
+class ValueHelperRef : public std::shared_ptr<ValueHelper<T>>
+{
+    public :
+        ValueHelperRef(){};
+        ValueHelperRef(ValueHelper<T> *ptr) : std::shared_ptr<ValueHelper<T>>(ptr){};
+};
+

@@ -26,6 +26,16 @@ class Controller
          * @brief Called each time the mouse mouve
          */
         virtual void mouseEvent(vec2 dir, GLFWwindow* window);
+
+        /**
+         * @brief Called when this controller is switched for another one 
+         */
+        virtual void clean(){};
+
+        /**
+         * @brief Called when this controller is enabled as actif
+         */
+        virtual void init(){};
 };
 
 class SpectatorController : public Controller

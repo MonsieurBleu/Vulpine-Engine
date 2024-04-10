@@ -1,5 +1,4 @@
-#ifndef MATHS_UTILS_HPP
-#define MATHS_UTILS_HPP
+#pragma once
 
 #include <glm/glm.hpp>
 
@@ -29,4 +28,6 @@ float random01Vec2(vec2 uv);
 
 vec3 viewToWorld(vec4 pos, const mat4& m);
 
-#endif
+vec3 slerpDirClamp(vec3 dir1, vec3 dir2, float t, vec3 wfront = vec3(0, 0, 1));
+
+vec3 screenPosToModel(vec2 screenPos);

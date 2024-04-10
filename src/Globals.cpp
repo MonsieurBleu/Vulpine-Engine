@@ -32,6 +32,8 @@ void Globals::clearMouseScroll(){_scrollOffset = vec2(0);};
 
 Scene *Globals::getScene() const {return _gameScene;};
 
+Scene *Globals::getScene2D() const {return _gameScene2D;};
+
 bool Globals::useTextInputs(void* user)
 {
     textInputString.clear();
@@ -74,3 +76,5 @@ bool Globals::getTextInputs(void* user, std::u32string& buff)
 }
 
 int Globals::windowHasFocus(){return _windowHasFocus;};
+
+

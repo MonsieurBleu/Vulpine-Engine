@@ -48,7 +48,6 @@ struct Frustum
 class Camera 
 { 
     private: 
-        CameraState state;
 
         float width = 1920.f;
         float height = 1080.f;
@@ -62,6 +61,7 @@ class Camera
         Frustum frustum;
 
     public: 
+        CameraState state;
         
         Camera(CameraType type = PERSPECTIVE);
 

@@ -5,6 +5,7 @@
 #include <memory>
 #include <functional>
 #include <cstring>
+#include <unordered_map>
 #include "Skeleton.hpp"
 
 #include <glm/glm.hpp>
@@ -12,23 +13,17 @@
 using namespace glm;
 
 typedef unsigned char byte;
-enum AnimationType : byte
-{
-    ANIMATION_TYPE_MATRIX,
-    ANIMATION_TYPE_QUATERNION,
-};
 
 struct AnimationFileHeader
 {
     int magicNumber; // should be "VANI" in ASCII or 0x56414e49 in hex
-    AnimationType type;
     char animationName[128];
     float duration;
     unsigned int totalBoneNumber;
     unsigned int animatedBoneNumber;
 
-    AnimationFileHeader(AnimationType type, const char *name, float duration, unsigned int totalBoneNumber, unsigned int animatedBoneNumber)
-        : type(type), duration(duration), totalBoneNumber(totalBoneNumber), animatedBoneNumber(animatedBoneNumber)
+    AnimationFileHeader(const char *name, float duration, unsigned int totalBoneNumber, unsigned int animatedBoneNumber)
+        : duration(duration), totalBoneNumber(totalBoneNumber), animatedBoneNumber(animatedBoneNumber)
     {
         strncpy(animationName, name, 127);
     }
@@ -63,16 +58,20 @@ struct AnimationBoneData
     unsigned int keyframeNumber;
 };
 
-struct AnimationKeyframeDataMatrix
+struct AnimationKeyframeData
 {
     float time;
-    mat4 matrix;
+    vec3 translation;
+    quat rotation;
+    vec3 scale;
 };
 
-struct AnimationKeyframeDataQuaternion
+// similar to animationkeyframedata but has no time component
+struct keyframeData
 {
-    float time;
-    quat quaternion;
+    vec3 translation;
+    quat rotation;
+    vec3 scale;
 };
 
 class Animation;
@@ -82,31 +81,36 @@ typedef std::shared_ptr<Animation> AnimationRef;
 class Animation
 {
 private:
-    const AnimationType animType;
     std::string name;
     float length;
 
-    std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes;
+    std::vector<std::vector<AnimationKeyframeData>> keyframes;
+    std::vector<int> currentKeyframeIndex;
 
     SkeletonRef skeleton;
 
 public:
+    Animation(){};
+
     Animation(
-        AnimationType type, 
-        const std::string &name, 
-        float length, 
-        std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes,
+        const std::string &name,
+        float length,
+        std::vector<std::vector<AnimationKeyframeData>> &keyframes,
         SkeletonRef skeleton)
-        : animType(type), name(name), length(length), keyframes(keyframes), skeleton(skeleton) {}
+        : name(name), length(length), keyframes(keyframes), skeleton(skeleton)
+    {
+        currentKeyframeIndex.resize(keyframes.size(), 0);
+    }
 
     static AnimationRef load(SkeletonRef skeleton, const std::string &filename);
 
-    AnimationType getType() const { return animType; }
     const std::string getName() const { return name; }
     float getLength() const { return length; }
-    const std::vector<std::vector<AnimationKeyframeDataMatrix>> &getKeyframes() { return keyframes; }
-    const std::vector<AnimationKeyframeDataMatrix> &getKeyframe(int i) { return keyframes[i]; }
-    const std::vector<AnimationKeyframeDataMatrix> &operator[](int i) { return keyframes[i]; }
+    const std::vector<std::vector<AnimationKeyframeData>> &getKeyframes() { return keyframes; }
+    const std::vector<AnimationKeyframeData> &getKeyframe(int i) { return keyframes[i]; }
+    const std::vector<AnimationKeyframeData> &operator[](int i) { return keyframes[i]; }
     int getKeyframeNumber() const { return keyframes.size(); }
-    void apply(float time, SkeletonAnimationState &state) const;
+    std::vector<keyframeData> getCurrentFrames(float time);
+
+    friend class Skeleton;
 };
