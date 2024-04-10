@@ -579,3 +579,49 @@ void SkeletonHelper::update(bool forceUpdate)
 
     ObjectGroup::update();
 }
+
+PolyhedronHelper::PolyhedronHelper(const std::vector<vec3>& points, vec3 color) : MeshModel3D(globals.basicMaterial)
+{
+    this->color = color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    int nbOfPoints = 2 * points.size() * (points.size() - 1);//(points.size() - 1) * (points.size() - 1);
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = vec3(0);
+    }
+
+    int id = 0;
+    for (std::size_t i = 0; i < points.size(); ++i) {
+        for (std::size_t j = 0; j < points.size(); ++j) {
+            if (i == j) {
+                continue;
+            }
+            pos[id++] = points[i];
+            pos[id++] = points[j];
+        }
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
