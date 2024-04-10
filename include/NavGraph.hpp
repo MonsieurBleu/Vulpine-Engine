@@ -73,6 +73,9 @@ class NavGraph {
         void shortestPath(int, int, Path); // A* algorithm
         void reconstructPath(int*, int, int, Path);
 
+        // Returns the nearest node from pos
+        int nearestNode(vec3 pos);
+
         const std::vector<Node>& getNodes(){return nodes;};
 
         void print();
@@ -81,16 +84,17 @@ class NavGraph {
 
 typedef std::shared_ptr<NavGraph> NavGraphRef;
 
-class Path : public std::shared_ptr<std::deque<int>>
+class Path : public std::shared_ptr<std::deque<vec3>>
 {
     private:
 
-        int start;
-        int dest;
+        vec3 start;
+        vec3 dest;
 
     public:
 
-        Path(int _start, int _dest): std::shared_ptr<std::deque<int>>(new std::deque<int>), start(_start), dest(_dest){};
+        Path(vec3 _start, vec3 _dest): std::shared_ptr<std::deque<vec3>>(new std::deque<vec3>), start(_start), dest(_dest){};
+        Path(){};
         ~Path(){};
         
         void update(NavGraphRef);

@@ -708,7 +708,6 @@ PathHelper::PathHelper(Path path, NavGraphRef graph) : path(path), graph(graph)
 
 void PathHelper::update(bool forceUpdate)
 {
-    auto &nodes = graph->getNodes();
     const float size = 0.025;
 
     for(auto i : meshes)
@@ -719,8 +718,8 @@ void PathHelper::update(bool forceUpdate)
 
     for(size_t i = 1; i < path->size(); i++)
     {
-        vec3 v1 = nodes[path->at(i-1)].getPosition()  + vec3(-size);
-        vec3 v2 = nodes[path->at(i)].getPosition()    + vec3(size);
+        vec3 v1 = path->at(i-1) + vec3(-size);
+        vec3 v2 = path->at(i) + vec3(size);
 
         ((CubeHelper*)(meshes[i].get()))->state.setHideStatus(SHOW);
         
