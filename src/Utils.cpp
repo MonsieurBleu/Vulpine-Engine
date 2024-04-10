@@ -120,3 +120,30 @@ double Get_delta_time()
     last_deltatime = now;
     return delta.count() * 0.001;
 }
+
+std::string getFileNameFromPath(const char *path)
+{
+    std::string name;
+    int i = 0;
+
+    for(; path[i] != '\0'; i++);
+
+    for(; i >= 0 && path[i] != '/' && path[i] != '\\'; i--)
+        name.push_back(path[i]);
+    
+    std::reverse(name.begin(), name.end());
+
+    return name;
+}
+
+std::string getNameOnlyFromPath(const char *path)
+{
+    std::string name = getFileNameFromPath(path);
+    std::string res;
+
+    int i = 0;
+    for(; name[i] != '\0' && name[i] != '.' ; i++)
+        res += name[i];
+
+    return res;
+}

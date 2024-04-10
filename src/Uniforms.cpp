@@ -145,6 +145,7 @@ void ShaderUniformGroup::forEach(void (*func)(int, const ShaderUniform&)) const
     for(uint64 i = 0; i < uniforms.size(); i++)
     {
         func(i, uniforms[i]);
+        uniforms.data();
     }
 }
 

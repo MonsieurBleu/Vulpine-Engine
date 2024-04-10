@@ -11,6 +11,8 @@
 
 class Scene;
 
+class FastUI_valueMenu;
+
 class ObjectGroup
 {
     friend Scene;
@@ -31,6 +33,13 @@ public:
     void add(SceneLight light);
     void add(ObjectGroupRef group);
     void add(ModelStateRef state);
+
+    void setAnimation(SkeletonAnimationState *animation);
+    void setMenu(FastUI_valueMenu &menu, std::u32string name);
+
+    void remove(ModelRef mesh);
+
+    std::pair<vec3, vec3> getMeshesBoundingBox();
 
     ObjectGroupRef copy();
 };

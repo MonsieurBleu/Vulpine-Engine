@@ -10,6 +10,7 @@
 #include <Controller.hpp>
 #include <Scene.hpp>
 #include <Enums.hpp>
+#include <Fonts.hpp>
 
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
 
@@ -45,14 +46,16 @@ private:
 
     vec2 _scrollOffset = vec2(0);
 
-    Controller *_currentController = nullptr;
 
     Scene *_gameScene;
+    Scene *_gameScene2D;
 
 public:
-    MeshMaterial basicMaterial;
+    // MeshMaterial basicMaterial;
 
+    Controller *_currentController = nullptr;
     Scene *getScene() const; 
+    Scene *getScene2D() const; 
 
     /**
      * Globals are not cloneable.
@@ -63,6 +66,7 @@ public:
      */
     // void operator=(const Globals&) = delete;
 
+    FontRef baseFont;
     Camera *currentCamera = nullptr;
     const Controller *getController() const;
 

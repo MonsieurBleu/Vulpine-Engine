@@ -49,7 +49,7 @@ void ObjectGroup::update(bool forceUpdate)
     for(auto i = children.begin(); i != children.end(); i++)
     {
         if((*i)->state.update() || globalUpdate)
-            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.modelMatrix;
+            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
 
         ManageHideStatus((*i)->state.hide, state.hide);
         (*i)->update(true);
@@ -80,6 +80,26 @@ void ObjectGroup::add(ModelStateRef state)
     states.push_back(state);
 }
 
+void ObjectGroup::setAnimation(SkeletonAnimationState *animation)
+{
+    for(auto &i : meshes)
+        if(i->getVao().animated)
+            i->animation = animation;
+
+    for(auto &i : children)
+        i->setAnimation(animation);
+}
+
+void ObjectGroup::remove(ModelRef mesh)
+{
+    for(auto i = meshes.begin(); i < meshes.end(); i++)
+        if(i->get() == mesh.get())
+        {
+            meshes.erase(i);
+            return;
+        }
+}
+
 ObjectGroupRef ObjectGroup::copy()
 {
     ObjectGroupRef g = newObjectGroup();
@@ -88,6 +108,7 @@ ObjectGroupRef ObjectGroup::copy()
     g->states.resize(states.size());
     g->meshes.resize(meshes.size());
     g->lights.resize(lights.size());
+    g->state = state.forceUpdate();
 
     int i = 0;
     for(auto &c : children) g->children[i++] = c->copy();
@@ -106,4 +127,27 @@ ObjectGroupRef ObjectGroup::copy()
     for(auto &c : meshes) g->meshes[i++] = c->copyWithSharedMesh();
 
     return g;
+}
+
+std::pair<vec3, vec3> ObjectGroup::getMeshesBoundingBox()
+{
+    vec3 minb(1e6), maxb(-1e6);
+
+    for(auto i : meshes)
+    {
+        vec4 min1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMin(), 1.0);
+        vec4 max1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMax(), 1.0);
+
+        minb = min(minb, vec3(min1));
+        maxb = max(maxb, vec3(max1));
+    }
+
+    for(auto i : children)
+    {
+        auto m = i->getMeshesBoundingBox();
+        minb = min(minb, m.first);
+        maxb = max(maxb, m.second);
+    }
+
+    return {minb, maxb};
 }

@@ -59,8 +59,9 @@ class Component
         struct ComponentElem
         {
             T data;
-            Entity *entity;
+            Entity *entity = nullptr;
             bool enabled = false;
+            bool markedForDeletion = false;
             int entityListID = -1;
             void init(){};
             void clean(){};
@@ -160,7 +161,13 @@ class Entity
             state.setTrue(ComponentInfos<T>::id);
         };
 
-        
+        template<typename T>
+        void removeComp()
+        {
+            if(!hasComp<T>()) return;
+            Component<T>::elements[ids[Component<T>::category]].markedForDeletion = true;
+            state.setFalse(ComponentInfos<T>::id);
+        };  
 };
 
 #include <memory>
@@ -181,7 +188,7 @@ void Component<T>::insert(Entity &entity, const T& data)
         ComponentGlobals::maxID[category] = std::max(ComponentGlobals::maxID[category], lastFreeID);
     }
 
-    elements[id] = {data, &entity, true, entity.ids[ENTITY_LIST]};
+    elements[id] = {data, &entity, true, false, entity.ids[ENTITY_LIST]};
     elements[id].init();
 };
 
@@ -216,11 +223,37 @@ void ManageGarbage()
     for(int i = 0; i < size && i <= maxID; i++)
     {        
 
-        if(list[i].enabled && !elist[list[i].entityListID].enabled)
+        if(list[i].markedForDeletion || (list[i].enabled && !elist[list[i].entityListID].enabled))
         {
             list[i].enabled = false;
+            list[i].markedForDeletion = false;
             list[i].clean();
             list[i].data = T();
+        }
+    }
+};
+
+template<typename T>
+struct GlobalComponentToggler
+{
+    static inline bool activated = false;
+
+    template<typename C>
+    static void update(C &entityList)
+    {
+        if(activated)
+        {
+            for(EntityRef &e : entityList)
+                if(!e->hasComp<T>())
+                    e->set<T>({});
+        }
+        else
+        {
+            for(EntityRef &e : entityList)
+                if(e->hasComp<T>())
+                    e->removeComp<T>();
+            
+            ManageGarbage<T>();
         }
     }
 };
