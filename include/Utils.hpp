@@ -91,4 +91,7 @@ void checkHeap();
 //     return out << glm::to_string(g);
 // }
 
+std::string getFileNameFromPath(const char *path);
+std::string getNameOnlyFromPath(const char *path);
+
 #endif

@@ -1,9 +1,9 @@
 #include <Helpers.hpp>
 #include <Globals.hpp>
 #include <iostream>
-#include <Globals.hpp>
 #include <MathsUtils.hpp>
 #include <Constants.hpp>
+#include <AssetManager.hpp>
 
 // PointLightHelper::PointLightHelper(ScenePointLight light) : light(light)
 // {
@@ -138,7 +138,7 @@ DirectionalLightHelper::DirectionalLightHelper(SceneDirectionalLight light) : li
 
     vao->generate();
 
-    static MeshMaterial material = globals.basicMaterial;
+    static MeshMaterial material = Loader<MeshMaterial>::get("basicHelper");
 
     helper = newModel(
         material,
@@ -244,7 +244,7 @@ void TubeLightHelper::update(bool forceUpdate)
     this->ObjectGroup::update(forceUpdate);
 }
 
-LineHelper::LineHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3D(globals.basicMaterial)
+LineHelper::LineHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3D(Loader<MeshMaterial>::get("basicHelper"))
 {
     color = _color;
     createUniforms();
@@ -285,7 +285,7 @@ LineHelper::LineHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3
 }
 
 
-CubeHelper::CubeHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3D(globals.basicMaterial)
+CubeHelper::CubeHelper(const vec3 min, const vec3 max, vec3 _color) : MeshModel3D(Loader<MeshMaterial>::get("basicHelper"))
 {
     color = _color;
     createUniforms();
@@ -444,7 +444,7 @@ void CubeHelper::updateData(const vec3 min, const vec3 max)
     getVao()->attributes[0].sendAllToGPU();
 }
 
-SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basicMaterial)
+SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(Loader<MeshMaterial>::get("basicHelper"))
 {
     color = _color;
     createUniforms();
@@ -512,7 +512,7 @@ SphereHelper::SphereHelper(vec3 _color, float radius) : MeshModel3D(globals.basi
     setVao(vao);
 }
 
-ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _color) : MeshModel3D(globals.basicMaterial)
+ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _color) : MeshModel3D(Loader<MeshMaterial>::get("basicHelper"))
 {
     color = _color;
     createUniforms();
@@ -640,12 +640,12 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
         })
     );
 
-    ModelRef boneHelper = newModel(globals.basicMaterial, vao);
+    ModelRef boneHelper = newModel(Loader<MeshMaterial>::get("basicHelper"), vao);
     boneHelper->uniforms.add(ShaderUniform(&color, 20));
 
     boneHelper->noBackFaceCulling = true;
     boneHelper->defaultMode = GL_LINES;
-    boneHelper->depthWrite = false;
+    // boneHelper->depthWrite = false;
 
 
     int s = state.size();
@@ -733,14 +733,19 @@ void PathHelper::update(bool forceUpdate)
 }
 
 CapsuleHelper::CapsuleHelper(
-    vec3 pos1, 
-    vec3 pos2, 
-    float radius, 
-    vec3 color) 
-        : MeshModel3D(globals.basicMaterial), color(color) 
+        vec3  *pos1, 
+        vec3  *pos2, 
+        float *radius, 
+        vec3  color)
+        : 
+            MeshModel3D(Loader<MeshMaterial>::get("basicHelper")), 
+            pos1(pos1),
+            pos2(pos2),
+            radius(radius),
+            color(color) 
 {
     createUniforms();
-    uniforms.add(ShaderUniform(&color, 20));
+    uniforms.add(ShaderUniform(&this->color, 20));
     noBackFaceCulling = true;
     defaultMode = GL_LINES;
     state.frustumCulled = false;
@@ -768,7 +773,7 @@ CapsuleHelper::CapsuleHelper(
 
     setVao(vao);
 
-    updateData(pos1, pos2, radius);
+    updateData(*pos1, *pos2, *radius);
 }   
 
 void addHalfCIrcle(vec3 *pos, vec3 x, vec3 y, vec3 center, int &id)
@@ -783,6 +788,14 @@ void addHalfCIrcle(vec3 *pos, vec3 x, vec3 y, vec3 center, int &id)
         pos[id++] = center + x*cos(b) + y*sin(b);
     }
 }
+
+#include <glm/gtx/string_cast.hpp>
+
+void CapsuleHelper::update()
+{
+    updateData(*pos1, *pos2, *radius);
+    MeshModel3D::update();
+};
 
 void CapsuleHelper::updateData(const vec3 pos1, const vec3 pos2, const float radius)
 {
@@ -825,3 +838,6 @@ void CapsuleHelper::updateData(const vec3 pos1, const vec3 pos2, const float rad
 
     getVao()->attributes[0].sendAllToGPU();
 }
+
+
+

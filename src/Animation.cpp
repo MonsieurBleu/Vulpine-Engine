@@ -42,7 +42,11 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
         return nullptr;
     }
 
-    std::vector<std::vector<AnimationKeyframeDataMatrix>> keyframes(skeleton->getSize(), std::vector<AnimationKeyframeDataMatrix>());
+    AnimationRef anim = std::make_shared<Animation>();
+    // std::vector<std::vector<AnimationKeyframeData>> keyframes(skeleton->getSize(), std::vector<AnimationKeyframeData>());
+    auto &keyframes = anim->keyframes;
+    keyframes.resize(skeleton->getSize());
+    
     for (uint i = 0; i < header.animatedBoneNumber; i++)
     {
         AnimationBoneData boneData;
@@ -50,54 +54,92 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
         file.read((char *)&boneData, sizeof(AnimationBoneData));
 
         keyframes[boneData.boneID].resize(boneData.keyframeNumber);
-        // fread(keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeDataMatrix), boneData.keyframeNumber, file);
-        file.read((char *)keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeDataMatrix)*boneData.keyframeNumber);
+
+        // fread(keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeData), boneData.keyframeNumber, file);
+        file.read((char *)keyframes[boneData.boneID].data(), sizeof(AnimationKeyframeData) * boneData.keyframeNumber);
     }
 
     // fclose(file);
     file.close();
 
     std::string name = header.animationName;
-    AnimationRef anim = std::make_shared<Animation>(header.type, name, header.duration, keyframes, skeleton);
+    // AnimationRef anim = std::make_shared<Animation>(name, header.duration, keyframes, skeleton);
+    anim->currentKeyframeIndex.resize(keyframes.size(), 0);
+    anim->length = header.duration;
+    anim->name = name;
+    anim->skeleton = skeleton;
     return anim;
 }
 
-void Animation::apply(float time, SkeletonAnimationState &state) const
+std::vector<keyframeData> Animation::getCurrentFrames(float time)
 {
-    // just testing for now, ignore time parameter
-    if (keyframes.size() != state.size())
+    static float lastTime = 0;
+
+    std::vector<keyframeData> data(keyframes.size());
+
+    time = fmod(time, length);
+
+    if (time < lastTime)
     {
-        std::cerr << TERMINAL_ERROR
-                  << "Animation::apply => state size does not match keyframes size.\n"
-                  << "state size: " << state.size() << ", keyframes size: " << keyframes.size() << ".\n"
-                  << TERMINAL_RESET;
-        return;
+        std::fill(currentKeyframeIndex.begin(), currentKeyframeIndex.end(), 0);
     }
 
-    time = mod(time, 30.f);
+    lastTime = time;
 
     for (uint i = 0; i < keyframes.size(); i++)
     {
         if (keyframes[i].size() == 0)
         {
-            state[i] = mat4(1);
+            data[i] = {vec3(0), quat(1, 0, 0, 0), vec3(1)};
             continue;
         }
 
-        uint j = 0;
-        for (; j < keyframes[i].size(); j++)
+        if (keyframes[i].size() == 1)
         {
-            if (keyframes[i][j].time > time)
-                break;
+            data[i].rotation = keyframes[i][0].rotation;
+            data[i].translation = keyframes[i][0].translation;
+            data[i].scale = keyframes[i][0].scale;
+            // data[i].time = keyframes[i][0].time;
+            continue;
         }
 
-        if (j == 0)
+        uint nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
+
+        if (time > keyframes[i][nextKeyframeIndex].time)
         {
-            state[i] = keyframes[i][0].matrix;
+            while (time > keyframes[i][nextKeyframeIndex].time)
+            {
+                currentKeyframeIndex[i] = nextKeyframeIndex;
+                nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
+
+                if (currentKeyframeIndex[i] == 0)
+                    break;
+            }
         }
-        else
-        {
-            state[i] = keyframes[i][j - 1].matrix;
-        }
+
+        // get the time difference between the two keyframes
+        float deltaTime = keyframes[i][nextKeyframeIndex].time - keyframes[i][currentKeyframeIndex[i]].time;
+
+        // get the time difference between the current time and the current keyframe
+        float currentTime = time - keyframes[i][currentKeyframeIndex[i]].time;
+
+        // get the interpolation factor
+        float factor = currentTime / deltaTime;
+
+        // if (i == 12)
+        //     std::cout << "time: " << time << ", currentKeyframeIndex: " << currentKeyframeIndex[i] << ", nextIndex: " << nextKeyframeIndex << ", factor: " << factor << ", deltaTime: " << deltaTime << ", currentTime: " << currentTime << ", keyframes[i][currentKeyframeIndex[i]].time: " << keyframes[i][currentKeyframeIndex[i]].time << "\n";
+
+        // interpolate translation
+        vec3 translation = glm::mix(keyframes[i][currentKeyframeIndex[i]].translation, keyframes[i][nextKeyframeIndex].translation, factor);
+
+        // interpolate rotation
+        quat rotation = glm::slerp(keyframes[i][currentKeyframeIndex[i]].rotation, keyframes[i][nextKeyframeIndex].rotation, factor);
+
+        // interpolate scale
+        vec3 scale = glm::mix(keyframes[i][currentKeyframeIndex[i]].scale, keyframes[i][nextKeyframeIndex].scale, factor);
+
+        data[i] = {translation, rotation, scale};
     }
+
+    return data;
 }
