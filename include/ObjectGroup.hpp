@@ -39,6 +39,8 @@ public:
 
     void remove(ModelRef mesh);
 
+    std::pair<vec3, vec3> getMeshesBoundingBox();
+
     ObjectGroupRef copy();
 };
 

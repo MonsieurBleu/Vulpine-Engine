@@ -48,12 +48,14 @@ private:
 
 
     Scene *_gameScene;
+    Scene *_gameScene2D;
 
 public:
     // MeshMaterial basicMaterial;
 
     Controller *_currentController = nullptr;
     Scene *getScene() const; 
+    Scene *getScene2D() const; 
 
     /**
      * Globals are not cloneable.

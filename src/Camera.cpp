@@ -53,9 +53,11 @@ void Camera::lookAt(vec3 _position)
 void Camera::updateViewMatrix()
 {
     if (state.forceLookAtpoint)
-        viewMatrix = glm::lookAt(state.position, state.lookpoint, vec3(0, 1, 0));
+        state.direction = -normalize(state.position - state.lookpoint);
     else
-        viewMatrix = glm::lookAt(state.position, state.position + state.direction, vec3(0, 1, 0));
+        state.lookpoint = state.position + state.direction;
+    
+    viewMatrix = glm::lookAt(state.position, state.lookpoint, vec3(0, 1, 0));
 }
 
 void Camera::updateProjectionMatrix()

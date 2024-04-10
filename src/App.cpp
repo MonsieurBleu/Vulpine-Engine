@@ -34,6 +34,7 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     });
 
     globals._gameScene = &scene;
+    globals._gameScene2D = &scene2D;
 
     /*
         TODO : 
@@ -236,6 +237,9 @@ bool App::baseInput(GLFWKeyInfo input)
 
 void App::setController(Controller *c)
 {
+    if(globals._currentController) globals._currentController->clean();
+    
+    c->init();
     globals._currentController = c;
     glfwSetCursorPosCallback(window,[](GLFWwindow* window, double dx, double dy)
     {

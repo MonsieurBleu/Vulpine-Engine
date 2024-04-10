@@ -2,7 +2,6 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 
-
 #include <vector>
 #include <deque>
 #include <queue>

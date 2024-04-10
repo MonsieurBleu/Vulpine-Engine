@@ -128,3 +128,26 @@ ObjectGroupRef ObjectGroup::copy()
 
     return g;
 }
+
+std::pair<vec3, vec3> ObjectGroup::getMeshesBoundingBox()
+{
+    vec3 minb(1e6), maxb(-1e6);
+
+    for(auto i : meshes)
+    {
+        vec4 min1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMin(), 1.0);
+        vec4 max1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMax(), 1.0);
+
+        minb = min(minb, vec3(min1));
+        maxb = max(maxb, vec3(max1));
+    }
+
+    for(auto i : children)
+    {
+        auto m = i->getMeshesBoundingBox();
+        minb = min(minb, m.first);
+        maxb = max(maxb, m.second);
+    }
+
+    return {minb, maxb};
+}
