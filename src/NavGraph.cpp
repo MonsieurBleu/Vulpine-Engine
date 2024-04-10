@@ -101,6 +101,12 @@ void Path::update(NavGraphRef graph) {
 
     get()->clear();
     graph->shortestPath(graph->nearestNode(start), graph->nearestNode(dest), *this);
+    if(get()->back() != dest) {
+        get()->push_back(dest);
+    }
+    if(get()->front() == start) {
+        get()->pop_front();
+    }
 
 }
 
