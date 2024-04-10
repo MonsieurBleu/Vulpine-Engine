@@ -1,4 +1,4 @@
-#define _USE_MATH_DEFINES
+/*#define _USE_MATH_DEFINES
 #include "demos/FPS/FPSController.hpp"
 #include <iostream>
 #include <math.h>
@@ -335,5 +335,5 @@ void FPSController::mouseLook()
     // std::cout << "camera position: " << camera->getPosition().x << ", " << camera->getPosition().y << ", " << camera->getPosition().z << "\n";
     vec3 rot = eulerAngles(newRotation);
     globals.currentCamera->setDirection(rot);
-    */
-}
+    
+}*/

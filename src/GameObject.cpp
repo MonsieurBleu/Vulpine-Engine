@@ -5,7 +5,7 @@ GameObject::GameObject()
 {
 }
 
-GameObject::GameObject(ObjectGroupRef ObjectGroup, RigidBodyRef RigidBody) : objectGroup(ObjectGroup), rigidBody(RigidBody)
+GameObject::GameObject(ObjectGroupRef ObjectGroup, RigidBody::Ref RigidBody) : objectGroup(ObjectGroup), rigidBody(RigidBody)
 {
 }
 
@@ -13,7 +13,7 @@ GameObject::GameObject(ObjectGroupRef ObjectGroup) : objectGroup(ObjectGroup)
 {
 }
 
-GameObject::GameObject(RigidBodyRef RigidBody) : rigidBody(RigidBody)
+GameObject::GameObject(RigidBody::Ref RigidBody) : rigidBody(RigidBody)
 {
 }
 
@@ -29,6 +29,8 @@ void GameObject::update()
         {
             vec3 pos = rigidBody->getPosition();
             vec3 rot = eulerAngles(rigidBody->getRotation());
+
+            //vec3 rot = rigidBody->getAngularVelocity();
 
             // no idea if this actually faster, it prevents an update if it is unnecessary
             // but it does branch so it might be slower overall if we have a lot of moving objects

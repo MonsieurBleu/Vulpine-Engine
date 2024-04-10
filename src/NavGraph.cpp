@@ -100,7 +100,7 @@ void Node::print() {
 void Path::update(NavGraphRef graph) {
 
     get()->clear();
-    graph->shortestPath(start, dest, *this);
+    graph->shortestPath(graph->nearestNode(start), graph->nearestNode(dest), *this);
 
 }
 
@@ -108,8 +108,8 @@ void Path::update(NavGraphRef graph) {
 void Path::print() {
 
     std::cout << "Path is ";
-    for(int node : *get()) {
-        std::cout << node << " ";
+    for(auto waypoint : *get()) {
+        std::cout << "(" << waypoint.x << " " << waypoint.y << " " << waypoint.z << ") ";
     }
     std::cout << "\n";
 
@@ -252,10 +252,10 @@ void NavGraph::shortestPath(int start, int end, Path path) {
 
 void NavGraph::reconstructPath(int* cameFrom, int current, int start, Path path) {
 
-    path->push_back(current);
+    path->push_back(nodes[current].getPosition());
     while(current != start) {
         current = cameFrom[current];
-        path->push_front(current);
+        path->push_front(nodes[current].getPosition());
     }
 
 }
@@ -272,5 +272,23 @@ void NavGraph::print() {
     }
 
     std::cout << "\n";
+
+}
+
+int NavGraph::nearestNode(vec3 pos) {
+
+    double min_dist = std::numeric_limits<double>::max();
+    int min_index = -1;
+    for(auto node: nodes) {
+
+        double dist = glm::distance(node.getPosition(), pos);
+        if(dist < min_dist) {
+            min_index = node.getId();
+            min_dist = dist;
+        }
+
+    }
+
+    return min_index;
 
 }

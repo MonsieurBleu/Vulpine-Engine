@@ -667,6 +667,54 @@ void SkeletonHelper::update(bool forceUpdate)
     ObjectGroup::update();
 }
 
+PolyhedronHelper::PolyhedronHelper(const std::vector<vec3>& points, vec3 color) : MeshModel3D(Loader<MeshMaterial>::get("basicHelper"))
+{
+    this->color = color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    int nbOfPoints = 2 * points.size() * (points.size() - 1);//(points.size() - 1) * (points.size() - 1);
+
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = vec3(0);
+    }
+
+    int id = 0;
+    for (std::size_t i = 0; i < points.size(); ++i) {
+        for (std::size_t j = 0; j < points.size(); ++j) {
+            if (i == j) {
+                continue;
+            }
+            pos[id++] = points[i];
+            pos[id++] = points[j];
+        }
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
+
+    
 NavGraphHelper::NavGraphHelper(NavGraphRef graph) : graph(graph)
 {
     auto &nodes = graph->getNodes();
@@ -708,7 +756,6 @@ PathHelper::PathHelper(Path path, NavGraphRef graph) : path(path), graph(graph)
 
 void PathHelper::update(bool forceUpdate)
 {
-    auto &nodes = graph->getNodes();
     const float size = 0.025;
 
     for(auto i : meshes)
@@ -719,8 +766,8 @@ void PathHelper::update(bool forceUpdate)
 
     for(size_t i = 1; i < path->size(); i++)
     {
-        vec3 v1 = nodes[path->at(i-1)].getPosition()  + vec3(-size);
-        vec3 v2 = nodes[path->at(i)].getPosition()    + vec3(size);
+        vec3 v1 = path->at(i-1) + vec3(-size);
+        vec3 v2 = path->at(i) + vec3(size);
 
         ((CubeHelper*)(meshes[i].get()))->state.setHideStatus(SHOW);
         
@@ -773,7 +820,6 @@ CapsuleHelper::CapsuleHelper(
     );
 
     setVao(vao);
-
     updateData(*pos1, *pos2, *radius);
 }   
 
