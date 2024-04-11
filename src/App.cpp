@@ -254,6 +254,7 @@ App::App(GLFWwindow* window) :
     SSAO(renderBuffer),
     Bloom(renderBuffer)
 {
+    globals._window = window;
     // if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     // {
     //     std::cerr << "ERROR: Could not set Distance Model to AL_INVERSE_DISTANCE_CLAMPED" << std::endl;

@@ -116,3 +116,8 @@ vec3 screenPosToModel(vec2 screenPos)
 
     return r;
 }
+
+vec3 rotateVec(vec3 front, vec3 axis, float angle)
+{
+    return mat3(rotate(mat4(1), angle, axis)) * front;
+}

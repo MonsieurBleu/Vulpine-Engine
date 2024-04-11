@@ -40,15 +40,19 @@ class Controller
 
 class SpectatorController : public Controller
 {
-    private : 
-        bool sprintActivated;
+    protected : 
+        bool sprintActivated = false;
         int upFactor = 0;
         int frontFactor = 0;
         int rightFactor = 0;
 
+        void updateDirectionStateWASD();
+
     public : 
         float speed = 2.0;
         float sprintFactor = 15.0;
-        void update();
-        bool inputs(GLFWKeyInfo& input);
+        virtual void update();
+        virtual bool inputs(GLFWKeyInfo& input);
+        void clean();
+        void init();
 };
