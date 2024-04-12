@@ -62,7 +62,8 @@ void SpectatorController::update()
     const vec3 right = cross(up, front);
     deplacementDir = front*(float)frontFactor + up*(float)upFactor + right*(float)rightFactor;
 
-    globals.currentCamera->setPosition(cpos + dspeed*normalize(deplacementDir));
+    float l = length(deplacementDir);
+    globals.currentCamera->setPosition(cpos + dspeed*deplacementDir/max(l, 1e-9f));
 }
 
 bool SpectatorController::inputs(GLFWKeyInfo& input)

@@ -89,6 +89,7 @@ class SingleStringBatch : public MeshModel3D
         */
         void batchText();
         vec2 getSize();
+        vec3 color = vec3(1);
 
         void setCurrentTab(int id);
 };
