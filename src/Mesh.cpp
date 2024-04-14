@@ -175,6 +175,8 @@ void MeshModel3D::resetDrawMode()
 
 GLuint MeshModel3D::drawVAO(bool depthOnly)
 {
+    if(!vao.get() || !vao.get()->attributes.size()) return 0;
+    
     update();
     if(!depthOnly) uniforms.update();
     setDrawMode();

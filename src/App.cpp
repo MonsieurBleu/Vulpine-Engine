@@ -9,6 +9,8 @@
 #include <Shadinclude.hpp>
 #include <AssetManager.hpp>
 
+#include <filesystem>
+
 std::mutex inputMutex;
 std::mutex physicsMutex;
 InputBuffer inputs;
@@ -16,6 +18,32 @@ InputBuffer inputs;
 Globals globals;
 
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
+
+void App::loadAllAssetsInfos(const char *filename)
+{
+    for(auto f : std::filesystem::recursive_directory_iterator(filename))
+    {
+        if(f.is_directory()) continue;
+
+        char ext[1024];
+        char p[4096];
+
+        strcpy(ext, (char *)f.path().extension().string().c_str());
+        strcpy(p, (char *)f.path().string().c_str());
+
+        if(!strcmp(ext, ".vulpineGroup"))
+            Loader<ObjectGroup>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineGroupRef"))
+            Loader<ObjectGroupRef>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineModel"))
+            Loader<MeshModel3D>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineMaterial"))
+            Loader<MeshMaterial>::addInfos(p);
+    }
+};
 
 void App::init()
 {
@@ -141,12 +169,12 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     //         "",
     //         globals.standartShaderUniform3D()));
     
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicHelper.vulpineMaterial");
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicFont3D.vulpineMaterial");
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial"); 
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/animatedPBR.vulpineMaterial");
-    
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/mdFont.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicHelper.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicFont3D.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial"); 
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/animatedPBR.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/mdFont.vulpineMaterial");
+    loadAllAssetsInfos("shader/vulpineMaterials/");
 }
 
 void App::activateMainSceneBindlessTextures()

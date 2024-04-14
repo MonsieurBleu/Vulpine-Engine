@@ -97,7 +97,9 @@ FastUI_context::FastUI_context(
         Scene& scene, 
         MeshMaterial fontMaterial)
     : tileBatch(tileBatch), font(font), scene(scene), fontMaterial(fontMaterial)
-{}
+{
+    scene.add(tileBatch);
+}
 
 FastUI_element::FastUI_element(FastUI_context& ui) : ObjectGroupRef(new ObjectGroup), ui(ui)
 {}
