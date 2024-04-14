@@ -526,7 +526,7 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _col
     const int stepD = dim.z; //8
     const int stepX = dim.x;
     const int stepY = dim.y;
-    float vFar = 5e3;
+    float vFar = 1024;
 
     int nbOfPoints = (stepY +1)*(stepX +1)*(stepD+1)*6;
     GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
