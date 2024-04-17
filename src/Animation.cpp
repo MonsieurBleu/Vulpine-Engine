@@ -10,7 +10,7 @@
 #include <iostream>
 #include <fstream>
 
-AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
+AnimationRef Animation::load(const std::string &filename)
 {
     // FILE *file = fopen(filename.c_str(), "rb");
     std::ifstream file(filename, std::ios::in | std::ios::binary);
@@ -44,9 +44,8 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
 
     AnimationRef anim = std::make_shared<Animation>();
     // std::vector<std::vector<AnimationKeyframeData>> keyframes(skeleton->getSize(), std::vector<AnimationKeyframeData>());
-    auto &keyframes = anim->keyframes;
-    keyframes.resize(skeleton->getSize());
-    
+    std::vector<std::vector<AnimationKeyframeData>> keyframes(header.totalBoneNumber, std::vector<AnimationKeyframeData>());
+
     for (uint i = 0; i < header.animatedBoneNumber; i++)
     {
         AnimationBoneData boneData;
@@ -67,7 +66,7 @@ AnimationRef Animation::load(SkeletonRef skeleton, const std::string &filename)
     anim->currentKeyframeIndex.resize(keyframes.size(), 0);
     anim->length = header.duration;
     anim->name = name;
-    anim->skeleton = skeleton;
+    anim->keyframes = keyframes;
     return anim;
 }
 
@@ -139,6 +138,62 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time)
         vec3 scale = glm::mix(keyframes[i][currentKeyframeIndex[i]].scale, keyframes[i][nextKeyframeIndex].scale, factor);
 
         data[i] = {translation, rotation, scale};
+    }
+
+    return data;
+}
+
+std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2, float a)
+{
+    std::vector<keyframeData> data(animA->keyframes.size());
+
+    if (animA->keyframes.size() != animB->keyframes.size())
+    {
+        std::cerr << TERMINAL_ERROR
+                  << "interpolateKeyframes : animations have different number of expected bones.\n"
+                  << TERMINAL_RESET;
+        return data;
+    }
+
+    if (t1 < 0 && t2 < 0)
+    {
+        std::cerr << TERMINAL_ERROR
+                  << "interpolateKeyframes : both animations have negative time.\n"
+                  << TERMINAL_RESET;
+        return data;
+    }
+
+    if (t2 < 0)
+        return animA->getCurrentFrames(t1);
+
+    if (t1 < 0)
+        return animB->getCurrentFrames(t2);
+
+    if (t1 > animA->length && t2 > animB->length)
+    {
+        std::cerr << TERMINAL_ERROR
+                  << "interpolateKeyframes : both animations have time greater than their length.\n"
+                  << TERMINAL_RESET;
+        return data;
+    }
+
+    if (t1 > animA->length)
+        return animB->getCurrentFrames(t2);
+
+    if (t2 > animB->length)
+        return animA->getCurrentFrames(t1);
+
+    std::vector<keyframeData> keyframesA = animA->getCurrentFrames(t1);
+    std::vector<keyframeData> keyframesB = animB->getCurrentFrames(t2);
+
+    for (uint i = 0; i < keyframesA.size(); i++)
+    {
+        keyframeData &dataA = keyframesA[i];
+        keyframeData &dataB = keyframesB[i];
+
+        data[i].translation = glm::mix(dataA.translation, dataB.translation, a);
+        data[i].rotation = glm::slerp(dataA.rotation, dataB.rotation, a);
+        data[i].scale = glm::mix(dataA.scale, dataB.scale, a);
     }
 
     return data;

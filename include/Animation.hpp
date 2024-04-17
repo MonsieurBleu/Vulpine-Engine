@@ -6,7 +6,6 @@
 #include <functional>
 #include <cstring>
 #include <unordered_map>
-#include "Skeleton.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -82,12 +81,10 @@ class Animation
 {
 private:
     std::string name;
-    float length;
+    float length; // in seconds
 
     std::vector<std::vector<AnimationKeyframeData>> keyframes;
     std::vector<int> currentKeyframeIndex;
-
-    SkeletonRef skeleton;
 
 public:
     Animation(){};
@@ -95,14 +92,13 @@ public:
     Animation(
         const std::string &name,
         float length,
-        std::vector<std::vector<AnimationKeyframeData>> &keyframes,
-        SkeletonRef skeleton)
-        : name(name), length(length), keyframes(keyframes), skeleton(skeleton)
+        std::vector<std::vector<AnimationKeyframeData>> &keyframes)
+        : name(name), length(length), keyframes(keyframes)
     {
         currentKeyframeIndex.resize(keyframes.size(), 0);
     }
 
-    static AnimationRef load(SkeletonRef skeleton, const std::string &filename);
+    static AnimationRef load(const std::string &filename);
 
     const std::string getName() const { return name; }
     float getLength() const { return length; }
@@ -112,5 +108,13 @@ public:
     int getKeyframeNumber() const { return keyframes.size(); }
     std::vector<keyframeData> getCurrentFrames(float time);
 
+    bool isFinished(float time)
+    {
+        return time >= length;
+    }
+
     friend class Skeleton;
+    friend std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2, float a);
 };
+
+std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2, float a);

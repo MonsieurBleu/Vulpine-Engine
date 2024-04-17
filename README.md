@@ -6,7 +6,7 @@
 
 ## Presentation
 
-The Vulpine Engine is a lightweight game engine made from scratch in C++ using OpenGL. This project aims to provide a solid and versatile foundation for 3D game development. The engine is built for developers who, like me, prefer a hands-on, code first approach with both hight-level built-in features and low-level fine tuning through direct API calls.
+The Vulpine Engine is a lightweight game engine made from scratch in C++ using OpenGL. This project aims to provide a solid and versatile foundation for 3D game development. The engine is built for developers who, like me, prefer a hands-on, code first approach with both high-level built-in features and low-level fine tuning through direct API calls.
 
 
 ## About The Creator 

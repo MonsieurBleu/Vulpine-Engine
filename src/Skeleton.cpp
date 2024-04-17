@@ -57,7 +57,7 @@ void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<A
         vec3 trans = data.translation;
         quat r = data.rotation;
         vec3 s = data.scale;
-        
+
         for (int j = 1; j < animations.size(); j++)
         {
             if (keyframes[j].size() == 0)
@@ -76,6 +76,19 @@ void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<A
         t = t * mat4_cast(r);
         t = scale(t, s);
 
+        (*this)[i] = t;
+    }
+}
+
+void SkeletonAnimationState::applyKeyframes(std::vector<keyframeData> keyframes)
+{
+    for (int i = 0; i < size(); i++)
+    {
+        keyframeData data = keyframes[i];
+        mat4 t = mat4(1);
+        t = translate(t, data.translation);
+        t = t * mat4_cast(data.rotation);
+        t = scale(t, data.scale);
 
         (*this)[i] = t;
     }

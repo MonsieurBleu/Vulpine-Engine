@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 using namespace glm;
 
+#include "Animation.hpp"
+
 struct SkeletonBone
 {
     mat4 t = mat4(1);
@@ -67,6 +69,8 @@ public:
      * @param animations a vector that contains animations as well as their "factor" (how much it affects the final animation, ideally should sum up to 1 but we ball)
      */
     void applyAnimations(float time, std::vector<std::pair<AnimationRef, float>> animations);
+
+    void applyKeyframes(std::vector<keyframeData> keyframes);
 
     void send();
     void update();
