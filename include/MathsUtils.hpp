@@ -5,23 +5,13 @@
 using namespace glm;
 
 
-vec3 hsv2rgb(vec3 hsv);
-
-vec3 rgb2hsv(vec3 c);
-
-// float getHue(vec3 c);
-
-float getSaturation(vec3 c);
-
-float getValue(vec3 c);
-
-float gold_noise3(vec3 coordinate, float seed);
 
 float random01Vec2(vec2 uv);
 
 vec3 viewToWorld(vec4 pos, const mat4& m);
 
 vec3 screenPosToModel(vec2 screenPos);
+
 
 /****** ROTATION & DIRECTION UTILS******/
     vec3 slerpDirClamp(vec3 dir1, vec3 dir2, float t, vec3 wfront = vec3(0, 0, 1));
@@ -36,4 +26,17 @@ vec3 screenPosToModel(vec2 screenPos);
 
     vec3 rotateVec(vec3 front, vec3 axis, float angle);
 
+/****** COLOR UTILS******/
+    vec3 hsv2rgb(vec3 hsv);
 
+    vec3 rgb2hsv(vec3 c);
+
+    // float getHue(vec3 c);
+
+    float getSaturation(vec3 c);
+
+    float getValue(vec3 c);
+
+    float gold_noise3(vec3 coordinate, float seed);
+
+    vec3 ColorHexToV(uint hex);

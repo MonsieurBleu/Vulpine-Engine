@@ -121,3 +121,8 @@ vec3 rotateVec(vec3 front, vec3 axis, float angle)
 {
     return mat3(rotate(mat4(1), angle, axis)) * front;
 }
+
+vec3 ColorHexToV(uint hex)
+{
+    return vec3((hex>>16)%256, (hex>>8)%256, hex%256)/256.f;
+}
