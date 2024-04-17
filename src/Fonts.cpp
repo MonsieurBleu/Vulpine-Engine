@@ -21,6 +21,12 @@ UFT32Stream &operator<<(UFT32Stream &os, const int i)
     return os;
 }
 
+UFT32Stream &operator<<(UFT32Stream &os, const short i)
+{
+    os << UFTconvert.from_bytes(std::to_string(i));
+    return os;
+}
+
 bool u32strtof(std::u32string &str, float &f)
 {
     errno = 0;
@@ -32,6 +38,15 @@ bool u32strtof(std::u32string &str, float &f)
 
     f = strtof(s.c_str(), &endptr);
     return !(errno || s.c_str() == endptr);
+}
+
+UFT32Stream& operator<<(UFT32Stream& os, const safeBoolOverload b)
+{
+    if(b.val) 
+        os << U"True";
+    else 
+        os << U"False";
+    return os;
 }
 
 bool u32chartoi(char32_t c, int &i)

@@ -25,7 +25,10 @@ typedef std::basic_ostringstream<char32_t> UFT32Stream;
 
 UFT32Stream& operator<<(UFT32Stream& os, const float f);
 UFT32Stream& operator<<(UFT32Stream& os, const int i);
+UFT32Stream& operator<<(UFT32Stream& os, const short i);
 UFT32Stream& operator<<(UFT32Stream& os, const std::string& str);
+struct safeBoolOverload{bool val;};
+UFT32Stream& operator<<(UFT32Stream& os, const safeBoolOverload b);
 
 bool u32strtof(std::u32string &str, float &f);
 int u32strtoi(std::u32string &str, int base = 10);
@@ -89,10 +92,13 @@ class SingleStringBatch : public MeshModel3D
         */
         void batchText();
         vec2 getSize();
+        vec3 color = vec3(1);
 
         void setCurrentTab(int id);
 };
 
 typedef std::shared_ptr<SingleStringBatch> SingleStringBatchRef;
+
+
 
 #endif

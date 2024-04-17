@@ -45,6 +45,8 @@ class App
 
         void setIcon(const std::string &filename);
 
+        void loadAllAssetsInfos(const char *filename);
+
     public :
         App(GLFWwindow* window);
         ~App();

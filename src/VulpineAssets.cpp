@@ -44,8 +44,12 @@ MeshVao loadVulpineMesh(const char *filename)
     GenericSharedBuffer uvs = getChunk(file, 2*v1size);
     attributes.push_back(VertexAttribute(uvs, 2, h.verticesCount, 2, GL_FLOAT, false));
 
+    bool animated = false;
+
     if(h.type == VulpineMesh_Type::ELEMENTS_SKINNED)
     {
+        animated = true;
+
         GenericSharedBuffer weights = getChunk(file, 4*v1size);
         attributes.push_back(VertexAttribute(weights, 6, h.verticesCount, 4, GL_FLOAT, false));
 
@@ -63,13 +67,14 @@ MeshVao loadVulpineMesh(const char *filename)
 
     vao.faces = faces;
     vao.nbFaces = h.facesCount*3;
+    vao.animated = animated;
 
     vao->setAABB(h.AABBmin, h.AABBmax);
 
     return vao;
 };
 
-void Skeleton::load(const std::string &filename)
+void Skeleton::load(const char* filename)
 {
     std::ifstream file(filename, std::ios::in | std::ios::binary);
 
@@ -90,6 +95,17 @@ void Skeleton::load(const std::string &filename)
         FILE_ERROR_MESSAGE(filename, "The file is probably corrupted or don't follow vulpineSkeleton specifications. The loader will return an empty object.")
         return;
     }
+
+    const size_t s = size();
+    for (size_t i = 0; i < s; i++)
+    {
+        SkeletonBone &b = at(i);
+        if(b.parent >= 0)
+            b.t = at(b.parent).t * b.t;
+    }
+
+    for (size_t i = 0; i < s; i++)
+        at(i).t = inverse(at(i).t);
 }
 
 

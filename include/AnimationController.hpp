@@ -1,6 +1,5 @@
 #include "Animation.hpp"
 #include "Utils.hpp"
-#include "DFAUtils.hpp"
 
 #include <iostream>
 #include <fstream>
@@ -25,7 +24,6 @@ struct AnimationControllerTransition
     AnimationRef from;
     AnimationRef to;
     AnimationControllerTransitionCondition condition;
-    float transitionStart;  // start time of the transition on the from animation
     float transitionLength; // length of the transition
     TransitionType type;
     std::function<bool()> conditionFunction;
@@ -33,14 +31,12 @@ struct AnimationControllerTransition
     AnimationControllerTransition(AnimationRef _from,
                                   AnimationRef _to,
                                   AnimationControllerTransitionCondition _condition,
-                                  float _transitionStart,
                                   float _transitionLength,
                                   TransitionType _type = TRANSITION_LINEAR,
                                   std::function<bool()> _conditionFunction = falseFunction)
         : from(_from),
           to(_to),
           condition(_condition),
-          transitionStart(_transitionStart),
           transitionLength(_transitionLength),
           type(_type),
           conditionFunction(_conditionFunction)
@@ -76,8 +72,8 @@ private:
 
         if (transitionsFromCurrentState.size() == 0)
         {
-            // add a transition to the same animation
-            transitions.push_back(AnimationControllerTransition(currentAnimation, currentAnimation, COND_ANIMATION_FINISHED, currentAnimation->getLength(), epsilon<float>()));
+            // failsafe if no transition is found, loop back to the same animation
+            transitions.push_back(AnimationControllerTransition(currentAnimation, currentAnimation, COND_ANIMATION_FINISHED, epsilon<float>()));
         }
     }
 
@@ -86,14 +82,6 @@ public:
     {
         transitions = _transitions;
         animations = _animations;
-
-        // std::vector<DFATransition *> _transitionsPtr;
-        // for (auto &t : transitions)
-        // {
-        //     _transitionsPtr.push_back(&t);
-        // }
-
-        // automaton = DFA(initialState, acceptingStates, _transitionsPtr);
 
         currentAnimation = animations[initialState];
         animationStart = std::chrono::high_resolution_clock::now();
@@ -111,7 +99,7 @@ public:
                 switch (t->condition)
                 {
                 case COND_ANIMATION_FINISHED:
-                    if (currentAnimation->isFinished(time + t->transitionStart))
+                    if (currentAnimation->isFinished(time + t->transitionLength))
                     {
                         currentTransition = t;
                         transitioning = true;
@@ -141,16 +129,19 @@ public:
                 a = transitionTime / (currentTransition->transitionLength);
                 break;
             case TRANSITION_SMOOTH:
-                a = smoothstep(transitionTime / (currentTransition->transitionLength), 0.0f, 1.0f);
+                a = smoothstep(0.0f, 1.0f, transitionTime / (currentTransition->transitionLength));
                 break;
             }
 
-            currentKeyframes = interpolateKeyframes(currentTransition->from, currentTransition->to, time, transitionTime, a);
+            currentKeyframes = interpolateKeyframes(currentTransition->from, currentTransition->to, fmod(time, currentAnimation->getLength()), transitionTime, a);
 
             if (transitionTime >= currentTransition->transitionLength)
             {
+                // std::cout << "a: " << a << "\n";
+                // std::cout << "time: " << time << "\n";
+                // std::cout << "transitionTime: " << transitionTime << "\n";
                 currentAnimation = currentTransition->to;
-                animationStart = std::chrono::high_resolution_clock::now();
+                animationStart = transitionStart;
                 transitioning = false;
                 getTransitionsFromCurrentState();
             }

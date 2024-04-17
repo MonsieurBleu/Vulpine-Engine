@@ -97,7 +97,9 @@ FastUI_context::FastUI_context(
         Scene& scene, 
         MeshMaterial fontMaterial)
     : tileBatch(tileBatch), font(font), scene(scene), fontMaterial(fontMaterial)
-{}
+{
+    scene.add(tileBatch);
+}
 
 FastUI_element::FastUI_element(FastUI_context& ui) : ObjectGroupRef(new ObjectGroup), ui(ui)
 {}
@@ -654,4 +656,29 @@ void MeshModel3D::setMenu(FastUI_valueMenu &menu, std::u32string name)
             FastUI_value(&lodHeightDispFactors.w,   U"\fMax Height\t", U"m"),
         })}
     );
+}
+
+void ObjectGroup::setMenu(FastUI_valueMenu &menu, std::u32string name)
+{
+    menu.push_back(
+        {FastUI_menuTitle(menu.ui, name), FastUI_valueTab(menu.ui, {
+            FastUI_value(U"State"),
+            FastUI_value((bool*)&state, U"\fUpdate\t"),
+            FastUI_value(U"\fPosition\t"),
+            FastUI_value(&state.position.x,   U"\f\fx\t"),
+            FastUI_value(&state.position.y,   U"\f\fy\t"),
+            FastUI_value(&state.position.z,   U"\f\fz\t"),
+            FastUI_value(U"\fScale\t"),
+            FastUI_value(&state.scale.x,   U"\f\fx\t"),
+            FastUI_value(&state.scale.y,   U"\f\fy\t"),
+            FastUI_value(&state.scale.z,   U"\f\fz\t"),
+            FastUI_value(U"\fRotation\t"),
+            FastUI_value(&state.rotation.x,   U"\f\fx\t", U"°", FUI_floatAngle),
+            FastUI_value(&state.rotation.y,   U"\f\fy\t", U"°", FUI_floatAngle),
+            FastUI_value(&state.rotation.z,   U"\f\fz\t", U"°", FUI_floatAngle)
+        })}
+    );
+
+    for(auto i : meshes)
+        i->setMenu(menu, name+U":Mesh");
 }

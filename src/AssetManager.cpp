@@ -4,60 +4,8 @@
 #include <Globals.hpp>
 #include <Constants.hpp>
 #include <Utils.hpp>
-
-#define PRINT_LOADER_DEBUG_CREATE std::cout \
-    << TERMINAL_INFO << "Creating object " \
-    << TERMINAL_NOTIF << name \
-    << TERMINAL_INFO << " from "\
-    << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
-    << TERMINAL_RESET << "\n" ;
-
-#define EARLY_RETURN_IF_LOADED \
-    auto check = loadedAssets.find(name); \
-    if(check != loadedAssets.end()){\
-        if(buff->data + buff->getReadHead() < end) buff->setHead(end); /*if the current buffer is ahead of the end of the info, this means that the dependant info is currently reading it as a reference*/ \
-        return check->second;} \
-    PRINT_LOADER_DEBUG_CREATE \
-    auto &r = loadedAssets[name]; \
-    buff->setHead(values); 
-
-#define EXIT_ROUTINE_AND_RETURN end = buff->data + buff->getReadHead(); return r;
-
-#define NEW_VALUE *buff->read() == ':'
-#define END_VALUE *buff->read() == ';'
-
-#define LOADER_DO_RUNTIME_ASSERT
-
-#ifdef LOADER_DO_RUNTIME_ASSERT
-    #define LOADER_ASSERT(cond) assert(cond);
-#else
-    #define LOADER_ASSERT(cond) if(cond){ EXIT_ROUTINE_AND_RETURN }
-#endif
-
-#define LOAD_VALUE(type) Loader<type>::addInfos(buff).loadFromInfos()
-
-#define LOAD_MODEL_STATE_3D(state) {\
-            ModelState3D &stateRefTmp = state; \
-            while(NEW_VALUE) \
-            {\
-                char *stateMember = buff->read(); \
-                if(!strcmp(stateMember, "position")) \
-                    stateRefTmp.setPosition(fromStr<vec3>(buff->read()));\
-                else \
-                if(!strcmp(stateMember, "rotation"))\
-                    stateRefTmp.setRotation(radians(fromStr<vec3>(buff->read())));\
-                else \
-                if(!strcmp(stateMember, "scalev3"))\
-                    stateRefTmp.setScale(fromStr<vec3>(buff->read()));\
-                else \
-                if(!strcmp(stateMember, "scalev1"))\
-                    stateRefTmp.scaleScalar(fromStr<float>(buff->read()));\
-                else\
-                if(!strcmp(stateMember, "frustum"))\
-                    stateRefTmp.frustumCulled = fromStr<int>(buff->read());\
-                else\
-                    FILE_ERROR_MESSAGE(name, "ModelState3D member '" << stateMember << "' not recognized.");\
-            }    }\
+#include <Skeleton.hpp>
+#include <AssetManagerUtils.hpp>
 
 /*
     TODO : adding Uniforms loading
@@ -67,10 +15,36 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
 {
     EARLY_RETURN_IF_LOADED
 
-    std::vector<const char*> elems;
-    while (NEW_VALUE) elems.push_back(buff->read());
+    bool uniformsSet = false;
+    std::vector<ShaderUniform> uniforms;
 
-    std::vector<ShaderUniform> uniforms = globals.standartShaderUniform3D();
+    std::vector<const char*> elems;
+    while (NEW_VALUE)
+    {
+        const char *elem = buff->read();
+
+        if(!strcasecmp(elem, "uniforms"))
+        {
+            const char *unitype = buff->read();
+            uniformsSet = true;
+
+            if(!strcasecmp(unitype, "2D"))
+                uniforms = globals.standartShaderUniform2D();
+            else
+            if(!strcasecmp(unitype, "3D"))
+                uniforms = globals.standartShaderUniform3D();
+            else
+            if(!strcasecmp(unitype, "none"))
+            {
+                FILE_ERROR_MESSAGE(name, "Uniform preset " << unitype << " not recognized. Expected 2D, 3D or none.")
+            }
+        }
+        else
+            elems.push_back(elem);
+    }
+
+    if(!uniformsSet)
+        uniforms = globals.standartShaderUniform3D();
 
     switch (elems.size())
     {
@@ -78,7 +52,7 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
         r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), uniforms);
         break;
 
-    case 3 :
+    case 3 : 
         r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), std::string(elems[2]), uniforms);
         break;
 
@@ -87,10 +61,11 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
         break;
 
     default:
-        FILE_ERROR_MESSAGE(name, "Wrong number of source files (" << elems.size() << ") expected 2, 3 or 4.\n")        
+        FILE_ERROR_MESSAGE(name, "Wrong number of source files (" << elems.size() << ") expected 2, 3 or 4.")        
         LOADER_ASSERT(elems.size() > 1 && elems.size() < 5)
         break;
     }
+
 
     EXIT_ROUTINE_AND_RETURN
 }
@@ -122,10 +97,10 @@ MeshVao& Loader<MeshVao>::loadFromInfos()
     char *file = buff->read();
     const char* ext = getFileExtensionC(file);
 
-    if(!strcmp(ext, "vulpineMesh"))
+    if(!strcasecmp(ext, "vulpineMesh"))
         r = loadVulpineMesh(file); 
     else
-    if(!strcmp(ext, "obj"))
+    if(!strcasecmp(ext, "obj"))
         r = readOBJ(file);
     else
         FILE_ERROR_MESSAGE(name, "File extension '" << ext << "' not recognized. Expected .vulpineMesh or .obj")
@@ -143,52 +118,52 @@ Texture2D& Loader<Texture2D>::loadFromInfos()
     {
         char *member = buff->read();
 
-        if(!strcmp(member, "source"))
+        if(!strcasecmp(member, "source"))
         {
             char *file = buff->read();
             const char* ext = getFileExtensionC(file);
 
-            if(!strcmp(ext, "ktx") || !strcmp(ext, "ktx2"))    
+            if(!strcasecmp(ext, "ktx") || !strcasecmp(ext, "ktx2"))    
                 r.loadFromFileKTX(file);
             else
-            if( !strcmp(ext, "png") || !strcmp(ext, "jpeg") || 
-                !strcmp(ext, "jpg") || !strcmp(ext, "tga")  || 
-                !strcmp(ext, "bmp") || !strcmp(ext, "psd")  || 
-                !strcmp(ext, "gif") || !strcmp(ext, "pic")  || 
-                !strcmp(ext, "ppm") || !strcmp(ext, "pgm")) 
+            if( !strcasecmp(ext, "png") || !strcasecmp(ext, "jpeg") || 
+                !strcasecmp(ext, "jpg") || !strcasecmp(ext, "tga")  || 
+                !strcasecmp(ext, "bmp") || !strcasecmp(ext, "psd")  || 
+                !strcasecmp(ext, "gif") || !strcasecmp(ext, "pic")  || 
+                !strcasecmp(ext, "ppm") || !strcasecmp(ext, "pgm")) 
                 r.loadFromFile(file);
             else
-            if(!strcmp(ext, "hdr"))
+            if(!strcasecmp(ext, "hdr"))
                 r.loadFromFileHDR(file);
             else
                 FILE_ERROR_MESSAGE(name, "Image extension '" << ext << "' not supported by Vulpine.");
         }
         else
-        if(!strcmp(member, "wrap"))
+        if(!strcasecmp(member, "wrap"))
         {
             char *mode = buff->read();
-            if(!strcmp(mode, "REPEAT"))
+            if(!strcasecmp(mode, "REPEAT"))
                 r.setWrapMode(GL_REPEAT);
             else
-            if(!strcmp(mode, "MIRRORED"))
+            if(!strcasecmp(mode, "MIRRORED"))
                 r.setWrapMode(GL_MIRRORED_REPEAT);
             else
-            if(!strcmp(mode, "CLAMP_TO_EDGE"))
+            if(!strcasecmp(mode, "CLAMP_TO_EDGE"))
                 r.setWrapMode(GL_CLAMP_TO_EDGE);
             else
-            if(!strcmp(mode, "CLAMP_TO_BORDER"))
+            if(!strcasecmp(mode, "CLAMP_TO_BORDER"))
                 r.setWrapMode(GL_CLAMP_TO_BORDER);
             else
                 FILE_ERROR_MESSAGE(name, "Image wrap mode '" << mode << "' not recognized. Expected REPEAT, MIRRORED, CLAMP_TO_EDGE or CLAMP_TO_BORDER.");
         }
         else
-        if(!strcmp(member, "filter"))
+        if(!strcasecmp(member, "filter"))
         {
             char *mode = buff->read();
-            if(!strcmp(mode, "LINEAR"))
+            if(!strcasecmp(mode, "LINEAR"))
                 r.setFilter(GL_LINEAR);
             else
-            if(!strcmp(mode, "NEAREST"))
+            if(!strcasecmp(mode, "NEAREST"))
                 r.setFilter(GL_NEAREST);
             else
                 FILE_ERROR_MESSAGE(name, "Image filter mode '" << mode << "' not recognized. Expected NEAREST or LINEAR.");            
@@ -213,19 +188,19 @@ MeshModel3D& Loader<MeshModel3D>::loadFromInfos()
     {
         char *member = buff->read();
 
-        if(!strcmp(member, "mesh"))
+        if(!strcasecmp(member, "mesh"))
             r.setVao(LOAD_VALUE(MeshVao));
         else
-        if(!strcmp(member, "material"))
+        if(!strcasecmp(member, "material"))
             r.setMaterial(LOAD_VALUE(MeshMaterial));
         else
-        if(!strcmp(member, "texture"))
+        if(!strcasecmp(member, "texture"))
         {
             int location = fromStr<int>(buff->read());
             r.setMap(location, LOAD_VALUE(Texture2D));
         }
         else
-        if(!strcmp(member, "state"))
+        if(!strcasecmp(member, "state"))
             LOAD_MODEL_STATE_3D(r.state)
         else
             FILE_ERROR_MESSAGE(name, "ModelRef member '" << member << "' not recognized.");
@@ -244,18 +219,18 @@ ObjectGroup& Loader<ObjectGroup>::loadFromInfos()
     {
         char *member = buff->read();
 
-        if(!strcmp(member, "groups"))
+        if(!strcasecmp(member, "groups"))
             while (NEW_VALUE)
                 r.add(newObjectGroup(std::move(LOAD_VALUE(ObjectGroup))));
         else
-        if(!strcmp(member, "meshes"))
+        if(!strcasecmp(member, "meshes"))
             while (NEW_VALUE)
                 r.add(LOAD_VALUE(MeshModel3D).copyWithSharedMesh());
         else
-        if(!strcmp(member, "state"))
+        if(!strcasecmp(member, "state"))
             LOAD_MODEL_STATE_3D(r.state)
         else
-        if(!strcmp(member, "pointLights"))
+        if(!strcasecmp(member, "pointLights"))
             while (NEW_VALUE)
             {
                 ScenePointLight l = newPointLight();
@@ -286,18 +261,18 @@ ObjectGroupRef& Loader<ObjectGroupRef>::loadFromInfos()
     {
         char *member = buff->read();
 
-        if(!strcmp(member, "groups"))
+        if(!strcasecmp(member, "groups"))
             while (NEW_VALUE)
                 r->add(LOAD_VALUE(ObjectGroupRef));
         else
-        if(!strcmp(member, "meshes"))
+        if(!strcasecmp(member, "meshes"))
             while (NEW_VALUE)
                 r->add(newModel(LOAD_VALUE(MeshModel3D)));
         else
-        if(!strcmp(member, "state"))
+        if(!strcasecmp(member, "state"))
             LOAD_MODEL_STATE_3D(r->state)
         else
-        if(!strcmp(member, "pointLights"))
+        if(!strcasecmp(member, "pointLights"))
             while (NEW_VALUE)
             {
                 ScenePointLight l = newPointLight();
@@ -315,4 +290,16 @@ ObjectGroupRef& Loader<ObjectGroupRef>::loadFromInfos()
     }
 
     EXIT_ROUTINE_AND_RETURN 
+}
+
+template<>
+SkeletonRef& Loader<SkeletonRef>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+    LOADER_ASSERT(NEW_VALUE)
+
+    r = std::make_shared<Skeleton>();
+    r->load(buff->read());
+
+    EXIT_ROUTINE_AND_RETURN
 }

@@ -1,8 +1,58 @@
 #include <Controller.hpp>
 #include <Globals.hpp>
 
+void SpectatorController::clean()
+{
+    sprintActivated = false;
+    upFactor = 0;
+    frontFactor = 0;
+    rightFactor = 0;
+}
+
+
+void SpectatorController::init()
+{
+    sprintActivated = false;
+    upFactor = 0;
+    frontFactor = 0;
+    rightFactor = 0;
+}
+
+void SpectatorController::updateDirectionStateWASD()
+{
+    sprintActivated = false;
+    upFactor = 0;
+    frontFactor = 0;
+    rightFactor = 0;
+
+    GLFWwindow *window = globals.getWindow();
+
+    if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        frontFactor ++;
+
+    if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        frontFactor --;
+
+    if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        rightFactor ++;
+
+    if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        rightFactor --;
+
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        upFactor ++;
+
+    if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        upFactor --;
+
+    if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        sprintActivated = true;
+}
+
 void SpectatorController::update()
 {
+    updateDirectionStateWASD();
+
     const vec3 cpos = globals.currentCamera->getPosition();
     const float delta = globals.appTime.getDelta();
     const float dspeed = speed * delta * (sprintActivated ? sprintFactor : 1.f);
@@ -12,44 +62,44 @@ void SpectatorController::update()
     const vec3 right = cross(up, front);
     deplacementDir = front*(float)frontFactor + up*(float)upFactor + right*(float)rightFactor;
 
-    globals.currentCamera->setPosition(cpos + dspeed*deplacementDir);
-    deplacementDir = vec3(0.f);
+    float l = length(deplacementDir);
+    globals.currentCamera->setPosition(cpos + dspeed*deplacementDir/max(l, 1e-9f));
 }
 
 bool SpectatorController::inputs(GLFWKeyInfo& input)
 {
-    switch (input.action)
-    {
-    case GLFW_PRESS:
-        switch (input.key)
-        {
-        case GLFW_KEY_W : frontFactor ++; break;
-        case GLFW_KEY_S : frontFactor --; break;
-        case GLFW_KEY_A : rightFactor ++; break;
-        case GLFW_KEY_D : rightFactor --; break;
-        case GLFW_KEY_SPACE : upFactor ++; break;
-        case GLFW_KEY_LEFT_CONTROL : upFactor --; break;
-        case GLFW_KEY_LEFT_SHIFT : sprintActivated = true; break;
-        default:break;
-        }
-        break;
+    // switch (input.action)
+    // {
+    // case GLFW_PRESS:
+    //     switch (input.key)
+    //     {
+    //     case GLFW_KEY_W : frontFactor ++; break;
+    //     case GLFW_KEY_S : frontFactor --; break;
+    //     case GLFW_KEY_A : rightFactor ++; break;
+    //     case GLFW_KEY_D : rightFactor --; break;
+    //     case GLFW_KEY_SPACE : upFactor ++; break;
+    //     case GLFW_KEY_LEFT_CONTROL : upFactor --; break;
+    //     case GLFW_KEY_LEFT_SHIFT : sprintActivated = true; break;
+    //     default:break;
+    //     }
+    //     break;
 
-    case GLFW_RELEASE:
-        switch (input.key)
-        {
-        case GLFW_KEY_W : frontFactor --; break;
-        case GLFW_KEY_S : frontFactor ++; break;
-        case GLFW_KEY_A : rightFactor --; break;
-        case GLFW_KEY_D : rightFactor ++; break;
-        case GLFW_KEY_SPACE : upFactor --; break;
-        case GLFW_KEY_LEFT_CONTROL : upFactor ++; break;
-        case GLFW_KEY_LEFT_SHIFT : sprintActivated = false; break;
-        default:break;
-        }
-        break;
+    // case GLFW_RELEASE:
+    //     switch (input.key)
+    //     {
+    //     case GLFW_KEY_W : frontFactor --; break;
+    //     case GLFW_KEY_S : frontFactor ++; break;
+    //     case GLFW_KEY_A : rightFactor --; break;
+    //     case GLFW_KEY_D : rightFactor ++; break;
+    //     case GLFW_KEY_SPACE : upFactor --; break;
+    //     case GLFW_KEY_LEFT_CONTROL : upFactor ++; break;
+    //     case GLFW_KEY_LEFT_SHIFT : sprintActivated = false; break;
+    //     default:break;
+    //     }
+    //     break;
 
-    default:break;
-    }
+    // default:break;
+    // }
 
 
     return false;
@@ -89,4 +139,5 @@ void Controller::mouseEvent(vec2 dir, GLFWwindow* window)
         }
     }
 }
+
 

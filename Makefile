@@ -60,6 +60,9 @@ DEPFLAGS_BASE = -MT $@ -MMD -MP -MF $(DEPDIR)
 DEPFLAGS = $(DEPFLAGS_BASE)/$*.d
 DEPFLAGSMAIN = $(DEPFLAGS_BASE)/main.d
 
+G_DEPFLAGS = $(DEPFLAGS_BASE)/game/$*.d
+G_DEPFLAGSMAIN = $(DEPFLAGS_BASE)/game/main.d
+
 SOURCES := $(call rwildcard,$(SDIR),*.cpp)
 OBJ := $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
 OBJ += $(ODIR)/main.o
@@ -98,13 +101,13 @@ $(G_EXEC): $(G_OBJ) $(G_EOBJ)
 	@$(CC) $(G_EOBJ) $(G_OBJ) $(LINKFLAGS) -o $(G_EXEC) $(LIBFLAGS)
 
 ../obj/main.o : ../main.cpp
-../obj/main.o : ../main.cpp 
-	@$(CC) -c $(CPPFLAGS) -I../include -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
+../obj/main.o : ../main.cpp $(DEPDIR)/game/main.d | $(DEPDIR)/game
+	@$(CC) -c $(G_DEPFLAGSMAIN) $(CPPFLAGS) -I../include -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
 	@$(BUILD_FILE_GAME) $<
 
 ../obj/%.o : ../src/%.cpp
-../obj/%.o : ../src/%.cpp
-	@$(CC) -c $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) -I../include $< -o $@ 
+../obj/%.o : ../src/%.cpp $(DEPDIR)/game/%.d | $(DEPDIR)/game
+	@$(CC) -c $(G_DEPFLAGS) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) -I../include $< -o $@ 
 	@$(BUILD_FILE_GAME) $<
 
 #/**************************************/
@@ -138,17 +141,23 @@ obj/%.o : src/%.cpp $(DEPDIR)/%.d | $(DEPDIR)
 	@$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) $< -o $@ 
 	@$(BUILD_FILE_VULPINE) $<
 
-$(DEPDIR): ; @mkdir $@
+$(DEPDIR): 
+	@mkdir -p $(DEPDIR)
+
+$(DEPDIR)/game:
+	@mkdir -p $(DEPDIR)/game
 
 DEPFILES := $(SOURCES:$(SDIR)/%.cpp=$(DEPDIR)/%.d)
+DEPFILES += $(G_SOURCES:$(G_SDIR)/%.cpp=$(DEPDIR)/game/%.d)
 DEPFILES += $(DEPDIR)/main.d
+DEPFILES += $(DEPDIR)/game/main.d
 # $(info $(DEPFILES))
 $(DEPFILES):
 
 
 include $(wildcard $(DEPFILES))
 
-
+.PHONY: clean countlines game gameClean gameReinstall reinstall vulpine debug run 
 
 
 clean : 

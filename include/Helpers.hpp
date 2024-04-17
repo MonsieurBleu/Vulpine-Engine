@@ -149,6 +149,16 @@ class SkeletonHelper : public ObjectGroup
 
 typedef std::shared_ptr<SkeletonHelper> SkeletonHelperRef;
 
+class PolyhedronHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        PolyhedronHelper(const std::vector<vec3>& points, vec3 color = vec3(0, 1, 0));
+};
+
+typedef std::shared_ptr<PolyhedronHelper> PolyhedronHelperRef;
 
 class NavGraphHelper : public ObjectGroup
 {

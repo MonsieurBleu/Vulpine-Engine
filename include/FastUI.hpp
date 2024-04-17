@@ -35,6 +35,8 @@ class SimpleUiTileBatch : public MeshModel3D
         std::deque<SimpleUiTileRef> tiles;
 
     public : 
+        SimpleUiTileBatch(){state.frustumCulled = false;};
+
         SimpleUiTileBatch& add(SimpleUiTileRef tile);
         /*
             TODO : add inteligent buffer overwrite (the whole thing is not re-allocated if the place is arleady here)

@@ -1,6 +1,8 @@
 #include <MathsUtils.hpp>
 #include <Constants.hpp>
 
+#include <glm/gtc/quaternion.hpp>
+
 vec3 PhiThetaToDir(vec2 pt)
 {
     vec3 v;
@@ -93,4 +95,34 @@ vec3 viewToWorld(vec4 pos, const mat4& m)
 {
     pos = m * pos;
     return vec3(pos)/pos.w;
+}
+
+vec3 slerpDirClamp(vec3 dir1, vec3 dir2, float t, vec3 wfront)
+{
+    const quat qcur(quatLookAt(dir1, vec3(0, 1, 0)));
+    const quat qnew(quatLookAt(dir2, vec3(0, 1, 0)));
+
+    return slerp(qcur, qnew, clamp(t, 0.f, 1.f)) * wfront;
+}
+
+#include <Globals.hpp>
+
+vec3 screenPosToModel(vec2 screenPos)
+{
+    vec3 r(screenPos, 0.f);
+    vec2 w(globals.windowSize());
+
+    r.y /= w.x/w.y;
+
+    return r;
+}
+
+vec3 rotateVec(vec3 front, vec3 axis, float angle)
+{
+    return mat3(rotate(mat4(1), angle, axis)) * front;
+}
+
+vec3 ColorHexToV(uint hex)
+{
+    return vec3((hex>>16)%256, (hex>>8)%256, hex%256)/256.f;
 }

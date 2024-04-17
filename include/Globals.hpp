@@ -23,6 +23,8 @@ private:
 
     const GLFWvidmode *_videoMode;
 
+    GLFWwindow *_window;
+
     glm::vec2 _mousePosition;
 
     ivec2 _windowSize;
@@ -48,12 +50,14 @@ private:
 
 
     Scene *_gameScene;
+    Scene *_gameScene2D;
 
 public:
     // MeshMaterial basicMaterial;
 
     Controller *_currentController = nullptr;
     Scene *getScene() const; 
+    Scene *getScene2D() const; 
 
     /**
      * Globals are not cloneable.
@@ -146,6 +150,8 @@ public:
     bool getTextInputs(void *user, std::u32string &buff);
 
     int windowHasFocus();
+
+    GLFWwindow *getWindow();
 };
 
 extern Globals globals;

@@ -2,7 +2,6 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 
-
 #include <vector>
 #include <deque>
 #include <queue>
@@ -24,10 +23,10 @@ class Node {
 
     private:
 
-        vec3 position; // position of node
         int id; // id of node
-        Link neighbors[MAX_NEIGHBORS]; // storing the id of neighbors
+        vec3 position; // position of node
         int neighborsN; // number of neighbors
+        Link neighbors[MAX_NEIGHBORS]; // storing the id of neighbors
 
         void rearrangeNeighbors();
 
@@ -73,6 +72,9 @@ class NavGraph {
         void shortestPath(int, int, Path); // A* algorithm
         void reconstructPath(int*, int, int, Path);
 
+        // Returns the nearest node from pos
+        int nearestNode(vec3 pos);
+
         const std::vector<Node>& getNodes(){return nodes;};
 
         void print();
@@ -81,19 +83,33 @@ class NavGraph {
 
 typedef std::shared_ptr<NavGraph> NavGraphRef;
 
-class Path : public std::shared_ptr<std::deque<int>>
+class Path : public std::shared_ptr<std::deque<vec3>>
 {
     private:
 
-        int start;
-        int dest;
+        vec3 start;
+        vec3 dest;
 
     public:
 
-        Path(int _start, int _dest): std::shared_ptr<std::deque<int>>(new std::deque<int>), start(_start), dest(_dest){};
+        Path(vec3 _start, vec3 _dest): std::shared_ptr<std::deque<vec3>>(new std::deque<vec3>), start(_start), dest(_dest){};
+        Path(){};
         ~Path(){};
         
         void update(NavGraphRef);
         void print();
+
+        void setStart(vec3 _start) {
+            start = _start;
+        };
+        void setDest(vec3 _dest) {
+            dest = _dest;
+        }
+        vec3 getStart() {
+            return start;
+        }
+        vec3 getDest() {
+            return dest;
+        }
         
 };

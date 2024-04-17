@@ -33,7 +33,7 @@ const std::string TERMINAL_NOTIF    = "\e[1;36m";
     << TERMINAL_WARNING << "WARNING \xBF from " \
     << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
     << TERMINAL_RESET << TERMINAL_WARNING << " at file " << __FILE__ << ":" << __LINE__ \
-    << "\n      \xC0\xC4\xC4 "\
+    << "\n        \xC0\xC4\xC4 "\
     << TERMINAL_WARNING << message \
     << TERMINAL_RESET << "\n\n";
 
@@ -90,5 +90,8 @@ void checkHeap();
 // {
 //     return out << glm::to_string(g);
 // }
+
+std::string getFileNameFromPath(const char *path);
+std::string getNameOnlyFromPath(const char *path);
 
 #endif
