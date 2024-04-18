@@ -84,7 +84,7 @@ void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<A
 
 void SkeletonAnimationState::applyKeyframes(std::vector<keyframeData> keyframes)
 {
-    for (int i = 0; i < size(); i++)
+    for (size_t i = 0; i < size(); i++)
     {
         keyframeData data = keyframes[i];
         mat4 t = mat4(1);

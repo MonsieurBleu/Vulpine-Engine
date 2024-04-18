@@ -1,8 +1,9 @@
 #include "Animation.hpp"
+#include "Skeleton.hpp"
 #include "Utils.hpp"
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
 
 enum AnimationControllerTransitionCondition
 {
@@ -16,9 +17,6 @@ enum TransitionType
     TRANSITION_SMOOTH = 0x2,
 };
 
-auto falseFunction = []()
-{ return false; };
-
 struct AnimationControllerTransition
 {
     AnimationRef from;
@@ -28,17 +26,11 @@ struct AnimationControllerTransition
     TransitionType type;
     std::function<bool()> conditionFunction;
 
-    AnimationControllerTransition(AnimationRef _from,
-                                  AnimationRef _to,
-                                  AnimationControllerTransitionCondition _condition,
-                                  float _transitionLength,
-                                  TransitionType _type = TRANSITION_LINEAR,
-                                  std::function<bool()> _conditionFunction = falseFunction)
-        : from(_from),
-          to(_to),
-          condition(_condition),
-          transitionLength(_transitionLength),
-          type(_type),
+    AnimationControllerTransition(
+        AnimationRef _from, AnimationRef _to, AnimationControllerTransitionCondition _condition,
+        float _transitionLength, TransitionType _type = TRANSITION_LINEAR,
+        std::function<bool()> _conditionFunction = [] { return false; })
+        : from(_from), to(_to), condition(_condition), transitionLength(_transitionLength), type(_type),
           conditionFunction(_conditionFunction)
     {
     }
@@ -46,8 +38,7 @@ struct AnimationControllerTransition
 
 class AnimationController
 {
-private:
-    // DFA automaton;
+  private:
     std::vector<AnimationRef> animations;
     std::vector<AnimationControllerTransition> transitions;
     bool transitioning = false; // insert trans flag emoji
@@ -55,6 +46,9 @@ private:
     AnimationRef currentAnimation;
     std::chrono::time_point<std::chrono::high_resolution_clock> animationStart;
     std::chrono::time_point<std::chrono::high_resolution_clock> transitionStart;
+    float animationTime = 0;
+    float transitionTime = 0;
+
     std::vector<keyframeData> currentKeyframes;
 
     std::vector<AnimationControllerTransition *> transitionsFromCurrentState;
@@ -73,24 +67,27 @@ private:
         if (transitionsFromCurrentState.size() == 0)
         {
             // failsafe if no transition is found, loop back to the same animation
-            transitions.push_back(AnimationControllerTransition(currentAnimation, currentAnimation, COND_ANIMATION_FINISHED, epsilon<float>()));
+            transitions.push_back(AnimationControllerTransition(currentAnimation, currentAnimation,
+                                                                COND_ANIMATION_FINISHED, epsilon<float>()));
         }
     }
 
-public:
-    AnimationController(int32_t initialState, std::vector<AnimationControllerTransition> &_transitions, std::vector<AnimationRef> &_animations)
+  public:
+    AnimationController(int32_t initialState, std::vector<AnimationControllerTransition> &_transitions,
+                        std::vector<AnimationRef> &_animations)
     {
         transitions = _transitions;
         animations = _animations;
 
         currentAnimation = animations[initialState];
         animationStart = std::chrono::high_resolution_clock::now();
+        currentAnimation->onEnterAnimation();
         getTransitionsFromCurrentState();
     }
 
-    void update()
+    void update(float dt)
     {
-        float time = std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - animationStart).count();
+        animationTime += dt * currentAnimation->speedCallback();
 
         if (!transitioning)
         {
@@ -99,11 +96,13 @@ public:
                 switch (t->condition)
                 {
                 case COND_ANIMATION_FINISHED:
-                    if (currentAnimation->isFinished(time + t->transitionLength))
+                    if (currentAnimation->isFinished(animationTime + t->transitionLength))
                     {
                         currentTransition = t;
                         transitioning = true;
                         transitionStart = std::chrono::high_resolution_clock::now();
+                        t->to->onEnterAnimation();
+                        transitionTime = 0;
                     }
                     break;
                 case COND_CUSTOM:
@@ -112,16 +111,18 @@ public:
                         currentTransition = t;
                         transitioning = true;
                         transitionStart = std::chrono::high_resolution_clock::now();
+                        t->to->onEnterAnimation();
+                        transitionTime = 0;
                     }
                     break;
                 }
             }
 
-            currentKeyframes = currentAnimation->getCurrentFrames(time);
+            currentKeyframes = currentAnimation->getCurrentFrames(animationTime);
         }
         else
         {
-            float transitionTime = std::chrono::duration<float>(std::chrono::high_resolution_clock::now() - transitionStart).count();
+            transitionTime += dt * currentTransition->to->speedCallback();
             float a = 0;
             switch (currentTransition->type)
             {
@@ -133,15 +134,19 @@ public:
                 break;
             }
 
-            currentKeyframes = interpolateKeyframes(currentTransition->from, currentTransition->to, fmod(time, currentAnimation->getLength()), transitionTime, a);
+            currentKeyframes =
+                interpolateKeyframes(currentTransition->from, currentTransition->to,
+                                     fmod(animationTime, currentAnimation->getLength()), transitionTime, a);
 
             if (transitionTime >= currentTransition->transitionLength)
             {
                 // std::cout << "a: " << a << "\n";
                 // std::cout << "time: " << time << "\n";
                 // std::cout << "transitionTime: " << transitionTime << "\n";
+                currentAnimation->onExitAnimation();
                 currentAnimation = currentTransition->to;
                 animationStart = transitionStart;
+                animationTime = transitionTime;
                 transitioning = false;
                 getTransitionsFromCurrentState();
             }
