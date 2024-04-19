@@ -1,14 +1,13 @@
 #pragma once
 
-#include <vector>
-#include <string>
-#include <memory>
-#include <functional>
 #include <cstring>
-#include <unordered_map>
-
+#include <functional>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
 using namespace glm;
 
 typedef unsigned char byte;
@@ -27,7 +26,9 @@ struct AnimationFileHeader
         strncpy(animationName, name, 127);
     }
 
-    AnimationFileHeader() {}
+    AnimationFileHeader()
+    {
+    }
 };
 
 enum AnimationBehaviour : byte
@@ -79,33 +80,61 @@ typedef std::shared_ptr<Animation> AnimationRef;
 
 class Animation
 {
-private:
+  private:
     std::string name;
     float length; // in seconds
 
     std::vector<std::vector<AnimationKeyframeData>> keyframes;
     std::vector<int> currentKeyframeIndex;
 
-public:
+  public:
+    std::function<void()> onEnterAnimation = [] {};
+    std::function<void()> onExitAnimation = [] {};
+    std::function<float()> speedCallback = [] { return 1; };
+
     Animation(){};
 
     Animation(
-        const std::string &name,
-        float length,
-        std::vector<std::vector<AnimationKeyframeData>> &keyframes)
-        : name(name), length(length), keyframes(keyframes)
+        const std::string &name, float length, std::vector<std::vector<AnimationKeyframeData>> &keyframes,
+        std::function<void()> onEnterAnimation = [] {}, std::function<void()> onExitAnimation = [] {},
+        std::function<float()> getSpeed = [] { return 1; })
+        : name(name), length(length), keyframes(keyframes), onEnterAnimation(onEnterAnimation),
+          onExitAnimation(onExitAnimation), speedCallback(getSpeed)
     {
         currentKeyframeIndex.resize(keyframes.size(), 0);
     }
 
     static AnimationRef load(const std::string &filename);
 
-    const std::string getName() const { return name; }
-    float getLength() const { return length; }
-    const std::vector<std::vector<AnimationKeyframeData>> &getKeyframes() { return keyframes; }
-    const std::vector<AnimationKeyframeData> &getKeyframe(int i) { return keyframes[i]; }
-    const std::vector<AnimationKeyframeData> &operator[](int i) { return keyframes[i]; }
-    int getKeyframeNumber() const { return keyframes.size(); }
+    const std::string getName() const
+    {
+        return name;
+    }
+
+    float getLength() const
+    {
+        return length;
+    }
+
+    const std::vector<std::vector<AnimationKeyframeData>> &getKeyframes()
+    {
+        return keyframes;
+    }
+
+    const std::vector<AnimationKeyframeData> &getKeyframe(int i)
+    {
+        return keyframes[i];
+    }
+
+    const std::vector<AnimationKeyframeData> &operator[](int i)
+    {
+        return keyframes[i];
+    }
+
+    int getKeyframeNumber() const
+    {
+        return keyframes.size();
+    }
     std::vector<keyframeData> getCurrentFrames(float time);
 
     bool isFinished(float time)
@@ -114,7 +143,8 @@ public:
     }
 
     friend class Skeleton;
-    friend std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2, float a);
+    friend std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2,
+                                                          float a);
 };
 
 std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2, float a);
