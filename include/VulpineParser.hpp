@@ -25,6 +25,7 @@ class VulpineTextBuff
 
     public :
         VulpineTextBuff(const char *filename);
+        VulpineTextBuff(){};
         ~VulpineTextBuff();
 
         void loadFromFile(const char *filename);
@@ -34,6 +35,8 @@ class VulpineTextBuff
         size_t getReadHead(){return readhead;};
 
         void setHead(uft8 *ptr);
+
+        void alloc(int size);
 
         uft8* read();
 };

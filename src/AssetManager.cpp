@@ -303,3 +303,14 @@ SkeletonRef& Loader<SkeletonRef>::loadFromInfos()
 
     EXIT_ROUTINE_AND_RETURN
 }
+
+template<>
+AnimationRef& Loader<AnimationRef>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+    LOADER_ASSERT(NEW_VALUE)
+
+    r = Animation::load(buff->read());
+
+    EXIT_ROUTINE_AND_RETURN
+}

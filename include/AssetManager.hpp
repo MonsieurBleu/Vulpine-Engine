@@ -3,6 +3,9 @@
 #include <unordered_map>
 #include <cassert>
 
+#include <Utils.hpp>
+#include <string.h>
+
 /*
     Template class for asset loading from text based format, with dupplication prevention policy.
 
@@ -79,6 +82,18 @@ class Loader
             e.values = buff->data + buff->getReadHead();
             e.name = ptr;
             return *(loadingInfos[e.name] = std::make_unique<Loader<T>> (e));
+        };
+
+        static Loader<T>& addInfosTextless(const char *filename)
+        {
+            VulpineTextBuffRef autoText(new VulpineTextBuff());
+
+            std::string id = getNameOnlyFromPath(filename) + " : " + filename + " ; "; 
+
+            autoText->alloc(id.size());
+            strcpy(autoText->data, id.c_str());
+
+            return addInfos(autoText);
         };
         
         T& loadFromInfos();

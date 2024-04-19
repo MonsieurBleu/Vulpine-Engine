@@ -1,15 +1,17 @@
+#include <stb/stb_image.h>
+#include <filesystem>
+
 #include <App.hpp>
 #include <Globals.hpp>
 #include <Uniforms.hpp>
 #include <FrameBuffer.hpp>
 #include <CompilingOptions.hpp>
-#include <stb/stb_image.h>
 #include <Audio.hpp>
 #include <Controller.hpp>
 #include <Shadinclude.hpp>
 #include <AssetManager.hpp>
+#include <Animation.hpp>
 
-#include <filesystem>
 
 std::mutex inputMutex;
 std::mutex physicsMutex;
@@ -42,6 +44,9 @@ void App::loadAllAssetsInfos(const char *filename)
         else
         if(!strcmp(ext, ".vulpineMaterial"))
             Loader<MeshMaterial>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineAnimation"))
+            Loader<AnimationRef>::addInfosTextless(p);
     }
 };
 

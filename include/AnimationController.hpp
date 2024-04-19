@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <Skeleton.hpp>
 
 enum AnimationControllerTransitionCondition
 {
@@ -15,9 +16,6 @@ enum TransitionType
     TRANSITION_LINEAR = 0x1,
     TRANSITION_SMOOTH = 0x2,
 };
-
-auto falseFunction = []()
-{ return false; };
 
 struct AnimationControllerTransition
 {
@@ -33,7 +31,7 @@ struct AnimationControllerTransition
                                   AnimationControllerTransitionCondition _condition,
                                   float _transitionLength,
                                   TransitionType _type = TRANSITION_LINEAR,
-                                  std::function<bool()> _conditionFunction = falseFunction)
+                                  std::function<bool()> _conditionFunction = [](){return false;})
         : from(_from),
           to(_to),
           condition(_condition),
@@ -50,7 +48,7 @@ private:
     // DFA automaton;
     std::vector<AnimationRef> animations;
     std::vector<AnimationControllerTransition> transitions;
-    bool transitioning = false; // insert trans flag emoji
+    bool transitioning = false; // 🏳️‍⚧️ 
     AnimationControllerTransition *currentTransition = nullptr;
     AnimationRef currentAnimation;
     std::chrono::time_point<std::chrono::high_resolution_clock> animationStart;
@@ -78,7 +76,7 @@ private:
     }
 
 public:
-    AnimationController(int32_t initialState, std::vector<AnimationControllerTransition> &_transitions, std::vector<AnimationRef> &_animations)
+    AnimationController(int32_t initialState, const std::vector<AnimationControllerTransition> &_transitions, const std::vector<AnimationRef> &_animations)
     {
         transitions = _transitions;
         animations = _animations;
@@ -153,3 +151,5 @@ public:
         skeleton.applyKeyframes(currentKeyframes);
     }
 };
+
+typedef std::shared_ptr<AnimationController> AnimationControllerRef;

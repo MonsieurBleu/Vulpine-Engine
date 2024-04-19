@@ -52,29 +52,29 @@ typedef std::shared_ptr<Animation> AnimationRef;
 
 class SkeletonAnimationState : public std::vector<mat4>
 {
-private:
-    // uint handle = 0;
-    std::shared_ptr<uint> handle;
+    private:
+        // uint handle = 0;
+        std::shared_ptr<uint> handle;
 
-public:
-    SkeletonAnimationState(SkeletonRef s);
-    SkeletonAnimationState();
-    ~SkeletonAnimationState();
+    public:
+        SkeletonAnimationState(SkeletonRef s);
+        SkeletonAnimationState();
+        ~SkeletonAnimationState();
 
-    SkeletonRef skeleton;
+        SkeletonRef skeleton;
 
-    /**
-     * @brief applies a number of animations to the state
-     *
-     * @param time the time
-     * @param animations a vector that contains animations as well as their "factor" (how much it affects the final animation, ideally should sum up to 1 but we ball)
-     */
-    void applyAnimations(float time, std::vector<std::pair<AnimationRef, float>> animations);
+        /**
+         * @brief applies a number of animations to the state
+         *
+         * @param time the time
+         * @param animations a vector that contains animations as well as their "factor" (how much it affects the final animation, ideally should sum up to 1 but we ball)
+         */
+        void applyAnimations(float time, std::vector<std::pair<AnimationRef, float>> animations);
 
-    void applyKeyframes(std::vector<keyframeData> keyframes);
+        void applyKeyframes(std::vector<keyframeData> keyframes);
 
-    void generate();
-    void send();
-    void update();
-    void activate(int location);
+        void generate();
+        void send();
+        void update();
+        void activate(int location);
 };
