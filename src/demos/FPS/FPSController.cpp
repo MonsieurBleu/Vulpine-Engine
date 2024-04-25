@@ -1,5 +1,6 @@
-/*#define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
 #include "demos/FPS/FPSController.hpp"
+#include "Globals.hpp"
 #include <iostream>
 #include <math.h>
 
@@ -16,9 +17,8 @@ bool FPSVariables::D = false;
 bool FPSVariables::grounded = false;
 bool FPSVariables::lockJump = false;
 
-std::vector<RigidBodyRef> FPSVariables::thingsYouCanStandOn;
-
-FPSController::FPSController(GLFWwindow *window, RigidBodyRef body, Camera *camera, InputBuffer *inputs) : body(body), inputs(inputs)
+FPSController::FPSController(GLFWwindow *window, RigidBody::Ref body, Camera *camera, InputBuffer *inputs)
+    : body(body), inputs(inputs)
 {
     // glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods)
     //                    {
@@ -44,7 +44,7 @@ FPSController::~FPSController()
 {
 }
 
-void FPSController::doInputs(GLFWKeyInfo& input)
+void FPSController::doInputs(GLFWKeyInfo &input)
 {
     doJump = false;
     if (input.action == GLFW_PRESS)
@@ -118,12 +118,12 @@ void FPSController::update(float deltaTime)
     }
 
     // grounded test
-    Ray ray{body->getPosition() + vec3(0, -1.95, 0), vec3(0.0f, -1.0f, 0.0f)};
-    float t;
-    RigidBodyRef bodyIntersect;
-    FPSVariables::grounded = raycast(ray, FPSVariables::thingsYouCanStandOn, 0.2f, t, bodyIntersect);
-    if (!FPSVariables::grounded)
-        FPSVariables::lockJump = false;
+    // Ray ray{body->getPosition() + vec3(0, -1.95, 0), vec3(0.0f, -1.0f, 0.0f)};
+    // float t;
+    // RigidBodyRef bodyIntersect;
+    // FPSVariables::grounded = raycast(ray, FPSVariables::thingsYouCanStandOn, 0.2f, t, bodyIntersect);
+    // if (!FPSVariables::grounded)
+    //     FPSVariables::lockJump = false;
 
     // std::cout << "grounded: " << FPSVariables::grounded << "\n";
     // std::cout << "ray: " << ray.origin.x << ", " << ray.origin.y << ", " << ray.origin.z << "\n";
@@ -149,12 +149,13 @@ void FPSController::update(float deltaTime)
         pos.y += bob;
 
     float diffBias = 0.0001;
-    vec3 diff = globals.currentCamera->getPosition()-pos;
-    if(dot(diff, diff) > diffBias)
+    vec3 diff = globals.currentCamera->getPosition() - pos;
+    if (dot(diff, diff) > diffBias)
         globals.currentCamera->setPosition(pos);
 
     // std::cout << "\r" << speed << " m/s   " << std::flush;
-    // std::cout << "\r" << body->getVelocity().x << ", " << body->getVelocity().y << ", " << body->getVelocity().z << " m/s   " << std::flush;
+    // std::cout << "\r" << body->getVelocity().x << ", " << body->getVelocity().y << ", " << body->getVelocity().z << "
+    // m/s   " << std::flush;
 
     mouseLook();
 }
@@ -194,8 +195,8 @@ void FPSController::move(float fmove, float smove, float deltaTime)
     // std::cout << "wishSpeed: " << wishSpeed << "\n";
     // std::cout << "forward: " << forward.x << ", " << forward.y << ", " << forward.z << "\n";
     // std::cout << "right: " << right.x << ", " << right.y << ", " << right.z << "\n";
-    // std::cout << "camera direction: " << camera->getDirection().x << ", " << camera->getDirection().y << ", " << camera->getDirection().z << "\n";
-    // std::cout << std::endl;
+    // std::cout << "camera direction: " << camera->getDirection().x << ", " << camera->getDirection().y << ", " <<
+    // camera->getDirection().z << "\n"; std::cout << std::endl;
 
     if (FPSVariables::grounded)
     {
@@ -331,9 +332,9 @@ void FPSController::mouseLook()
     quat newRotation = yawQuat * pitchQuat * globals.currentCamera->getDirection();
 
     // print camera->getDirection()
-    // std::cout << "Camera direction: " << camera->getDirection().x << ", " << camera->getDirection().y << ", " << camera->getDirection().z << "\n";
-    // std::cout << "camera position: " << camera->getPosition().x << ", " << camera->getPosition().y << ", " << camera->getPosition().z << "\n";
-    vec3 rot = eulerAngles(newRotation);
-    globals.currentCamera->setDirection(rot);
-    
-}*/
+    // std::cout << "Camera direction: " << camera->getDirection().x << ", " << camera->getDirection().y << ", " <<
+    camera->getDirection().z << "\n";
+    // std::cout << "camera position: " << camera->getPosition().x << ", " << camera->getPosition().y << ", " <<
+    camera->getPosition().z << "\n"; vec3 rot = eulerAngles(newRotation); globals.currentCamera->setDirection(rot);
+    */
+}
