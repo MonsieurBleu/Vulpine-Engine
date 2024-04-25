@@ -322,9 +322,10 @@ void Scene::generateLightClusters()
                 {
                     oneCulledX = true;
                     int cid = MAX_LIGHT_PER_CLUSTER*aabbID;
-                    const int maxCID = cid + MAX_LIGHT_PER_CLUSTER;
+                    const int maxCID = cid + MAX_LIGHT_PER_CLUSTER - 1;
+
                     while(buff[cid] != lmax && cid < maxCID) cid++;
-                    
+
                     buff[cid] = i;
                     buff[cid+1] = lmax;
                 }

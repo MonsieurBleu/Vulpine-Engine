@@ -59,7 +59,7 @@ void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<A
         vec3 trans = data.translation;
         quat r = data.rotation;
         vec3 s = data.scale;
-        
+
         for (size_t j = 1; j < animations.size(); j++)
         {
             if (keyframes[j].size() == 0)
@@ -78,6 +78,20 @@ void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<A
         t = t * mat4_cast(r);
         t = scale(t, s);
 
+        (*this)[i] = t;
+    }
+}
+
+void SkeletonAnimationState::applyKeyframes(std::vector<keyframeData> keyframes)
+{
+    int _size = (int)size();
+    for (int i = 0; i < _size; i++)
+    {
+        keyframeData data = keyframes[i];
+        mat4 t = mat4(1);
+        t = translate(t, data.translation);
+        t = t * mat4_cast(data.rotation);
+        t = scale(t, data.scale);
 
         (*this)[i] = t;
     }
@@ -104,18 +118,18 @@ SkeletonAnimationState::SkeletonAnimationState(SkeletonRef s) : std::vector<mat4
     handle = std::make_shared<uint>();
     std::fill(this->begin(), this->end(), mat4(1));
     generate();
-    send(); 
+    send();
 };
 
 SkeletonAnimationState::~SkeletonAnimationState()
 {
-    if(handle.get() && *handle && handle.use_count() == 1)
-        glDeleteBuffers(1, handle.get());    
+    if (handle.get() && *handle && handle.use_count() == 1)
+        glDeleteBuffers(1, handle.get());
 }
 
 void SkeletonAnimationState::send()
 {
-    if(handle.get() && *handle)
+    if (handle.get() && *handle)
     {
         glBindBuffer(GL_SHADER_STORAGE_BUFFER, *handle);
         glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(mat4) * size(), data(), GL_DYNAMIC_COPY);
@@ -125,12 +139,12 @@ void SkeletonAnimationState::send()
 
 void SkeletonAnimationState::update()
 {
-    if(handle.get() && *handle)
+    if (handle.get() && *handle)
         glNamedBufferSubData(*handle, 0, sizeof(mat4) * size(), data());
 }
 
 void SkeletonAnimationState::activate(int location)
 {
-    if(handle.get() && *handle)
+    if (handle.get() && *handle)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, *handle);
 }

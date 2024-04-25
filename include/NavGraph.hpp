@@ -23,10 +23,10 @@ class Node {
 
     private:
 
-        vec3 position; // position of node
         int id; // id of node
-        Link neighbors[MAX_NEIGHBORS]; // storing the id of neighbors
+        vec3 position; // position of node
         int neighborsN; // number of neighbors
+        Link neighbors[MAX_NEIGHBORS]; // storing the id of neighbors
 
         void rearrangeNeighbors();
 
@@ -98,5 +98,18 @@ class Path : public std::shared_ptr<std::deque<vec3>>
         
         void update(NavGraphRef);
         void print();
+
+        void setStart(vec3 _start) {
+            start = _start;
+        };
+        void setDest(vec3 _dest) {
+            dest = _dest;
+        }
+        vec3 getStart() {
+            return start;
+        }
+        vec3 getDest() {
+            return dest;
+        }
         
 };

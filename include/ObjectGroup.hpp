@@ -42,6 +42,8 @@ public:
     std::pair<vec3, vec3> getMeshesBoundingBox();
 
     ObjectGroupRef copy();
+
+    const std::deque<ModelRef>& getMeshes() const {return meshes;};
 };
 
 #endif

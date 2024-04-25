@@ -99,7 +99,7 @@ std::optional<IntersectionInfo> sat(const std::vector<glm::vec3> &points1, const
 static glm::vec3 gjkSupport(const std::vector<glm::vec3> &vertices, const glm::vec3 &direction)
 {
     float maxDot = -std::numeric_limits<float>::infinity();
-    glm::vec3 supportPoint;
+    glm::vec3 supportPoint(0.f);
     for (const glm::vec3 &vertex : vertices)
     {
         float dot = glm::dot(vertex, direction);
@@ -474,7 +474,7 @@ namespace geometry
     glm::vec3 convexSetSupportPoint(const std::vector<glm::vec3> &convexSet, const glm::vec3 &direction)
     {
         float maxDot = -std::numeric_limits<float>::infinity();
-        glm::vec3 supportPoint;
+        glm::vec3 supportPoint(0.f);
         for (const glm::vec3 &point : convexSet)
         {
             float dot = glm::dot(point, direction);

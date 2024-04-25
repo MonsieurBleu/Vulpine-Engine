@@ -1,13 +1,17 @@
+#include <stb/stb_image.h>
+#include <filesystem>
+
 #include <App.hpp>
 #include <Globals.hpp>
 #include <Uniforms.hpp>
 #include <FrameBuffer.hpp>
 #include <CompilingOptions.hpp>
-#include <stb/stb_image.h>
 #include <Audio.hpp>
 #include <Controller.hpp>
 #include <Shadinclude.hpp>
 #include <AssetManager.hpp>
+#include <Animation.hpp>
+
 
 std::mutex inputMutex;
 std::mutex physicsMutex;
@@ -16,6 +20,35 @@ InputBuffer inputs;
 Globals globals;
 
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
+
+void App::loadAllAssetsInfos(const char *filename)
+{
+    for(auto f : std::filesystem::recursive_directory_iterator(filename))
+    {
+        if(f.is_directory()) continue;
+
+        char ext[1024];
+        char p[4096];
+
+        strcpy(ext, (char *)f.path().extension().string().c_str());
+        strcpy(p, (char *)f.path().string().c_str());
+
+        if(!strcmp(ext, ".vulpineGroup"))
+            Loader<ObjectGroup>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineGroupRef"))
+            Loader<ObjectGroupRef>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineModel"))
+            Loader<MeshModel3D>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineMaterial"))
+            Loader<MeshMaterial>::addInfos(p);
+        else
+        if(!strcmp(ext, ".vulpineAnimation"))
+            Loader<AnimationRef>::addInfosTextless(p);
+    }
+};
 
 void App::init()
 {
@@ -141,10 +174,12 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     //         "",
     //         globals.standartShaderUniform3D()));
     
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicHelper.vulpineMaterial");
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicFont3D.vulpineMaterial");
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial"); 
-    Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/animatedPBR.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicHelper.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicFont3D.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial"); 
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/animatedPBR.vulpineMaterial");
+    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/mdFont.vulpineMaterial");
+    loadAllAssetsInfos("shader/vulpineMaterials/");
 }
 
 void App::activateMainSceneBindlessTextures()
@@ -254,6 +289,7 @@ App::App(GLFWwindow* window) :
     SSAO(renderBuffer),
     Bloom(renderBuffer)
 {
+    globals._window = window;
     // if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     // {
     //     std::cerr << "ERROR: Could not set Distance Model to AL_INVERSE_DISTANCE_CLAMPED" << std::endl;

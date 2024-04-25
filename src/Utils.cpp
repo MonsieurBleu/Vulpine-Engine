@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 #include <Utils.hpp>
 
 std::string readFile(const std::string &filePath) // Mights just use a C approach instead

@@ -6,7 +6,7 @@
 
 ## Presentation
 
-The Vulpine Engine is a lightweight game engine made from scratch in C++ using OpenGL. This project aims to provide a solid and versatile foundation for 3D game development. The engine is built for developers who, like me, prefer a hands-on, code first approach with both hight-level built-in features and low-level fine tuning through direct API calls.
+The Vulpine Engine is a lightweight game engine made from scratch in C++ using OpenGL. This project aims to provide a solid and versatile foundation for 3D game development. The engine is built for developers who, like me, prefer a hands-on, code first approach with both high-level built-in features and low-level fine tuning through direct API calls.
 
 
 ## About The Creator 
@@ -42,12 +42,12 @@ Important modules :
 Project structure with Vulpine :
 ```
 my-project/
-├── Engine/      <===== Vulpine Engine submodule
 ├── build/
 │   ├── ressources/
 │   ├── saves/
 │   ├── shader/  <===== VESL submodule
 │   └── Game.exe
+├── Engine/      <===== Vulpine Engine submodule
 ├── include/
 │   └── Game.hpp
 ├── obj/
@@ -107,9 +107,8 @@ my-project/
     - [X] Bindless Textures   
     - [ ] Indirect Vao Drawning
 
-- [ ] Rendering Techniques
+- [X] Rendering Techniques
   - [X] Foward Rendering
-  - [ ] Deffered Rendering
   - [X] Clustured Rendering  
 
 - [ ] Post Process
@@ -135,13 +134,12 @@ my-project/
   - [ ] Fast Non-Redundant Updates
         
 - [ ] Culling 
-  - [ ] Frustum
+  - [X] Frustum
     - [X] Sphere Frustum Culling 
     - [ ] AABB Frustum Culling 
     - [ ] Fast Parallelized Frustum Culling
   - [ ] Efficient Occlusion Culling
 
-- [ ] Scene/Group Loader
 - [ ] Map/Scene Editor 
 
 ### 2D Rendering
@@ -149,13 +147,13 @@ my-project/
   - [X] MSDF Font Rendering
   - [X] UFT Support
   - [X] Single String Batch
+  - [X] Markdown bold and italics
   - [ ] Multi String Batch
-  - [ ] Multi Text Style Per Batch Support
   - [ ] Automatic Text Resizing
       
-- [ ] Fast Ui
-  - [X] Fast UI Batching (TODO : Refactor this monstrosity)
-  - [X] Value Menu Tab (TODO : Refactor this monstrosity)
+- [x] Fast Ui for debugging
+  - [X] Fast UI Batching 
+  - [X] Value Menu Tab 
     - [X] Const & Input Support
     - [X] Int
     - [X] Float
@@ -174,7 +172,7 @@ my-project/
 
 ### Utils & Debug
 - [X] Clear OpenGl Message Callback
-- [X] Lights/Physics/PathFinding Helpers
+- [X] Lights/Physics/PathFinding/Frustum/Geometry Helpers
 - [X] Angle & Color Conversion Functions
 - [X] Precise Benchmark/Frame Timer
 - [X] Precise Limit Timer
@@ -205,13 +203,13 @@ my-project/
  - [X] Textures
   - [X] png/jpeg/gif Images Loading (STB lib)
   - [X] hdr Images Loading (STB lib)
-  - [X] KTX Images Loading (KTX lib) 
+  - [X] KTX/KTX2 Images Loading (KTX lib) 
   - [X] MipMaps (KTX lib)
   - [X] Basic CubeMap Loading
   - [X] Font/CSV Atlas MSDF Loading
   - [ ] (optional) Level/Scene Atlas Generator
 
- - [ ] Audio
+ - [X] Audio
    - [X] .ogg Files loading
    - [ ] .wav Files loading
    - [X] 3D Audio (OpenAL lib)
@@ -222,8 +220,8 @@ my-project/
   - [X] Easy Fragment/Geometry/Vertex Shader Loading From Source File
   - [ ] Shared Device & Host Constants/Defines
   - [X] Easy Tesselation Shader Loading From Source File
-  - [ ] Easy SPIR-V Loading
-  - [ ] Easy Compute Shader Loading 
+  - [ ] PIR-V Loading
+  - [ ] Compute Shader Loading 
 
 - [ ] Assets Streaming
    - [X] Automatic & Secure Destroy Calls  

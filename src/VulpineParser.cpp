@@ -41,6 +41,13 @@ void VulpineTextBuff::loadFromFile(const char *filename)
     data[size] = '\0';
 }
 
+void VulpineTextBuff::alloc(int size)
+{
+    this->size = size;
+    data = new uft8[size+1];
+    data[size] = '\0';
+}
+
 bool VulpineTextBuff::readBreakChar()
 {
     if(readhead >= size)

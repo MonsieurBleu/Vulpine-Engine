@@ -23,6 +23,8 @@ private:
 
     const GLFWvidmode *_videoMode;
 
+    GLFWwindow *_window;
+
     glm::vec2 _mousePosition;
 
     ivec2 _windowSize;
@@ -148,6 +150,8 @@ public:
     bool getTextInputs(void *user, std::u32string &buff);
 
     int windowHasFocus();
+
+    GLFWwindow *getWindow();
 };
 
 extern Globals globals;

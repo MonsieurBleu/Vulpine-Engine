@@ -75,6 +75,8 @@ class Scene
         void deactivateClusteredLighting();
 
         ClusteredLightBuffer& getClusteredLight(){return clusteredLight;};
+
+        const std::deque<SceneLight>& getLights(){return lights;};
 };
 
 
