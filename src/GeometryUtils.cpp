@@ -471,11 +471,6 @@ namespace geometry
         return RaycastInfo();
     }
 
-    RaycastInfo raycastSphere(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection, const glm::vec3 &spherePosition, float sphereRadius)
-    {
-        return RaycastInfo::none();
-    }
-
     glm::vec3 convexSetSupportPoint(const std::vector<glm::vec3> &convexSet, const glm::vec3 &direction)
     {
         float maxDot = -std::numeric_limits<float>::infinity();
