@@ -106,7 +106,7 @@ FastUI_element::FastUI_element(FastUI_context& ui) : ObjectGroupRef(new ObjectGr
 
 vec2 FastUI_element::getSize()
 {
-    return size;
+    return size2D;
 }
 
 FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : FastUI_element(ui)
@@ -139,7 +139,7 @@ FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : Fa
 
     (*this)->add(background);
 
-    this->size = vec2(background->scale);
+    this->size2D = vec2(background->scale);
 
     ui.batchNeedUpdate = true;
 
@@ -413,7 +413,7 @@ FastUI_valueTab& FastUI_valueTab::batch()
 
     ui.batchNeedUpdate = true;
 
-    this->FastUI_element::size = vec2(background->scale);
+    this->FastUI_element::size2D = vec2(background->scale);
 
     return *this;
 }

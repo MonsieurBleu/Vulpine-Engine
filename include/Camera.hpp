@@ -74,9 +74,9 @@ class Camera
         const vec3 getDirection() {return state.direction;};
         const vec3 getLookpoint() {return state.lookpoint;};
 
-        const vec3* getPositionAddr() {return &state.position;};
-        const vec3* getDirectionAddr() {return &state.direction;};
-        const vec3* getLookpointAddr() {return &state.lookpoint;};
+        vec3* getPositionAddr() {return &state.position;};
+        vec3* getDirectionAddr() {return &state.direction;};
+        vec3* getLookpointAddr() {return &state.lookpoint;};
 
         const mat4 getViewMatrix() {return viewMatrix;};
         const mat4 getProjectionMatrix() {return projectionMatrix;};
