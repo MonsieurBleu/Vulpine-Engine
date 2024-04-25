@@ -64,7 +64,9 @@ G_DEPFLAGS = $(DEPFLAGS_BASE)/game/$*.d
 G_DEPFLAGSMAIN = $(DEPFLAGS_BASE)/game/main.d
 
 SOURCES := $(call rwildcard,$(SDIR),*.cpp)
+# SOURCES += $(call rwildcard,$(SDIR),*.c)
 OBJ := $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
+# OBJ += $(SOURCES:$(SDIR)/%.c=$(ODIR)/%.o)
 OBJ += $(ODIR)/main.o
 
 default: $(EXEC)
@@ -129,7 +131,7 @@ obj/main.o : main.cpp $(DEPDIR)/main.d | $(DEPDIR)
 	@$(BUILD_FILE_VULPINE) $<
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
-	@$(CC) -c $(CPPFLAGS) -fpermissive -w $(LIBFLAGS) $(INCLUDE)  $< -o $@
+	@gcc -c -x c -Wno-error -Ofast $< -o $@
 	@$(BUILD_FILE_VULPINE) $<
 
 obj/Audio.o : src/Audio.cpp
