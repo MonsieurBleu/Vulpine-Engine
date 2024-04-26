@@ -679,6 +679,13 @@ void ObjectGroup::setMenu(FastUI_valueMenu &menu, std::u32string name)
         })}
     );
 
+    int cnt = 0;
+
     for(auto i : meshes)
-        i->setMenu(menu, name+U":Mesh");
+        i->setMenu(menu, name+U":Mesh"+UFTconvert.from_bytes(std::to_string(cnt++)));
+
+    cnt = 0;
+
+    for(auto i : children)
+        i->setMenu(menu, name+U":Group"+UFTconvert.from_bytes(std::to_string(cnt++)));
 }

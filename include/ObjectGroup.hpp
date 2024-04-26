@@ -45,6 +45,7 @@ public:
     ObjectGroupRef copy();
 
     const std::deque<ModelRef>& getMeshes() const {return meshes;};
+    const std::deque<ObjectGroupRef>& getChildren() const {return children;};
 };
 
 #endif
