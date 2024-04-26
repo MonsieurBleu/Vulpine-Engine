@@ -74,7 +74,7 @@ struct FastUI_context
 struct FastUI_element : public ObjectGroupRef
 {
     protected : 
-        vec2 size = vec2(0);
+        vec2 size2D = vec2(0);
 
     public : 
         FastUI_context& ui;

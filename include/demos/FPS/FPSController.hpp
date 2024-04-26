@@ -1,7 +1,8 @@
-/*#include "PhysicsEngine.hpp"
-#include "Camera.hpp"
-#include "Inputs.hpp"
+#include <Camera.hpp>
+#include <Inputs.hpp>
+#include <Physics.hpp>
 
+#include <glm/glm.hpp>
 #include <iostream>
 #include <vector>
 
@@ -17,9 +18,9 @@ struct FPSVariables
     static constexpr float jumpForce = 60.0f;
     static constexpr float sensitivity = 0.01f;
 
-    static constexpr float forwardSpeed = 15.0f;    // 20
-    static constexpr float sideSpeed = 15.0f;       // 35
-    static constexpr float backSpeed = 10.0f;       // 20
+    static constexpr float forwardSpeed = 15.0f; // 20
+    static constexpr float sideSpeed = 15.0f;    // 35
+    static constexpr float backSpeed = 10.0f;    // 20
 
     static float cursorXOld;
     static float cursorYOld;
@@ -34,25 +35,22 @@ struct FPSVariables
 
     static bool grounded;
     static bool lockJump;
-
-    // probably should have a better name
-    static std::vector<RigidBodyRef> thingsYouCanStandOn;
 };
 
 class FPSController
 {
-private:
-    RigidBodyRef body;
+  private:
+    RigidBody::Ref body;
     InputBuffer *inputs;
     bool doJump;
 
-public:
-    FPSController(GLFWwindow *window, RigidBodyRef body, Camera *camera, InputBuffer *inputs);
+  public:
+    FPSController(GLFWwindow *window, RigidBody::Ref body, Camera *camera, InputBuffer *inputs);
     ~FPSController();
 
     void update(float deltaTime);
 
-    void doInputs(GLFWKeyInfo& input);
+    void doInputs(GLFWKeyInfo &input);
 
     void move(float forward, float side, float deltaTime);
     void accelerate(vec3 wishDirection, float wishSpeed, float accel, float deltaTime);
@@ -61,4 +59,4 @@ public:
     void jump(float deltaTime);
 
     void mouseLook();
-};*/
+};
