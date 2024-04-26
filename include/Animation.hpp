@@ -88,16 +88,20 @@ class Animation
     std::vector<int> currentKeyframeIndex;
 
   public:
-    std::function<void()> onEnterAnimation = [] {};
-    std::function<void()> onExitAnimation = [] {};
-    std::function<float()> speedCallback = [] { return 1; };
+    std::function<void(void *)> onEnterAnimation = [](void* usr) {};
+    std::function<void(void *)> onExitAnimation = [](void* usr) {};
+    std::function<float(float, void *)> speedCallback = [](float, void* usr) { return 1; };
 
     Animation(){};
 
     Animation(
-        const std::string &name, float length, std::vector<std::vector<AnimationKeyframeData>> &keyframes,
-        std::function<void()> onEnterAnimation = [] {}, std::function<void()> onExitAnimation = [] {},
-        std::function<float()> getSpeed = [] { return 1; })
+        const std::string &name, 
+        float length, 
+        std::vector<std::vector<AnimationKeyframeData>> &keyframes,
+        std::function<void(void *)> onEnterAnimation = [](void *) {}, 
+        std::function<void(void *)> onExitAnimation = [](void *) {},
+        std::function<float(float, void *)> getSpeed = [](float, void* usr) { return 1; }
+        )
         : name(name), length(length), keyframes(keyframes), onEnterAnimation(onEnterAnimation),
           onExitAnimation(onExitAnimation), speedCallback(getSpeed)
     {

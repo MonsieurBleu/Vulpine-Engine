@@ -11,6 +11,7 @@
 #include <Shadinclude.hpp>
 #include <AssetManager.hpp>
 #include <Animation.hpp>
+#include <Skeleton.hpp>
 
 
 std::mutex inputMutex;
@@ -40,13 +41,25 @@ void App::loadAllAssetsInfos(const char *filename)
             Loader<ObjectGroupRef>::addInfos(p);
         else
         if(!strcmp(ext, ".vulpineModel"))
-            Loader<MeshModel3D>::addInfos(p);
+            Loader<ObjectGroup>::addInfos(p);
         else
         if(!strcmp(ext, ".vulpineMaterial"))
             Loader<MeshMaterial>::addInfos(p);
         else
+        if(!strcmp(ext, ".vulpineMeshModel"))
+            Loader<MeshModel3D>::addInfos(p);
+        else
         if(!strcmp(ext, ".vulpineAnimation"))
             Loader<AnimationRef>::addInfosTextless(p);
+        else
+        if(!strcmp(ext, ".vulpineMesh"))
+            Loader<MeshVao>::addInfosTextless(p);
+        else
+        if(!strcmp(ext, ".vulpineSkeleton"))
+            Loader<SkeletonRef>::addInfosTextless(p);
+        else
+        if(!strcmp(ext, ".ktx") || !strcmp(ext, ".ktx2") || !strcmp(ext, ".png") || !strcmp(ext, ".jpg"))
+            Loader<Texture2D>::addInfosTextless(p, "source");
     }
 };
 

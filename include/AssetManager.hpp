@@ -51,8 +51,18 @@ class Loader
             auto res = Loader<T>::loadedAssets.find(elem);
 
             if(res == Loader<T>::loadedAssets.end())
+            {
+                auto infos = Loader<T>::loadingInfos.find(elem);
+
+                if(infos == Loader<T>::loadingInfos.end())
+                {
+                    FILE_ERROR_MESSAGE(elem, "No loader information was loaded for this element.")
+                    return Loader<T>::loadedAssets.begin()->second;
+                }
+
                 return Loader<T>::loadingInfos[elem]->loadFromInfos();
-            
+            }
+
             return res->second;
         };
 
@@ -84,11 +94,11 @@ class Loader
             return *(loadingInfos[e.name] = std::make_unique<Loader<T>> (e));
         };
 
-        static Loader<T>& addInfosTextless(const char *filename)
+        static Loader<T>& addInfosTextless(const char *filename, const std::string& prefix = "")
         {
             VulpineTextBuffRef autoText(new VulpineTextBuff());
 
-            std::string id = getNameOnlyFromPath(filename) + " : " + filename + " ; "; 
+            std::string id = getNameOnlyFromPath(filename) + " : " + prefix + " " + filename + " ; "; 
 
             autoText->alloc(id.size());
             strcpy(autoText->data, id.c_str());

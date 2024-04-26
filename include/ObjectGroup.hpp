@@ -38,6 +38,7 @@ public:
     void setMenu(FastUI_valueMenu &menu, std::u32string name);
 
     void remove(ModelRef mesh);
+    void remove(ObjectGroupRef group);
 
     std::pair<vec3, vec3> getMeshesBoundingBox();
 

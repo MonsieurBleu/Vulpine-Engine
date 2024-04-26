@@ -100,6 +100,16 @@ void ObjectGroup::remove(ModelRef mesh)
         }
 }
 
+void ObjectGroup::remove(ObjectGroupRef group)
+{
+    for(auto i = children.begin(); i < children.end(); i++)
+        if(i->get() == group.get())
+        {
+            children.erase(i);
+            return;
+        }
+}
+
 ObjectGroupRef ObjectGroup::copy()
 {
     ObjectGroupRef g = newObjectGroup();

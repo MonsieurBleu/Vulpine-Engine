@@ -1,3 +1,5 @@
+#pragma once 
+
 #include "Animation.hpp"
 #include "Skeleton.hpp"
 #include "Utils.hpp"
@@ -25,14 +27,14 @@ struct AnimationControllerTransition
     AnimationControllerTransitionCondition condition;
     float transitionLength; // length of the transition
     TransitionType type;
-    std::function<bool()> conditionFunction;
+    std::function<bool(void *)> conditionFunction;
 
     AnimationControllerTransition(AnimationRef _from,
                                   AnimationRef _to,
                                   AnimationControllerTransitionCondition _condition,
                                   float _transitionLength,
                                   TransitionType _type = TRANSITION_LINEAR,
-                                  std::function<bool()> _conditionFunction = [](){return false;})
+                                  std::function<bool(void *)> _conditionFunction = [](void *){return false;})
         : from(_from),
           to(_to),
           condition(_condition),
@@ -55,6 +57,8 @@ class AnimationController
     std::chrono::time_point<std::chrono::high_resolution_clock> transitionStart;
     float animationTime = 0;
     float transitionTime = 0;
+
+    void* usr = nullptr;
 
     std::vector<keyframeData> currentKeyframes;
 
@@ -80,20 +84,26 @@ class AnimationController
     }
 
 public:
-    AnimationController(int32_t initialState, const std::vector<AnimationControllerTransition> &_transitions, const std::vector<AnimationRef> &_animations)
+    AnimationController(
+        int32_t initialState, 
+        const std::vector<AnimationControllerTransition> &_transitions, 
+        const std::vector<AnimationRef> &_animations, 
+        void *usr = nullptr) : usr(usr)
     {
         transitions = _transitions;
         animations = _animations;
 
         currentAnimation = animations[initialState];
         animationStart = std::chrono::high_resolution_clock::now();
-        currentAnimation->onEnterAnimation();
+        currentAnimation->onEnterAnimation(usr);
         getTransitionsFromCurrentState();
     }
 
     void update(float dt)
     {
-        animationTime += dt * currentAnimation->speedCallback();
+        float prct = 100.f * animationTime / currentAnimation->getLength();
+
+        animationTime += dt * currentAnimation->speedCallback(prct, usr);
 
         if (!transitioning)
         {
@@ -107,17 +117,17 @@ public:
                         currentTransition = t;
                         transitioning = true;
                         transitionStart = std::chrono::high_resolution_clock::now();
-                        t->to->onEnterAnimation();
+                        t->to->onEnterAnimation(usr);
                         transitionTime = 0;
                     }
                     break;
                 case COND_CUSTOM:
-                    if (t->conditionFunction())
+                    if (t->conditionFunction(usr))
                     {
                         currentTransition = t;
                         transitioning = true;
                         transitionStart = std::chrono::high_resolution_clock::now();
-                        t->to->onEnterAnimation();
+                        t->to->onEnterAnimation(usr);
                         transitionTime = 0;
                     }
                     break;
@@ -128,7 +138,7 @@ public:
         }
         else
         {
-            transitionTime += dt * currentTransition->to->speedCallback();
+            transitionTime += dt * currentTransition->to->speedCallback(prct, usr);
             float a = 0;
             switch (currentTransition->type)
             {
@@ -149,7 +159,7 @@ public:
                 // std::cout << "a: " << a << "\n";
                 // std::cout << "time: " << time << "\n";
                 // std::cout << "transitionTime: " << transitionTime << "\n";
-                currentAnimation->onExitAnimation();
+                currentAnimation->onExitAnimation(usr);
                 currentAnimation = currentTransition->to;
                 animationStart = transitionStart;
                 animationTime = transitionTime;
