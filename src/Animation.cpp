@@ -70,9 +70,9 @@ AnimationRef Animation::load(const std::string &filename)
     return anim;
 }
 
-std::vector<keyframeData> Animation::getCurrentFrames(float time, std::vector<int16> & currentKeyframeIndex)
+std::vector<keyframeData> Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16> & currentKeyframeIndex)
 {
-    static float lastTime = 0;
+    // static float lastTime = 0;
 
     std::vector<keyframeData> data(keyframes.size());
 
@@ -144,7 +144,9 @@ std::vector<keyframeData> interpolateKeyframes(
     AnimationRef animA, 
     AnimationRef animB, 
     float t1, 
-    float t2, 
+    float t2,
+    float &lt1, 
+    float &lt2,
     float a, 
     std::vector<int16> &currentKeyframeIndexA,
     std::vector<int16> &currentKeyframeIndexB)
@@ -164,10 +166,10 @@ std::vector<keyframeData> interpolateKeyframes(
     }
 
     if (t2 < 0)
-        return animA->getCurrentFrames(t1, currentKeyframeIndexA);
+        return animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA);
 
     if (t1 < 0)
-        return animB->getCurrentFrames(t2, currentKeyframeIndexB);
+        return animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB);
 
     if (t1 > animA->length && t2 > animB->length)
     {
@@ -178,13 +180,13 @@ std::vector<keyframeData> interpolateKeyframes(
     
     /* TODO : figure out what luna meant when making those 2 conditions*/
     if (t1 > animA->length)
-        return animB->getCurrentFrames(t2, currentKeyframeIndexB);
+        return animB->getCurrentFrames(t2, lt1, currentKeyframeIndexB);
 
     if (t2 > animB->length)
-        return animA->getCurrentFrames(t1, currentKeyframeIndexA);
+        return animA->getCurrentFrames(t1, lt2, currentKeyframeIndexA);
 
-    std::vector<keyframeData> keyframesA = animA->getCurrentFrames(t1, currentKeyframeIndexA);
-    std::vector<keyframeData> keyframesB = animB->getCurrentFrames(t2, currentKeyframeIndexB);
+    std::vector<keyframeData> keyframesA = animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA);
+    std::vector<keyframeData> keyframesB = animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB);
 
     for (uint i = 0; i < keyframesA.size(); i++)
     {

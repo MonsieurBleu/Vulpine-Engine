@@ -57,6 +57,8 @@ class AnimationController
     std::chrono::time_point<std::chrono::high_resolution_clock> transitionStart;
     float animationTime = 0;
     float transitionTime = 0;
+    float animationLTime = 0;
+    float transitionLTime = 0;
 
     void* usr = nullptr;
 
@@ -117,7 +119,7 @@ public:
 
         if (!transitioning)
         {
-            currentKeyframes = currentAnimation->getCurrentFrames(animationTime, currentKeyframeIndexA);
+            currentKeyframes = currentAnimation->getCurrentFrames(animationTime, animationLTime, currentKeyframeIndexA);
 
             for (auto &t : transitionsFromCurrentState)
             {
@@ -131,6 +133,7 @@ public:
                         transitionStart = std::chrono::high_resolution_clock::now();
                         t->to->onEnterAnimation(usr);
                         transitionTime = 0;
+                        transitionLTime = 0;
 
                         // std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
                         std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
@@ -146,6 +149,7 @@ public:
                         transitionStart = std::chrono::high_resolution_clock::now();
                         t->to->onEnterAnimation(usr);
                         transitionTime = 0;
+                        transitionLTime = 0;
 
                         // std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
                         std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
@@ -163,18 +167,18 @@ public:
             float a = 0;
             switch (currentTransition->type)
             {
-            case TRANSITION_LINEAR:
-                a = transitionTime / (currentTransition->transitionLength);
-                break;
-            case TRANSITION_SMOOTH:
-                a = smoothstep(0.0f, 1.0f, transitionTime / (currentTransition->transitionLength));
-                break;
+                case TRANSITION_LINEAR:
+                    a = transitionTime / (currentTransition->transitionLength);
+                    break;
+                case TRANSITION_SMOOTH:
+                    a = smoothstep(0.0f, 1.0f, transitionTime / (currentTransition->transitionLength));
+                    break;
             }
 
             currentKeyframes =
                 interpolateKeyframes(currentTransition->from, currentTransition->to,
-                                     fmod(animationTime, currentAnimation->getLength()), 
-                                     transitionTime, a, currentKeyframeIndexA, currentKeyframeIndexB);
+                                     fmod(animationTime, currentAnimation->getLength()), transitionTime, 
+                                     animationTime, transitionLTime , a, currentKeyframeIndexA, currentKeyframeIndexB);
 
             if (transitionTime >= currentTransition->transitionLength)
             {
@@ -185,6 +189,7 @@ public:
                 currentAnimation = currentTransition->to;
                 animationStart = transitionStart;
                 animationTime = transitionTime;
+                animationLTime = transitionLTime;
                 transitioning = false;
                 getTransitionsFromCurrentState();
                 currentKeyframeIndexA = currentKeyframeIndexB;
