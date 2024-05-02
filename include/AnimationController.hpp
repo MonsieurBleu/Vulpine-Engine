@@ -64,6 +64,9 @@ class AnimationController
 
     std::vector<AnimationControllerTransition *> transitionsFromCurrentState;
 
+    std::vector<int16> currentKeyframeIndexA;
+    std::vector<int16> currentKeyframeIndexB;
+
     void getTransitionsFromCurrentState()
     {
         transitionsFromCurrentState.clear();
@@ -75,12 +78,12 @@ class AnimationController
             }
         }
 
-        if (transitionsFromCurrentState.size() == 0)
-        {
-            // failsafe if no transition is found, loop back to the same animation
-            transitions.push_back(AnimationControllerTransition(currentAnimation, currentAnimation,
-                                                                COND_ANIMATION_FINISHED, epsilon<float>()));
-        }
+        // if (transitionsFromCurrentState.size() == 0)
+        // {
+        //     // failsafe if no transition is found, loop back to the same animation
+        //     transitions.push_back(AnimationControllerTransition(currentAnimation, currentAnimation,
+        //                                                         COND_ANIMATION_FINISHED, epsilon<float>()));
+        // }
     }
 
 public:
@@ -94,6 +97,13 @@ public:
         animations = _animations;
 
         currentAnimation = animations[initialState];
+
+        currentKeyframeIndexA.resize(currentAnimation->getKeyframeNumber());
+        currentKeyframeIndexB.resize(currentAnimation->getKeyframeNumber());
+
+        std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
+        std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
+
         animationStart = std::chrono::high_resolution_clock::now();
         currentAnimation->onEnterAnimation(usr);
         getTransitionsFromCurrentState();
@@ -107,6 +117,8 @@ public:
 
         if (!transitioning)
         {
+            currentKeyframes = currentAnimation->getCurrentFrames(animationTime, currentKeyframeIndexA);
+
             for (auto &t : transitionsFromCurrentState)
             {
                 switch (t->condition)
@@ -119,6 +131,11 @@ public:
                         transitionStart = std::chrono::high_resolution_clock::now();
                         t->to->onEnterAnimation(usr);
                         transitionTime = 0;
+
+                        // std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
+                        std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
+
+                        return;
                     }
                     break;
                 case COND_CUSTOM:
@@ -129,15 +146,19 @@ public:
                         transitionStart = std::chrono::high_resolution_clock::now();
                         t->to->onEnterAnimation(usr);
                         transitionTime = 0;
+
+                        // std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
+                        std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
+
+                        return;
                     }
                     break;
                 }
             }
-
-            currentKeyframes = currentAnimation->getCurrentFrames(animationTime);
         }
         else
         {
+            // std::cout << "transitionning omg " << usr << " " << transitionTime << "\t" << currentTransition->transitionLength << "\n";
             transitionTime += dt * currentTransition->to->speedCallback(prct, usr);
             float a = 0;
             switch (currentTransition->type)
@@ -152,7 +173,8 @@ public:
 
             currentKeyframes =
                 interpolateKeyframes(currentTransition->from, currentTransition->to,
-                                     fmod(animationTime, currentAnimation->getLength()), transitionTime, a);
+                                     fmod(animationTime, currentAnimation->getLength()), 
+                                     transitionTime, a, currentKeyframeIndexA, currentKeyframeIndexB);
 
             if (transitionTime >= currentTransition->transitionLength)
             {
@@ -165,6 +187,8 @@ public:
                 animationTime = transitionTime;
                 transitioning = false;
                 getTransitionsFromCurrentState();
+                currentKeyframeIndexA = currentKeyframeIndexB;
+                std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
             }
         }
     }

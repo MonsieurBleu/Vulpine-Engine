@@ -122,6 +122,16 @@ vec3 rotateVec(vec3 front, vec3 axis, float angle)
     return mat3(rotate(mat4(1), angle, axis)) * front;
 }
 
+vec2 toHvec2(const vec3 &v)
+{
+    return vec2(v.x, v.z);
+}
+
+float angle(const vec2 &v1, const vec2& v2)
+{
+    return std::atan2(determinant(mat2(v1, v2)), dot(v1, v2));
+}
+
 vec3 ColorHexToV(uint hex)
 {
     return vec3((hex>>16)%256, (hex>>8)%256, hex%256)/256.f;

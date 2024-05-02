@@ -85,7 +85,7 @@ class Animation
     float length; // in seconds
 
     std::vector<std::vector<AnimationKeyframeData>> keyframes;
-    std::vector<int> currentKeyframeIndex;
+    // std::vector<int> currentKeyframeIndex;
 
   public:
     std::function<void(void *)> onEnterAnimation = [](void* usr) {};
@@ -105,7 +105,7 @@ class Animation
         : name(name), length(length), keyframes(keyframes), onEnterAnimation(onEnterAnimation),
           onExitAnimation(onExitAnimation), speedCallback(getSpeed)
     {
-        currentKeyframeIndex.resize(keyframes.size(), 0);
+        // currentKeyframeIndex.resize(keyframes.size(), 0);
     }
 
     static AnimationRef load(const std::string &filename);
@@ -139,7 +139,7 @@ class Animation
     {
         return keyframes.size();
     }
-    std::vector<keyframeData> getCurrentFrames(float time);
+    std::vector<keyframeData> getCurrentFrames(float time, std::vector<int16> & currentKeyframeIndex);
 
     bool isFinished(float time)
     {
@@ -147,8 +147,18 @@ class Animation
     }
 
     friend class Skeleton;
-    friend std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2,
-                                                          float a);
+
+    friend std::vector<keyframeData> interpolateKeyframes(
+            AnimationRef animA, 
+            AnimationRef animB, 
+            float t1, float t2, float a, 
+            std::vector<int16> &currentKeyframeIndexA,
+            std::vector<int16> &currentKeyframeIndexB);
 };
 
-std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2, float a);
+std::vector<keyframeData> interpolateKeyframes(
+    AnimationRef animA, 
+    AnimationRef animB, 
+    float t1, float t2, float a, 
+    std::vector<int16> &currentKeyframeIndexA,
+    std::vector<int16> &currentKeyframeIndexB);

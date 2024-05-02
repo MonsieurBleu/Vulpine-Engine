@@ -26,6 +26,11 @@ vec3 screenPosToModel(vec2 screenPos);
 
     vec3 rotateVec(vec3 front, vec3 axis, float angle);
 
+    vec2 toHvec2(const vec3 &v);
+
+    float angle(const vec2 &v1, const vec2& v2);
+
+
 /****** COLOR UTILS******/
     vec3 hsv2rgb(vec3 hsv);
 

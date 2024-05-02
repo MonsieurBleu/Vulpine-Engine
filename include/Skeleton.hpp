@@ -64,7 +64,7 @@ class SkeletonAnimationState : public std::vector<mat4>
         SkeletonRef skeleton;
 
         /**
-         * @brief applies a number of animations to the state
+         * @brief TODO : delete... applies a number of animations to the state
          *
          * @param time the time
          * @param animations a vector that contains animations as well as their "factor" (how much it affects the final animation, ideally should sum up to 1 but we ball)

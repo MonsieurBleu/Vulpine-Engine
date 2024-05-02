@@ -39,47 +39,47 @@ void Skeleton::applyGraph(SkeletonAnimationState &state)
 
 void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<AnimationRef, float>> animations)
 {
-    std::vector<std::vector<keyframeData>> keyframes(animations.size(), std::vector<keyframeData>());
+    // std::vector<std::vector<keyframeData>> keyframes(animations.size(), std::vector<keyframeData>());
 
-    for (size_t i = 0; i < animations.size(); i++)
-    {
-        keyframes[i] = animations[i].first->getCurrentFrames(time);
-    }
+    // for (size_t i = 0; i < animations.size(); i++)
+    // {
+    //     keyframes[i] = animations[i].first->getCurrentFrames(time);
+    // }
 
-    std::vector<float> factors(animations.size());
-    for (size_t i = 0; i < animations.size(); i++)
-    {
-        factors[i] = animations[i].second;
-    }
+    // std::vector<float> factors(animations.size());
+    // for (size_t i = 0; i < animations.size(); i++)
+    // {
+    //     factors[i] = animations[i].second;
+    // }
 
-    // horrible horrible code
-    for (size_t i = 0; i < size(); i++)
-    {
-        keyframeData data = keyframes[0][i];
-        vec3 trans = data.translation;
-        quat r = data.rotation;
-        vec3 s = data.scale;
+    // // horrible horrible code
+    // for (size_t i = 0; i < size(); i++)
+    // {
+    //     keyframeData data = keyframes[0][i];
+    //     vec3 trans = data.translation;
+    //     quat r = data.rotation;
+    //     vec3 s = data.scale;
 
-        for (size_t j = 1; j < animations.size(); j++)
-        {
-            if (keyframes[j].size() == 0)
-                continue;
+    //     for (size_t j = 1; j < animations.size(); j++)
+    //     {
+    //         if (keyframes[j].size() == 0)
+    //             continue;
 
-            keyframeData data = keyframes[j][i];
-            float factor = factors[j];
+    //         keyframeData data = keyframes[j][i];
+    //         float factor = factors[j];
 
-            trans = mix(trans, data.translation, factor);
-            r = lerp(r, data.rotation, factor);
-            s = mix(s, data.scale, factor);
-        }
+    //         trans = mix(trans, data.translation, factor);
+    //         r = lerp(r, data.rotation, factor);
+    //         s = mix(s, data.scale, factor);
+    //     }
 
-        mat4 t = mat4(1);
-        t = translate(t, trans);
-        t = t * mat4_cast(r);
-        t = scale(t, s);
+    //     mat4 t = mat4(1);
+    //     t = translate(t, trans);
+    //     t = t * mat4_cast(r);
+    //     t = scale(t, s);
 
-        (*this)[i] = t;
-    }
+    //     (*this)[i] = t;
+    // }
 }
 
 void SkeletonAnimationState::applyKeyframes(std::vector<keyframeData> keyframes)
@@ -146,5 +146,5 @@ void SkeletonAnimationState::update()
 void SkeletonAnimationState::activate(int location)
 {
     if (handle.get() && *handle)
-        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, *handle);
+        glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, *handle);;
 }

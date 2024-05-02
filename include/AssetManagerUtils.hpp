@@ -24,7 +24,7 @@ constexpr auto type_name() {
 }
 
 #define PRINT_LOADER_DEBUG_CREATE std::cout \
-    << TERMINAL_INFO << "Creating object " \
+    << TERMINAL_INFO << "Loading " \
     << TERMINAL_NOTIF << name \
     << TERMINAL_INFO << " from "\
     << TERMINAL_UNDERLINE << type_name<decltype(r)>() \

@@ -63,14 +63,14 @@ AnimationRef Animation::load(const std::string &filename)
 
     std::string name = header.animationName;
     // AnimationRef anim = std::make_shared<Animation>(name, header.duration, keyframes, skeleton);
-    anim->currentKeyframeIndex.resize(keyframes.size(), 0);
+    // anim->currentKeyframeIndex.resize(keyframes.size(), 0);
     anim->length = header.duration;
     anim->name = name;
     anim->keyframes = keyframes;
     return anim;
 }
 
-std::vector<keyframeData> Animation::getCurrentFrames(float time)
+std::vector<keyframeData> Animation::getCurrentFrames(float time, std::vector<int16> & currentKeyframeIndex)
 {
     static float lastTime = 0;
 
@@ -104,16 +104,13 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time)
 
         uint nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
 
-        if (time > keyframes[i][nextKeyframeIndex].time)
+        while (time > keyframes[i][nextKeyframeIndex].time)
         {
-            while (time > keyframes[i][nextKeyframeIndex].time)
-            {
-                currentKeyframeIndex[i] = nextKeyframeIndex;
-                nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
+            currentKeyframeIndex[i] = nextKeyframeIndex;
+            nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
 
-                if (currentKeyframeIndex[i] == 0)
-                    break;
-            }
+            if (currentKeyframeIndex[i] == 0)
+                break;
         }
 
         // get the time difference between the two keyframes
@@ -143,48 +140,51 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time)
     return data;
 }
 
-std::vector<keyframeData> interpolateKeyframes(AnimationRef animA, AnimationRef animB, float t1, float t2, float a)
+std::vector<keyframeData> interpolateKeyframes(
+    AnimationRef animA, 
+    AnimationRef animB, 
+    float t1, 
+    float t2, 
+    float a, 
+    std::vector<int16> &currentKeyframeIndexA,
+    std::vector<int16> &currentKeyframeIndexB)
 {
     std::vector<keyframeData> data(animA->keyframes.size());
 
     if (animA->keyframes.size() != animB->keyframes.size())
-    {
-        std::cerr << TERMINAL_ERROR
-                  << "interpolateKeyframes : animations have different number of expected bones.\n"
-                  << TERMINAL_RESET;
+    {        
+        WARNING_MESSAGE("interpolateKeyframes : animations have different number of expected bones.");
         return data;
     }
 
     if (t1 < 0 && t2 < 0)
     {
-        std::cerr << TERMINAL_ERROR
-                  << "interpolateKeyframes : both animations have negative time.\n"
-                  << TERMINAL_RESET;
+        WARNING_MESSAGE("interpolateKeyframes : both animations have negative time.");
         return data;
     }
 
     if (t2 < 0)
-        return animA->getCurrentFrames(t1);
+        return animA->getCurrentFrames(t1, currentKeyframeIndexA);
 
     if (t1 < 0)
-        return animB->getCurrentFrames(t2);
+        return animB->getCurrentFrames(t2, currentKeyframeIndexB);
 
     if (t1 > animA->length && t2 > animB->length)
     {
-        std::cerr << TERMINAL_ERROR
-                  << "interpolateKeyframes : both animations have time greater than their length.\n"
-                  << TERMINAL_RESET;
+        WARNING_MESSAGE("interpolateKeyframes : both animations have time greater than their length.");
         return data;
     }
 
+    
+    /* TODO : figure out what luna meant when making those 2 conditions*/
     if (t1 > animA->length)
-        return animB->getCurrentFrames(t2);
+        return animB->getCurrentFrames(t2, currentKeyframeIndexB);
 
     if (t2 > animB->length)
-        return animA->getCurrentFrames(t1);
+        return animA->getCurrentFrames(t1, currentKeyframeIndexA);
 
-    std::vector<keyframeData> keyframesA = animA->getCurrentFrames(t1);
-    std::vector<keyframeData> keyframesB = animB->getCurrentFrames(t2);
+    std::vector<keyframeData> keyframesA = animA->getCurrentFrames(t1, currentKeyframeIndexA);
+    std::vector<keyframeData> keyframesB = animB->getCurrentFrames(t2, currentKeyframeIndexB);
 
     for (uint i = 0; i < keyframesA.size(); i++)
     {
