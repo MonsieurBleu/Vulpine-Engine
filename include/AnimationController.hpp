@@ -48,7 +48,6 @@ struct AnimationControllerTransition
 class AnimationController
 {
   private:
-    std::vector<AnimationRef> animations;
     std::vector<AnimationControllerTransition> transitions;
     bool transitioning = false; // 🏳️‍⚧️ 
     AnimationControllerTransition *currentTransition = nullptr;
@@ -90,15 +89,13 @@ class AnimationController
 
 public:
     AnimationController(
-        int32_t initialState, 
         const std::vector<AnimationControllerTransition> &_transitions, 
-        const std::vector<AnimationRef> &_animations, 
+        AnimationRef &initialState, 
         void *usr = nullptr) : usr(usr)
     {
         transitions = _transitions;
-        animations = _animations;
 
-        currentAnimation = animations[initialState];
+        currentAnimation = initialState;
 
         currentKeyframeIndexA.resize(currentAnimation->getKeyframeNumber());
         currentKeyframeIndexB.resize(currentAnimation->getKeyframeNumber());
