@@ -46,6 +46,8 @@ public:
 
     const std::deque<ModelRef>& getMeshes() const {return meshes;};
     const std::deque<ObjectGroupRef>& getChildren() const {return children;};
+    const std::deque<ModelStateRef>& getStates() const {return states;};
+    const std::deque<SceneLight>& getLights() const {return lights;};
 };
 
 #endif

@@ -39,6 +39,9 @@ private:
     bool _mouseLeftClick = false;
     bool _mouseLeftClickDown = false;
 
+    bool _mouseRightClick = false;
+    bool _mouseRightClickDown = false;
+
     std::u32string textInputString;
     void *currentTextInputUser = nullptr;
 
@@ -104,6 +107,9 @@ public:
 
     bool mouseLeftClick();
     bool mouseLeftClickDown();
+
+    bool mouseRightClick();
+    bool mouseRightClickDown();
 
     vec2 mouseScrollOffset();
     void clearMouseScroll();

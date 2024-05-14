@@ -650,7 +650,7 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
     int s = state.size();
     for(int i = 0; i < s; i++)
     {
-        bones.push_back(boneHelper->copyWithSharedMesh());
+        bones.push_back(boneHelper->copy());
         add(bones.back());
     }
 };

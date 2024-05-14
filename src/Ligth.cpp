@@ -190,7 +190,7 @@ void ClusteredLightBuffer::update()
 }
 
 
-LightInfos Light::getInfos() const
+LightInfos & Light::getInfos() 
 {
     return infos;
 }

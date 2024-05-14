@@ -50,7 +50,7 @@ class Light
     
     public :
         const void* getAttribAddr() const;
-        LightInfos getInfos() const;
+        LightInfos & getInfos() ;
         virtual void applyModifier(const ModelState3D& state);
         
         Camera shadowCamera;

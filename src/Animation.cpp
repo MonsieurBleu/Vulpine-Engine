@@ -76,6 +76,29 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time, float & lastTi
 
     std::vector<keyframeData> data(keyframes.size());
 
+    if(!repeat && time >= length)
+    {
+        // time = length;
+        // lastTime = time;
+
+        for (uint i = 0; i < keyframes.size(); i++)
+        {
+            if (keyframes[i].size() == 0)
+            {
+                data[i] = {vec3(0), quat(1, 0, 0, 0), vec3(1)};
+                continue;
+            }
+
+            data[i] = {
+                keyframes[i].back().translation,
+                keyframes[i].back().rotation,
+                keyframes[i].back().scale
+            };
+        }
+
+        return data;
+    }
+
     time = fmod(time, length);
 
     if (time < lastTime)
@@ -109,6 +132,7 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time, float & lastTi
             currentKeyframeIndex[i] = nextKeyframeIndex;
             nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
 
+            /* TODO : fix, this can cause animations to be bugged at low frame rate*/
             if (currentKeyframeIndex[i] == 0)
                 break;
         }
@@ -121,9 +145,6 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time, float & lastTi
 
         // get the interpolation factor
         float factor = currentTime / deltaTime;
-
-        // if (i == 12)
-        //     std::cout << "time: " << time << ", currentKeyframeIndex: " << currentKeyframeIndex[i] << ", nextIndex: " << nextKeyframeIndex << ", factor: " << factor << ", deltaTime: " << deltaTime << ", currentTime: " << currentTime << ", keyframes[i][currentKeyframeIndex[i]].time: " << keyframes[i][currentKeyframeIndex[i]].time << "\n";
 
         // interpolate translation
         vec3 translation = glm::mix(keyframes[i][currentKeyframeIndex[i]].translation, keyframes[i][nextKeyframeIndex].translation, factor);

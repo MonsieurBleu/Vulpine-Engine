@@ -54,9 +54,9 @@ int launchGame(GameType **game, std::string name, Params... initParams)
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
 
-    window = glfwCreateWindow(1920, 1080, name.c_str(), NULL, NULL);
+    // window = glfwCreateWindow(1920, 1080, name.c_str(), NULL, NULL);
     // window = glfwCreateWindow(1200, 700, name.c_str(), NULL, NULL);
-    // window = glfwCreateWindow(3440, 1440, name.c_str(), NULL, NULL);
+    window = glfwCreateWindow(3440, 1440, name.c_str(), NULL, NULL);
     if (!window)
     {
         std::cerr << "ERROR: could not open window with GLFW3\n";

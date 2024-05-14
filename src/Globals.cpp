@@ -27,6 +27,8 @@ void Globals::drawFullscreenQuad() {_fullscreenQuad.drawVAO();};
 
 bool Globals::mouseLeftClick(){return _mouseLeftClick;};
 bool Globals::mouseLeftClickDown(){return _mouseLeftClickDown;};
+bool Globals::mouseRightClick(){return _mouseRightClick;};
+bool Globals::mouseRightClickDown(){return _mouseRightClickDown;};
 vec2 Globals::mouseScrollOffset(){return _scrollOffset;};
 void Globals::clearMouseScroll(){_scrollOffset = vec2(0);};
 

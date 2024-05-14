@@ -134,7 +134,7 @@ ObjectGroupRef ObjectGroup::copy()
             default:break;
         }
     i = 0;
-    for(auto &c : meshes) g->meshes[i++] = c->copyWithSharedMesh();
+    for(auto &c : meshes) g->meshes[i++] = c->copy();
 
     return g;
 }

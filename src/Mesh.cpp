@@ -264,7 +264,7 @@ void MeshModel3D::tessActivate(vec2 minmaxTessLevel, vec2 minmaxDistance)
     baseUniforms.add(ShaderUniform(&lodTessLevelDistance, 12));
 }
 
-ModelRef MeshModel3D::copyWithSharedMesh()
+ModelRef MeshModel3D::copy()
 {
     ModelRef m = newModel(material, vao);
     m->maps = maps;
