@@ -41,7 +41,7 @@ void App::loadAllAssetsInfos(const char *filename)
             Loader<ObjectGroupRef>::addInfos(p);
         else
         if(!strcmp(ext, ".vulpineModel"))
-            Loader<ObjectGroup>::addInfos(p);
+            Loader<MeshModel3D>::addInfos(p);
         else
         if(!strcmp(ext, ".vulpineMaterial"))
             Loader<MeshMaterial>::addInfos(p);
