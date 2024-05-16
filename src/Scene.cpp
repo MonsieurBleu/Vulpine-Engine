@@ -180,7 +180,7 @@ void Scene::generateLightClusters()
     const int lmax = lightBuffer.maxID()-1;
 
     const mat4 vm = globals.currentCamera->getViewMatrix();
-    const mat4 im = inverse(globals.currentCamera->getProjectionMatrix());
+    const mat4 ipm = inverse(globals.currentCamera->getProjectionMatrix());
 
     const mat4 pm = globals.currentCamera->getProjectionMatrix();
 
@@ -198,6 +198,8 @@ void Scene::generateLightClusters()
                 l._position.a = 1.f;
                 l._position = vm * l._position;
                 l._position.a = tmp;
+
+                // std::cout << l._position.z << "\n";
             }
                 break;
 
@@ -211,26 +213,30 @@ void Scene::generateLightClusters()
     for(float y = 1.f; y <= dimf.y; y++)
     for(float z = 1.f; z <= dimf.z; z++, aabbID++)
     {
-        float viewX2 = x*idim.x - 1.f; 
+        float viewX2 = x*idim.x - 1.f;
         float viewX = viewX2 - idim.x; 
 
         float inverseZ = (viewX2 > 1e-6);
         float viewZid = !inverseZ ? z : max(z-1.f, 1e-6f);
         float viewZ2id = inverseZ ? z : max(z-1.f, 1e-6f);
-        float viewZ = dimf.z/(viewZid*vFar);
-        float viewZ2 = dimf.z/(viewZ2id*vFar);
+        float viewZ = vFar * dimf.z/(viewZid);
+        float viewZ2 = vFar * dimf.z/(viewZ2id);
 
         float viewYbase = y*idim.y - 1.f;
         bool inverseY = inverseZ != (viewYbase >= 0.f);
         float viewY = viewYbase - (!inverseY ? idim.y : 0.f);
         float viewY2 = viewYbase - (inverseY ? idim.y : 0.f);
 
-        vec3 p1 = viewToWorld(vec4(viewX, viewY, viewZ, 1), im);
-        vec3 p2 = viewToWorld(vec4(viewX2, viewY2, viewZ2, 1), im);
+        vec3 p1 = viewToWorld(vec4(viewX, viewY, viewZ, 1), ipm);
+        vec3 p2 = viewToWorld(vec4(viewX2, viewY2, viewZ2, 1), ipm);
 
         AABBs[aabbID].first = min(p1, p2);
         AABBs[aabbID].second = max(p1, p2);
+
+        // std::cout << AABBs[aabbID].second.z << "\n";
     }
+
+    // std::cout << "=======================================\n";
 
     /****** Per Cluster Culling 
     int clusterOff = 0;
@@ -283,11 +289,11 @@ void Scene::generateLightClusters()
         if(l._infos.a != POINT_LIGHT) continue;
 
         vec4 zSp = vec4(0, 0, l._position.z + l._direction.x, 1) * pm;
-        float zId = 100.f*(zSp.w/zSp.z)*dimf.z/vFar;
+        float zId = 100.f*(zSp.w/zSp.z)*dimf.z*vFar;
         int minZ = clamp((int)(zId), 0, dim.z);
 
         vec4 zSp2 = vec4(0, 0, l._position.z - l._direction.x, 1) * pm;
-        float zId2 = 100.f*(zSp2.w/zSp2.z)*dimf.z/vFar;
+        float zId2 = 100.f*(zSp2.w/zSp2.z)*dimf.z*vFar;
         int maxZ = clamp((int)(zId2)+1, 0, dim.z);
         
         if(!maxZ) continue;
@@ -531,8 +537,8 @@ void Scene::activateClusteredLighting(ivec3 dimention, float vFar)
     clusteredLight.allocate(dimention);
     clusteredLight.send();
 
-    clusteredLight.vFar = vFar;
-    clusteredLight.ivFar = 1.f/vFar;
+    clusteredLight.vFar = 0.5 * globals.currentCamera->getState().nearPlane / vFar;
+    clusteredLight.ivFar = clusteredLight.vFar;
 }
 
 void Scene::deactivateClusteredLighting()
