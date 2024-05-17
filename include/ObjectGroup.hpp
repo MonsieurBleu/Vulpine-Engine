@@ -13,6 +13,8 @@ class Scene;
 
 class FastUI_valueMenu;
 
+#include <iostream>
+
 class ObjectGroup
 {
     friend Scene;
@@ -27,7 +29,7 @@ protected:
 
 public:
     ModelState3D state;
-
+    
     virtual void update(bool forceUpdate = false);
     void add(ModelRef meshe);
     void add(SceneLight light);

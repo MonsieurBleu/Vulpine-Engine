@@ -144,8 +144,8 @@ uint MeshGroup::draw(bool useBindlessTextures)
 
 void Scene::updateAllObjects()
 {
-    for(auto i = groups.begin(); i != groups.end(); i++)
-        (*i)->update();
+    for(auto &i : groups)
+        i->update();
 }
 
 void Scene::genLightBuffer()
@@ -167,9 +167,14 @@ void Scene::genLightBuffer()
     }
 }
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 void Scene::generateLightClusters()
 {
-    const float vFar = clusteredLight.vFar;
+    const float hNFratio = clusteredLight.ivFar;
+    const float near = globals.currentCamera->getState().nearPlane;
+    const float far = clusteredLight.vFar;
 
     const ivec3 dim = clusteredLight.dim();
     const vec3 dimf = vec3(dim);
@@ -198,8 +203,6 @@ void Scene::generateLightClusters()
                 l._position.a = 1.f;
                 l._position = vm * l._position;
                 l._position.a = tmp;
-
-                // std::cout << l._position.z << "\n";
             }
                 break;
 
@@ -219,22 +222,23 @@ void Scene::generateLightClusters()
         float inverseZ = (viewX2 > 1e-6);
         float viewZid = !inverseZ ? z : max(z-1.f, 1e-6f);
         float viewZ2id = inverseZ ? z : max(z-1.f, 1e-6f);
-        float viewZ = vFar * dimf.z/(viewZid);
-        float viewZ2 = vFar * dimf.z/(viewZ2id);
+        float viewZ = hNFratio * dimf.z/(viewZid);
+        float viewZ2 = hNFratio * dimf.z/(viewZ2id);
 
         float viewYbase = y*idim.y - 1.f;
         bool inverseY = inverseZ != (viewYbase >= 0.f);
         float viewY = viewYbase - (!inverseY ? idim.y : 0.f);
         float viewY2 = viewYbase - (inverseY ? idim.y : 0.f);
 
-        vec3 p1 = viewToWorld(vec4(viewX, viewY, viewZ, 1), ipm);
-        vec3 p2 = viewToWorld(vec4(viewX2, viewY2, viewZ2, 1), ipm);
+        // vec3 p1 = viewToWorld(vec4(viewX, viewY, viewZ, 1), ipm);
+        // vec3 p2 = viewToWorld(vec4(viewX2, viewY2, viewZ2, 1), ipm);
+        vec3 p1 = vec3(viewX * ipm[0].x, viewY * ipm[1].y, -1)/(viewZ*ipm[2].w);
+        vec3 p2 = vec3(viewX2 * ipm[0].x, viewY2 * ipm[1].y, -1)/(viewZ2*ipm[2].w);
 
         AABBs[aabbID].first = min(p1, p2);
         AABBs[aabbID].second = max(p1, p2);
-
-        // std::cout << AABBs[aabbID].second.z << "\n";
     }
+
 
     // std::cout << "=======================================\n";
 
@@ -288,33 +292,47 @@ void Scene::generateLightClusters()
 
         if(l._infos.a != POINT_LIGHT) continue;
 
-        vec4 zSp = vec4(0, 0, l._position.z + l._direction.x, 1) * pm;
-        float zId = 100.f*(zSp.w/zSp.z)*dimf.z*vFar;
-        int minZ = clamp((int)(zId), 0, dim.z);
+        float minDepth = -0.5*(l._position.z + l._direction.x)/far;
+        int minZid = clamp((int)(minDepth*dim.z), 0, dim.z);
 
-        vec4 zSp2 = vec4(0, 0, l._position.z - l._direction.x, 1) * pm;
-        float zId2 = 100.f*(zSp2.w/zSp2.z)*dimf.z*vFar;
-        int maxZ = clamp((int)(zId2)+1, 0, dim.z);
+        float maxDepth = -0.5*(l._position.z - l._direction.x)/far;
+        int maxZid = clamp((int)(maxDepth*dim.z)+1, 0, dim.z);
         
-        if(!maxZ) continue;
+        if(!maxZid) continue;
 
-        // vec4 xSp = vec4(l._position.x - l._direction.x, l._position.y, l._position.z - l._direction.x, 1) * pm;
-        // float xId = (0.1f*(xSp.x/xSp.w) + 1.f)*0.5*dimf.x;
-        // int minX = dim.x-clamp((int)(xId)+2, 0, dim.x);
+        float depthFront = 1.f/(l._position.z - l._direction.x);
 
-        // vec4 xSp2 = vec4(l._position.x + l._direction.x, l._position.y, l._position.z - l._direction.x, 1) * pm;
-        // float xId2 = (0.1f*(xSp2.x/xSp2.w) + 1.f)*0.5*dimf.x;
-        // int maxX = dim.x-clamp((int)(xId2)-2, 0, dim.x);
-        // std::cout << minX << "\n";
+
+        float minSphereX = (l._position.x - l._direction.x);
+        float minX = minSphereX*pm[0][0]*depthFront;
+        minX = minX*-0.5 + 0.5;
+        int minXid = clamp((int)(minX*dim.x) - (minSphereX > 0.f ? 0 : 1), 0, dim.x);
+
+        float maxSphereX = (l._position.x + l._direction.x);
+        float maxX = maxSphereX*pm[0][0]*depthFront;
+        maxX = maxX*-0.5 + 0.5;
+        int maxXid = clamp((int)(maxX*dim.x) + (maxSphereX > 0.f ? 2 : 1), 0, dim.x);
+
+
+        float minSphereY = (l._position.y - l._direction.x);
+        float minY = minSphereY*pm[1][1]*depthFront;
+        minY = minY*-0.5 + 0.5;
+        int minYid = clamp((int)(minY*dim.y) - (minSphereY > 0.f ? 0 : 1), 0, dim.y);
+
+        float maxSphereY = (l._position.y + l._direction.x);
+        float maxY = maxSphereY*pm[1][1]*depthFront;
+        maxY = maxY*-0.5 + 0.5;
+        int maxYid = clamp((int)(maxY*dim.y) + (maxSphereY > 0.f ? 2 : 1), 0, dim.y);
+
 
         bool lastOneCulledX = false;
         int culledSwitchX = 0;
-        for(int x = 0; x < dim.x; x++)
+        for(int x = minXid; x < maxXid; x++)
         {
             bool oneCulledX = false;
 
-            for(int y = 0; y < dim.y; y++)
-            for(int z = minZ; z < maxZ; z++)
+            for(int y = minYid; y < maxYid; y++)
+            for(int z = minZid; z < maxZid; z++)
             {
                 aabbID = x*dim.z*dim.y + y*dim.z + z;
                 vec3 minP = AABBs[aabbID].first;
@@ -537,8 +555,8 @@ void Scene::activateClusteredLighting(ivec3 dimention, float vFar)
     clusteredLight.allocate(dimention);
     clusteredLight.send();
 
-    clusteredLight.vFar = 0.5 * globals.currentCamera->getState().nearPlane / vFar;
-    clusteredLight.ivFar = clusteredLight.vFar;
+    clusteredLight.vFar = vFar;
+    clusteredLight.ivFar = 0.5 * globals.currentCamera->getState().nearPlane / vFar;
 }
 
 void Scene::deactivateClusteredLighting()
