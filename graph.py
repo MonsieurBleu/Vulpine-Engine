@@ -10,40 +10,43 @@ import glob
 path = ""
 
 
-def getMostRecentBenchmarkFile():
-    root = "build/output/"
-    files = list(filter(os.path.isfile, glob.glob(root + "*.csv")))
-    files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
-    return files[0]
+# def getMostRecentBenchmarkFile():
+#     try:
+#         root = "build/output/"
+#         files = list(filter(os.path.isfile, glob.glob(root + "*.csv")))
+#         files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+#         return files[0]
+#     except:
+#         return ""
 
-    # files = [i for i in files if i.endswith(
-    #     ".csv") and i.startswith("benchmark")]
+# files = [i for i in files if i.endswith(
+#     ".csv") and i.startswith("benchmark")]
 
-    # filesAndStamps = {}
+# filesAndStamps = {}
 
-    # for i in files:
-    #     m = re.search(
-    #         r"(?<=benchmark_)(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)(?=\.csv)", i)
+# for i in files:
+#     m = re.search(
+#         r"(?<=benchmark_)(\d+)-(\d+)-(\d+)_(\d+)-(\d+)-(\d+)(?=\.csv)", i)
 
-    #     if m:
-    #         timestamp = (int(m.group(1)) - 1970) * 31556926
-    #         timestamp += int(m.group(2)) * 2629743
-    #         timestamp += int(m.group(3)) * 86400
-    #         timestamp += int(m.group(4)) * 3600
-    #         timestamp += int(m.group(5)) * 60
-    #         timestamp += int(m.group(6))
+#     if m:
+#         timestamp = (int(m.group(1)) - 1970) * 31556926
+#         timestamp += int(m.group(2)) * 2629743
+#         timestamp += int(m.group(3)) * 86400
+#         timestamp += int(m.group(4)) * 3600
+#         timestamp += int(m.group(5)) * 60
+#         timestamp += int(m.group(6))
 
-    #         filesAndStamps[i] = timestamp
+#         filesAndStamps[i] = timestamp
 
-    # if (len(filesAndStamps) == 0):
-    #     print("No benchmark files found")
-    #     sys.exit(1)
+# if (len(filesAndStamps) == 0):
+#     print("No benchmark files found")
+#     sys.exit(1)
 
-    # mostRecent = max(filesAndStamps.values())
-    # mostRecentFile = [k for k, v in filesAndStamps.items()
-    #                   if v == mostRecent][0]
+# mostRecent = max(filesAndStamps.values())
+# mostRecentFile = [k for k, v in filesAndStamps.items()
+#                   if v == mostRecent][0]
 
-    # return os.path.join(root, mostRecentFile)
+# return os.path.join(root, mostRecentFile)
 
 
 parser = argparse.ArgumentParser(
@@ -52,7 +55,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('graphs', type=str, nargs='+',
                     help='The columns to graph in the format "title, x, y1, y2, ...". Optionally, you can add xLabel= and yLabel= to specify the labels for the x and y axis.')
 
-parser.add_argument('--file', type=str, nargs='*', default=[getMostRecentBenchmarkFile()],
+parser.add_argument('--file', type=str, nargs='*', required=True,
                     help='The csv file(s) to read the data from')
 
 parser.add_argument('--xOffset', type=int, default=0,
