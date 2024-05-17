@@ -327,7 +327,7 @@ void Benchmark::saveCSV() const
 void Benchmark::saveCSV(std::string filename) const
 {
     std::ofstream file;
-    file.open(std::string("output/") + filename, std::ios::out | std::ios::trunc);
+    file.open(filename, std::ios::out | std::ios::trunc);
     file << "tick,time,";
     for (unsigned int i = 0; i < metrics.size() - 1; i++)
     {
