@@ -526,7 +526,7 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _col
     const int stepD = dim.z; //8
     const int stepX = dim.x;
     const int stepY = dim.y;
-    float vFar = 1024;
+    float vFar = 0.5*cam.getState().nearPlane/18.f;
     int nbOfPoints = (stepY +1)*(stepX +1)*(stepD+1)*6;
     GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
     GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
@@ -552,8 +552,11 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _col
 
     for(int i = 0; i <= stepD; i++)
     {
-        float z = (float)stepD/(max((float)i, 1e-5f)*vFar);
-        float z2 = (float)stepD/((float)(i+1)*vFar);
+        float z = vFar*(float)stepD/(max((float)i, 1e-5f));
+        float z2 = vFar*(float)stepD/((float)(i+1));
+
+        // z  *= cam.getState().nearPlane;
+        // z2 *= cam.getState().nearPlane;
 
         // z = log(-z/0.1)/log(1 + 2*tan(35)/(float)stepY);
         // z2 = log(-z2/0.1)/log(1 + 2*tan(35)/(float)stepY);
@@ -650,7 +653,7 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
     int s = state.size();
     for(int i = 0; i < s; i++)
     {
-        bones.push_back(boneHelper->copyWithSharedMesh());
+        bones.push_back(boneHelper->copy());
         add(bones.back());
     }
 };

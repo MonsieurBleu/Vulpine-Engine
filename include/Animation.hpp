@@ -91,6 +91,7 @@ class Animation
     std::function<void(void *)> onEnterAnimation = [](void* usr) {};
     std::function<void(void *)> onExitAnimation = [](void* usr) {};
     std::function<float(float, void *)> speedCallback = [](float, void* usr) { return 1; };
+    bool repeat = true;
 
     Animation(){};
 

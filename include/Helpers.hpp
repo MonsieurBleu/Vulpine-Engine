@@ -211,6 +211,7 @@ class ValueHelper : public SingleStringBatch
             state.frustumCulled = false;
             noBackFaceCulling = true;
         };
+        
         void update()
         {
             UFT32Stream s;

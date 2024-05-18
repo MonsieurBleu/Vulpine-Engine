@@ -41,7 +41,7 @@ void App::loadAllAssetsInfos(const char *filename)
             Loader<ObjectGroupRef>::addInfos(p);
         else
         if(!strcmp(ext, ".vulpineModel"))
-            Loader<ObjectGroup>::addInfos(p);
+            Loader<MeshModel3D>::addInfos(p);
         else
         if(!strcmp(ext, ".vulpineMaterial"))
             Loader<MeshMaterial>::addInfos(p);
@@ -239,6 +239,11 @@ bool App::baseInput(GLFWKeyInfo input)
             // used = true;
             break;
         
+        case GLFW_MOUSE_BUTTON_RIGHT :
+            globals._mouseRightClickDown = false;
+            // used = true;
+            break;
+
         default: break;
     }
 
@@ -251,6 +256,12 @@ bool App::baseInput(GLFWKeyInfo input)
             // used = true;
             break;
         
+        case GLFW_MOUSE_BUTTON_RIGHT :
+            globals._mouseRightClick = true;
+            globals._mouseRightClickDown = true;
+            // used = true;
+            break;
+
         case GLFW_KEY_V :
             if(input.mods&GLFW_MOD_CONTROL)
             {
@@ -433,6 +444,7 @@ void App::mainloopStartRoutine()
     globals.cpuTime.start();
 
     globals._mouseLeftClick = false;
+    globals._mouseRightClick = false;
 
     glfwPollEvents();
     globals._windowHasFocus = glfwGetWindowAttrib(window, GLFW_FOCUSED);

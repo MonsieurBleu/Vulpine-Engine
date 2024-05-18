@@ -16,6 +16,8 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
     EARLY_RETURN_IF_LOADED
 
     bool uniformsSet = false;
+    char emptypreproc[1] = "";
+    char *preproc = emptypreproc;
     std::vector<ShaderUniform> uniforms;
 
     std::vector<const char*> elems;
@@ -40,6 +42,11 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
             }
         }
         else
+        if(!strcasecmp(elem, "directive"))
+        {
+            preproc = buff->read();
+        }
+        else
             elems.push_back(elem);
     }
 
@@ -49,15 +56,15 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
     switch (elems.size())
     {
     case 2 :
-        r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), uniforms);
+        r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), uniforms, std::string(preproc));
         break;
 
     case 3 : 
-        r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), std::string(elems[2]), uniforms);
+        r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), std::string(elems[2]), uniforms, std::string(preproc));
         break;
 
     case 4 :
-        r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), std::string(elems[2]), std::string(elems[3]), uniforms);
+        r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), std::string(elems[2]), std::string(elems[3]), uniforms, std::string(preproc));
         break;
 
     default:
@@ -225,7 +232,7 @@ ObjectGroup& Loader<ObjectGroup>::loadFromInfos()
         else
         if(!strcasecmp(member, "meshes"))
             while (NEW_VALUE)
-                r.add(LOAD_VALUE(MeshModel3D).copyWithSharedMesh());
+                r.add(LOAD_VALUE(MeshModel3D).copy());
         else
         if(!strcasecmp(member, "state"))
             LOAD_MODEL_STATE_3D(r.state)

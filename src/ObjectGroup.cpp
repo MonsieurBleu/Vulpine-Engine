@@ -26,8 +26,6 @@ void ObjectGroup::update(bool forceUpdate)
     bool globalUpdate = state.update();
     globalUpdate |= forceUpdate;
 
-    
-
     if(globalUpdate)
     {
         for(auto i = meshes.begin(); i != meshes.end(); i++)
@@ -46,13 +44,13 @@ void ObjectGroup::update(bool forceUpdate)
 
     }
     
-    for(auto i = children.begin(); i != children.end(); i++)
+    for(auto &i : children)
     {
-        if((*i)->state.update() || globalUpdate)
-            (*i)->state.modelMatrix = state.modelMatrix * (*i)->state.forceUpdate().modelMatrix;
+        if(i->state.update() || globalUpdate)
+            i->state.modelMatrix = state.modelMatrix * i->state.modelMatrix;
 
-        ManageHideStatus((*i)->state.hide, state.hide);
-        (*i)->update(true);
+        ManageHideStatus(i->state.hide, state.hide);
+        i->update(true);
     }
 
 }
@@ -134,7 +132,7 @@ ObjectGroupRef ObjectGroup::copy()
             default:break;
         }
     i = 0;
-    for(auto &c : meshes) g->meshes[i++] = c->copyWithSharedMesh();
+    for(auto &c : meshes) g->meshes[i++] = c->copy();
 
     return g;
 }

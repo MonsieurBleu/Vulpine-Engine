@@ -147,7 +147,7 @@ class MeshModel3D : public Mesh
             : Mesh(material, vao), state(state)
             {createUniforms();};
 
-        ModelRef copyWithSharedMesh();
+        ModelRef copy();
 
         ModelState3D state;
         ShaderUniformGroup uniforms;

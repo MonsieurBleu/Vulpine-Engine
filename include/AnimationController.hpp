@@ -88,7 +88,7 @@ class AnimationController
     }
 
 public:
-    AnimationController(
+     AnimationController(
         const std::vector<AnimationControllerTransition> &_transitions, 
         AnimationRef &initialState, 
         void *usr = nullptr) : usr(usr)
@@ -111,6 +111,7 @@ public:
     void update(float dt)
     {
         float prct = 100.f * animationTime / currentAnimation->getLength();
+        float prctTransition = 100.f * transitionTime / currentAnimation->getLength();
 
         animationTime += dt * currentAnimation->speedCallback(prct, usr);
 
@@ -160,7 +161,7 @@ public:
         else
         {
             // std::cout << "transitionning omg " << usr << " " << transitionTime << "\t" << currentTransition->transitionLength << "\n";
-            transitionTime += dt * currentTransition->to->speedCallback(prct, usr);
+            transitionTime += dt * currentTransition->to->speedCallback(prctTransition, usr);
             float a = 0;
             switch (currentTransition->type)
             {
@@ -175,7 +176,8 @@ public:
             currentKeyframes =
                 interpolateKeyframes(currentTransition->from, currentTransition->to,
                                      fmod(animationTime, currentAnimation->getLength()), transitionTime, 
-                                     animationTime, transitionLTime , a, currentKeyframeIndexA, currentKeyframeIndexB);
+                                     animationLTime, transitionLTime , 
+                                     a, currentKeyframeIndexA, currentKeyframeIndexB);
 
             if (transitionTime >= currentTransition->transitionLength)
             {
