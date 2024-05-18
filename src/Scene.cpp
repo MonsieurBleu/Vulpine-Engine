@@ -4,6 +4,8 @@
 #include <Helpers.hpp>
 #include <MathsUtils.hpp>
 
+#define PER_LIGHT_OPTIMIZED_CLUSTERED_RENDERING
+
 Scene::Scene()
 {
     // lightBuffer
@@ -239,98 +241,57 @@ void Scene::generateLightClusters()
         AABBs[aabbID].second = max(p1, p2);
     }
 
+    
+    #ifdef PER_LIGHT_OPTIMIZED_CLUSTERED_RENDERING
+        /****** Per Light Optimized Culling ******/
 
-    // std::cout << "=======================================\n";
+        int buffSize = MAX_LIGHT_PER_CLUSTER*dim.x*dim.y*dim.z;
 
-    /****** Per Cluster Culling 
-    int clusterOff = 0;
-    aabbID = 0;
-    for(float x = 1.f; x <= dimf.x; x++)
-    for(float y = 1.f; y <= dimf.y; y++)
-    for(float z = 1.f; z <= dimf.z; z++, aabbID++, clusterOff += MAX_LIGHT_PER_CLUSTER)
-    {
-        vec3 minP = AABBs[aabbID].first;
-        vec3 maxP = AABBs[aabbID].second;
+        for(int i = 0; i < buffSize; i+= MAX_LIGHT_PER_CLUSTER) 
+            buff[i] = lmax;
 
-        int id = clusterOff;
-        int maxId = clusterOff+MAX_LIGHT_PER_CLUSTER;
-        for(int i = 0; i < lmax && id < maxId; i++)
+        for(int i = 0; i < lmax; i++)
         {
             const LightInfos &l = lbuffv[i];
-            bool culled = false;
 
-            switch (l._infos.a)
+            if(l._infos.a != POINT_LIGHT) continue;
+
+            float minDepth = -0.5*(l._position.z + l._direction.x)/far;
+            int minZid = clamp((int)(minDepth*dim.z), 0, dim.z);
+
+            float maxDepth = -0.5*(l._position.z - l._direction.x)/far;
+            int maxZid = clamp((int)(maxDepth*dim.z)+1, 0, dim.z);
+            
+            if(!maxZid) continue;
+
+            float depthFront = 1.f/(l._position.z);
+
+            float minSphereX = (l._position.x - l._direction.x);
+            float minX = minSphereX*pm[0][0]*depthFront;
+            minX = minX*-0.5 + 0.5;
+            int minXid = clamp((int)(minX*dim.x) - (minSphereX > 0.f ? 0 : 1), 0, dim.x);
+
+            float maxSphereX = (l._position.x + l._direction.x);
+            float maxX = maxSphereX*pm[0][0]*depthFront;
+            maxX = maxX*-0.5 + 0.5;
+            int maxXid = clamp((int)(maxX*dim.x) + (maxSphereX > 0.f ? 2 : 1), 0, dim.x);
+
+            float minSphereY = (l._position.y - l._direction.x);
+            float minY = minSphereY*pm[1][1]*depthFront;
+            minY = minY*-0.5 + 0.5;
+            int minYid = clamp((int)(minY*dim.y) - (minSphereY > 0.f ? 0 : 1), 0, dim.y);
+
+            float maxSphereY = (l._position.y + l._direction.x);
+            float maxY = maxSphereY*pm[1][1]*depthFront;
+            maxY = maxY*-0.5 + 0.5;
+            int maxYid = clamp((int)(maxY*dim.y) + (maxSphereY > 0.f ? 2 : 1), 0, dim.y);
+
+            if(l._position.z + l._direction.x > -near)
             {
-                case  POINT_LIGHT :
-                {
-                    const vec3 p = vec3(l._position);
-                    const vec3 closest = p-max(minP, min(maxP, p));
-                    culled = dot(closest, closest) <= l._direction.x*l._direction.x;
-                }
-                    break;
-
-                default: break;
+                minYid = 0; maxYid = dim.y; minXid = 0; maxXid = dim.x;
             }
 
-            if(culled) buff[id++] = i;
-        }
-
-        buff[id] = lmax;
-    }
-    ******/
-
-    /****** Per Light Optimized Culling 
-    ******/
-    int buffSize = MAX_LIGHT_PER_CLUSTER*dim.x*dim.y*dim.z;
-
-    for(int i = 0; i < buffSize; i+= MAX_LIGHT_PER_CLUSTER) 
-        buff[i] = lmax;
-
-    for(int i = 0; i < lmax; i++)
-    {
-        const LightInfos &l = lbuffv[i];
-
-        if(l._infos.a != POINT_LIGHT) continue;
-
-        float minDepth = -0.5*(l._position.z + l._direction.x)/far;
-        int minZid = clamp((int)(minDepth*dim.z), 0, dim.z);
-
-        float maxDepth = -0.5*(l._position.z - l._direction.x)/far;
-        int maxZid = clamp((int)(maxDepth*dim.z)+1, 0, dim.z);
-        
-        if(!maxZid) continue;
-
-        float depthFront = 1.f/(l._position.z - l._direction.x);
-
-
-        float minSphereX = (l._position.x - l._direction.x);
-        float minX = minSphereX*pm[0][0]*depthFront;
-        minX = minX*-0.5 + 0.5;
-        int minXid = clamp((int)(minX*dim.x) - (minSphereX > 0.f ? 0 : 1), 0, dim.x);
-
-        float maxSphereX = (l._position.x + l._direction.x);
-        float maxX = maxSphereX*pm[0][0]*depthFront;
-        maxX = maxX*-0.5 + 0.5;
-        int maxXid = clamp((int)(maxX*dim.x) + (maxSphereX > 0.f ? 2 : 1), 0, dim.x);
-
-
-        float minSphereY = (l._position.y - l._direction.x);
-        float minY = minSphereY*pm[1][1]*depthFront;
-        minY = minY*-0.5 + 0.5;
-        int minYid = clamp((int)(minY*dim.y) - (minSphereY > 0.f ? 0 : 1), 0, dim.y);
-
-        float maxSphereY = (l._position.y + l._direction.x);
-        float maxY = maxSphereY*pm[1][1]*depthFront;
-        maxY = maxY*-0.5 + 0.5;
-        int maxYid = clamp((int)(maxY*dim.y) + (maxSphereY > 0.f ? 2 : 1), 0, dim.y);
-
-
-        bool lastOneCulledX = false;
-        int culledSwitchX = 0;
-        for(int x = minXid; x < maxXid; x++)
-        {
-            bool oneCulledX = false;
-
+            for(int x = minXid; x < maxXid; x++)
             for(int y = minYid; y < maxYid; y++)
             for(int z = minZid; z < maxZid; z++)
             {
@@ -344,7 +305,6 @@ void Scene::generateLightClusters()
 
                 if(culled)
                 {
-                    oneCulledX = true;
                     int cid = MAX_LIGHT_PER_CLUSTER*aabbID;
                     const int maxCID = cid + MAX_LIGHT_PER_CLUSTER - 1;
 
@@ -354,14 +314,44 @@ void Scene::generateLightClusters()
                     buff[cid+1] = lmax;
                 }
             }
-
-            culledSwitchX += lastOneCulledX != oneCulledX ? 1 : 0;
-            if(culledSwitchX >= 2)
-                break;
-
-            lastOneCulledX = oneCulledX;
         }
-    }
+    #else
+        /****** Per Cluster Culling ******/
+        int clusterOff = 0;
+        aabbID = 0;
+        for(float x = 1.f; x <= dimf.x; x++)
+        for(float y = 1.f; y <= dimf.y; y++)
+        for(float z = 1.f; z <= dimf.z; z++, aabbID++, clusterOff += MAX_LIGHT_PER_CLUSTER)
+        {
+            vec3 minP = AABBs[aabbID].first;
+            vec3 maxP = AABBs[aabbID].second;
+
+            int id = clusterOff;
+            int maxId = clusterOff+MAX_LIGHT_PER_CLUSTER;
+            for(int i = 0; i < lmax && id < maxId; i++)
+            {
+                const LightInfos &l = lbuffv[i];
+                bool culled = false;
+
+                switch (l._infos.a)
+                {
+                    case  POINT_LIGHT :
+                    {
+                        const vec3 p = vec3(l._position);
+                        const vec3 closest = p-max(minP, min(maxP, p));
+                        culled = dot(closest, closest) <= l._direction.x*l._direction.x;
+                    }
+                        break;
+
+                    default: break;
+                }
+
+                if(culled) buff[id++] = i;
+            }
+
+            buff[id] = lmax;
+        }
+    #endif
 
     delete [] lbuffv;
 }
