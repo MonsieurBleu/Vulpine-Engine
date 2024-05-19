@@ -8,38 +8,7 @@
 
 Scene::Scene()
 {
-    // lightBuffer
-    // .add(
-    //     PointLight()
-    //         .setColor(vec3(1, 0, 0))
-    //         .setPosition(vec3(100, 50, 0))
-    //         .setIntensity(1)
-    //         .setSize(vec3(2, 1, 1)))
-    // .add(
-    //     DirectionLight()
-    //         .setColor(vec3(0, 1, 0))
-    //         .setDirection(vec3(0, 1, 0))
-    //         .setIntensity(1))
-    // .add(
-    //     DirectionLight()
-    //         .setColor(vec3(0, 0, 1))
-    //         .setDirection(vec3(1, 0, 0))
-    //         .setIntensity(2))
-    // ;
-
-    // lights
-    //     .push_back(
-    //         std::make_shared<Light>(
-    //             PointLight()
-    //                 .setColor(vec3(1, 0, 0))
-    //                 .setPosition(vec3(100, 50, 0))
-    //                 .setIntensity(1)
-    //                 .setSize(vec3(2, 1, 1))));
-
-    
-
     lightBuffer.send();
-
 }
 
 Scene& Scene::add(ModelRef mesh, bool sort)
