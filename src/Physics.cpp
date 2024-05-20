@@ -74,7 +74,7 @@ void PhysicsEngine::tick(float delta) {
                 body2->applyImpulse(relativeCollisionPoint2, invI2, -impulse);
 
                 /* Friction */
-                /*const float friction = body1->getPhysicsMaterial().friction * body2->getPhysicsMaterial().friction;
+                const float friction = body1->getPhysicsMaterial().friction * body2->getPhysicsMaterial().friction;
 
                 const glm::vec3 tangentVelocity = relativeVelocity - glm::dot(relativeVelocity, intersectionInfo.getNormal()) * intersectionInfo.getNormal();
                 const glm::vec3 tangent = glm::normalize(tangentVelocity);
@@ -85,11 +85,10 @@ void PhysicsEngine::tick(float delta) {
                 const glm::vec3 thetaTangent2 = body2->canRotate() ? glm::cross(invI2 * glm::cross(relativeCollisionPoint1, tangent), tangent) : glm::vec3(0.0f, 0.0f, 0.0f);
 
                 const float jr = std::abs(jn);
-                const float jt1 = std::clamp(friction * glm::dot(tangentVelocity, tangent) / glm::dot(relativeCollisionPoint1, thetaTangent1), -jr, jr);
-                const float jt2 = std::clamp(friction * glm::dot(tangentVelocity, tangent) / glm::dot(relativeCollisionPoint2, thetaTangent2), -jr, jr);
+                const float jt = std::clamp(glm::dot(tangentVelocity, tangent) / (invMasses + glm::dot(thetaTangent1 + thetaTangent2, intersectionInfo.getNormal())), -friction * jr, friction * jr);
 
-                body1->applyImpulse(relativeCollisionPoint1, invI1, -jt1 * tangent);
-                body2->applyImpulse(relativeCollisionPoint2, invI2, jt2 * tangent);*/
+                body1->applyImpulse(relativeCollisionPoint1, invI1, -jt * tangent);
+                body2->applyImpulse(relativeCollisionPoint2, invI2, jt * tangent);
                 /*
                 
                 glm::vec3 tangentVelocity{relativeVelocity - glm::dot(relativeVelocity, normal) * normal};
