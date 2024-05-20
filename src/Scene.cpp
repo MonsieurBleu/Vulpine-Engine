@@ -8,38 +8,7 @@
 
 Scene::Scene()
 {
-    // lightBuffer
-    // .add(
-    //     PointLight()
-    //         .setColor(vec3(1, 0, 0))
-    //         .setPosition(vec3(100, 50, 0))
-    //         .setIntensity(1)
-    //         .setSize(vec3(2, 1, 1)))
-    // .add(
-    //     DirectionLight()
-    //         .setColor(vec3(0, 1, 0))
-    //         .setDirection(vec3(0, 1, 0))
-    //         .setIntensity(1))
-    // .add(
-    //     DirectionLight()
-    //         .setColor(vec3(0, 0, 1))
-    //         .setDirection(vec3(1, 0, 0))
-    //         .setIntensity(2))
-    // ;
-
-    // lights
-    //     .push_back(
-    //         std::make_shared<Light>(
-    //             PointLight()
-    //                 .setColor(vec3(1, 0, 0))
-    //                 .setPosition(vec3(100, 50, 0))
-    //                 .setIntensity(1)
-    //                 .setSize(vec3(2, 1, 1))));
-
-    
-
     lightBuffer.send();
-
 }
 
 Scene& Scene::add(ModelRef mesh, bool sort)
@@ -212,33 +181,36 @@ void Scene::generateLightClusters()
         }
     }
 
-    std::pair<vec3, vec3> AABBs[clusteredLight.gridSize()];
+    static std::vector<std::pair<vec3, vec3>> AABBs;
     int aabbID = 0;
-    for(float x = 1.f; x <= dimf.x; x++)
-    for(float y = 1.f; y <= dimf.y; y++)
-    for(float z = 1.f; z <= dimf.z; z++, aabbID++)
+
+    if(AABBs.empty())
     {
-        float viewX2 = x*idim.x - 1.f;
-        float viewX = viewX2 - idim.x; 
+        AABBs.resize(clusteredLight.gridSize());
+        for(float x = 1.f; x <= dimf.x; x++)
+        for(float y = 1.f; y <= dimf.y; y++)
+        for(float z = 1.f; z <= dimf.z; z++, aabbID++)
+        {
+            float viewX2 = x*idim.x - 1.f;
+            float viewX = viewX2 - idim.x; 
 
-        float inverseZ = (viewX2 > 1e-6);
-        float viewZid = !inverseZ ? z : max(z-1.f, 1e-6f);
-        float viewZ2id = inverseZ ? z : max(z-1.f, 1e-6f);
-        float viewZ = hNFratio * dimf.z/(viewZid);
-        float viewZ2 = hNFratio * dimf.z/(viewZ2id);
+            float inverseZ = (viewX2 > 1e-6);
+            float viewZid = !inverseZ ? z : max(z-1.f, 1e-6f);
+            float viewZ2id = inverseZ ? z : max(z-1.f, 1e-6f);
+            float viewZ = hNFratio * dimf.z/(viewZid);
+            float viewZ2 = hNFratio * dimf.z/(viewZ2id);
 
-        float viewYbase = y*idim.y - 1.f;
-        bool inverseY = inverseZ != (viewYbase >= 0.f);
-        float viewY = viewYbase - (!inverseY ? idim.y : 0.f);
-        float viewY2 = viewYbase - (inverseY ? idim.y : 0.f);
+            float viewYbase = y*idim.y - 1.f;
+            bool inverseY = inverseZ != (viewYbase >= 0.f);
+            float viewY = viewYbase - (!inverseY ? idim.y : 0.f);
+            float viewY2 = viewYbase - (inverseY ? idim.y : 0.f);
 
-        // vec3 p1 = viewToWorld(vec4(viewX, viewY, viewZ, 1), ipm);
-        // vec3 p2 = viewToWorld(vec4(viewX2, viewY2, viewZ2, 1), ipm);
-        vec3 p1 = vec3(viewX * ipm[0].x, viewY * ipm[1].y, -1)/(viewZ*ipm[2].w);
-        vec3 p2 = vec3(viewX2 * ipm[0].x, viewY2 * ipm[1].y, -1)/(viewZ2*ipm[2].w);
+            vec3 p1 = vec3(viewX * ipm[0].x, viewY * ipm[1].y, -1)/(viewZ*ipm[2].w);
+            vec3 p2 = vec3(viewX2 * ipm[0].x, viewY2 * ipm[1].y, -1)/(viewZ2*ipm[2].w);
 
-        AABBs[aabbID].first = min(p1, p2);
-        AABBs[aabbID].second = max(p1, p2);
+            AABBs[aabbID].first = min(p1, p2);
+            AABBs[aabbID].second = max(p1, p2);
+        }
     }
 
     
