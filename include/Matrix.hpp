@@ -18,7 +18,7 @@ using namespace glm;
 class ModelState3D
 {
 private:
-    bool needUpdate = true;
+    bool _needUpdate = true;
     bool usingLookAt = false;
 
 public:
@@ -32,33 +32,45 @@ public:
     bool frustumCulled = true;
     ModelStateHideStatus hide = ModelStateHideStatus::UNDEFINED;
 
+    quat quaternion;
+    bool useQuaternion = false;
+
     ModelState3D &setHideStatus(ModelStateHideStatus h)
     {
         hide = h;
-        needUpdate = true;
+        _needUpdate = true;
         return *this;
     }
 
     ModelState3D &scaleScalar(float newScale)
     {
         scale = vec3(newScale);
-        needUpdate = true;
+        _needUpdate = true;
         return *this;
     }
 
     ModelState3D &setScale(vec3 newScale)
     {
         scale = newScale;
-        needUpdate = true;
+        _needUpdate = true;
         return *this;
     }
 
     ModelState3D &setPosition(vec3 newPosition)
     {
         position = newPosition;
-        needUpdate = true;
+        _needUpdate = true;
         return *this;
     }
+
+    ModelState3D &setQuaternion(quat newQuat)
+    {
+        quaternion = newQuat;
+        _needUpdate = true;
+        useQuaternion = true;
+        return *this;
+    }
+
 
     ModelState3D &setRotation(vec3 newRotation)
     {
@@ -70,7 +82,7 @@ public:
 
         // rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
 
-        needUpdate = true;
+        _needUpdate = true;
 
         return *this;
     }
@@ -90,7 +102,7 @@ public:
 
     bool update()
     {
-        if (needUpdate)
+        if (_needUpdate)
         {
             forceUpdate();
 
@@ -102,19 +114,25 @@ public:
 
     ModelState3D &forceUpdate()
     {
-        if (usingLookAt)
-            rotationMatrix = glm::lookAt(position, lookAtPoint, vec3(0, 1, 0));
+        // if (usingLookAt)
+        //     rotationMatrix = glm::lookAt(position, lookAtPoint, vec3(0, 1, 0));
+        if(useQuaternion)
+            rotationMatrix = mat4(quaternion);
         else
             rotationMatrix = glm::eulerAngleXYZ(rotation.x, rotation.y, rotation.z);
+
+            
         mat4 scaleMatrix = glm::scale(mat4(1.0), scale);
         mat4 translateMatrix = translate(mat4(1.0), position);
 
         modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
 
-        needUpdate = false;
+        _needUpdate = false;
 
         return *this;
     }
+
+    bool needUpdate(){return _needUpdate;};
 };
 
 #include <memory>

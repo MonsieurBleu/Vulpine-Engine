@@ -46,8 +46,8 @@ void ObjectGroup::update(bool forceUpdate)
     
     for(auto &i : children)
     {
-        if(i->state.update() || globalUpdate)
-            i->state.modelMatrix = state.modelMatrix * i->state.modelMatrix;
+        if(i->state.needUpdate() || globalUpdate)
+            i->state.modelMatrix = state.modelMatrix * i->state.forceUpdate().modelMatrix;
 
         ManageHideStatus(i->state.hide, state.hide);
         i->update(true);

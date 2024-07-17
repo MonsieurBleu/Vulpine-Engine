@@ -160,6 +160,17 @@ class PolyhedronHelper : public MeshModel3D
 
 typedef std::shared_ptr<PolyhedronHelper> PolyhedronHelperRef;
 
+class PointsHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        PointsHelper(const std::vector<vec3>& points, vec3 _color);
+};
+
+typedef std::shared_ptr<PointsHelper> PointsHelperRef;
+
 class NavGraphHelper : public ObjectGroup
 {
     private : 

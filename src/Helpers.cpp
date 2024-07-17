@@ -888,5 +888,38 @@ void CapsuleHelper::updateData(const vec3 pos1, const vec3 pos2, const float rad
     getVao()->attributes[0].sendAllToGPU();
 }
 
+PointsHelper::PointsHelper(const std::vector<vec3>& points, vec3 _color) : MeshModel3D(Loader<MeshMaterial>::get("basicHelper"))
+{
+    this->color = _color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
 
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_POINTS;
+
+    int nbOfPoints = points.size();
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        nor[i] = vec3(2);
+        pos[i] = points[i];
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
 

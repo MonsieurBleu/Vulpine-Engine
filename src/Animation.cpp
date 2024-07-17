@@ -70,11 +70,12 @@ AnimationRef Animation::load(const std::string &filename)
     return anim;
 }
 
-std::vector<keyframeData> Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16> & currentKeyframeIndex)
+void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16> & currentKeyframeIndex, std::vector<keyframeData> &data)
 {
     // static float lastTime = 0;
 
-    std::vector<keyframeData> data(keyframes.size());
+    // std::vector<keyframeData> data(keyframes.size());
+    if(data.empty()) data.resize(keyframes.size());
 
     if(!repeat && time >= length)
     {
@@ -96,7 +97,7 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time, float & lastTi
             };
         }
 
-        return data;
+        return;
     }
 
     time = fmod(time, length);
@@ -158,10 +159,10 @@ std::vector<keyframeData> Animation::getCurrentFrames(float time, float & lastTi
         data[i] = {translation, rotation, scale};
     }
 
-    return data;
+    return;
 }
 
-std::vector<keyframeData> interpolateKeyframes(
+void interpolateKeyframes(
     AnimationRef animA, 
     AnimationRef animB, 
     float t1, 
@@ -170,48 +171,51 @@ std::vector<keyframeData> interpolateKeyframes(
     float &lt2,
     float a, 
     std::vector<int16> &currentKeyframeIndexA,
-    std::vector<int16> &currentKeyframeIndexB)
+    std::vector<int16> &currentKeyframeIndexB,
+    std::vector<keyframeData> &data)
 {
-    std::vector<keyframeData> data(animA->keyframes.size());
-
     if (animA->keyframes.size() != animB->keyframes.size())
     {        
         WARNING_MESSAGE("interpolateKeyframes : animations have different number of expected bones.");
-        return data;
+        return;
     }
 
     if (t1 < 0 && t2 < 0)
     {
         WARNING_MESSAGE("interpolateKeyframes : both animations have negative time.");
-        return data;
+        return;
     }
 
     if (t2 < 0)
-        return animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA);
+        return animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA, data);
 
     if (t1 < 0)
-        return animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB);
+        return animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB, data);
 
     if (t1 > animA->length && t2 > animB->length)
     {
         WARNING_MESSAGE("interpolateKeyframes : both animations have time greater than their length.");
-        return data;
+        return;
     }
+
+    // return animA->getCurrentFrames(t1, lt2, currentKeyframeIndexA, data);
 
     
     /* TODO : figure out what luna meant when making those 2 conditions*/
     if (t1 > animA->length)
-        return animB->getCurrentFrames(t2, lt1, currentKeyframeIndexB);
+        return animB->getCurrentFrames(t2, lt1, currentKeyframeIndexB, data);
 
     if (t2 > animB->length)
-        return animA->getCurrentFrames(t1, lt2, currentKeyframeIndexA);
+        return animA->getCurrentFrames(t1, lt2, currentKeyframeIndexA, data);
 
-    std::vector<keyframeData> keyframesA = animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA);
-    std::vector<keyframeData> keyframesB = animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB);
+    // std::vector<keyframeData> keyframesA;
+    animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA, data);
+    static std::vector<keyframeData> keyframesB;
+    animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB, keyframesB);
 
-    for (uint i = 0; i < keyframesA.size(); i++)
+    for (uint i = 0; i < data.size(); i++)
     {
-        keyframeData &dataA = keyframesA[i];
+        keyframeData &dataA = data[i];
         keyframeData &dataB = keyframesB[i];
 
         data[i].translation = glm::mix(dataA.translation, dataB.translation, a);
@@ -219,5 +223,5 @@ std::vector<keyframeData> interpolateKeyframes(
         data[i].scale = glm::mix(dataA.scale, dataB.scale, a);
     }
 
-    return data;
+    return;
 }

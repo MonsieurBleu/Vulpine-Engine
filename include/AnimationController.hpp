@@ -117,7 +117,7 @@ public:
 
         if (!transitioning)
         {
-            currentKeyframes = currentAnimation->getCurrentFrames(animationTime, animationLTime, currentKeyframeIndexA);
+            currentAnimation->getCurrentFrames(animationTime, animationLTime, currentKeyframeIndexA, currentKeyframes);
 
             for (auto &t : transitionsFromCurrentState)
             {
@@ -173,11 +173,10 @@ public:
                     break;
             }
 
-            currentKeyframes =
-                interpolateKeyframes(currentTransition->from, currentTransition->to,
-                                     fmod(animationTime, currentAnimation->getLength()), transitionTime, 
-                                     animationLTime, transitionLTime , 
-                                     a, currentKeyframeIndexA, currentKeyframeIndexB);
+            interpolateKeyframes(currentTransition->from, currentTransition->to,
+                                fmod(animationTime, currentAnimation->getLength()), transitionTime, 
+                                animationLTime, transitionLTime , 
+                                a, currentKeyframeIndexA, currentKeyframeIndexB, currentKeyframes);
 
             if (transitionTime >= currentTransition->transitionLength)
             {

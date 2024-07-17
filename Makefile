@@ -1,7 +1,7 @@
 CC = g++
 CPPFLAGS = -Wall -Wno-strict-aliasing -g -Ofast --std=c++23 
 ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32  -lktx -lsoft_oal
+	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lreactphysics3d
 	LINKFLAGS = libglfw3.a libglfw3dll.a 
 
 	ECHO = echo
