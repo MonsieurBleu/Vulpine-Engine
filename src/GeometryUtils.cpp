@@ -696,7 +696,7 @@ namespace geometry {
 
     glm::vec3 convexSetSupportPoint(const std::vector<glm::vec3>& convexSet, const glm::vec3& direction) {
         float maxDot = -std::numeric_limits<float>::infinity();
-        glm::vec3 supportPoint;
+        glm::vec3 supportPoint(0);
         for (const glm::vec3& point : convexSet) {
             float dot = glm::dot(point, direction);
             if (dot > maxDot) {
@@ -784,7 +784,7 @@ namespace geometry {
     }
 
     static std::size_t closestPointInHull(const glm::vec3& point, const std::deque<glm::vec3>& hull) {
-        std::size_t closestIndex;
+        std::size_t closestIndex = 0;
         float closestDistance = std::numeric_limits<float>::infinity();
         for (std::size_t i = 0; i < hull.size(); ++i) {
             const float distance = triangulationDistance(point, hull[i]);
