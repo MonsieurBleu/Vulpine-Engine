@@ -696,7 +696,7 @@ namespace geometry {
 
     glm::vec3 convexSetSupportPoint(const std::vector<glm::vec3>& convexSet, const glm::vec3& direction) {
         float maxDot = -std::numeric_limits<float>::infinity();
-        glm::vec3 supportPoint;
+        glm::vec3 supportPoint(0);
         for (const glm::vec3& point : convexSet) {
             float dot = glm::dot(point, direction);
             if (dot > maxDot) {
