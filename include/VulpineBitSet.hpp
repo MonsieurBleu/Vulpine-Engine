@@ -59,6 +59,10 @@ struct VulpineBitSet
         setTrue(arg ...);
     };
 
+    bool operator[](int i)
+    {
+        return bytes[i/8]&(1<<(i%8));
+    };
 
     std::string toStr()
     {

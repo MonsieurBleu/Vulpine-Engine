@@ -30,6 +30,10 @@ vec3 screenPosToModel(vec2 screenPos);
 
     float angle(const vec2 &v1, const vec2& v2);
 
+    quat directionToQuat(vec3 dir);
+    
+    vec3 directionToEuler(vec3 dir);
+
 
 /****** COLOR UTILS******/
     vec3 hsv2rgb(vec3 hsv);

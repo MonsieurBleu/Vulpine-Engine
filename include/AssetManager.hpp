@@ -108,3 +108,15 @@ class Loader
         
         T& loadFromInfos();
 };
+
+template<typename T>
+class DataLoader
+{
+    private : 
+
+    public : 
+
+        static void write(const T & data, VulpineTextOutputRef out);
+
+        static T read(VulpineTextBuffRef buff);
+};

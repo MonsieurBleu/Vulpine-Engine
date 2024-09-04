@@ -85,14 +85,13 @@ std::ostream& operator<<(std::ostream& os, BenchTimer e)
 
     os << TERMINAL_INFO << "Timer : " << "\n";
     os << TERMINAL_INFO <<"\tname     : " << TERMINAL_NOTIF << e.name << "\n";
-    os << TERMINAL_INFO <<"\tdelta    : " << TERMINAL_NOTIF <<e.delta.count() << "\n";
-    os << TERMINAL_INFO <<"\tmin      : " << TERMINAL_NOTIF <<e.min.count() << "\n";
-    os << TERMINAL_INFO <<"\tmax      : " << TERMINAL_NOTIF <<e.max.count() << "\n";
-    os << TERMINAL_INFO <<"\tavgTotal : " << TERMINAL_NOTIF <<e.avgTotal.count() << "\n";
-    os << TERMINAL_INFO <<"\tavg      : " << TERMINAL_NOTIF <<e.avgLast.count() << "\n";
-
+    os << TERMINAL_INFO <<"\tdelta    : " << TERMINAL_NOTIF <<e.delta.count() << "ms\n";
+    os << TERMINAL_INFO <<"\tmin      : " << TERMINAL_NOTIF <<e.min.count() << "ms\n";
+    os << TERMINAL_INFO <<"\tmax      : " << TERMINAL_NOTIF <<e.max.count() << "ms\n";
+    os << TERMINAL_INFO <<"\tavgTotal : " << TERMINAL_NOTIF <<e.avgTotal.count() << "ms\n";
+    os << TERMINAL_INFO <<"\tavg      : " << TERMINAL_NOTIF <<e.avgLast.count() << "ms\n";
     os << TERMINAL_INFO <<"\tupdateCounter  : " << TERMINAL_NOTIF << e.updateCounter << "\n";
-    os << TERMINAL_INFO <<"\tlastTimeUpdate : " << TERMINAL_NOTIF << e.lastTimeUpdate.time_since_epoch().count() << "\n";
+    // os << TERMINAL_INFO <<"\tlastTimeUpdate : " << TERMINAL_NOTIF << e.lastTimeUpdate.time_since_epoch().count() << "\n";
     os << TERMINAL_RESET;
     return os;
 }

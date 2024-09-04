@@ -784,7 +784,7 @@ namespace geometry {
     }
 
     static std::size_t closestPointInHull(const glm::vec3& point, const std::deque<glm::vec3>& hull) {
-        std::size_t closestIndex;
+        std::size_t closestIndex = 0;
         float closestDistance = std::numeric_limits<float>::infinity();
         for (std::size_t i = 0; i < hull.size(); ++i) {
             const float distance = triangulationDistance(point, hull[i]);
@@ -830,7 +830,7 @@ namespace geometry {
 
             std::set<std::size_t, std::greater<std::size_t>> hullDeleted;
 
-            std::size_t putAt;
+            std::size_t putAt = 0;
 
             // Inside
             if (glm::dot(sortedConvexSet[i] - hull[previous], glm::cross(sweepingDirection, hull[closestIndex] - hull[previous])) <= 0.0f && glm::dot(sortedConvexSet[i] - hull[closestIndex], glm::cross(sweepingDirection, hull[next] - hull[closestIndex])) <= 0.0f) {

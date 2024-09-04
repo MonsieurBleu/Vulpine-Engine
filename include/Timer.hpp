@@ -10,6 +10,8 @@ typedef std::chrono::duration<float, std::milli> duration;
 #define NS_TO_S 1000000000;
 #define MS_TO_S 0.001;
 
+#define NAMED_TIMER(x) BenchTimer x(#x);
+
 class FastUI_valueMenu;
 
 class BenchTimer
@@ -20,10 +22,10 @@ private:
     bool paused = false;
     bool resumePending = false;
 
-    duration delta;
-    duration min;
-    duration max;
-    duration avgTotal;
+    duration delta    = duration(0);
+    duration min      = duration(1e9);
+    duration max      = duration(0);
+    duration avgTotal = duration(0);
 
     duration avgLast;
     duration avg;
