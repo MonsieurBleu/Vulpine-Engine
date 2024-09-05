@@ -1,6 +1,8 @@
 #pragma once
 
+#include <VulpineParser.hpp>
 #include <Entity.hpp>
+#include <ModularEntityGrouppingUtils.hpp>
 #include <AssetManagerUtils.hpp>
 
 /*
@@ -52,6 +54,7 @@ class ComponentModularity
     private : 
 
     public :
+
         template <typename T> struct Attribute
         {
             uint16_t ComponentID = 0;
@@ -63,15 +66,17 @@ class ComponentModularity
         typedef Attribute<std::function<bool(Entity&, EntityRef)>> CheckFunc;
         typedef Attribute<std::function<bool(Entity&, EntityRef, Entity&)>> ReparFunc;
         typedef Attribute<std::function<bool(Entity&, EntityRef)>> ClearFunc;
-        typedef Attribute<std::function<bool(Entity&, EntityRef)>> LoadsFunc;
-        // typedef Attribute<std::function<bool(Entity&, VulpineTextBuffRef)>> LoadsFunc;
+
+        typedef Attribute<std::function<void(EntityRef, VulpineTextBuffRef)>> ReadFunc;
+        typedef Attribute<std::function<void(EntityRef, VulpineTextOutputRef)>> WriteFunc;
 
         static inline std::vector<SynchFunc> SynchFuncs;
         static inline std::vector<MergeFunc> MergeFuncs;
         static inline std::vector<CheckFunc> CheckFuncs;
         static inline std::vector<ReparFunc> ReparFuncs;
         static inline std::vector<ClearFunc> ClearFuncs;
-        static inline std::vector<LoadsFunc> LoadsFuncs;
+        static inline std::vector<ReadFunc>  ReadFuncs;
+        static inline std::vector<WriteFunc> WriteFuncs;
 
         static void addChild(Entity &parent, EntityRef child)
         {
@@ -156,21 +161,3 @@ class ComponentModularity
                     }
         };
 };
-
-
-template<typename T>
-class PreLaunchVectorFill
-{
-    public : PreLaunchVectorFill(std::vector<T> &v, T i){v.push_back(i);};
-};
-
-
-#define __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(type, funcType, params) void __##funcType##__##type params
-
-#define __COMPONENT_ADD_ATTRIBUTE(type, funcType, params) \
-    __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(type, funcType, params); \
-    inline PreLaunchVectorFill<ComponentModularity::funcType> __##funcType##SetupObject__##type(ComponentModularity::funcType##s, {(uint16_t)ComponentInfos<type>::id, __##funcType##__##type});
-
-
-#define COMPONENT_ADD_SYNCH(type) __COMPONENT_ADD_ATTRIBUTE(type, SynchFunc, (Entity& parent, EntityRef child))
-#define COMPONENT_DEFINE_SYNCH(type) __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(type, SynchFunc, (Entity& parent, EntityRef child))

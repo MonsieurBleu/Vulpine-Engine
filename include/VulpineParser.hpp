@@ -3,6 +3,9 @@
 #include <fstream>
 #include <glm/glm.hpp>
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+
 typedef char uft8;
 
 /*
@@ -115,14 +118,20 @@ class FastTextParser
 #define PARSER_WRITE(T) template<> void FastTextParser::write<T>(T data, char *&buff)
 #define PARSER_DEFINE(T) PARSER_WRITE(T); PARSER_READ(T);
 
-PARSER_DEFINE(float);
-PARSER_DEFINE(unsigned int);
-PARSER_DEFINE(int);
-PARSER_DEFINE(glm::vec2);
-PARSER_DEFINE(glm::vec3);
-PARSER_DEFINE(glm::vec4);
-PARSER_DEFINE(glm::ivec2);
-PARSER_DEFINE(glm::ivec3);
-PARSER_DEFINE(glm::ivec4);
+#define PARSER_EQUALS(T1, T2) \
+    PARSER_WRITE(T2){FastTextParser::write<T1>(data, buff);} \
+    PARSER_READ(T2){return FastTextParser::read<T1>(buff);}
 
-PARSER_DEFINE(bool);
+// PARSER_DEFINE(float);
+// PARSER_DEFINE(unsigned int);
+// PARSER_DEFINE(int);
+// PARSER_DEFINE(glm::vec2);
+// PARSER_DEFINE(glm::vec3);
+// PARSER_DEFINE(glm::vec4);
+// PARSER_DEFINE(glm::ivec2);
+// PARSER_DEFINE(glm::ivec3);
+// PARSER_DEFINE(glm::ivec4);
+
+// PARSER_DEFINE(glm::quat);
+
+// PARSER_DEFINE(bool);

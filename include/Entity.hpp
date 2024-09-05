@@ -9,6 +9,15 @@
 #include <sstream>
 #include <Utils.hpp>
 
+#define PreLaunchContainerFill(_containerType_, _name_) \
+    template<typename T> \
+    class PreLaunch##_name_##Fill \
+    { \
+        public : PreLaunchVectorFill(_containerType_<T> &v, T i){v.push_back(i);}; \
+    }; 
+
+template<typename T> class PreLaunchVectorFill { public : PreLaunchVectorFill(std::vector<T> &v, T i){v.push_back(i);}; };
+template<typename T, typename D> class PreLaunchMapFill { public : PreLaunchMapFill(std::unordered_map<T, D> &v, const T &i, const D &j){v[i] = j;}; };
 
 GENERATE_ENUM(ComponentCategory,
     ENTITY_LIST,
@@ -17,7 +26,6 @@ GENERATE_ENUM(ComponentCategory,
     PHYSIC,     // Components that contains physic related elements, should be manipulated with the physic mutex in mind, or in the physics thread directly 
     SOUND,      // Components that contains Sound related elements
     AI,         // Components that contains AI related elements, should be manipulated with the AI mutex in mind, or in the AI thread directly 
-
     END 
 );
 
@@ -38,6 +46,9 @@ struct ComponentGlobals
     static inline int lastID = -1;
     static inline int lastFreeID[ComponentCategory::END] = {0};
     static inline int maxID[ComponentCategory::END] = {0};
+
+    static inline std::unordered_map<std::string, int> ComponentNamesMap;
+    static inline std::vector<std::string> ComponentNames;
 };
 
 template <typename T>
@@ -81,7 +92,9 @@ class Component
     static_assert(_size_ <= MAX_ENTITY); \
     template<> const int ComponentInfos<_type_>::size = _size_;\
     template<> const int ComponentInfos<_type_>::id = ComponentGlobals::lastID++;\
-    template<> const ComponentCategory Component<_type_>::category = _category_;
+    template<> const ComponentCategory Component<_type_>::category = _category_; \
+    inline PreLaunchVectorFill<std::string> __ComponentNamesSetupObject__##_type_(ComponentGlobals::ComponentNames, #_type_); \
+    inline PreLaunchMapFill<std::string, int> __ComponentNamesMapSetupObject__##_type_(ComponentGlobals::ComponentNamesMap, #_type_, ComponentInfos<_type_>::id);
 
 struct EntityInfos
 {
@@ -257,3 +270,5 @@ struct GlobalComponentToggler
         }
     }
 };
+
+

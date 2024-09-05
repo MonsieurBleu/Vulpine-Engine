@@ -96,15 +96,21 @@ constexpr auto type_name() {
 
     #define DATA_WRITE_INIT(T) out->Entry(); WRITE_NAME(T, out); out->Tabulate();
 
+    #define DATA_WRITE_INIT_AN(T) out->Tabulate();
+
     #define DATA_WRITE_END out->Break();
 
     #define DATA_WRITE_FUNC_INIT(T) DATA_WRITE_FUNC(T) { DATA_WRITE_INIT(T)
     #define DATA_WRITE_END_FUNC  DATA_WRITE_END; }
 
     #define FTXTP_WRITE_ELEMENT(data, elem) \
-        out->Entry(); \
+        {out->Entry(); \
         WRITE_NAME(elem, out); \
-        FastTextParser::write<decltype(data.elem)>(data.elem, out->getReadHead());
+        FastTextParser::write<decltype(data.elem)>(data.elem, out->getReadHead());}
+    
+    #define FTXTP_WRITE_ELEMENT_COND(data, elem, cond) if(cond) {FTXTP_WRITE_ELEMENT(data, elem)}
+
+    #define FTXTP_WRITE_ELEMENT_COND_E(data, elem, cond) if(elem cond) {FTXTP_WRITE_ELEMENT(data, elem)}
 
     #define CONST_CSTRING_SIZED(str) str, sizeof(str)-1
     #define CONST_STRING_SIZED(str) str.c_str(), str.size()
@@ -139,8 +145,8 @@ constexpr auto type_name() {
     #define IF_MEMBER(x) if(!strcmp(member, #x))
 
     #define IF_MEMBER_FTXTP_LOAD(data, elem) \
-        IF_MEMBER(elem)\
-            data.elem = FastTextParser::read<decltype(data.elem)>(value);\
+        IF_MEMBER_READ_VALUE(elem)\
+            data.elem = FastTextParser::read<decltype(data.elem)>(value);
 
     #define MAP_SAFE_READ(map, buff, data, value) \
         {                                  \
@@ -205,6 +211,14 @@ constexpr auto type_name() {
                 DATA_WRITE_END; \
             }
 
+    #define AUTOGEN_DATA_WRITE_FUNC_AN(T, ...) \
+        DATA_WRITE_FUNC(T) \
+            { \
+                DATA_WRITE_INIT_AN(T); \
+                MAPGEN_FOR_EACH(FTXTP_WRITE_ELEMENT_AUTOGEN, __VA_ARGS__) \
+                DATA_WRITE_END; \
+            }
+
     #define AUTOGEN_DATA_READ_FUNC(T, ...) \
         DATA_READ_FUNC(T) \
             { \
@@ -212,7 +226,7 @@ constexpr auto type_name() {
                 while (NEW_VALUE) \
                 { \
                     const char *member = buff->read(); \
-                    const char *value = buff->read(); \
+                    const char *value = nullptr; \
                     if(false); \
                     MAPGEN_FOR_EACH(IF_MEMBER_FTXTP_LOAD_AUTOGEN, __VA_ARGS__) \
                     else \
@@ -223,9 +237,31 @@ constexpr auto type_name() {
                 DATA_READ_END; \
             }
 
+    /*
+        Generate Automaticlly the read and write functions for DataLoader<T>.
+        All given members should be pure data and writtable and readable by a 
+        FastTextParser template.
+    */
     #define AUTOGEN_DATA_RW_FUNC(T, ...) \
         AUTOGEN_DATA_WRITE_FUNC(T, __VA_ARGS__) \
         AUTOGEN_DATA_READ_FUNC(T, __VA_ARGS__) 
 
+    /*
+        Generate Automaticlly the read and write functions for DataLoader<T>.
+        All given members should be pure data and writtable and readable by a 
+        FastTextParser template.
 
+        _AN means anonymous, the type name will not be written
+     */
+    #define AUTOGEN_DATA_RW_FUNC_AN(T, ...) \
+        AUTOGEN_DATA_WRITE_FUNC_AN(T, __VA_ARGS__) \
+        AUTOGEN_DATA_READ_FUNC(T, __VA_ARGS__) 
+
+
+    #define AUTOGEN_COMPONENT_RWFUNC(type) \
+        COMPONENT_ADD_RW(type) \
+        COMPONENT_DEFINE_READ(type) \
+        {entity->set<type>(DataLoader<type>::read(buff));} \
+        COMPONENT_DEFINE_WRITE(type) \
+        {DataLoader<type>::write(entity->comp<type>(), out);}
 

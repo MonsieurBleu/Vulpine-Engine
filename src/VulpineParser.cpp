@@ -304,10 +304,10 @@ PARSER_WRITE(float)
         buff[c++] = '+';
 
     if(data != 0.f && data >= 10.f)
-        do{data *= 0.1f; e++;} while(data >= 10.f);
+        do{data *= 0.1f; e++;} while(data > 10.f);
 
     else if(data != 0.f && data < 1.f)
-        do{data *= 10.f; e--;} while(data <= 1.f);
+        do{data *= 10.f; e--;} while(data < 1.f);
 
 
     unsigned int datai = (double)(data) * precision;
@@ -441,6 +441,11 @@ PARSER_WRITE(int)
     FastTextParser::write<unsigned int>(data, ++buff);
 }
 
+PARSER_EQUALS(int32_t, int16_t);
+PARSER_EQUALS(int32_t, int8_t);
+PARSER_EQUALS(uint32_t, uint16_t);
+PARSER_EQUALS(uint32_t, uint8_t);
+
 PARSER_READ(glm::vec2)
 {
     float x = FastTextParser::read<float>(buff);
@@ -463,6 +468,15 @@ PARSER_READ(glm::vec4)
     float z = FastTextParser::read<float>(++buff);
     float w = FastTextParser::read<float>(++buff);
     return glm::vec4(x, y, z, w);
+}
+
+PARSER_READ(glm::quat)
+{
+    float w = FastTextParser::read<float>(buff);
+    float x = FastTextParser::read<float>(++buff);
+    float y = FastTextParser::read<float>(++buff);
+    float z = FastTextParser::read<float>(++buff);
+    return glm::quat(w, x, y, z);
 }
 
 PARSER_READ(glm::ivec2)
@@ -514,6 +528,18 @@ PARSER_WRITE(glm::vec4)
     FastTextParser::write<float>(data.z, buff);
     *(buff++) = PARSER_SEPARATOR_CHAR;
     FastTextParser::write<float>(data.w, buff);
+}
+
+// template<> void FastTextParser::write<glm::qua<float, glm::packed_highp>>(glm::qua<float, glm::packed_highp> data, char *&buff)
+PARSER_WRITE(glm::quat)
+{
+    FastTextParser::write<float>(data.w, buff);
+    *(buff++) = PARSER_SEPARATOR_CHAR;
+    FastTextParser::write<float>(data.x, buff);
+    *(buff++) = PARSER_SEPARATOR_CHAR;
+    FastTextParser::write<float>(data.y, buff);
+    *(buff++) = PARSER_SEPARATOR_CHAR;
+    FastTextParser::write<float>(data.z, buff);
 }
 
 PARSER_WRITE(glm::ivec2)
