@@ -112,6 +112,8 @@ ObjectGroupRef ObjectGroup::copy()
 {
     ObjectGroupRef g = newObjectGroup();
 
+    g->name = name;
+
     g->children.resize(children.size());
     g->states.resize(states.size());
     g->meshes.resize(meshes.size());

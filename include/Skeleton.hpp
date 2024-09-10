@@ -22,7 +22,11 @@ class SkeletonAnimationState;
 class Skeleton : public std::vector<SkeletonBone>
 {
 private:
+
 public:
+
+    std::string name;
+
     const SkeletonBone &operator[](int i);
     void load(const char *filename);
     int getSize() { return size(); };
@@ -57,6 +61,8 @@ class SkeletonAnimationState : public std::vector<mat4>
         std::shared_ptr<uint> handle;
 
     public:
+        std::string name;
+
         SkeletonAnimationState(SkeletonRef s);
         SkeletonAnimationState();
         ~SkeletonAnimationState();

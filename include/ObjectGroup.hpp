@@ -28,6 +28,8 @@ protected:
     std::deque<SceneLight> lights;
 
 public:
+    std::string name;
+
     ModelState3D state;
     
     virtual void update(bool forceUpdate = false);

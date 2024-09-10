@@ -479,6 +479,17 @@ PARSER_READ(glm::quat)
     return glm::quat(w, x, y, z);
 }
 
+PARSER_READ(glm::mat4)
+{
+    glm::mat4 m;
+    float *f = (float *)&m;
+
+    for(int i = 0; i < 16; i++, buff++)
+        f[i] =  FastTextParser::read<float>(buff);
+
+    return m;
+}
+
 PARSER_READ(glm::ivec2)
 {
     int x = FastTextParser::read<int>(buff);
@@ -541,6 +552,17 @@ PARSER_WRITE(glm::quat)
     *(buff++) = PARSER_SEPARATOR_CHAR;
     FastTextParser::write<float>(data.z, buff);
 }
+
+PARSER_WRITE(glm::mat4)
+{
+    const float *f = (float *)&data;
+    for(int i = 0; i < 16; i++)
+    {
+        FastTextParser::write<float>(f[i], buff);
+        *(buff++) = PARSER_SEPARATOR_CHAR;
+    }
+}
+
 
 PARSER_WRITE(glm::ivec2)
 {

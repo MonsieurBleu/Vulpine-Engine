@@ -115,6 +115,7 @@ SkeletonAnimationState::SkeletonAnimationState()
 
 SkeletonAnimationState::SkeletonAnimationState(SkeletonRef s) : std::vector<mat4>(s->getSize()), skeleton(s)
 {
+    name = s->name;
     handle = std::make_shared<uint>();
     std::fill(this->begin(), this->end(), mat4(1));
     generate();

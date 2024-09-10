@@ -222,6 +222,8 @@ ObjectGroup& Loader<ObjectGroup>::loadFromInfos()
 {
     EARLY_RETURN_IF_LOADED
 
+    r.name = std::string(name);
+
     while (NEW_VALUE)
     {
         char *member = buff->read();
@@ -263,6 +265,7 @@ ObjectGroupRef& Loader<ObjectGroupRef>::loadFromInfos()
     EARLY_RETURN_IF_LOADED
 
     r = newObjectGroup();
+    r->name = std::string(name);
 
     while (NEW_VALUE)
     {
@@ -307,6 +310,7 @@ SkeletonRef& Loader<SkeletonRef>::loadFromInfos()
 
     r = std::make_shared<Skeleton>();
     r->load(buff->read());
+    r->name = name;
 
     EXIT_ROUTINE_AND_RETURN
 }
