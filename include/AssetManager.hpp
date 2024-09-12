@@ -109,6 +109,8 @@ class Loader
         T& loadFromInfos();
 };
 
+class Entity;
+
 template<typename T>
 class DataLoader
 {
@@ -119,4 +121,5 @@ class DataLoader
         static void write(const T & data, VulpineTextOutputRef out);
 
         static T read(VulpineTextBuffRef buff);
+        static T read(VulpineTextBuffRef buff, Entity *e);
 };

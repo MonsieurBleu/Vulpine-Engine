@@ -133,6 +133,9 @@ constexpr auto type_name() {
     #define DATA_READ_FUNC(T) template<> \
         T DataLoader<T>::read(VulpineTextBuffRef buff) 
 
+    #define DATA_READ_FUNC_ENTITY(T) template<> \
+        T DataLoader<T>::read(VulpineTextBuffRef buff, Entity *e) 
+
     #define DATA_READ_INIT(T) T data;
 
     #define DATA_READ_END return data;
@@ -265,3 +268,9 @@ constexpr auto type_name() {
         COMPONENT_DEFINE_WRITE(type) \
         {DataLoader<type>::write(entity->comp<type>(), out);}
 
+    #define AUTOGEN_COMPONENT_RWFUNC_E(type) \
+        COMPONENT_ADD_RW(type) \
+        COMPONENT_DEFINE_READ(type) \
+        {entity->set<type>(DataLoader<type>::read(buff, entity.get()));} \
+        COMPONENT_DEFINE_WRITE(type) \
+        {DataLoader<type>::write(entity->comp<type>(), out);}
