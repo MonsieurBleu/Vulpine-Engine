@@ -13,7 +13,7 @@ struct VulpineBitSet
     uint8_t bytes[(N-N%256)/8 + 32*((N%256 > 0))] = {0};
     // uint8_t bytes[(N/8)+1] = {0};
 
-    bool operator==(const VulpineBitSet &mask)
+    bool operator==(const VulpineBitSet &mask) const
     {   
         bool res = true;
 

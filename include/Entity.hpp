@@ -54,8 +54,8 @@ struct ComponentGlobals
 template <typename T>
 struct ComponentInfos
 {
-    static inline const int size;
-    static inline const int id;
+    static inline const int size = 0;
+    static inline const int id = 0;
 };
 
 template <typename T>
@@ -81,7 +81,7 @@ class Component
         template<typename ... Args>
         T CopyElision(Args&&... args){return T(args ...);};
 
-        static inline const ComponentCategory category; 
+        static inline const ComponentCategory category = ComponentCategory::ENTITY_LIST; 
         static inline std::array<ComponentElem, ComponentInfos<T>::size> elements;
 
         static void insert(Entity &entity, const T& data);      
@@ -90,9 +90,9 @@ class Component
 
 #define COMPONENT(_type_, _category_, _size_) \
     static_assert(_size_ <= MAX_ENTITY); \
-    template<> const int ComponentInfos<_type_>::size = _size_;\
-    template<> const int ComponentInfos<_type_>::id = ComponentGlobals::lastID++;\
-    template<> const ComponentCategory Component<_type_>::category = _category_; \
+    template<> inline const int ComponentInfos<_type_>::size = _size_;\
+    template<> inline const int ComponentInfos<_type_>::id = ComponentGlobals::lastID++;\
+    template<> inline const ComponentCategory Component<_type_>::category = _category_; \
     inline PreLaunchVectorFill<std::string> __ComponentNamesSetupObject__##_type_(ComponentGlobals::ComponentNames, #_type_); \
     inline PreLaunchMapFill<std::string, int> __ComponentNamesMapSetupObject__##_type_(ComponentGlobals::ComponentNamesMap, #_type_, ComponentInfos<_type_>::id);
 

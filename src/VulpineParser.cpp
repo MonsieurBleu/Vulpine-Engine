@@ -256,7 +256,7 @@ void VulpineTextOutput::saveAs(const char *filename)
 }
 
 uft8       *& VulpineTextOutput::getReadHead(){return readhead;} 
-const uft8 *& VulpineTextOutput::getReadHeadConst(){readhead = readhead;  return readheadconst;}
+const uft8 *& VulpineTextOutput::getReadHeadConst(){return readheadconst;}
 uft8 *VulpineTextOutput::getData(){return data;}
 
 #define PARSER_END_CHAR         '\0'

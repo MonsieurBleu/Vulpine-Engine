@@ -1,173 +1,122 @@
-CC = g++
-CPPFLAGS = -Wall -Wno-strict-aliasing -g -Ofast --std=c++23 
-ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lreactphysics3d
-	LINKFLAGS = libglfw3.a libglfw3dll.a 
+#************** COMPILER SETUP VARIABLES **************#
+CC = clang++
+WFLAGS = -Wall -Wno-strict-aliasing 
+WFLAGS += -Wno-delete-non-abstract-non-virtual-dtor  
+WFLAGS += -Wno-unused-private-field
+WFLAGS += -Wno-unused-lambda-capture 
+WFLAGS += -Wno-delete-non-virtual-dtor
 
-	ECHO = echo
-	BOLD = [1m
-	UNDERLINE = [4m
-	INVERSE = [7m
-	RESET = [0m
-	GREEN = [32m
-	RED = [31m
-	BLUE = [34m
-	CYAN = [36m
-	ORANGE = [38;5;208m
+OPTFLAGS = -Ofast
 
-	BUILD_FILE_VULPINE = $(ECHO) $(BOLD)$(ORANGE)$(UNDERLINE)Building Vulpine Module$(RESET)
-	BUILD_FILE_GAME    = $(ECHO) $(BOLD)$(CYAN)$(UNDERLINE)Building$(RESET)
-	LINKING_EXECUTABLE = $(ECHO) $(UNDERLINE)$(BOLD)$(BLUE)Linking$(RESET)
-
-else
-	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 -lreactphysics3d
-	LINKFLAGS = 
-
-	ECHO = echo
-	BOLD = [1m
-	UNDERLINE = [4m
-	INVERSE = [7m
-	RESET = [0m
-	GREEN = [32m
-	RED = [31m
-	BLUE = [34m
-	CYAN = [36m
-	ORANGE = [38;5;208m
-
-	BUILD_FILE_VULPINE = $(ECHO) "$(BOLD)$(ORANGE)$(UNDERLINE)Building Vulpine Module$(RESET)"
-	BUILD_FILE_GAME    = $(ECHO) "$(BOLD)$(CYAN)$(UNDERLINE)Building$(RESET)"
-	LINKING_EXECUTABLE = $(ECHO) "$(UNDERLINE)$(BOLD)$(BLUE)Linking$(RESET)"
-
-endif
-
+CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS)
 INCLUDE = -Iinclude -IexternalLibs 
+
+
 ifeq ($(OS),Windows_NT)
-	EXEC = GameEngine.exe
-	RM = del /s /f /q
+	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal 
+	LINKFLAGS = libglfw3.a libglfw3dll.a 
+	VULPINE_LIB_NAME = TODO
 else
-	EXEC = GameEngine
-	RM = rm -f
+	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 
+	LINKFLAGS = 
+	VULPINE_LIB_NAME = libvulpineEngine.so
 endif
 
+VULPINE_LIB_PATH = VULPINE_LIB_NAME
+
+
+
+#************** HELPER VARIABLE/FUNCTIONS **************#
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
-
-ODIR=obj
-IDIR=include
-SDIR=src
-
-DEPDIR := .deps
-DEPFLAGS_BASE = -MT $@ -MMD -MP -MF $(DEPDIR)
-DEPFLAGS = $(DEPFLAGS_BASE)/$*.d
-DEPFLAGSMAIN = $(DEPFLAGS_BASE)/main.d
-
-G_DEPFLAGS = $(DEPFLAGS_BASE)/game/$*.d
-G_DEPFLAGSMAIN = $(DEPFLAGS_BASE)/game/main.d
-
-SOURCES := $(call rwildcard,$(SDIR),*.cpp)
-# SOURCES += $(call rwildcard,$(SDIR),*.c)
-OBJ := $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
-# OBJ += $(SOURCES:$(SDIR)/%.c=$(ODIR)/%.o)
-OBJ += $(ODIR)/main.o
-
-default: $(EXEC)
-
-#/******* GAME BUILD ARGUMENTS ********/
-
-G_ODIR=../obj
-G_SDIR=../src
-
-G_SOURCES := $(call rwildcard,$(G_SDIR),*.cpp)
-G_OBJ := $(G_SOURCES:$(G_SDIR)/%.cpp=$(G_ODIR)/%.o)
-G_EOBJ := $(SOURCES:$(SDIR)/%.cpp=$(ODIR)/%.o)
-G_EOBJ += $(G_ODIR)/main.o
+ECHO = echo
+BOLD = [1m
+UNDERLINE = [4m
+INVERSE = [7m
+RESET = [0m
+GREEN = [32m
+RED = [31m
+BLUE = [34m
+CYAN = [36m
+ORANGE = [38;5;208m
 
 ifeq ($(OS),Windows_NT)
-	G_EXEC = ..\build\Game.exe
-else
-	G_EXEC = ../build/Game
+	STRDEC = 
+else 
+	STRDEC = "
 endif
 
-game: $(G_EXEC)
+BUILD_VULPINE = echo $(STRDEC) $(BOLD)$(UNDERLINE)$(ORANGE)-VULPINE LIBRARY BUILT-$(RESET) $(STRDEC)
+BUILD_FILE_VULPINE = echo $(STRDEC) $(BOLD)$(ORANGE)Building Vulpine Module$(RESET) $(STRDEC)
+BUILD_FILE_GAME    = echo $(STRDEC) $(BOLD)$(CYAN)Building$(RESET) $(STRDEC)
+LINKING_EXECUTABLE = echo $(STRDEC) $(BOLD)$(UNDERLINE)$(BLUE)Linking$(RESET)$(STRDEC)
 
-gameClean : 
-ifeq ($(OS),Windows_NT)
-	$(RM) $(G_EXEC) ..\obj\*.o
-else
-	$(RM) $(G_EXEC) ../obj/*.o
-endif
+DEPFLAGS_BASE = -MT $@ -MMD -MP -MF .deps
+VDEPFLAGS = $(DEPFLAGS_BASE)/$*.d
+GDEPFLAGS = $(DEPFLAGS_BASE)/game/$*.d
+GDEPFLAGS_MAIN= $(DEPFLAGS_BASE)/game/main.d
 
-gameReinstall : gameClean game
 
-$(G_EXEC): $(G_OBJ) $(G_EOBJ)
-	@$(LINKING_EXECUTABLE) $@
-	@$(CC) $(G_EOBJ) $(G_OBJ) $(LINKFLAGS) -o $(G_EXEC) $(LIBFLAGS)
+#************** DEFINING SOURCE FILES **************#
+VSOURCES = $(call rwildcard,src,*.cpp)
+VOBJ = $(VSOURCES:src/%.cpp=obj/%.o)
+DEPFILES := $(VSOURCES:src/%.cpp=.deps/%.d)
 
-../obj/main.o : ../main.cpp
-../obj/main.o : ../main.cpp $(DEPDIR)/game/main.d | $(DEPDIR)/game
-	@$(CC) -c $(G_DEPFLAGSMAIN) $(CPPFLAGS) -I../include -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
-	@$(BUILD_FILE_GAME) $<
 
-../obj/%.o : ../src/%.cpp
-../obj/%.o : ../src/%.cpp $(DEPDIR)/game/%.d | $(DEPDIR)/game
-	@$(CC) -c $(G_DEPFLAGS) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) -I../include $< -o $@ 
-	@$(BUILD_FILE_GAME) $<
+GSOURCES = $(call rwildcard,../src,*.cpp)
+GOBJ = $(GSOURCES:../src/%.cpp=obj/game/%.o) obj/game/main.o
+DEPFILES += $(GSOURCES:../src/%.cpp=.deps/game/%.d) .deps/game/main.d
 
-#/**************************************/
-
-run :
-	$(EXEC)
-
-$(EXEC): $(OBJ)
-	@$(LINKING_EXECUTABLE) $@
-	@$(CC) $(OBJ) -o $@ $(LIBFLAGS) $(LINKFLAGS)
-
-install : $(EXEC)
-
-reinstall : clean install
-
-obj/main.o : main.cpp
-obj/main.o : main.cpp $(DEPDIR)/main.d | $(DEPDIR)
-	@$(CC) -c $(DEPFLAGSMAIN) $(CPPFLAGS) -Wno-delete-non-virtual-dtor $(LIBFLAGS) $(INCLUDE) $< -o $@
-	@$(BUILD_FILE_VULPINE) $<
-
-obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
-	@gcc -c -x c -Wno-error -Ofast $< -o $@
-	@$(BUILD_FILE_VULPINE) $<
-
-obj/Audio.o : src/Audio.cpp
-	@$(CC) -c $(DEPFLAGS_BASE)/Audio.d $(CPPFLAGS) $(LIBFLAGS) -Wno-unused-variable $(INCLUDE) $< -o $@ 
-	@$(BUILD_FILE_VULPINE) $<
-
-obj/%.o : src/%.cpp
-obj/%.o : src/%.cpp $(DEPDIR)/%.d | $(DEPDIR)
-	@$(CC) -c $(DEPFLAGS) $(CPPFLAGS) $(LIBFLAGS) $(INCLUDE) $< -o $@ 
-	@$(BUILD_FILE_VULPINE) $<
-
-$(DEPDIR): 
-	@mkdir -p $(DEPDIR)
-
-$(DEPDIR)/game:
-	@mkdir -p $(DEPDIR)/game
-
-DEPFILES := $(SOURCES:$(SDIR)/%.cpp=$(DEPDIR)/%.d)
-DEPFILES += $(G_SOURCES:$(G_SDIR)/%.cpp=$(DEPDIR)/game/%.d)
-DEPFILES += $(DEPDIR)/main.d
-DEPFILES += $(DEPDIR)/game/main.d
-# $(info $(DEPFILES))
 $(DEPFILES):
-
 
 include $(wildcard $(DEPFILES))
 
-.PHONY: clean countlines game gameClean gameReinstall reinstall vulpine debug run 
 
 
-clean : 
+#************** VULPINE SHARED LIBRARY BUILDING **************#
+vulpine : $(VOBJ)
+	@$(CC) -shared $(VOBJ) $(LINKFLAGS) -o $(VULPINE_LIB_PATH) 
+	@$(BUILD_VULPINE)
+
+obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
+	@clang -c -x c -Wno-error -Ofast -fPIC $< -o $@
+	@$(BUILD_FILE_VULPINE) $<
+
+obj/%.o : src/%.cpp
+	@$(CC) -c $(VDEPFLAGS) $(CPPFLAGS) -fPIC $(INCLUDE) $< -o $@ 
+	@$(BUILD_FILE_VULPINE) $<
+
+
+
+#************** GAME BUILDING **************#
 ifeq ($(OS),Windows_NT)
-	@$(RM) $(EXEC) obj\*.o $(DEPDIR)\*.d 
+GEXEC = ..\build\Game.exe
 else
-	@$(RM) $(EXEC) obj/*.o $(DEPDIR)/*.d
+GEXEC = ../build/Game
 endif
 
-countlines :
-	find ./ -type f \( -iname \*.cpp -o -iname \*.hpp -o -iname \*.frag -o -iname \*.vert -o -iname \*.geom -o -iname \*.glsl -o -iname \*.tese -o -iname \*.tesc \) | sed 's/.*/"&"/' | xargs  wc -l
+game : VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME) 
+game : vulpine
+game : LIBFLAGS += -lreactphysics3d -lvulpineEngine 
+game : LINKFLAGS += -L../build -Wl,-rpath,'$$ORIGIN'
+game : $(GOBJ)
+	@$(LINKING_EXECUTABLE) $@
+	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGS) -o $(GEXEC)
+
+obj/game/main.o : ../main.cpp
+	@$(CC) -c $(GDEPFLAGS_MAIN) $(CPPFLAGS) -I../include -Wno-delete-non-virtual-dtor $(INCLUDE) $< -o $@
+	@$(BUILD_FILE_GAME) $<
+
+obj/game/%.o : ../src/%.cpp
+	@$(CC) -c $(GDEPFLAGS) $(CPPFLAGS) $(INCLUDE) -I../include $< -o $@ 
+	@$(BUILD_FILE_GAME) $<
+
+
+
+#************** SECONDARY COMMANDS **************#
+clean : 
+ifeq ($(OS),Windows_NT)
+	@del /s /f /q $(EXEC) obj\*.o .deps\*.d 
+else
+	@rm -f $(EXEC) obj/*.o obj/game/*.o .deps/*.d .deps/game/*.d
+endif
+

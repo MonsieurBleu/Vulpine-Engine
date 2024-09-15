@@ -78,7 +78,7 @@ class DirectionLight : public Light
 
         void applyModifier(const ModelState3D& state) override;
 
-        void updateShadowCamera();
+        void updateShadowCamera() override;
         vec2 shadowCameraSize;
 
         void setMenu(FastUI_valueMenu &menu, std::u32string name);
