@@ -46,29 +46,25 @@ else
 	STRDEC = "
 endif
 
-ESC="\033"
-CLEAR_LINE="${ESC}[2K"
-MOVE_UP="${ESC}[1A"
-MOVE_DOWN="${ESC}[1B"
+ESC=\033
+CLEAR_LINE=${ESC}[2K
+MOVE_UP=${ESC}[1A
+MOVE_DOWN=${ESC}[1B
 
 
+TO_LIB_LINE = echo -n ${STRDEC} ${MOVE_UP} ${CLEAR_LINE} \r ${STRDEC}
+TO_PRO_LINE = echo -n ${STRDEC} ${CLEAR_LINE} \r ${STRDEC}
 
-TO_LIBLINE = ${MOVE_UP}${MOVE_UP}${CLEAR_LINE}
-FROM_LIBLINE = echo $(STRDEC)$(STRDEC)
+# TO_PRO_LINE = bash -c 'lines=$$(tput lines); echo -e  "\033[2K\033[G"' 
+# TO_LIB_LINE = bash -c 'lines=$$(tput lines); echo -e "\033[1A;1H\033[2K\033[G"'
 
-TO_PROLINE = ${MOVE_UP}${CLEAR_LINE}
-FROM_PROLINE = echo $(STRDEC)$(STRDEC)
+BUILD_VULPINE      = ${TO_LIB_LINE} && echo ${STRDEC}${BOLD}${UNDERLINE}${ORANGE}-VULPINE LIBRARY BUILT-${RESET}${STRDEC}
+BUILD_FILE_VULPINE = ${TO_LIB_LINE} && echo ${STRDEC}${BOLD}${ORANGE}Vulpine Module Built ${RESET}${STRDEC}
+BUILD_FILE_GAME    = ${TO_PRO_LINE} && echo -n ${STRDEC}${BOLD}${CYAN}Built ${RESET}${STRDEC} 
+LINKING_EXECUTABLE = ${TO_PRO_LINE} && echo -n ${STRDEC}${BOLD}${UNDERLINE}${BLUE}Linking${RESET}${STRDEC} 
 
-move_to_last_line = bash -c 'lines=$$(tput lines); echo -e -n  "\033[2K\033[G"' 
-move_to_second_last_line = bash -c 'lines=$$(tput lines); echo -e -n "\033[1A;1H\033[2K\033[G"'
-
-BUILD_VULPINE      = ${move_to_second_last_line} && echo $(STRDEC)$(BOLD)$(UNDERLINE)$(ORANGE)-VULPINE LIBRARY BUILT-$(RESET)$(STRDEC)
-BUILD_FILE_VULPINE = ${move_to_second_last_line} && echo $(STRDEC)$(BOLD)$(ORANGE)Vulpine Module Built $(RESET)$(STRDEC)
-BUILD_FILE_GAME    = ${move_to_last_line} && echo -n $(STRDEC)$(BOLD)$(CYAN)Built $(RESET)$(STRDEC) 
-LINKING_EXECUTABLE = ${move_to_last_line} && echo -n $(STRDEC)$(BOLD)$(UNDERLINE)$(BLUE)Linking$(RESET)$(STRDEC) 
-
-BUILD_GAME    = ${move_to_last_line} && echo -n $(STRDEC)$(BOLD)$(CYAN)Builting Game...$(RESET)$(STRDEC) 
-GAME_READY = ${move_to_last_line} && echo $(STRDEC)$(BOLD)$(UNDERLINE)$(BLUE)Game is now compiled and linked!$(RESET)$(STRDEC) 
+BUILD_GAME    = ${TO_PRO_LINE} && echo -n ${STRDEC}${BOLD}${CYAN}Builting Game...${RESET}${STRDEC} 
+GAME_READY = ${TO_PRO_LINE} && echo ${STRDEC}${BOLD}${UNDERLINE}${BLUE}Game is now compiled and linked!${RESET}${STRDEC} 
 
 DEPFLAGS_BASE = -MT $@ -MMD -MP -MF .deps
 VDEPFLAGS = $(DEPFLAGS_BASE)/$*.d
