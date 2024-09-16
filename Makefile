@@ -5,6 +5,7 @@ WFLAGS += -Wno-delete-non-abstract-non-virtual-dtor
 WFLAGS += -Wno-unused-private-field
 WFLAGS += -Wno-unused-lambda-capture 
 WFLAGS += -Wno-delete-non-virtual-dtor
+WFLAGS += -Wno-unused-variable
 
 OPTFLAGS = -Ofast
 
@@ -45,10 +46,29 @@ else
 	STRDEC = "
 endif
 
-BUILD_VULPINE = echo $(STRDEC) $(BOLD)$(UNDERLINE)$(ORANGE)-VULPINE LIBRARY BUILT-$(RESET) $(STRDEC)
-BUILD_FILE_VULPINE = echo $(STRDEC) $(BOLD)$(ORANGE)Building Vulpine Module$(RESET) $(STRDEC)
-BUILD_FILE_GAME    = echo $(STRDEC) $(BOLD)$(CYAN)Building$(RESET) $(STRDEC)
-LINKING_EXECUTABLE = echo $(STRDEC) $(BOLD)$(UNDERLINE)$(BLUE)Linking$(RESET)$(STRDEC)
+ESC="\033"
+CLEAR_LINE="${ESC}[2K"
+MOVE_UP="${ESC}[1A"
+MOVE_DOWN="${ESC}[1B"
+
+
+
+TO_LIBLINE = ${MOVE_UP}${MOVE_UP}${CLEAR_LINE}
+FROM_LIBLINE = echo $(STRDEC)$(STRDEC)
+
+TO_PROLINE = ${MOVE_UP}${CLEAR_LINE}
+FROM_PROLINE = echo $(STRDEC)$(STRDEC)
+
+move_to_last_line = bash -c 'lines=$$(tput lines); echo -e -n  "\033[2K\033[G"' 
+move_to_second_last_line = bash -c 'lines=$$(tput lines); echo -e -n "\033[1A;1H\033[2K\033[G"'
+
+BUILD_VULPINE      = ${move_to_second_last_line} && echo $(STRDEC)$(BOLD)$(UNDERLINE)$(ORANGE)-VULPINE LIBRARY BUILT-$(RESET)$(STRDEC)
+BUILD_FILE_VULPINE = ${move_to_second_last_line} && echo $(STRDEC)$(BOLD)$(ORANGE)Vulpine Module Built $(RESET)$(STRDEC)
+BUILD_FILE_GAME    = ${move_to_last_line} && echo -n $(STRDEC)$(BOLD)$(CYAN)Built $(RESET)$(STRDEC) 
+LINKING_EXECUTABLE = ${move_to_last_line} && echo -n $(STRDEC)$(BOLD)$(UNDERLINE)$(BLUE)Linking$(RESET)$(STRDEC) 
+
+BUILD_GAME    = ${move_to_last_line} && echo -n $(STRDEC)$(BOLD)$(CYAN)Builting Game...$(RESET)$(STRDEC) 
+GAME_READY = ${move_to_last_line} && echo $(STRDEC)$(BOLD)$(UNDERLINE)$(BLUE)Game is now compiled and linked!$(RESET)$(STRDEC) 
 
 DEPFLAGS_BASE = -MT $@ -MMD -MP -MF .deps
 VDEPFLAGS = $(DEPFLAGS_BASE)/$*.d
@@ -86,7 +106,6 @@ obj/%.o : src/%.cpp
 	@$(BUILD_FILE_VULPINE) $<
 
 
-
 #************** GAME BUILDING **************#
 ifeq ($(OS),Windows_NT)
 GEXEC = ..\build\Game.exe
@@ -94,13 +113,18 @@ else
 GEXEC = ../build/Game
 endif
 
+game_base_echo :
+	@echo " "
+	@${BUILD_GAME} 
+
 game : VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME) 
 game : vulpine
 game : LIBFLAGS += -lreactphysics3d -lvulpineEngine 
 game : LINKFLAGS += -L../build -Wl,-rpath,'$$ORIGIN'
-game : $(GOBJ)
+game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@
 	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGS) -o $(GEXEC)
+	@${GAME_READY}
 
 obj/game/main.o : ../main.cpp
 	@$(CC) -c $(GDEPFLAGS_MAIN) $(CPPFLAGS) -I../include -Wno-delete-non-virtual-dtor $(INCLUDE) $< -o $@
