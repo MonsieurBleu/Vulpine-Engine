@@ -109,7 +109,7 @@ else
 GEXEC = ../build/Game
 endif
 
-game_base_echo :
+game_base_echo : 
 	@echo " "
 	@${BUILD_GAME} 
 
