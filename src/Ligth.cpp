@@ -255,6 +255,9 @@ void DirectionLight::updateShadowCamera()
 
     vec3 cPos = globals.currentCamera->getPosition();
     cPos.y = 0;
+
+    cPos = ceil(cPos);
+
     vec3 cDir = globals.currentCamera->getDirection();
     vec3 position = cPos + vec3(shadowCameraSize.y*0.25)*cDir;
 
