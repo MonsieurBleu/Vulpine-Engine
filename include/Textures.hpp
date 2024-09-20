@@ -48,7 +48,8 @@ class Texture2D
         Texture2D& loadFromFileKTX(const char* filename);
         Texture2D& loadFromFileKTX_IO(const char* filename);
 
-        Texture2D& generate();      
+        Texture2D& generate();    
+        Texture2D& deleteHandle();      
 
         Texture2D& bind(GLuint location);
         

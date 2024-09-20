@@ -63,6 +63,27 @@ void App::loadAllAssetsInfos(const char *filename)
     }
 };
 
+float UI_res_scale = 2;
+
+void App::resizeCallback(GLFWwindow* window, int width, int height)
+{
+    std::cout << width << "\t" << height << "\n";
+    glViewport(0, 0, width, height);
+    camera.width = width;
+    camera.height = height;
+
+    renderBuffer.getTexture(0).setResolution(ivec2(width, height)).generate();
+    renderBuffer.getTexture(1).setResolution(ivec2(width, height)).generate();
+    renderBuffer.getTexture(2).setResolution(ivec2(width, height)).generate();
+    renderBuffer.getTexture(3).setResolution(ivec2(width, height)).generate();
+    renderBuffer.getTexture(4).setResolution(ivec2(width, height)).generate();
+
+    ivec2 newres = ivec2(width, height);
+
+    renderBuffer.resizeAll(newres);
+    screenBuffer2D.resizeAll(vec2(width, height)*UI_res_scale);
+}
+
 void App::init()
 {
 if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
@@ -130,8 +151,6 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     SSAO.setup();
     Bloom.setup();
 
-    float UI_res_scale = 2;
-
     screenBuffer2D
         .addTexture(
             Texture2D()
@@ -168,6 +187,13 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
         GLFWKeyInfo i;
         i.key = 0;
         inputs.add(i);
+    });
+
+    static App *mainApp = this;
+
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* window, int width, int height)
+    {
+        mainApp->resizeCallback(window, width, height);
     });
 
     /// CENTER WINDOW

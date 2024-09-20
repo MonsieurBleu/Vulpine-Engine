@@ -30,7 +30,10 @@ class FrameBuffer
 
         void bindTexture(uint64 id, uint location);
 
-        Texture2D getTexture(int id);
+        Texture2D& getTexture(int id);
+        int getNBtextures() const{return textures.size();};
+
+        FrameBuffer& resizeAll(ivec2 newres);
 };
 
 #define RENDER_BUFFER_COLOR_TEXTURE_ID 0

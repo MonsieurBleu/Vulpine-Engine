@@ -76,6 +76,18 @@ Texture2D::~Texture2D()
     }
 }
 
+Texture2D& Texture2D::deleteHandle()
+{
+    glDeleteTextures(1, &handle);
+
+    handle = 0;
+    *handleRef = 0;
+
+    generated = false;
+
+    return *this;
+}
+
 Texture2D& Texture2D::generate()
 {
     if(!generated)
@@ -115,6 +127,18 @@ Texture2D& Texture2D::generate()
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            _internalFormat,
+            _resolution.x,
+            _resolution.y,
+            0,
+            _format,
+            _type,
+            _pixelSource
+        );
     }
     
     return *this;

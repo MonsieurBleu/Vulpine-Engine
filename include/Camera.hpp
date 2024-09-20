@@ -49,8 +49,6 @@ class Camera
 { 
     private: 
 
-        float width = 1920.f;
-        float height = 1080.f;
 
         mat4 projectionMatrix; 
         mat4 viewMatrix; 
@@ -61,6 +59,9 @@ class Camera
         Frustum frustum;
 
     public: 
+        float width = 1920.f;
+        float height = 1080.f;
+        
         CameraState state;
         
         Camera(CameraType type = PERSPECTIVE);

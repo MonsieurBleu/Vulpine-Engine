@@ -47,7 +47,11 @@ class App
 
         void loadAllAssetsInfos(const char *filename);
 
+
     public :
+
+        void resizeCallback(GLFWwindow* window, int width, int height);
+
         App(GLFWwindow* window);
         ~App();
 

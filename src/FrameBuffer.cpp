@@ -3,7 +3,7 @@
 #include <CompilingOptions.hpp>
 #include <Utils.hpp>
 
-Texture2D FrameBuffer::getTexture(int id)
+Texture2D& FrameBuffer::getTexture(int id)
 {
     return textures[id%textures.size()];
 }
@@ -25,6 +25,14 @@ FrameBuffer& FrameBuffer::generateHandle()
 {
     glGenFramebuffers(1, &handle);
     glBindFramebuffer(GL_FRAMEBUFFER, handle);
+    return *this;
+}
+
+FrameBuffer& FrameBuffer::resizeAll(ivec2 newres)
+{
+    for(auto &t : textures)
+        t.setResolution(newres).generate();
+
     return *this;
 }
 
