@@ -125,7 +125,7 @@ int u32strtoi(std::u32string &str, int base)
     return errno || s.c_str() == endptr ? INT_MAX : i;
 }
 
-bool u32strtocolorHTML(std::u32string &str, vec3 &v)
+bool u32strtocolorHTML(const std::u32string &str, vec3 &v)
 {
     int i = 0;
     if (str[0] == U'#')

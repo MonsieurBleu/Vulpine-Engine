@@ -51,10 +51,11 @@ class SSAOPass : public RenderPass
 class BloomPass : public RenderPass
 {
     private : 
-        RenderBuffer& inputs;
         FrameBuffer FBO2;
+        RenderBuffer& inputs;
     
     public : 
+        FrameBuffer& getFBO2(){return FBO2;};
         BloomPass(RenderBuffer& inputsBuffer);
         void setup();
         void render(Camera &camera);

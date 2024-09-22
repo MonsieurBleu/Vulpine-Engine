@@ -67,21 +67,28 @@ float UI_res_scale = 2;
 
 void App::resizeCallback(GLFWwindow* window, int width, int height)
 {
-    std::cout << width << "\t" << height << "\n";
     glViewport(0, 0, width, height);
     camera.width = width;
     camera.height = height;
 
-    renderBuffer.getTexture(0).setResolution(ivec2(width, height)).generate();
-    renderBuffer.getTexture(1).setResolution(ivec2(width, height)).generate();
-    renderBuffer.getTexture(2).setResolution(ivec2(width, height)).generate();
-    renderBuffer.getTexture(3).setResolution(ivec2(width, height)).generate();
-    renderBuffer.getTexture(4).setResolution(ivec2(width, height)).generate();
+    // renderBuffer.getTexture(0).setResolution(ivec2(width, height)).generate();
+    // renderBuffer.getTexture(1).setResolution(ivec2(width, height)).generate();
+    // renderBuffer.getTexture(2).setResolution(ivec2(width, height)).generate();
+    // renderBuffer.getTexture(3).setResolution(ivec2(width, height)).generate();
+    // renderBuffer.getTexture(4).setResolution(ivec2(width, height)).generate();
 
-    ivec2 newres = ivec2(width, height);
+    ivec2 newres = vec2(width, height)*globals._renderScale;
 
     renderBuffer.resizeAll(newres);
     screenBuffer2D.resizeAll(vec2(width, height)*UI_res_scale);
+
+    Bloom.getFBO().resizeAll(newres);
+    Bloom.getFBO2().resizeAll(newres);
+
+    SSAO.getFBO().resizeAll(newres);
+
+    globals._renderSize = newres;
+    globals._windowSize = ivec2(width, height);
 }
 
 void App::init()
