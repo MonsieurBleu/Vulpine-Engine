@@ -48,7 +48,17 @@ class Texture2D
         Texture2D& loadFromFileKTX(const char* filename);
         Texture2D& loadFromFileKTX_IO(const char* filename);
 
-        Texture2D& generate();    
+        /** test
+         * 
+         * @param forceTexImageCall 
+         *      If the image is arleady generated, set to true to force call 
+         *      glTexImage2D to update its format, internal format, type and 
+         *      resolution. Default is false. Warning : If you call it on a
+         *      Texture that uses a pixel source, it will be unsafe and 
+         *      likely loose it's data.
+        */
+        Texture2D& generate(bool forceTexImageCall = false);    
+        
         Texture2D& deleteHandle();      
 
         Texture2D& bind(GLuint location);

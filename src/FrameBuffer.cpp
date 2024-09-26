@@ -31,7 +31,7 @@ FrameBuffer& FrameBuffer::generateHandle()
 FrameBuffer& FrameBuffer::resizeAll(ivec2 newres)
 {
     for(auto &t : textures)
-        t.setResolution(newres).generate();
+        t.setResolution(newres).generate(true);
 
     return *this;
 }

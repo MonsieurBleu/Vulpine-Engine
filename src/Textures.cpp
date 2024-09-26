@@ -88,7 +88,7 @@ Texture2D& Texture2D::deleteHandle()
     return *this;
 }
 
-Texture2D& Texture2D::generate()
+Texture2D& Texture2D::generate(bool forceTexImageCall)
 {
     if(!generated)
     {
@@ -128,17 +128,20 @@ Texture2D& Texture2D::generate()
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
 
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            _internalFormat,
-            _resolution.x,
-            _resolution.y,
-            0,
-            _format,
-            _type,
-            _pixelSource
-        );
+        if(forceTexImageCall)
+        {
+            glTexImage2D(
+                GL_TEXTURE_2D,
+                0,
+                _internalFormat,
+                _resolution.x,
+                _resolution.y,
+                0,
+                _format,
+                _type,
+                _pixelSource
+            );
+        }
     }
     
     return *this;
