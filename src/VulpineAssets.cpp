@@ -35,14 +35,29 @@ MeshVao loadVulpineMesh(const char *filename)
 
     std::vector<VertexAttribute> attributes;
 
-    GenericSharedBuffer positions = getChunk(file, 3*v1size);
-    attributes.push_back(VertexAttribute(positions, 0, h.verticesCount, 3, GL_FLOAT, false));
-    
-    GenericSharedBuffer normals = getChunk(file, 3*v1size);
-    attributes.push_back(VertexAttribute(normals, 1, h.verticesCount, 3, GL_FLOAT, false));
-    
-    GenericSharedBuffer uvs = getChunk(file, 2*v1size);
-    attributes.push_back(VertexAttribute(uvs, 2, h.verticesCount, 2, GL_FLOAT, false));
+    switch (h.vertexPacking)
+    {
+        case COMPRESSED_UVEC4_PACKING :
+            {
+                GenericSharedBuffer data = getChunk(file, 4*v1size);
+                attributes.push_back(VertexAttribute(data, 0, h.verticesCount, 4, GL_UNSIGNED_INT, false));
+            }
+            break;
+
+        case DEFAULT_PACKING :
+        default:
+            {
+                GenericSharedBuffer positions = getChunk(file, 3*v1size);
+                attributes.push_back(VertexAttribute(positions, 0, h.verticesCount, 3, GL_FLOAT, false));
+                
+                GenericSharedBuffer normals = getChunk(file, 3*v1size);
+                attributes.push_back(VertexAttribute(normals, 1, h.verticesCount, 3, GL_FLOAT, false));
+                
+                GenericSharedBuffer uvs = getChunk(file, 2*v1size);
+                attributes.push_back(VertexAttribute(uvs, 2, h.verticesCount, 2, GL_FLOAT, false));
+            }
+            break;
+    }
 
     bool animated = false;
 

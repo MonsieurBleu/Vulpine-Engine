@@ -4,13 +4,19 @@
 
 enum VulpineMesh_Type
 {
-    ELEMENTS = 0, 
-    ELEMENTS_SKINNED = 1,
-    ARRAY = 2,
-    ARRAY_SKINNED = 2
+    ELEMENTS ,
+    ELEMENTS_SKINNED ,
+    ARRAY ,
+    ARRAY_SKINNED 
 };
 
-struct VulpineMesh_Header
+enum VulpineMesh_VertexPacking : uint8
+{
+    DEFAULT_PACKING, /* FLOAT POS, NORMAL, UV*/
+    COMPRESSED_UVEC4_PACKING /* MERGED POS & NORMAL, + 32 bit STENCIL */
+};
+
+struct VulpineMesh_HeaderBase
 {
     VulpineMesh_Type type = ELEMENTS;
     uint facesCount;
@@ -19,7 +25,12 @@ struct VulpineMesh_Header
     vec3 AABBmin;
     vec3 AABBmax;
 
-    uint stencil[23];
+    VulpineMesh_VertexPacking vertexPacking = DEFAULT_PACKING;
+};
+
+struct VulpineMesh_Header : VulpineMesh_HeaderBase
+{
+    const uint stencil[32 - sizeof(VulpineMesh_HeaderBase)/4] = {0};
 };
 
 MeshVao loadVulpineMesh(const char *filename);
