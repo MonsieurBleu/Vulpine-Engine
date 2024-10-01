@@ -43,10 +43,15 @@ class Texture2D
         Texture2D& setPixelSource(const void *source);
         Texture2D& setAttachement(GLenum attachement);
         Texture2D& setWrapMode(GLenum wrapMode);
+
+        /* Memory leak of the texture information when using stb */
         Texture2D& loadFromFile(const char* filename);
+        /* Memory leak of the texture information when using stb */
         Texture2D& loadFromFileHDR(const char* filename);
+
         Texture2D& loadFromFileKTX(const char* filename);
         Texture2D& loadFromFileKTX_IO(const char* filename);
+
 
         /** test
          * 
@@ -68,4 +73,5 @@ class Texture2D
         GLenum getAttachement(){return _attachement;};
         ivec2 getResolution(){return _resolution;};
         const ivec2* getResolutionAddr() const {return &_resolution;};
+        const void *getPixelSource() const {return _pixelSource;};
 };

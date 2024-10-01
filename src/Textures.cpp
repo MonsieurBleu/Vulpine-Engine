@@ -173,6 +173,9 @@ Texture2D& Texture2D::loadFromFile(const char* filename)
 
 Texture2D& Texture2D::loadFromFileHDR(const char* filename)
 {
+    stbi_hdr_to_ldr_gamma(1.0f);
+    stbi_hdr_to_ldr_scale(1.0f);
+
     // BenchTimer timer;
     // timer.start();
     int n, fileStatus;

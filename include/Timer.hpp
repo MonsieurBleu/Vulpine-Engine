@@ -110,4 +110,18 @@ public:
     void setMenu(FastUI_valueMenu &menu);
 };
 
+class TickTimer
+{
+
+private :
+    // bool activated;
+    clockmicro::time_point lasTickTime;
+
+public : 
+
+    void tick();
+    float timeSinceLastTickMS();
+};
+
+
 #endif
