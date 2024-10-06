@@ -274,3 +274,5 @@ constexpr auto type_name() {
         {entity->set<type>(DataLoader<type>::read(buff, entity.get()));} \
         COMPONENT_DEFINE_WRITE(type) \
         {DataLoader<type>::write(entity->comp<type>(), out);}
+
+
