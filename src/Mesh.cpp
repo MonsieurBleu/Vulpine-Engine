@@ -245,6 +245,11 @@ MeshModel3D &MeshModel3D::loadFromFolderVulpine(
     return (*this);
 }
 
+void MeshModel3D::tessHeightTextureRange(vec2 min, vec2 max)
+{
+    lodHeigtTextureRange = vec4(min, max);
+}
+
 void MeshModel3D::tessHeighFactors(float uvScale, float heightFactor)
 {
     lodHeightDispFactors.z = uvScale;
@@ -260,6 +265,7 @@ void MeshModel3D::tessDisplacementFactors(float uvScale, float displacementFacto
 void MeshModel3D::tessActivate(vec2 minmaxTessLevel, vec2 minmaxDistance)
 {
     lodTessLevelDistance = vec4(minmaxTessLevel, minmaxDistance);
+    baseUniforms.add(ShaderUniform(&lodHeigtTextureRange, 10));
     baseUniforms.add(ShaderUniform(&lodHeightDispFactors, 11));
     baseUniforms.add(ShaderUniform(&lodTessLevelDistance, 12));
 }

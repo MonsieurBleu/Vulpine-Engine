@@ -124,6 +124,7 @@ class MeshModel3D : public Mesh
 
         bool culled = true;
 
+        vec4 lodHeigtTextureRange = vec4(0);
         vec4 lodHeightDispFactors = vec4(0);
         vec4 lodTessLevelDistance = vec4(0);
 
@@ -171,6 +172,7 @@ class MeshModel3D : public Mesh
         virtual bool cull();
         bool isCulled();
 
+        void tessHeightTextureRange(vec2 min, vec2 max);
         void tessHeighFactors(float uvScale, float heightFactor);
         void tessDisplacementFactors(float uvScale, float displacementFactor);
         void tessActivate(vec2 minmaxTessLevel, vec2 minmaxDistance);

@@ -359,8 +359,10 @@ uint Scene::getDrawCalls(){return drawcnt;}
 //        should be calculated just once in a compute/cpu prepass. But this 
 //        woulnd't be compatible with tesselation.
 
-void Scene::depthOnlyDraw(Camera &camera, bool cull)
+void Scene::depthOnlyDraw(Camera &camera, bool doCulling)
 {
+    // if(doCulling) this->cull();
+
     if(depthOnlyMaterial != NULL)
     {
         for(auto i = meshes.begin(); i != meshes.end(); i++)
@@ -446,7 +448,7 @@ void Scene::generateShadowMaps()
             i->updateShadowCamera();
             i->shadowCamera.updateFrustum();
             globals.currentCamera = &i->shadowCamera;
-            //cull();
+            cull();
             depthOnlyDraw(i->shadowCamera);
             i->shadowMap.deactivate();
         }
