@@ -43,8 +43,7 @@ class Entity;
 
 struct ComponentGlobals
 {
-    static inline int lastID = -1;
-    static inline int lastID2 = -1; // Needef for clang++ way of initialazing const in vs PreLaunchxxx class
+    static inline int lastID = 0;
     static inline int lastFreeID[ComponentCategory::END] = {0};
     static inline int maxID[ComponentCategory::END] = {0};
 
@@ -91,11 +90,12 @@ class Component
 
 #define COMPONENT(_type_, _category_, _size_) \
     static_assert(_size_ <= MAX_ENTITY); \
+    inline const int __ComponentIDSetupID__##_type_ = ComponentGlobals::lastID++; \
     template<> inline const int ComponentInfos<_type_>::size = _size_;\
     template<> inline const ComponentCategory Component<_type_>::category = _category_; \
-    template<> inline const int ComponentInfos<_type_>::id = ComponentGlobals::lastID++;\
+    template<> inline const int ComponentInfos<_type_>::id = __ComponentIDSetupID__##_type_;\
     inline PreLaunchVectorFill<std::string> __ComponentNamesSetupObject__##_type_(ComponentGlobals::ComponentNames, #_type_); \
-    inline PreLaunchMapFill<std::string, int> __ComponentNamesMapSetupObject__##_type_(ComponentGlobals::ComponentNamesMap, #_type_, ComponentGlobals::lastID2++);\
+    inline PreLaunchMapFill<std::string, int> __ComponentNamesMapSetupObject__##_type_(ComponentGlobals::ComponentNamesMap, #_type_, __ComponentIDSetupID__##_type_);\
 
 struct EntityInfos
 {

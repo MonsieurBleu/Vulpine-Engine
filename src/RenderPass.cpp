@@ -194,8 +194,6 @@ void SkyboxPass::render(Camera &camera)
 {
     if(isEnable)
     {
-        // std::cout << FBO.getTexture(0).getHandle() << " " << FBO.getTexture(0).getAttachement() << "\n";
-        // std::cout << shader.getProgram() << "\n";
         FBO.activate();
         shader.activate();
         globals.drawFullscreenQuad();

@@ -49,6 +49,7 @@ struct EntityGroupInfo
 
 COMPONENT(EntityGroupInfo, ENTITY_LIST, MAX_ENTITY);
 
+
 class ComponentModularity
 {
     private : 

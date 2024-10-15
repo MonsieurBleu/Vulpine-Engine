@@ -196,14 +196,6 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
         return *(this);
     }
 
-    // timer.end();
-    // std::cout 
-    // << TERMINAL_OK << "Successfully loaded image "
-    // << TERMINAL_FILENAME << filename 
-    // << TERMINAL_OK << " in " 
-    // << TERMINAL_TIMER << timer.getElapsedTime() << " s\n"
-    // << TERMINAL_RESET;
-
     bindlessHandleRef = std::make_shared<GLuint>(0);
 
     return *(this);
