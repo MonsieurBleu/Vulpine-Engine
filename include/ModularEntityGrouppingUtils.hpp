@@ -34,4 +34,12 @@
 #define COMPONENT_DEFINE_SYNCH(type) __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(type, SynchFunc, (Entity& parent, EntityRef child))
 
 
+#define COMPONENT_ADD_REPARENT(type) __COMPONENT_ADD_ATTRIBUTE(type, ReparFunc, (Entity& parent, EntityRef child, Entity& newParent))
+#define COMPONENT_DEFINE_REPARENT(type) __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(type, ReparFunc, (Entity& parent, EntityRef child, Entity& newParent))
+
+#define COMPONENT_ADD_COMPATIBILITY_CHECK(type) __COMPONENT_ADD_ATTRIBUTE(type, CheckFunc, (Entity& parent, EntityRef child))
+#define COMPONENT_DEFINE_COMPATIBILITY_CHECK(type) __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(type, CheckFunc, (Entity& parent, EntityRef child))
+
+#define COMPONENT_ADD_MERGE(type) __COMPONENT_ADD_ATTRIBUTE(type, MergeFunc, (Entity& parent, EntityRef child))
+#define COMPONENT_DEFINE_Merge(type) __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(type, MergeFunc, (Entity& parent, EntityRef child))
 
