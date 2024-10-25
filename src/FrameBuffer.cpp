@@ -1,4 +1,4 @@
-#include <FrameBuffer.hpp>
+#include <Graphics/FrameBuffer.hpp>
 #include <iostream>
 #include <CompilingOptions.hpp>
 #include <Utils.hpp>

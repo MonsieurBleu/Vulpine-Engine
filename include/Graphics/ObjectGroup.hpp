@@ -3,8 +3,8 @@
 
 #include <deque>
 
-#include <Mesh.hpp>
-#include <Light.hpp>
+#include <Graphics/Mesh.hpp>
+#include <Graphics/Light.hpp>
 
 #define ObjectGroupRef std::shared_ptr<ObjectGroup>
 #define newObjectGroup std::make_shared<ObjectGroup>

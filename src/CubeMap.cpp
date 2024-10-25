@@ -1,4 +1,4 @@
-#include <CubeMap.hpp>
+#include <Graphics/CubeMap.hpp>
 #include <stb/stb_image.h>
 #include <Utils.hpp>
 

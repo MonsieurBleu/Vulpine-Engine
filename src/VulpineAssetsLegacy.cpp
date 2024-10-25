@@ -1,4 +1,4 @@
-#include <Mesh.hpp>
+#include <Graphics/Mesh.hpp>
 #include <Utils.hpp>
 
 MeshVao readOBJ(const std::string filePath, bool useVertexColors)

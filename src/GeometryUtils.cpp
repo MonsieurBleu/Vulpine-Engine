@@ -11,8 +11,8 @@
 #include <stdexcept>
 #include <set>
 
-#include <Mesh.hpp>
-#include <Scene.hpp>
+#include <Graphics/Mesh.hpp>
+#include <Graphics/Scene.hpp>
 extern Mesh* globalEarthMesh;
 extern Scene* scenePointer;
 

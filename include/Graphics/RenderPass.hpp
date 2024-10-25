@@ -2,9 +2,9 @@
 #define RENDER_PASS_HPP
 
 #include <Timer.hpp>
-#include <Shader.hpp>
-#include <FrameBuffer.hpp>
-#include <Camera.hpp>
+#include <Graphics/Shader.hpp>
+#include <Graphics/FrameBuffer.hpp>
+#include <Graphics/Camera.hpp>
 
 #define AO_RESULTS_BINDING_LOCATION 3
 

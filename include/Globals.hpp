@@ -3,14 +3,14 @@
 
 #include <Timer.hpp>
 
-#include <Mesh.hpp>
+#include <Graphics/Mesh.hpp>
 
 #include <codecvt>
 #include <iomanip>
 #include <Controller.hpp>
-#include <Scene.hpp>
+#include <Graphics/Scene.hpp>
 #include <Enums.hpp>
-#include <Fonts.hpp>
+#include <Graphics/Fonts.hpp>
 
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
 

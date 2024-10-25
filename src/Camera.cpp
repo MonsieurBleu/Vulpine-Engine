@@ -4,7 +4,7 @@
 #define  GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include <Camera.hpp>
+#include <Graphics/Camera.hpp>
 #include <Utils.hpp>
 
 #include <CompilingOptions.hpp>

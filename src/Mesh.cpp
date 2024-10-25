@@ -2,11 +2,11 @@
 #include <iostream>
 #include <fstream>
 
-#include <Mesh.hpp>
+#include <Graphics/Mesh.hpp>
 #include <Utils.hpp>
 #include <Globals.hpp>
 #include <VulpineAssets.hpp>
-#include <Skeleton.hpp>
+#include <Graphics/Skeleton.hpp>
 
 using namespace glm;
 

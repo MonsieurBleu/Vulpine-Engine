@@ -4,8 +4,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <Matrix.hpp>
-#include <FrameBuffer.hpp>
-#include <Camera.hpp>
+#include <Graphics/FrameBuffer.hpp>
+#include <Graphics/Camera.hpp>
 
 using namespace glm;
 

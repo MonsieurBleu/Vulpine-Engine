@@ -1,4 +1,4 @@
-#include "Animation.hpp"
+#include <Graphics/Animation.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtc/matrix_transform.hpp>

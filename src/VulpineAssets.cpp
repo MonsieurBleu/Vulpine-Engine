@@ -1,5 +1,5 @@
 #include <VulpineAssets.hpp>
-#include <Skeleton.hpp>
+#include <Graphics/Skeleton.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>

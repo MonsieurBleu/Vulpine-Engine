@@ -4,14 +4,14 @@
 #include <App.hpp>
 #include <Globals.hpp>
 #include <Uniforms.hpp>
-#include <FrameBuffer.hpp>
+#include <Graphics/FrameBuffer.hpp>
 #include <CompilingOptions.hpp>
 #include <Audio.hpp>
 #include <Controller.hpp>
-#include <Shadinclude.hpp>
+#include <Graphics/Shadinclude.hpp>
 #include <AssetManager.hpp>
-#include <Animation.hpp>
-#include <Skeleton.hpp>
+#include <Graphics/Animation.hpp>
+#include <Graphics/Skeleton.hpp>
 
 
 std::mutex inputMutex;

@@ -1,4 +1,5 @@
 #************** COMPILER SETUP VARIABLES **************#
+# CC = /bin/time -f "\n\ttime : %e \n" clang++
 CC = clang++
 WFLAGS = -Wall -Wno-strict-aliasing 
 WFLAGS += -Wno-delete-non-abstract-non-virtual-dtor  

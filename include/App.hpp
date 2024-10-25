@@ -3,11 +3,11 @@
 
 #include <iostream>
 
-#include <Scene.hpp>
+#include <Graphics/Scene.hpp>
 
 #include <Inputs.hpp>
 
-#include <RenderPass.hpp>
+#include <Graphics/RenderPass.hpp>
 #include <Controller.hpp>
 
 #include <Enums.hpp>

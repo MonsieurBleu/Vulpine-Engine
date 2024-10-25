@@ -1,11 +1,11 @@
-#include <Skeleton.hpp>
+#include <Graphics/Skeleton.hpp>
 
 #include <GL/glew.h>
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
 #include <string.h>
-#include "Animation.hpp"
+#include <Graphics/Animation.hpp>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>

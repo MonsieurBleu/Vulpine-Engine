@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Camera.hpp>
+#include <Graphics/Camera.hpp>
 #include <Inputs.hpp>
 
 class Controller

@@ -1,7 +1,7 @@
 #ifndef CUBE_MAP_HPP
 #define CUBE_MAP_HPP
 
-#include <Textures.hpp>
+#include <Graphics/Textures.hpp>
 #include <string>
 
 class CubeMap

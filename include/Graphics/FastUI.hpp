@@ -2,9 +2,9 @@
 #define FAST_UI_HPP
 
 #include <deque>
-#include <Fonts.hpp>
+#include <Graphics/Fonts.hpp>
 
-#include <ObjectGroup.hpp>
+#include <Graphics/ObjectGroup.hpp>
 
 enum UiTileType
 {

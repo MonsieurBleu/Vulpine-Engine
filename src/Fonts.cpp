@@ -1,4 +1,4 @@
-#include <Fonts.hpp>
+#include <Graphics/Fonts.hpp>
 #include <Utils.hpp>
 
 UFT32Stream &operator<<(UFT32Stream &os, const float f)

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <VulpineParser.hpp>
-#include <Entity.hpp>
-#include <ModularEntityGrouppingUtils.hpp>
+#include <ECS/Entity.hpp>
+#include <ECS/ModularEntityGrouppingUtils.hpp>
 #include <AssetManagerUtils.hpp>
 
 /*
@@ -65,100 +65,36 @@ class ComponentModularity
         typedef Attribute<std::function<void(Entity&, EntityRef)>> SynchFunc;
         typedef Attribute<std::function<void(Entity&, EntityRef)>> MergeFunc;
         typedef Attribute<std::function<bool(Entity&, EntityRef)>> CheckFunc;
-        typedef Attribute<std::function<bool(Entity&, EntityRef, Entity&)>> ReparFunc;
-        typedef Attribute<std::function<bool(Entity&, EntityRef)>> ClearFunc;
-
+        typedef Attribute<std::function<void(Entity&, EntityRef, Entity&)>> ReparFunc;
         typedef Attribute<std::function<void(EntityRef, VulpineTextBuffRef)>> ReadFunc;
         typedef Attribute<std::function<void(EntityRef, VulpineTextOutputRef)>> WriteFunc;
+        // typedef Attribute<std::function<bool(Entity&, EntityRef)>> ClearFunc;
 
         static inline std::vector<SynchFunc> SynchFuncs;
         static inline std::vector<MergeFunc> MergeFuncs;
         static inline std::vector<CheckFunc> CheckFuncs;
         static inline std::vector<ReparFunc> ReparFuncs;
-        static inline std::vector<ClearFunc> ClearFuncs;
         static inline std::vector<ReadFunc>  ReadFuncs;
         static inline std::vector<WriteFunc> WriteFuncs;
+        // static inline std::vector<ClearFunc> ClearFuncs;
 
-        static void addChild(Entity &parent, EntityRef child)
-        {
-            parent.comp<EntityGroupInfo>().children.push_back(child);
-        };
+        static void addChild(Entity &parent, EntityRef child);
 
-        static void removeChild(Entity &parent, EntityRef child)
-        {
-            std::vector<EntityRef> children;
-            auto &old = parent.comp<EntityGroupInfo>().children;
-            
-            for(auto i : old)
-                if(i != child)
-                    children.push_back(i);
-            
-            old = children;
-        };
+        static void removeChild(Entity &parent, EntityRef child);
 
-        static void synchronizeChildren(Entity &parent)
-        {
-            for(auto &c : parent.comp<EntityGroupInfo>().children)
-                for(auto &i : SynchFuncs)
-                    if(c->state[i.ComponentID])
-                        i.element(parent, c);
-        };
+        static void synchronizeChildren(Entity &parent);
 
-        static void Reparent(Entity& parent, EntityRef child, Entity& newParent)
-        {
-            for(auto &i : ReparFuncs)
-                if(child->state[i.ComponentID])
-                    i.element(parent, child, newParent);
-            
-            newParent.comp<EntityGroupInfo>().children.push_back(child);
+        static void Reparent(Entity& parent, EntityRef child, Entity& newParent);
 
-            auto &children = parent.comp<EntityGroupInfo>().children;
-            std::vector<EntityRef> newchildren;
-            for(auto i : children)
-                if(i != child)
-                    newchildren.push_back(i);
-            children = newchildren;
-        };
+        static bool canMerge(Entity& parent, EntityRef child);
 
-        static bool canMerge(Entity& parent, EntityRef child)
-        {
-            bool success = true;
+        static void mergeChild(Entity& parent, EntityRef child);
 
-            for(auto &i : CheckFuncs)
-                if(child->state[i.ComponentID])
-                    success &= i.element(parent, child);
-                else
-                {
-                    WARNING_MESSAGE("TODO : Add message when there ar merge conflicts");
-                    break;
-                }
-            
-            return success;
-        };
-
-        static void mergeChild(Entity& parent, EntityRef child)
-        {
-            for(auto &i : MergeFuncs)
-                if(child->state[i.ComponentID])
-                    i.element(parent, child);
-        };
-
-        static void mergeChildren(Entity& parent)
-        {
-            auto &children = parent.comp<EntityGroupInfo>().children;
-
-            for(uint64_t i = 0; i < children.size(); i++)
-                if(canMerge(parent, children[i]))
-                    {
-                        auto &c = children[i];
-                        mergeChildren(*c);
-
-                        for(auto &j : c->comp<EntityGroupInfo>().children)
-                            Reparent(*c, j, parent);
-
-                        mergeChild(parent, c);
-
-                        c->comp<EntityGroupInfo>().markedForDeletion = true;
-                    }
-        };
+        static void mergeChildren(Entity& parent);
 };
+
+#ifdef VULPINE_COMPONENT_IMPL
+
+#include <ECS/ModularEntityGroupping_IMPL.hpp>
+
+#endif

@@ -1,5 +1,5 @@
-#include <Light.hpp>
-#include <Fonts.hpp>
+#include <Graphics/Light.hpp>
+#include <Graphics/Fonts.hpp>
 
 #include <GL/glew.h>
 #include <Utils.hpp>

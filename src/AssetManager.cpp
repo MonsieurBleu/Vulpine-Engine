@@ -1,10 +1,10 @@
 #include <AssetManager.hpp>
 #include <VulpineAssets.hpp>
-#include <ObjectGroup.hpp>
+#include <Graphics/ObjectGroup.hpp>
 #include <Globals.hpp>
 #include <Constants.hpp>
 #include <Utils.hpp>
-#include <Skeleton.hpp>
+#include <Graphics/Skeleton.hpp>
 #include <AssetManagerUtils.hpp>
 
 /*

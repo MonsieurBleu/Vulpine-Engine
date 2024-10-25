@@ -1,8 +1,8 @@
-#include <Shader.hpp>
+#include <Graphics/Shader.hpp>
 #include <Utils.hpp>
 #include <Timer.hpp>
 #include <iostream>
-#include "Shadinclude.hpp"
+#include <Graphics/Shadinclude.hpp>
 
 std::string Shadinclude::shaderDefines;
 

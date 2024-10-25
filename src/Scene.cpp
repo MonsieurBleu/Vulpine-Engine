@@ -1,4 +1,4 @@
-#include <Scene.hpp>
+#include <Graphics/Scene.hpp>
 #include <iostream>
 #include <Globals.hpp> 
 #include <Helpers.hpp>

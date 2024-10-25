@@ -1,7 +1,7 @@
 #ifndef FRAME_BUFFER_HPP
 #define FRAME_BUFFER_HPP
 
-#include <Textures.hpp>
+#include <Graphics/Textures.hpp>
 #include <vector>
 #include <memory>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Mesh.hpp>
+#include <Graphics/Mesh.hpp>
 
 enum VulpineMesh_Type
 {

@@ -1,9 +1,9 @@
 #pragma once
 
-#include <ObjectGroup.hpp>
-#include <Skeleton.hpp>
+#include <Graphics/ObjectGroup.hpp>
+#include <Graphics/Skeleton.hpp>
 #include <NavGraph.hpp>
-#include <Fonts.hpp>
+#include <Graphics/Fonts.hpp>
 #include <AssetManager.hpp>
 #include <Globals.hpp>
 

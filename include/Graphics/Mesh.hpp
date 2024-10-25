@@ -2,9 +2,9 @@
 #define MESH_HPP
 
 #include <string>
-#include <Shader.hpp>
+#include <Graphics/Shader.hpp>
 #include <VertexBuffer.hpp>
-#include <Textures.hpp>
+#include <Graphics/Textures.hpp>
 
 #define MESH_BASE_ATTRIBUTE_LOCATION_POSITION 0
 #define MESH_BASE_ATTRIBUTE_LOCATION_COLOR    1

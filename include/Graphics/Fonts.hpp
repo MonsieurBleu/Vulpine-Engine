@@ -2,7 +2,7 @@
 #define FONTS_MSDF_HPP
 
 #include <iostream>
-#include <Mesh.hpp>
+#include <Graphics/Mesh.hpp>
 #include <memory>
 
 typedef unsigned int UFT8;

@@ -1,4 +1,4 @@
-#include <ObjectGroup.hpp>
+#include <Graphics/ObjectGroup.hpp>
 #include <iostream>
 
 void ManageHideStatus(ModelStateHideStatus &children, ModelStateHideStatus parent)

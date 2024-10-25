@@ -1,8 +1,8 @@
 #ifndef SCENE_HPP
 #define SCENE_HPP
 
-#include <ObjectGroup.hpp>
-#include <Camera.hpp>
+#include <Graphics/ObjectGroup.hpp>
+#include <Graphics/Camera.hpp>
 
 struct MeshGroup
 {

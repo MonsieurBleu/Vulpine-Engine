@@ -5,7 +5,7 @@
 #include "Utils.hpp"
 
 #include <fstream>
-#include <Skeleton.hpp>
+#include <Graphics/Skeleton.hpp>
 #include <iostream>
 
 enum AnimationControllerTransitionCondition
