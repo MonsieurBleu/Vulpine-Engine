@@ -6,7 +6,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 
-enum ModelStateHideStatus
+enum class ModelStateHideStatus : uint8_t
 {
     HIDE,
     SHOW,

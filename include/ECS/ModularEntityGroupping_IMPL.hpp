@@ -25,15 +25,20 @@ void ComponentModularity::removeChild(Entity &parent, EntityRef child)
     old = children;
 }
 
-void ComponentModularity::synchronizeChildren(Entity &parent)
+void ComponentModularity::synchronizeChildren(EntityRef parent)
 {
-    for(auto &c : parent.comp<EntityGroupInfo>().children)
+    for(auto &i : SynchFuncs)
+        if(parent->state[i.ComponentID])
+            i.element(*parent, parent);
+
+    for(auto &c : parent->comp<EntityGroupInfo>().children)
     {
+        synchronizeChildren(c);
+        
         for(auto &i : SynchFuncs)
             if(c->state[i.ComponentID])
-                i.element(parent, c);
+                i.element(*parent, c);
 
-        synchronizeChildren(*c);
     }
 }
 

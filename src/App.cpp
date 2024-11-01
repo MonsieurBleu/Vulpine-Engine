@@ -161,7 +161,7 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
     screenBuffer2D
         .addTexture(
             Texture2D()
-                .setResolution(ivec2(vec2(globals.windowSize())*UI_res_scale))
+                .setResolution(ivec2(vec2(globals._renderSize)*UI_res_scale))
                 .setInternalFormat(GL_SRGB8_ALPHA8)
                 .setFormat(GL_RGBA)
                 .setPixelType(GL_UNSIGNED_BYTE)
@@ -170,7 +170,7 @@ if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
                 .setAttachement(GL_COLOR_ATTACHMENT0))
         .addTexture(
             Texture2D() 
-                .setResolution(ivec2(vec2(globals.windowSize())*UI_res_scale))
+                .setResolution(ivec2(vec2(globals._renderSize)*UI_res_scale))
                 .setInternalFormat(GL_DEPTH_COMPONENT)
                 .setFormat(GL_DEPTH_COMPONENT)
                 .setPixelType(GL_UNSIGNED_BYTE)

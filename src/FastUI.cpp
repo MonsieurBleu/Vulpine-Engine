@@ -51,6 +51,9 @@ SimpleUiTileBatch& SimpleUiTileBatch::batch()
         p[id+4] = rightTop;
         p[id+5] = rightBottom;
 
+        for(int y = 0; y < 6; y++)
+            p[id+y].z = min(i->scale.x, i->scale.y);
+
         vec4 color[6] = {i->color, i->color, i->color, i->color, i->color, i->color};
         memcpy(&(c[id]), color, 6*sizeof(vec4));
 
@@ -121,6 +124,8 @@ FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : Fa
     title->state.setPosition(vec3(0, 0, 1.0));
     (*this)->add(title);
 
+    
+
     vec2 padding = vec2(1.0, 0.5)*title->charSize;
     vec2 bSize = vec2(title->getSize().x, title->charSize*title->state.scale.y*1.6);
     bSize += padding + padding;
@@ -136,6 +141,8 @@ FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : Fa
     // background->setPosition(vec3(vec2(-0.5, 0.5)*title->getSize()*padding,0));
     // title->state.setPosition(vec3(padding.x, -padding.y, 0));
     title->state.setPosition(vec3(vec2(0.5, -0.5)*(bSize-title->getSize()), 0));
+
+    title->align = StringAlignement::CENTERED;
 
     (*this)->add(background);
 
@@ -507,7 +514,7 @@ void FastUI_valueMenu::trackCursor()
     float iaspectRatio = (float)(globals.windowHeight())/(float)(globals.windowWidth());
     // mpos = mpos*vec2(2.0) - vec2(1.0);
     mpos = vec2(mpos.x*2.0 - 1.0, 1.0 - mpos.y*2.0);
-    mpos.y *= iaspectRatio;
+    // mpos.y *= iaspectRatio;
 
     get()->state.update();
     

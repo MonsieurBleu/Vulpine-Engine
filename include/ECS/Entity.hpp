@@ -154,7 +154,6 @@ class Entity
         ~Entity();
 
         std::string toStr()
-        #ifdef VULPINE_COMPONENT_IMPL
         {
             std::stringstream ss;
             ss << TERMINAL_OK << "Entity {";
@@ -168,7 +167,6 @@ class Entity
             ss << TERMINAL_OK << "}\n" << TERMINAL_RESET;
             return ss.str();
         }
-        #endif
         ;
 
         template<typename T>
@@ -217,7 +215,7 @@ COMPONENT_IMPL(EntityInfos)
 
 Entity::~Entity()
 {
-    std::cout << "Destroying Entity " << comp<EntityInfos>().name << "\t" << this << "\n";
+    // std::cout << "Destroying Entity " << comp<EntityInfos>().name << "\t" << this << "\n";
 
     Component<EntityInfos>::elements[ids[ENTITY_LIST]].enabled = false;
 

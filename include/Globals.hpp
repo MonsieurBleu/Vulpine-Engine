@@ -14,9 +14,12 @@
 
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
 
+class Game;
+
 class Globals
 {
     friend App;
+    friend Game;
 
 private:
     AppState _state;

@@ -42,7 +42,10 @@
 
 struct EntityGroupInfo
 {
-    std::vector<EntityRef> children;
+    EntityGroupInfo(){};
+    EntityGroupInfo(const std::vector<EntityRef> & children) : children(children){};
+
+    std::vector<EntityRef> children;    
     bool markedForDeletion = false;
     bool markedForCreation = false;
 };
@@ -82,7 +85,7 @@ class ComponentModularity
 
         static void removeChild(Entity &parent, EntityRef child);
 
-        static void synchronizeChildren(Entity &parent);
+        static void synchronizeChildren(EntityRef parent);
 
         static void Reparent(Entity& parent, EntityRef child, Entity& newParent);
 
