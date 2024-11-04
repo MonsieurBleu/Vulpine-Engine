@@ -139,8 +139,6 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     
     float a = smoothstep(0.0f, 1.f, (time - box.lastChangeTime));
 
-    // if(a < 1e-9) a = 0.1;
-
     box.displayMin = mix(box.displayMin, box.min, a);
     box.displayMax = mix(box.displayMax, box.max, a);
 
