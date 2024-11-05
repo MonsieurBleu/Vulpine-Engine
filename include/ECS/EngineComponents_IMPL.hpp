@@ -29,7 +29,8 @@ template<> void Component<WidgetBackground>::ComponentElem::init()
 
     data.tile = SimpleUiTileRef(new SimpleUiTile(
         ModelState3D()
-        , UiTileType::SQUARE_ROUNDED
+        // , UiTileType::SQUARE_ROUNDED
+        , UiTileType::SQUARE
         , ui->colorTitleBackground));
 
     ui->tileBatch->add(data.tile);
