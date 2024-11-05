@@ -148,10 +148,14 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     /********** APPLYING DISPLAY VALUES ON ALL RELATED COMPONENTS **********/
 
 
-    vec2 scale(box.displayMax - box.displayMin);
-    vec2 pos(box.displayMin.x, -box.displayMin.y);
+    // vec2 scale = vec2(box.displayMax - box.displayMin)*2.f;
+    // vec2 pos = box.displayMin * vec2(1, 1)*scale;
+
+    vec2 scale = vec2(box.max - box.min);
+    vec2 pos = box.min * vec2(1, -1);
 
     scale = max(scale, vec2(0));
+
 
     if(child->hasComp<WidgetBackground>())
     {

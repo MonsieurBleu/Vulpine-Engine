@@ -50,8 +50,8 @@ struct WidgetBox
         displayMax(UNINITIALIZED_FLOAT)
         {};
     
-    vec2 min = vec2(-1);
-    vec2 max = vec2(1);
+    vec2 min;
+    vec2 max;
     vec2 initMin;
     vec2 initMax;
 
