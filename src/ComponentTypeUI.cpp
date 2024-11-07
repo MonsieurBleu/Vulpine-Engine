@@ -2,17 +2,15 @@
 #include <Graphics/Scene.hpp>
 #include <Globals.hpp>
 
-WidgetModel::WidgetModel()
+
+
+void WidgetBox::set(vec2 xrange, vec2 yrange)
 {
-    scene = globals.getScene2D();
+    lastMin = min;
+    lastMax = max;
+    lastChangeTime = globals.appTime.getElapsedTime();
+
+    initMin = min = vec2(xrange[0], yrange[0]);
+    initMax = max = vec2(xrange[1], yrange[1]);
 }
-
-WidgetModel::WidgetModel(Scene * s)
-{
-    assert(s != nullptr);
-    scene = s;
-}
-
-
-
 

@@ -16,17 +16,30 @@ SimpleUiTileBatch& SimpleUiTileBatch::add(SimpleUiTileRef tile)
     return *this;
 }
 
+SimpleUiTileBatch& SimpleUiTileBatch::remove(SimpleUiTileRef tile)
+{
+    for(auto i = tiles.begin(); i < tiles.end(); i++)
+        if(i->get() == tile.get())
+        {
+            tiles.erase(i);
+            return *this;
+        }   
+
+    return *this;
+}
+
 SimpleUiTileBatch& SimpleUiTileBatch::batch()
 {
     size_t size = tiles.size();
     if(!size) return *this;
-    depthWrite = false;
+    // depthWrite = false;
+    depthWrite = true;
     // invertFaces = true;
 
-    GenericSharedBuffer positions(new char[sizeof(vec3)*6*size]);
+    GenericSharedBuffer positions(new char[sizeof(vec4)*6*size]);
     GenericSharedBuffer colors(new char[sizeof(vec4)*6*size]);
     GenericSharedBuffer uvs(new char[sizeof(vec4)*6*size]);
-    vec3 *p = (vec3 *)positions.get();
+    vec4 *p = (vec4 *)positions.get();
     vec4 *c = (vec4 *)colors.get();
     vec4 *u = (vec4 *)uvs.get();
 
@@ -34,16 +47,16 @@ SimpleUiTileBatch& SimpleUiTileBatch::batch()
 
     for(auto i : tiles)
     {
-        if(i->hide == ModelStateHideStatus::HIDE) continue;
+        if(i->hide == ModelStatus::HIDE) continue;
         i->update();
         mat4 m = i->modelMatrix;
-        vec3 leftTop = vec3(m*vec4(0, 0, 0, 1));
-        vec3 rightTop = vec3(m*vec4(1, 0, 0, 1));
-        vec3 leftBottom = vec3(m*vec4(0, -1, 0, 1));
-        vec3 rightBottom = vec3(m*vec4(1, -1, 0, 1));
+        vec4 leftTop     = vec4(vec3(m*vec4(+0, +0, +0, +1)), i->position.z);
+        vec4 rightTop    = vec4(vec3(m*vec4(+1, +0, +0, +1)), i->position.z);
+        vec4 leftBottom  = vec4(vec3(m*vec4(+0, -1, +0, +1)), i->position.z);
+        vec4 rightBottom = vec4(vec3(m*vec4(+1, -1, +0, +1)), i->position.z);
 
         int id = usedTiles*6;
-        p[id] = leftTop;
+        p[id]   = leftTop;
         p[id+1] = rightTop;
         p[id+2] = leftBottom;
 
@@ -52,7 +65,7 @@ SimpleUiTileBatch& SimpleUiTileBatch::batch()
         p[id+5] = rightBottom;
 
         for(int y = 0; y < 6; y++)
-            p[id+y].z = min(i->scale.x, i->scale.y);
+            p[id+y].z = min(i->scale.x, i->scale.y/i->scale.x);
 
         vec4 color[6] = {i->color, i->color, i->color, i->color, i->color, i->color};
         memcpy(&(c[id]), color, 6*sizeof(vec4));
@@ -75,7 +88,7 @@ SimpleUiTileBatch& SimpleUiTileBatch::batch()
         setVao(
             MeshVao(
                 new VertexAttributeGroup({
-                    VertexAttribute(positions, 0, usedTiles*6, 3, GL_FLOAT, false),
+                    VertexAttribute(positions, 0, usedTiles*6, 4, GL_FLOAT, false),
                     VertexAttribute(colors, 1, usedTiles*6, 4, GL_FLOAT, false),
                     VertexAttribute(uvs, 2, usedTiles*6, 4, GL_FLOAT, false)
                 })
@@ -479,7 +492,7 @@ void FastUI_valueMenu::batch()
         e.tab.batch();
         e.tab->state.scaleScalar(1.0);
         e.tab->state.setPosition(vec3(0, -titleOffset.y, 0));
-        e.tab->state.setHideStatus(ModelStateHideStatus::HIDE);
+        e.tab->state.setHideStatus(ModelStatus::HIDE);
         g->add(dynamic_cast<ObjectGroupRef&>(e.tab));
     }
 
@@ -493,13 +506,13 @@ void FastUI_valueMenu::setCurrentTab(int id)
     // if(currentTab == id) return;
     if(currentTab >= 0)
     {
-        elements[currentTab].tab->state.setHideStatus(ModelStateHideStatus::HIDE);
+        elements[currentTab].tab->state.setHideStatus(ModelStatus::HIDE);
         elements[currentTab].title.changeBackgroundColor(ui.colorTitleBackground);
     }
     if(currentTab != id)
     {
         currentTab = id;
-        elements[currentTab].tab->state.setHideStatus(ModelStateHideStatus::SHOW);
+        elements[currentTab].tab->state.setHideStatus(ModelStatus::SHOW);
         elements[currentTab].title.changeBackgroundColor(ui.colorCurrentTitleBackground);
     }
     else

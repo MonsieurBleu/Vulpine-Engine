@@ -254,7 +254,8 @@ void SingleStringBatch::batchText()
     if (!size)
         return;
 
-    depthWrite = false;
+    // depthWrite = false;
+    depthWrite = true;
     state.frustumCulled = false;
 
     GenericSharedBuffer positions(new char[sizeof(vec3) * 6 * size]);

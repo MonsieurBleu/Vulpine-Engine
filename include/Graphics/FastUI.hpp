@@ -38,6 +38,9 @@ class SimpleUiTileBatch : public MeshModel3D
         SimpleUiTileBatch(){state.frustumCulled = false;};
 
         SimpleUiTileBatch& add(SimpleUiTileRef tile);
+
+        SimpleUiTileBatch& remove(SimpleUiTileRef tile);
+
         /*
             TODO : add inteligent buffer overwrite (the whole thing is not re-allocated if the place is arleady here)
         */
@@ -59,16 +62,17 @@ struct FastUI_context
     FontRef& font;
     Scene& scene;
     MeshMaterial fontMaterial;
+    MeshMaterial spriteMaterial;
 
     bool batchNeedUpdate = false;
 
     vec4 colorTitleBackground = vec4(0, 0.4, 0.8, 0.75);
     vec4 colorCurrentTitleBackground = vec4(0, 0.3, 0.95, 0.75);
     vec4 colorHighlightedTitleBackground = vec4(0.3, 0.5, 0.9, 0.75);
-    vec3 colorTitleFont = vec3(1.0);
+    vec4 colorTitleFont = vec4(1.0);
 
     vec4 colorBackground = vec4(0, 0.1, 0.2, 0.8);
-    vec3 colorFont = vec3(0.9);
+    vec4 colorFont = vec4(0.9);
 };
 
 struct FastUI_element : public ObjectGroupRef

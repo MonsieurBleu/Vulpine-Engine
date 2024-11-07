@@ -10,19 +10,23 @@
 /***************** UI BASE VULPINE COMPONENTS *****************/
 
 /* TODO : remove ?*/
-Ephemeral_Component(WidgetModel)
-template<> void Component<WidgetModel>::ComponentElem::init();
-template<> void Component<WidgetModel>::ComponentElem::clean();
+Ephemeral_Component(WidgetSprite)
+template<> void Component<WidgetSprite>::ComponentElem::init();
+template<> void Component<WidgetSprite>::ComponentElem::clean();
 
 Adaptive_Component(WidgetBox)
 
 Adaptive_Component(WidgetState)
 
+Ephemeral_Component(WidgetStyle)
+
 Ephemeral_Component(WidgetText)
 template<> void Component<WidgetText>::ComponentElem::init();
+template<> void Component<WidgetText>::ComponentElem::clean();
 
 Ephemeral_Component(WidgetBackground)
 template<> void Component<WidgetBackground>::ComponentElem::init();
+template<> void Component<WidgetBackground>::ComponentElem::clean();
 
 Ephemeral_Component(WidgetButton)
 
@@ -31,5 +35,6 @@ Ephemeral_Component(WidgetUI_Context)
 
 /***************** UI BASE VULPINE SYSTEMS *****************/
 
-void updateEntityCursor(vec2 screenPos, bool down, bool click);
+void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context& ui);
 
+void updateWidgetsStyle();

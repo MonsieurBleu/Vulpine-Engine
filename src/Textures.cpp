@@ -151,8 +151,8 @@ Texture2D& Texture2D::loadFromFile(const char* filename)
 {
     BenchTimer timer;
     timer.start();
-    int n, fileStatus;
-    fileStatus = stbi_info(filename, &_resolution.x, &_resolution.y, &n);
+    int fileStatus;
+    fileStatus = stbi_info(filename, &_resolution.x, &_resolution.y, &loadedChannels);
 
     if(!fileStatus)
     {
@@ -160,7 +160,16 @@ Texture2D& Texture2D::loadFromFile(const char* filename)
         return *(this);
     }
 
-    _pixelSource = stbi_load(filename, &_resolution.x, &_resolution.y, &n, 0);
+    _pixelSource = stbi_load(filename, &_resolution.x, &_resolution.y, &loadedChannels, loadedChannels);
+
+    switch (loadedChannels)
+    {
+        case 1 : setInternalFormat(GL_R8).setFormat(GL_R); break;
+        case 2 : setInternalFormat(GL_RG8).setFormat(GL_RG); break;
+        case 3 : setInternalFormat(GL_RGB8).setFormat(GL_RGB); break;
+        case 4 : setInternalFormat(GL_RGBA8).setFormat(GL_RGBA); break;
+        default: break;
+    }
 
     if(!_pixelSource)
     {

@@ -762,7 +762,7 @@ void PathHelper::update(bool forceUpdate)
 
     for(auto i : meshes)
     {
-        i->state.setHideStatus(ModelStateHideStatus::HIDE);
+        i->state.setHideStatus(ModelStatus::HIDE);
         i->state.frustumCulled = false;
     }
 
@@ -771,7 +771,7 @@ void PathHelper::update(bool forceUpdate)
         vec3 v1 = path->at(i-1) + vec3(-size);
         vec3 v2 = path->at(i) + vec3(size);
 
-        ((CubeHelper*)(meshes[i].get()))->state.setHideStatus(ModelStateHideStatus::SHOW);
+        ((CubeHelper*)(meshes[i].get()))->state.setHideStatus(ModelStatus::SHOW);
         
         ((CubeHelper*)(meshes[i].get()))->updateData(
             min(v1, v2), max(v1, v2)

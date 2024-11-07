@@ -11,6 +11,7 @@ using namespace glm;
 class Texture2D
 {
     private : 
+        int loadedChannels = 3;
         GLuint handle = 0;
         std::shared_ptr<GLuint> bindlessHandleRef;
         std::shared_ptr<GLuint> handleRef;

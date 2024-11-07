@@ -100,7 +100,7 @@ bool Mesh::cull() { return true; };
 
 bool MeshModel3D::cull()
 {
-    if (state.hide == ModelStateHideStatus::HIDE)
+    if (state.hide == ModelStatus::HIDE)
         return culled = false;
 
     if (!state.frustumCulled)
@@ -381,7 +381,7 @@ void InstancedMeshModel3D::updateInstances()
     {
         ModelInstance &inst = (*instances)[i];
 
-        if (inst.hide != ModelStateHideStatus::HIDE)
+        if (inst.hide != ModelStatus::HIDE)
         {
             memcpy((void *)&m[i], (void *)&inst.modelMatrix, sizeof(mat4));
             drawnInstance++;

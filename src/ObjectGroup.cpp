@@ -1,20 +1,20 @@
 #include <Graphics/ObjectGroup.hpp>
 #include <iostream>
 
-void ManageHideStatus(ModelStateHideStatus &children, ModelStateHideStatus parent)
+void ManageHideStatus(ModelStatus &children, ModelStatus parent)
 {
     switch (children)
     {
-    case ModelStateHideStatus::UNDEFINED :
+    case ModelStatus::UNDEFINED :
         children = parent;
         break;
     
-    case ModelStateHideStatus::SHOW :
-        children = parent == ModelStateHideStatus::HIDE ? parent : children;
+    case ModelStatus::SHOW :
+        children = parent == ModelStatus::HIDE ? parent : children;
         break;
 
-    case ModelStateHideStatus::HIDE :
-        children = parent == ModelStateHideStatus::SHOW ? parent : children;
+    case ModelStatus::HIDE :
+        children = parent == ModelStatus::SHOW ? parent : children;
         break;
 
     default: break;

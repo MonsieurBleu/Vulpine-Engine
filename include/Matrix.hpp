@@ -6,7 +6,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 
-enum class ModelStateHideStatus : uint8_t
+enum class ModelStatus : uint8_t
 {
     HIDE,
     SHOW,
@@ -30,12 +30,12 @@ public:
     mat4 modelMatrix = mat4(1.0);
 
     bool frustumCulled = true;
-    ModelStateHideStatus hide = ModelStateHideStatus::UNDEFINED;
+    ModelStatus hide = ModelStatus::UNDEFINED;
 
     quat quaternion;
     bool useQuaternion = false;
 
-    ModelState3D &setHideStatus(ModelStateHideStatus h)
+    ModelState3D &setHideStatus(ModelStatus h)
     {
         hide = h;
         _needUpdate = true;
@@ -59,6 +59,20 @@ public:
     ModelState3D &setPosition(vec3 newPosition)
     {
         position = newPosition;
+        _needUpdate = true;
+        return *this;
+    }
+
+    ModelState3D &setPositionXY(vec2 newPosition)
+    {
+        position = vec3(newPosition, position.z);
+        _needUpdate = true;
+        return *this;
+    }
+
+    ModelState3D &setPositionZ(float z)
+    {
+        position.z = z;
         _needUpdate = true;
         return *this;
     }
