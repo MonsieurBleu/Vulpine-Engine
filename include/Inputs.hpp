@@ -1,17 +1,20 @@
 #ifndef INPUTS_HPP
 #define INPUTS_HPP
 
-#include <mutex>
 #include <deque>
+#include <functional>
+#include <mutex>
+#include <string>
+#include <vector>
 
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
 struct GLFWKeyInfo
 {
-    GLFWwindow* window;
+    GLFWwindow *window;
     int key;
-    int scancode;
+    int scanCode;
     int action;
     int mods;
 };
@@ -26,11 +29,73 @@ class InputBuffer : private std::deque<GLFWKeyInfo>
     friend void giveCallbackToApp(GLFWKeyInfo input);
     void add(GLFWKeyInfo input);
 
-    public : 
-        bool pull(GLFWKeyInfo& input);
+  public:
+    bool pull(GLFWKeyInfo &input);
 };
 
 extern std::mutex inputMutex;
 extern InputBuffer inputs;
+
+typedef std::function<void()> InputCallback;
+typedef std::function<bool()> InputFilter;
+
+enum class InputType
+{
+    EVENT,
+    CONTINUOUS
+};
+
+struct GenericInput
+{
+    std::string inputName;
+    int keyCode;
+    InputCallback callback;
+    InputFilter filter;
+};
+
+struct EventInput : public GenericInput
+{
+    int mods;
+    int action;
+    bool isScanCode = true;
+    EventInput(std::string inputName, int keyCode, InputCallback callback, InputFilter filter, int mods, int action,
+               bool isScanCode = true)
+        : GenericInput{inputName, keyCode, callback, filter}, mods{mods}, action{action}, isScanCode{isScanCode}
+    {
+    }
+};
+
+struct ContinuousInput : public GenericInput
+{
+    ContinuousInput(std::string inputName, int keyCode, InputCallback callback, InputFilter filter)
+        : GenericInput{inputName, keyCode, callback, filter}
+    {
+    }
+};
+
+namespace InputManager
+{
+inline std::vector<EventInput> eventInputs;
+inline std::vector<ContinuousInput> continuousInputs;
+
+// generic filter functions
+namespace Filters
+{
+inline InputFilter always = []() { return true; };
+}; // namespace Filters
+
+EventInput &addEventInput(std::string inputName, int keyCode, int mods, int action, InputCallback callback,
+                          InputFilter filter = Filters::always, bool isScanCode = true);
+ContinuousInput &addContinuousInput(std::string inputName, int keyCode, InputCallback callback,
+                                    InputFilter filter = Filters::always);
+void processEventInput(const GLFWKeyInfo &event);
+void processContinuousInputs();
+void clearInputs();
+void clearEventInputs();
+void clearContinuousInputs();
+
+std::string getInputKeyString(std::string inputName);
+
+}; // namespace InputManager
 
 #endif

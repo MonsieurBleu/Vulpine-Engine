@@ -145,9 +145,7 @@ bool u32strtocolorHTML(const std::u32string &str, vec3 &v)
         validInput &= u32chartoi(str[i + j * 2], tmp);
         validInput &= u32chartoi(str[i + j * 2 + 1], rgb[j]);
         rgb[j] += tmp << 4;
-        std::cout << rgb[j] << "\t";
     }
-    std::cout << "\n";
 
     if (!validInput)
         return false;
