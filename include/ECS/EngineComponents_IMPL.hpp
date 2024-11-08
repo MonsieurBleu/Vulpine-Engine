@@ -246,10 +246,10 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         child->comp<WidgetBackground>().tile->setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth);
     }
 
-    if(child->hasComp<WidgetSprite>())
-    {
-        child->comp<WidgetSprite>().sprite->state.setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth+0.000025);
-    }
+    // if(child->hasComp<WidgetSprite>())
+    // {
+    //     child->comp<WidgetSprite>().sprite->state.setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth+0.000025);
+    // }
 
     float iaspectRatio = (float)(globals.windowWidth())/(float)(globals.windowHeight());
 
@@ -346,6 +346,7 @@ void updateWidgetsStyle()
         auto &b = entity.comp<WidgetBackground>();
 
         b.tile->color = s.useAltBackgroundColor ? s.backgroundColor2 : s.backgroundColor1;
+        b.tile->tileType = s.backGroundStyle;
     });
 
     System<WidgetStyle, WidgetText>([](Entity &entity)
@@ -357,6 +358,32 @@ void updateWidgetsStyle()
         auto &t = entity.comp<WidgetText>();
 
         t.mesh->color = s.useAltTextColor ? s.textColor2 : s.textColor1;
+    });
+
+    System<WidgetSprite, WidgetBox>([](Entity &entity)
+    {
+        if(entity.hasComp<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
+            return;
+
+        // auto &style = entity.comp<WidgetStyle>();
+        vec2 position = entity.hasComp<WidgetStyle>() ? entity.comp<WidgetStyle>().spritePosition : vec2(0);
+
+        auto &sprite = entity.comp<WidgetSprite>();
+        auto &box = entity.comp<WidgetBox>();
+        vec2 scale = vec2(box.displayMax - box.displayMin);
+
+// child->comp<WidgetSprite>().sprite->state.setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth+0.000025);
+
+        sprite.sprite->state.setPositionXY(
+            // mix(box.displayMin, box.displayMax, position*0.5f + 0.5f) * vec2(1, -1)
+
+            (box.displayMin + scale*position) * vec2(1, -1)
+
+            // box.displayMin * vec2(1, -1)
+        )
+            .setPositionZ(box.depth+0.000025)
+            .setScale(vec3(scale, 1))
+            ;
     });
 }
 
@@ -378,6 +405,10 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
     Entity *lastEntityUnderCursor = entityUnderCursor;
     entityUnderCursor = nullptr;
 
+    static Entity *lastEntityClicked = nullptr;
+    if(!down)
+        lastEntityClicked = nullptr;
+
     System<WidgetBox, WidgetButton, WidgetState>([screenPos, down, click](Entity &entity)
     {
         auto &box = entity.comp<WidgetBox>();
@@ -389,29 +420,75 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 
         if(button.valueUpdate)
             button.cur = button.valueUpdate();
+        
+        vec2 cursor = ((screenPos-box.min)/(box.max - box.min));
 
-        if(entity.hasComp<WidgetStyle>())
-            switch (button.type)
-            {
-                case WidgetButton::Type::HIDE_SHOW_TRIGGER : 
-                    style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE && group.children.size();
-                    break;
-                
-                case WidgetButton::Type::CHECKBOX :
-                    style.useAltBackgroundColor = button.cur == 0.f;
-                    break;
+        
+        switch (button.type)
+        {
+            case WidgetButton::Type::HIDE_SHOW_TRIGGER : 
+                if(entity.hasComp<WidgetStyle>())
+                style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE && group.children.size();
+                break;
+            
+            case WidgetButton::Type::CHECKBOX :
+                if(entity.hasComp<WidgetStyle>())
+                style.useAltBackgroundColor = button.cur == 0.f;
+                break;
+            
+            case WidgetButton::Type::SLIDER :
+                if(lastEntityClicked == &entity)
+                {
+                    float v = clamp(cursor.x, 0.f, 1.f);
+                    v = round(v*button.padding)/button.padding;
+                    button.cur = button.min + v*(button.max - button.min);
+                    
+                    button.valueChanged(button.cur);
 
-                default : break; 
-            }
+                }
+                if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
+                {
+                    float v = button.cur/(button.max-button.min) - button.min;
+                    entity.comp<WidgetStyle>().setspritePosition(vec2(v - 0.5, 0));
+                }
+                break;
+            
+            case WidgetButton::Type::TEXT_INPUT :
+                // if(globals.canUseTextInputs(&entity))
+                if(entity.hasComp<WidgetText>())
+                {
+                    auto &text = entity.comp<WidgetText>().text;
 
+                    globals.getTextInputs(&entity, text);
+                    if(text.back() == U'\n')
+                    {
+                        globals.endTextInputs(&entity);
+                        text.pop_back();
+                    }
+                    if(click && (cursor.x < 0 || cursor.y < 0 || cursor.x > 1 || cursor.y > 1))
+                    {
+                        globals.endTextInputs(&entity);
+                    }
+                }
+
+                if(entity.hasComp<WidgetStyle>())
+                {
+                    style.useAltBackgroundColor = style.useAltTextColor = globals.canUseTextInputs(&entity);
+                }
+
+                break;
+
+            default : break; 
+        }
 
         if(state.status == ModelStatus::HIDE)
             return;
 
-        vec2 cursor = ((screenPos-box.min)/(box.max - box.min));
-
         if(cursor.x < 0 || cursor.y < 0 || cursor.x > 1 || cursor.y > 1)
             return;
+
+        if(click)
+            lastEntityClicked = &entity;
 
         entityUnderCursor = &entity;
 
@@ -445,6 +522,13 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                 {
                     button.cur = button.cur == 0.f ? 1.f : 0.f;
                     button.valueChanged(button.cur);
+                }
+                break;
+
+            case WidgetButton::Type::TEXT_INPUT :
+                if(entity.hasComp<WidgetText>() && click)
+                {
+                    globals.useTextInputs(&entity);
                 }
                 break;
 

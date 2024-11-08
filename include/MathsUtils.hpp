@@ -12,7 +12,6 @@ vec3 viewToWorld(vec4 pos, const mat4& m);
 
 vec3 screenPosToModel(vec2 screenPos);
 
-
 /****** ROTATION & DIRECTION UTILS******/
     vec3 slerpDirClamp(vec3 dir1, vec3 dir2, float t, vec3 wfront = vec3(0, 0, 1));
 

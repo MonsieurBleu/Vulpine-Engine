@@ -6,6 +6,10 @@
 
 #define UNINITIALIZED_FLOAT 1e12f
 
+#define ChainedMember(classt, type, name, defval) \
+    type name = defval; \
+    classt & set##name(const type & new_##name = defval){name = new_##name; return *this;};
+
 class Scene;
 
 typedef FastUI_context* WidgetUI_Context;
@@ -109,11 +113,11 @@ struct WidgetButton
         InteractFunc valueChanged,
         UpdateFunc valueUpdate
         ) : type(type), valueChanged(valueChanged), valueUpdate(valueUpdate){};
-
-    float cur = 0;
-    float min = 0;
-    float max = 1;
-    float padding = 1;
+        
+    ChainedMember(WidgetButton, float, cur, 0)
+    ChainedMember(WidgetButton, float, min, 0)
+    ChainedMember(WidgetButton, float, max, 1)
+    ChainedMember(WidgetButton, float, padding, 1e-3f)
 
     void* usr = nullptr;
 
@@ -125,17 +129,14 @@ struct WidgetButton
 
 struct WidgetStyle
 {
-    #define ChainedMember(classt, type, name, defval) \
-        type name = defval; \
-        classt & set##name(const type & new_##name = defval){name = new_##name; return *this;};
-
-
     ChainedMember(WidgetStyle, vec4, textColor1, vec4(vec3(0.85), 1))
-    ChainedMember(WidgetStyle, vec4, textColor2, vec4(vec3(0.85), 1))
+    ChainedMember(WidgetStyle, vec4, textColor2, vec4(0.85, 0.85, 0.25, 1))
     ChainedMember(WidgetStyle, vec4, backgroundColor1, vec4(vec3(0.35), 0.9))
     ChainedMember(WidgetStyle, vec4, backgroundColor2, vec4(vec3(0.125), 0.9))
     ChainedMember(WidgetStyle, UiTileType, backGroundStyle, UiTileType::SQUARE)
     ChainedMember(WidgetStyle, int, automaticTabbing, 0)
+
+    ChainedMember(WidgetStyle, vec2, spritePosition, vec2(0))
 
     bool useAltBackgroundColor = false;
     bool useAltTextColor = false;
