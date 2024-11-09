@@ -34,8 +34,12 @@ struct WidgetState
     ModelStatus statusToPropagate = ModelStatus::UNDEFINED;
 };
 
+class Entity;
+
 struct WidgetBox
 {
+    typedef std::function<void(Entity* parent, Entity* child)> FittingFunc;
+
     enum Type : uint8
     {
         FOLLOW_PARENT_BOX, FOLLOW_SIBLINGS_BOX
@@ -59,8 +63,18 @@ struct WidgetBox
         displayMax(0)
         {};
     
-    vec2 min;
-    vec2 max;
+    WidgetBox(
+        FittingFunc specialFittingScript
+    ) :
+        type(FOLLOW_PARENT_BOX), 
+        initMin(min), initMax(max),
+        childrenMin(min),childrenMax(max),
+        displayMin(0), displayMax(0),
+        specialFittingScript(specialFittingScript)
+    {};
+    
+    vec2 min = vec2(-1, -1);
+    vec2 max = vec2(1, 1);
     vec2 initMin;
     vec2 initMax;
 
@@ -77,6 +91,8 @@ struct WidgetBox
     float lastChangeTime = 0.f;
 
     void set(vec2 xrange, vec2 yrange);
+
+    FittingFunc specialFittingScript;
 };
 
 struct WidgetText

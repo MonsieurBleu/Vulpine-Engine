@@ -113,8 +113,10 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     if(&parent != child.get())
     {
         auto &parentBox = parent.comp<WidgetBox>();
-
         box.depth = parentBox.depth+0.0001;
+
+        if(box.specialFittingScript)
+            box.specialFittingScript(&parent, child.get());
 
         if(parent.hasComp<WidgetStyle>() && parent.comp<WidgetStyle>().automaticTabbing != 0)
         {
