@@ -193,10 +193,14 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     }
     else
     {
+        // box.min = clamp(box.min, box.clampEdgeMin, box.childrenMax);
+        // box.max = clamp(box.max, box.clampEdgeMin, box.childrenMax);
+
         box.childrenMax = box.max;
         box.childrenMin = box.min;
         // box.max = box.initMax;
         // box.min = box.initMin;
+
     }
 
     // if(&parent != child.get())
@@ -435,7 +439,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
             
             case WidgetButton::Type::CHECKBOX :
                 if(entity.hasComp<WidgetStyle>())
-                style.useAltBackgroundColor = button.cur == 0.f;
+                style.useAltBackgroundColor = button.cur > 0.f;
                 break;
             
             case WidgetButton::Type::SLIDER :
@@ -457,7 +461,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
             
             case WidgetButton::Type::TEXT_INPUT :
                 // if(globals.canUseTextInputs(&entity))
-                if(entity.hasComp<WidgetText>())
+                if(entity.hasComp<WidgetText>() && globals.canUseTextInputs(&entity))
                 {
                     auto &text = entity.comp<WidgetText>().text;
 
@@ -466,10 +470,16 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                     {
                         globals.endTextInputs(&entity);
                         text.pop_back();
+
+                        if(button.valueChanged)
+                            button.valueChanged(button.cur);
                     }
                     if(click && (cursor.x < 0 || cursor.y < 0 || cursor.x > 1 || cursor.y > 1))
                     {
                         globals.endTextInputs(&entity);
+
+                        if(button.valueChanged)
+                            button.valueChanged(button.cur);
                     }
                 }
 

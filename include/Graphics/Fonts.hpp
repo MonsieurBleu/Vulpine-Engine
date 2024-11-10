@@ -30,11 +30,14 @@ UFT32Stream& operator<<(UFT32Stream& os, const std::string& str);
 struct safeBoolOverload{bool val;};
 UFT32Stream& operator<<(UFT32Stream& os, const safeBoolOverload b);
 
-bool u32strtof(std::u32string &str, float &f);
+bool u32strtof(const std::u32string &str, float &f);
 int u32strtoi(std::u32string &str, int base = 10);
 bool u32chartoi(char32_t c, int &i);
 bool u32strtocolorHTML(const std::u32string &str, vec3 &v);
 std::u32string rgbtou32str(vec3 v);
+
+
+float u32strtof2(std::u32string &str, float cur);
 
 struct FontCharInfo
 {

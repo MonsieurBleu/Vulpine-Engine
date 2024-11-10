@@ -93,6 +93,7 @@ struct WidgetBox
     void set(vec2 xrange, vec2 yrange);
 
     FittingFunc specialFittingScript;
+
 };
 
 struct WidgetText

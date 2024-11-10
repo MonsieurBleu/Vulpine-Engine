@@ -27,7 +27,7 @@ UFT32Stream &operator<<(UFT32Stream &os, const short i)
     return os;
 }
 
-bool u32strtof(std::u32string &str, float &f)
+bool u32strtof(const std::u32string &str, float &f)
 {
     errno = 0;
     char *endptr = NULL;
@@ -38,6 +38,35 @@ bool u32strtof(std::u32string &str, float &f)
 
     f = strtof(s.c_str(), &endptr);
     return !(errno || s.c_str() == endptr);
+}
+
+float u32strtof2(std::u32string &str, float cur)
+{
+    uint op = str[0] == str[1] ? str[0] : '\0';
+
+    switch(op)
+    {
+        case U'+': case U'-': case U'x': case U'/':
+            str[0] = str[1] = '0';
+            break;
+        
+        default:break;
+    }
+
+    float r;
+    if(u32strtof(str, r))
+    {
+        switch (op)
+        {
+            case U'+': cur += r; break;
+            case U'-': cur -= r; break;
+            case U'x': cur *= r; break;
+            case U'/': cur /= r; break;
+            default  : cur  = r; break;
+        }
+    }
+
+    return cur;
 }
 
 UFT32Stream& operator<<(UFT32Stream& os, const safeBoolOverload b)
