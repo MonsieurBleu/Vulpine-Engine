@@ -8,21 +8,23 @@ WFLAGS += -Wno-unused-lambda-capture
 WFLAGS += -Wno-delete-non-virtual-dtor
 WFLAGS += -Wno-unused-variable
 
-OPTFLAGS = -Ofast
+OPTFLAGS = -O3 -ffast-math
 
 CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS)
 INCLUDE = -Iinclude -IexternalLibs 
 
 
 ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal 
-	LINKFLAGS = libglfw3.a libglfw3dll.a 
-	VULPINE_LIB_NAME = TODO
+	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread
+	LINKFLAGS = libglfw3.a libglfw3dll.a
+	VULPINE_LIB_NAME = libvulpineEngine.dll
 else
 	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 
 	LINKFLAGS = 
 	VULPINE_LIB_NAME = libvulpineEngine.so
 endif
+
+
 
 VULPINE_LIB_PATH = VULPINE_LIB_NAME
 
@@ -91,11 +93,11 @@ include $(wildcard $(DEPFILES))
 
 #************** VULPINE SHARED LIBRARY BUILDING **************#
 vulpine : $(VOBJ)
-	@$(CC) -shared $(VOBJ) $(LINKFLAGS) -o $(VULPINE_LIB_PATH) 
+	$(CC) -shared $(VOBJ) $(LINKFLAGS) $(LIBFLAGS) -o $(VULPINE_LIB_PATH) 
 	@$(BUILD_VULPINE)
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
-	@clang -c -x c -Wno-error -Ofast -fPIC $< -o $@
+	@clang -c -x c -Wno-error $(OPTFLAGS) -fPIC $< -o $@
 	@$(BUILD_FILE_VULPINE) $<
 
 obj/%.o : src/%.cpp
@@ -116,11 +118,11 @@ game_base_echo :
 
 game : VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME) 
 game : vulpine
-game : LIBFLAGS += -lreactphysics3d -lvulpineEngine 
+game : LIBFLAGSG = $(LIBFLAGS) -lvulpineEngine -lreactphysics3d
 game : LINKFLAGS += -L../build -Wl,-rpath,'$$ORIGIN'
 game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@
-	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGS) -o $(GEXEC)
+	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGSG) -o $(GEXEC)
 	@${GAME_READY}
 
 obj/game/main.o : ../main.cpp
@@ -136,7 +138,7 @@ obj/game/%.o : ../src/%.cpp
 #************** SECONDARY COMMANDS **************#
 clean : 
 ifeq ($(OS),Windows_NT)
-	@del /s /f /q $(EXEC) obj\*.o .deps\*.d 
+	@del /s /f /q $(EXEC) obj\*.o .deps\*.d obj\game\*.o .deps\game\*.d
 else
 	@rm -f $(EXEC) obj/*.o obj/game/*.o .deps/*.d .deps/game/*.d
 endif
