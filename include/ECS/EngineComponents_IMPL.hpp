@@ -132,13 +132,16 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
             }
 
             int nbLine = parent.comp<WidgetStyle>().automaticTabbing;
-            int nbRow = (parentGroup.children.size() -1)/nbLine + 1;
+            int nbRow = (parentGroup.children.size())/nbLine;
 
             vec2 idim = 1.f/vec2(nbRow, nbLine);
             vec2 tabCoord = vec2(id%nbRow, id/nbRow)*idim;
 
-            box.initMin = tabCoord + idim*0.1f ;
-            box.initMax = tabCoord - idim*0.1f + idim;
+            vec2 screen(globals.windowSize());
+            screen /= min(screen.x, screen.y); 
+
+            box.initMin = tabCoord + 0.05f*idim/screen;
+            box.initMax = tabCoord - 0.05f*idim/screen + idim;
 
             box.initMin = box.initMin*2.f - 1.f;
             box.initMax = box.initMax*2.f - 1.f;
@@ -427,6 +430,13 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         if(button.valueUpdate)
             button.cur = button.valueUpdate();
         
+        if(button.valueUpdate2D)
+        {
+            vec2 uv = button.valueUpdate2D();
+            button.cur = uv.x;
+            button.cur2 = uv.y;
+        }
+
         vec2 cursor = ((screenPos-box.min)/(box.max - box.min));
 
         
@@ -459,6 +469,26 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                 }
                 break;
             
+            case WidgetButton::Type::SLIDER_2D :
+                if(lastEntityClicked == &entity)
+                {
+                    vec2 v = clamp(cursor, vec2(0.f), vec2(1.f));
+
+                    v = round(v*button.padding)/button.padding;
+
+                    button.cur = button.min + v.x*(button.max - button.min);
+                    button.cur2 = button.min + v.y*(button.max - button.min);
+                    
+                    button.valueChanged2D(vec2(button.cur, button.cur2));
+
+                }
+                if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
+                {
+                    vec2 v = vec2(button.cur, button.cur2)/(button.max-button.min) - button.min;
+                    entity.comp<WidgetStyle>().setspritePosition(v - 0.5f);
+                }
+            break;
+
             case WidgetButton::Type::TEXT_INPUT :
                 // if(globals.canUseTextInputs(&entity))
                 if(entity.hasComp<WidgetText>() && globals.canUseTextInputs(&entity))
