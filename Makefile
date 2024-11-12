@@ -17,11 +17,11 @@ INCLUDE = -Iinclude -IexternalLibs
 ifeq ($(OS),Windows_NT)
 	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread
 	LINKFLAGS = libglfw3.a libglfw3dll.a
-	VULPINE_LIB_NAME = libvulpineEngine.dll
+	VULPINE_LIB_NAME = libvulpineEngine.a
 else
 	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 
 	LINKFLAGS = 
-	VULPINE_LIB_NAME = libvulpineEngine.so
+	VULPINE_LIB_NAME = libvulpineEngine.a
 endif
 
 
@@ -45,28 +45,34 @@ ORANGE = [38;5;208m
 
 ifeq ($(OS),Windows_NT)
 	STRDEC = 
+# turns out printing in windows is really annoying, also the user could be using powershell or cmd
+# which have different ways of printing
+	ECHO_N = echo  
 else 
 	STRDEC = "
+	ECHO_N = echo -n
 endif
 
-ESC=\033
+ESC=
 CLEAR_LINE=${ESC}[2K
 MOVE_UP=${ESC}[1A
 MOVE_DOWN=${ESC}[1B
 
+CR=
 
-TO_LIB_LINE = echo -n ${STRDEC} ${MOVE_UP} ${CLEAR_LINE} \r ${STRDEC}
-TO_PRO_LINE = echo -n ${STRDEC} ${CLEAR_LINE} \r ${STRDEC}
+
+TO_LIB_LINE = $(ECHO_N) ${STRDEC} ${MOVE_UP} ${CLEAR_LINE} \r ${STRDEC}
+TO_PRO_LINE = $(ECHO_N) ${STRDEC} ${CLEAR_LINE} \r ${STRDEC}
 
 # TO_PRO_LINE = bash -c 'lines=$$(tput lines); echo -e  "\033[2K\033[G"' 
 # TO_LIB_LINE = bash -c 'lines=$$(tput lines); echo -e "\033[1A;1H\033[2K\033[G"'
 
 BUILD_VULPINE      = ${TO_LIB_LINE} && echo ${STRDEC}${BOLD}${UNDERLINE}${ORANGE}-VULPINE LIBRARY BUILT-${RESET}${STRDEC}
 BUILD_FILE_VULPINE = ${TO_LIB_LINE} && echo ${STRDEC}${BOLD}${ORANGE}Vulpine Module Built ${RESET}${STRDEC}
-BUILD_FILE_GAME    = ${TO_PRO_LINE} && echo -n ${STRDEC}${BOLD}${CYAN}Built ${RESET}${STRDEC} 
-LINKING_EXECUTABLE = ${TO_PRO_LINE} && echo -n ${STRDEC}${BOLD}${UNDERLINE}${BLUE}Linking${RESET}${STRDEC} 
+BUILD_FILE_GAME    = ${TO_PRO_LINE} && $(ECHO_N) ${STRDEC}${BOLD}${CYAN}Built ${RESET}${STRDEC} 
+LINKING_EXECUTABLE = ${TO_PRO_LINE} && $(ECHO_N) ${STRDEC}${BOLD}${UNDERLINE}${BLUE}Linking${RESET}${STRDEC} 
 
-BUILD_GAME    = ${TO_PRO_LINE} && echo -n ${STRDEC}${BOLD}${CYAN}Builting Game...${RESET}${STRDEC} 
+BUILD_GAME    = ${TO_PRO_LINE} && $(ECHO_N) ${STRDEC}${BOLD}${CYAN}Builting Game...${RESET}${STRDEC} 
 GAME_READY = ${TO_PRO_LINE} && echo ${STRDEC}${BOLD}${UNDERLINE}${BLUE}Game is now compiled and linked!${RESET}${STRDEC} 
 
 DEPFLAGS_BASE = -MT $@ -MMD -MP -MF .deps
@@ -82,7 +88,7 @@ DEPFILES := $(VSOURCES:src/%.cpp=.deps/%.d)
 
 
 GSOURCES = $(call rwildcard,../src,*.cpp)
-GOBJ = $(GSOURCES:../src/%.cpp=obj/game/%.o) obj/game/main.o
+GOBJ = $(GSOURCES:../src/%.cpp=obj/game/%.o) obj/game/main.o ../build/$(VULPINE_LIB_NAME)
 DEPFILES += $(GSOURCES:../src/%.cpp=.deps/game/%.d) .deps/game/main.d
 
 $(DEPFILES):
@@ -93,7 +99,8 @@ include $(wildcard $(DEPFILES))
 
 #************** VULPINE SHARED LIBRARY BUILDING **************#
 vulpine : $(VOBJ)
-	$(CC) -shared $(VOBJ) $(LINKFLAGS) $(LIBFLAGS) -o $(VULPINE_LIB_PATH) 
+# @$(CC) -shared $(VOBJ) $(LINKFLAGS) $(LIBFLAGS) -o $(VULPINE_LIB_PATH) 
+	@ar rcs $(VULPINE_LIB_PATH) $(VOBJ)
 	@$(BUILD_VULPINE)
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
