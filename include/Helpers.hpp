@@ -242,3 +242,31 @@ class ValueHelperRef : public std::shared_ptr<ValueHelper<T>>
         ValueHelperRef(ValueHelper<T> *ptr) : std::shared_ptr<ValueHelper<T>>(ptr){};
 };
 
+#include <deque>
+
+class PlottingHelper : public MeshModel3D
+{
+    private : 
+
+        std::deque<float> values;
+        float minv = +1e9;
+        float maxv = -1e9;
+
+    public : 
+
+        vec4 color;
+        float depth = 1.f;
+        
+        PlottingHelper(vec4 color = vec4(1), int maxValues = 1000);
+
+        // void update() override;
+
+        void updateData();
+
+        void push(float f);
+
+    private :
+        int maxValues;
+};
+
+typedef std::shared_ptr<PlottingHelper> PlottingHelperRef;

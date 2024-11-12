@@ -923,3 +923,82 @@ PointsHelper::PointsHelper(const std::vector<vec3>& points, vec3 _color) : MeshM
     setVao(vao);
 }
 
+
+PlottingHelper::PlottingHelper(vec4 color, int maxValues) : MeshModel3D(Loader<MeshMaterial>::get("plot")), color(color), maxValues(maxValues)
+{
+    createUniforms();
+    uniforms.add(ShaderUniform(&this->color, 20));
+    noBackFaceCulling = true;
+    state.frustumCulled = false;
+
+    int nbOfPoints = maxValues*6;
+    GenericSharedBuffer buff(new char[sizeof(vec4)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    for(int i = 0; i < nbOfPoints; i++)
+    {
+        pos[i] = vec3(0);
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 4, GL_FLOAT, false),
+        })
+    );
+
+    values.resize(maxValues);
+    std::fill(values.begin(), values.end(), 0.f);
+
+    setVao(vao);
+}
+
+void PlottingHelper::push(float f)
+{
+    values.pop_front();
+    values.push_back(f);
+}
+
+void PlottingHelper::updateData()
+{
+    // MeshModel3D::update();
+
+    if(state.hide == ModelStatus::HIDE)
+        return;
+    
+    // std::cout << "=== DEBUG PRINT 2 ===\n";
+
+    minv = 0;
+    maxv = 1000.f/60.f;
+
+    // for(auto &i : values)
+    // {
+    //     minv = min(minv, i);
+    //     maxv = max(maxv, i);
+    // }
+
+    // minv -= (maxv - minv)*0.1;
+    // maxv += (maxv - minv)*0.1;
+
+    vec4 *pos = (vec4*)getVao()->attributes[0].getBufferAddr();
+
+    for(int i = 0; i < maxValues-1; i++)
+    {
+        int id = i*6;
+        vec2 xRange = vec2(i, i+1)/float(maxValues-1);
+        vec2 yRange = (vec2(values[i], values[i+1]) - minv)/(maxv - minv);
+
+        yRange = clamp(yRange, 0.f, 1.f);
+
+        // yRange = pow(yRange, vec2(0.1));
+
+        pos[id++] = vec4(xRange[0], yRange[0], depth, 0);
+        pos[id++] = vec4(xRange[1], yRange[1], depth, 0);
+        pos[id++] = vec4(xRange[0], 0, depth, 1);
+
+        pos[id++] = vec4(xRange[0], 0, depth, 1);
+        pos[id++] = vec4(xRange[1], yRange[1], depth, 0);
+        pos[id++] = vec4(xRange[1], 0, depth, 1);
+    }
+
+    getVao()->attributes[0].sendAllToGPU();
+}

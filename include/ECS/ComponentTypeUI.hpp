@@ -20,6 +20,7 @@ class WidgetSprite
 
         WidgetSprite(){};
         WidgetSprite(const std::string& name) : name(name){};
+        WidgetSprite(ModelRef sprite) : sprite(sprite){};
 
         ModelRef sprite;
         std::string name;

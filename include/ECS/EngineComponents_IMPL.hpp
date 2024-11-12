@@ -11,37 +11,40 @@
 
 template<> void Component<WidgetSprite>::ComponentElem::init()
 {
-    FastUI_context *ui = entity->comp<WidgetUI_Context>();
-    data.sprite = newModel(ui->spriteMaterial);
+    if(data.name.size())
+    {
+        FastUI_context *ui = entity->comp<WidgetUI_Context>();
+        data.sprite = newModel(ui->spriteMaterial);
 
-    data.sprite->noBackFaceCulling = true;
-    data.sprite->state.frustumCulled = false;
-    // data.sprite->depthWrite = false;
+        data.sprite->noBackFaceCulling = true;
+        data.sprite->state.frustumCulled = false;
+        // data.sprite->depthWrite = false;
 
-    GenericSharedBuffer buff(new char[sizeof(vec3)*6]);
-    vec3 *pos = (vec3*)buff.get();
+        GenericSharedBuffer buff(new char[sizeof(vec3)*6]);
+        vec3 *pos = (vec3*)buff.get();
 
-    int id = 0;
+        int id = 0;
 
-    pos[id++] = vec3(0, 0, 0);
-    pos[id++] = vec3(1, -1, 0);
-    pos[id++] = vec3(1, 0, 0);
+        pos[id++] = vec3(0, 0, 0);
+        pos[id++] = vec3(1, -1, 0);
+        pos[id++] = vec3(1, 0, 0);
 
-    pos[id++] = vec3(0, 0, 0);
-    pos[id++] = vec3(0, -1, 0);
-    pos[id++] = vec3(1, -1, 0);
+        pos[id++] = vec3(0, 0, 0);
+        pos[id++] = vec3(0, -1, 0);
+        pos[id++] = vec3(1, -1, 0);
 
-    data.sprite->setVao(new
-        VertexAttributeGroup({
-            VertexAttribute(buff, 0, 6, 3, GL_FLOAT, false)
-        })
-    );
+        data.sprite->setVao(new
+            VertexAttributeGroup({
+                VertexAttribute(buff, 0, 6, 3, GL_FLOAT, false)
+            })
+        );
 
-    data.sprite->getVao()->generate();
+        data.sprite->getVao()->generate();
 
-    data.sprite->setMap(0, Loader<Texture2D>::get(data.name));
+        data.sprite->setMap(0, Loader<Texture2D>::get(data.name));
 
-    data.sprite->state.scaleScalar(0);
+        data.sprite->state.scaleScalar(0);
+    }
 
     globals.getScene2D()->add(data.sprite);
 };
@@ -132,7 +135,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
             }
 
             int nbLine = parent.comp<WidgetStyle>().automaticTabbing;
-            int nbRow = (parentGroup.children.size())/nbLine;
+            int nbRow = max(((int)parentGroup.children.size())/nbLine, 1);
 
             vec2 idim = 1.f/vec2(nbRow, nbLine);
             vec2 tabCoord = vec2(id%nbRow, id/nbRow)*idim;

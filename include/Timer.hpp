@@ -41,9 +41,11 @@ private:
     float elapsedTime = 0.0;
     float deltaS = 0.0;
 
-    std::string name;
 
 public:
+
+    std::string name;
+
     BenchTimer();
     BenchTimer(std::string name);
 
