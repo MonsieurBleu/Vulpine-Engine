@@ -10,7 +10,8 @@ enum UiTileType
 {
     SQUARE,
     SQUARE_ROUNDED,
-    CIRCLE
+    CIRCLE,
+    SATURATION_VALUE_PICKER
 };
 
 

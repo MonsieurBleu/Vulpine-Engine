@@ -115,12 +115,16 @@ struct WidgetButton
     typedef std::function<void(float value)> InteractFunc;
     typedef std::function<float()> UpdateFunc;
 
+    typedef std::function<void(vec2 value)> InteractFunc2D;
+    typedef std::function<vec2()> UpdateFunc2D;
+
     enum Type : uint8
     {
         HIDE_SHOW_TRIGGER, 
         CHECKBOX, 
         TEXT_INPUT, 
-        SLIDER
+        SLIDER,
+        SLIDER_2D
     } type;
 
     WidgetButton(Type type = HIDE_SHOW_TRIGGER) : type(type){};
@@ -130,16 +134,26 @@ struct WidgetButton
         InteractFunc valueChanged,
         UpdateFunc valueUpdate
         ) : type(type), valueChanged(valueChanged), valueUpdate(valueUpdate){};
-        
+
+    WidgetButton(
+        Type type, 
+        InteractFunc2D valueChanged2D,
+        UpdateFunc2D valueUpdate2D
+        ) : type(type), valueChanged2D(valueChanged2D), valueUpdate2D(valueUpdate2D){};
+
     ChainedMember(WidgetButton, float, cur, 0)
+    ChainedMember(WidgetButton, float, cur2, 0)
     ChainedMember(WidgetButton, float, min, 0)
     ChainedMember(WidgetButton, float, max, 1)
-    ChainedMember(WidgetButton, float, padding, 1e-3f)
+    ChainedMember(WidgetButton, float, padding, 1e3f)
 
     void* usr = nullptr;
 
     InteractFunc valueChanged;
     UpdateFunc valueUpdate;
+
+    InteractFunc2D valueChanged2D;
+    UpdateFunc2D valueUpdate2D;
 
     MeshMaterial material;
 };
