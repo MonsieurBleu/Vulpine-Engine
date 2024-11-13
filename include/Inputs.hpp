@@ -63,6 +63,8 @@ struct EventInput : public GenericInput
         : GenericInput{inputName, keyCode, callback, filter}, mods{mods}, action{action}, isScanCode{isScanCode}
     {
     }
+
+    EventInput() = default;
 };
 
 struct ContinuousInput : public GenericInput
