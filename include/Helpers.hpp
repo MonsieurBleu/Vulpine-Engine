@@ -249,10 +249,11 @@ class PlottingHelper : public MeshModel3D
     private : 
 
         std::deque<float> values;
-        float minv = +1e9;
-        float maxv = -1e9;
 
     public : 
+
+        float minv = 0;
+        float maxv = 100;
 
         vec4 color;
         float depth = 1.f;

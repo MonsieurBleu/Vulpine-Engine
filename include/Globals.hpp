@@ -86,10 +86,11 @@ public:
     const int *screenResolutionAddr() const;
     const glm::vec2 mousePosition() const;
 
-    BenchTimer appTime = BenchTimer("App Time");
-    BenchTimer simulationTime = BenchTimer("Simulation Time");
-    BenchTimer cpuTime = BenchTimer("CPU Time");
-    BenchTimer gpuTime = BenchTimer("GPU Time");
+    BenchTimer appTime = BenchTimer("App");
+    BenchTimer mainThreadTime = BenchTimer("Main Thread");
+    BenchTimer simulationTime = BenchTimer("Simulation");
+    BenchTimer cpuTime = BenchTimer("CPU");
+    BenchTimer gpuTime = BenchTimer("GPU");
     LimitTimer fpsLimiter = LimitTimer();
 
     bool enablePhysics = true;
