@@ -447,6 +447,7 @@ App::App(GLFWwindow *window)
 void App::mainloopStartRoutine()
 {
     globals.fpsLimiter.start();
+    globals.mainThreadTime.start();
     globals.appTime.start();
     globals.simulationTime.start();
     globals.cpuTime.start();
@@ -488,6 +489,7 @@ void App::mainloopEndRoutine()
     glfwSwapBuffers(window);
     globals.gpuTime.end();
 
+    globals.mainThreadTime.end();
     globals.fpsLimiter.waitForEnd();
     globals.appTime.end();
     globals.simulationTime.end();

@@ -86,7 +86,12 @@ public:
     duration getLastAvg() const
     {
         return avgLast;
-    }
+    };
+
+    duration getMax() const
+    {
+        return max;
+    };
 };
 
 std::ostream &operator<<(std::ostream &os, BenchTimer e);

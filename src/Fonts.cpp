@@ -1,6 +1,18 @@
 #include <Graphics/Fonts.hpp>
 #include <Utils.hpp>
 
+std::u32string ftou32str(float f)
+{
+    std::stringstream s;
+    s  
+        // << std::setw(4)
+        << std::setprecision(3)
+        // << std::scientific
+        << f;
+    
+    return UFTconvert.from_bytes(s.str());
+}
+
 UFT32Stream &operator<<(UFT32Stream &os, const float f)
 {
     std::stringstream s;

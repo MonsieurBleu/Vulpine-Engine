@@ -967,8 +967,8 @@ void PlottingHelper::updateData()
     
     // std::cout << "=== DEBUG PRINT 2 ===\n";
 
-    minv = 0;
-    maxv = 1000.f/60.f;
+    // minv = 0;
+    // maxv = 1000.f/60.f;
 
     // for(auto &i : values)
     // {
