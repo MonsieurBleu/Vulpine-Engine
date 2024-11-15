@@ -122,6 +122,7 @@ struct WidgetButton
     enum Type : uint8
     {
         HIDE_SHOW_TRIGGER, 
+        HIDE_SHOW_TRIGGER_INDIRECT,
         CHECKBOX, 
         TEXT_INPUT, 
         SLIDER,
@@ -147,8 +148,7 @@ struct WidgetButton
     ChainedMember(WidgetButton, float, min, 0)
     ChainedMember(WidgetButton, float, max, 1)
     ChainedMember(WidgetButton, float, padding, 1e3f)
-
-    void* usr = nullptr;
+    ChainedMember(WidgetButton, uint64, usr, 0)
 
     InteractFunc valueChanged;
     UpdateFunc valueUpdate;

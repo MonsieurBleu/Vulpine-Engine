@@ -8,7 +8,7 @@ WFLAGS += -Wno-unused-lambda-capture
 WFLAGS += -Wno-delete-non-virtual-dtor
 WFLAGS += -Wno-unused-variable
 
-OPTFLAGS = -O3 -ffast-math
+OPTFLAGS =
 
 CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS)
 INCLUDE = -Iinclude -IexternalLibs 

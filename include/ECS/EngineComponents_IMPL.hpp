@@ -102,12 +102,14 @@ template<> void Component<WidgetText>::ComponentElem::clean()
 
 COMPONENT_DEFINE_SYNCH(WidgetBox)
 {
+    // if(&parent == child.get() && child->comp<EntityGroupInfo>().parent)
+    //     return;
+
     auto &box = child->comp<WidgetBox>();
 
     bool hidden = child->hasComp<WidgetState>() && child->comp<WidgetState>().status == ModelStatus::HIDE;
 
-    if(child->hasComp<WidgetState>() && child->comp<WidgetState>().status == ModelStatus::HIDE)
-        return;
+    // if(hidden) return;
 
     vec2 tmpMin = box.min;
     vec2 tmpMax = box.max;
@@ -135,22 +137,33 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
             }
 
             int nbLine = parent.comp<WidgetStyle>().automaticTabbing;
-            int nbRow = max(((int)parentGroup.children.size())/nbLine, 1);
+            int nbRow = ceil((float)parentGroup.children.size()/(float)nbLine);
 
             vec2 idim = 1.f/vec2(nbRow, nbLine);
-            vec2 tabCoord = vec2(id%nbRow, id/nbRow)*idim;
+            ivec2 tabID(id/nbLine, id%nbLine);
+            vec2 tabCoord = vec2(tabID)*idim;
 
             vec2 screen(globals.windowSize());
-            screen /= min(screen.x, screen.y); 
+            if(screen.x > screen.y)
+            {
+                screen.x = screen.y/screen.x;
+                screen.y = 1;
+            }
+            else
+            {
+                screen.y = screen.x/screen.y;
+                screen.x = 1;
+            }
 
-            box.initMin = tabCoord + 0.05f*idim/screen;
-            box.initMax = tabCoord - 0.05f*idim/screen + idim;
+            vec2 scale = screen/(parentBox.max - parentBox.min)*0.5f;
+
+            vec2 space = 0.0075f*scale;
+
+            box.initMin = tabCoord + space;
+            box.initMax = tabCoord - space + idim;
 
             box.initMin = box.initMin*2.f - 1.f;
             box.initMax = box.initMax*2.f - 1.f;
-
-            // box.min = parentBox.min + idim*0.1f + tabCoord * parentScale;
-            // box.max = parentBox.min - idim*0.1f + (tabCoord + idim) * parentScale;
         }
 
         vec2 parentMax(+1);
@@ -187,15 +200,19 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         box.min -= step(-box.max, vec2(1)) * (parentBox.min - parentMin);
         box.max -= step(-box.max, vec2(1)) * (parentBox.min - parentMin);
 
-        parentBox.childrenMax = max(parentBox.childrenMax, box.max);
-        parentBox.childrenMax = max(parentBox.childrenMax, box.min);
-        parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMax);
-        parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMin);
+        if(!hidden)
+        {
+            parentBox.childrenMax = max(parentBox.childrenMax, box.max);
+            parentBox.childrenMax = max(parentBox.childrenMax, box.min);
+            parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMax);
+            parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMin);
 
-        parentBox.childrenMin = min(parentBox.childrenMin, box.max);
-        parentBox.childrenMin = min(parentBox.childrenMin, box.min);
-        parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMax);
-        parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMin);
+            parentBox.childrenMin = min(parentBox.childrenMin, box.max);
+            parentBox.childrenMin = min(parentBox.childrenMin, box.min);
+            parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMax);
+            parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMin);
+        }
+
     }
     else
     {
@@ -225,18 +242,20 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         box.lastMax = tmpMax;
     }
     
-    if(box.displayMax.x == UNINITIALIZED_FLOAT)
-    {
-        // box.lastMin = mix(box.min, box.max, 0.25f) - (box.min + box.max)*0.5f;
-        // box.lastMax = mix(box.max, box.min, 0.25f) - (box.min + box.max)*0.5f;
-        box.lastMin = box.lastMax = vec2(0);
-        box.lastChangeTime = time;
-    }
+    // if(box.displayMax.x == UNINITIALIZED_FLOAT)
+    // {
+    //     // box.lastMin = mix(box.min, box.max, 0.25f) - (box.min + box.max)*0.5f;
+    //     // box.lastMax = mix(box.max, box.min, 0.25f) - (box.min + box.max)*0.5f;
+    //     // box.lastMin = box.lastMax = vec2(0);
+    //     // box.lastChangeTime = time;
+    // }
 
     float a = smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*4.f);
 
     box.displayMin = mix(box.lastMin, box.min, a);
     box.displayMax = mix(box.lastMax, box.max, a);
+
+    // if(hidden) return;
 
     /*
         TODO : move this into a system
@@ -292,6 +311,8 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 {
     auto &up = child->comp<WidgetState>();
 
+    bool isIndirectHST = child->hasComp<WidgetButton>() && child->comp<WidgetButton>().type == WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT;
+
     if(&parent != child.get())
     {
         auto &parentUp = parent.comp<WidgetState>();
@@ -309,15 +330,59 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
                 {
                     auto &b = child->comp<WidgetBox>();
                     b.displayMin = b.displayMax = vec2(UNINITIALIZED_FLOAT);
+                    // b.lastMin = b.lastMax = vec2(0);
+                    // b.lastMax.y = b.min.y;
+                    // b.lastMax.y = b.max.y;
+                    // b.lastChangeTime = globals.appTime.getElapsedTime();
+                    // b.set(vec2(0), vec2(0));
                 }
 
                 up.status = ModelStatus::SHOW;
+
+                if(!child->hasComp<WidgetButton>() || child->comp<WidgetButton>().type != WidgetButton::Type::HIDE_SHOW_TRIGGER)
+                    up.statusToPropagate = ModelStatus::SHOW;
+
                 break;
 
             default: break;
         }
     }
+    else
+    {
+        switch (up.statusToPropagate)
+        {
+            case ModelStatus::HIDE :
+                if(isIndirectHST)
+                {
+                    auto &button = child->comp<WidgetButton>();
+                    Entity* e = (Entity*)button.usr;   
+                    e->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
+                    e->comp<WidgetState>().status            = ModelStatus::HIDE;
+                }
+            break;
+        
+            case ModelStatus::SHOW :
+                if(isIndirectHST)
+                {
+                    auto &button = child->comp<WidgetButton>();
 
+                    Entity* e = (Entity*)button.usr;
+                    Entity* p = e->comp<EntityGroupInfo>().parent;
+
+                    if(p)
+                        for(auto c : p->comp<EntityGroupInfo>().children)
+                            if(c.get() != e)
+                                c->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
+
+                    e->comp<WidgetState>().statusToPropagate = ModelStatus::SHOW;
+                }
+            break;
+
+            default : break;
+        }
+    
+    }
+    
     if(up.statusToPropagate == ModelStatus::UNDEFINED)
         up.statusToPropagate = up.status;
 
@@ -326,6 +391,9 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
     
     if(child->hasComp<WidgetText>() && child->comp<WidgetText>().mesh.get())
         child->comp<WidgetText>().mesh->state.setHideStatus(up.status);
+
+    if(child->hasComp<WidgetSprite>() && child->comp<WidgetSprite>().sprite.get())
+        child->comp<WidgetSprite>().sprite->state.setHideStatus(up.status);
 }
 
 // COMPONENT_DEFINE_SYNCH(WidgetStyle)
@@ -447,12 +515,17 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         {
             case WidgetButton::Type::HIDE_SHOW_TRIGGER : 
                 if(entity.hasComp<WidgetStyle>())
-                style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE && group.children.size();
+                    style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE && group.children.size();
                 break;
-            
+
+            case WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT : 
+                if(entity.hasComp<WidgetStyle>())
+                    style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE;
+                break;
+
             case WidgetButton::Type::CHECKBOX :
                 if(entity.hasComp<WidgetStyle>())
-                style.useAltBackgroundColor = button.cur > 0.f;
+                    style.useAltBackgroundColor = button.cur > 0.f;
                 break;
             
             case WidgetButton::Type::SLIDER :
@@ -540,21 +613,28 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         switch (button.type)
         {
             case WidgetButton::Type::HIDE_SHOW_TRIGGER :
+            case WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT :
                 if(click)
                 {
                     switch (state.statusToPropagate)
                     {
                         case ModelStatus::HIDE :
                             state.statusToPropagate = ModelStatus::SHOW;
-                            // if(entity.hasComp<WidgetStyle>())
-                            //     entity.comp<WidgetStyle>().useAltBackgroundColor = false;
+                            if(button.type == WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT)
+                            {
+                                Entity* p = entity.comp<EntityGroupInfo>().parent;
+                                if(p)
+                                    for(auto c : p->comp<EntityGroupInfo>().children)
+                                        if(c.get() != &entity)
+                                        {
+                                            c->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
+                                        }
+                            }
                             break;
 
                         case ModelStatus::SHOW :
                         case ModelStatus::UNDEFINED :
                             state.statusToPropagate = ModelStatus::HIDE;
-                            // if(entity.hasComp<WidgetStyle>())
-                            //     entity.comp<WidgetStyle>().useAltBackgroundColor = true;
                             break;
 
                         default: break;

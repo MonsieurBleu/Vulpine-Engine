@@ -36,7 +36,7 @@ bool u32chartoi(char32_t c, int &i);
 bool u32strtocolorHTML(const std::u32string &str, vec3 &v);
 std::u32string rgbtou32str(vec3 v);
 
-std::u32string ftou32str(float f);
+std::u32string ftou32str(float f, int precision = 3);
 
 float u32strtof2(std::u32string &str, float cur);
 

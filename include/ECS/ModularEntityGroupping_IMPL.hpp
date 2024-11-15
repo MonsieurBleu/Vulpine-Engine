@@ -10,6 +10,11 @@ void ComponentModularity::addChild(Entity &parent, EntityRef child)
     if(!parent.hasComp<EntityGroupInfo>())
         parent.set<EntityGroupInfo>(EntityGroupInfo());
 
+    if(!child->hasComp<EntityGroupInfo>())
+        child->set<EntityGroupInfo>(EntityGroupInfo());
+
+    child->comp<EntityGroupInfo>().parent = &parent;
+
     Reparent(parent, child, parent);
 };
 

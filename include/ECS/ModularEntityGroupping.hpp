@@ -48,6 +48,8 @@ struct EntityGroupInfo
     std::vector<EntityRef> children;    
     bool markedForDeletion = false;
     bool markedForCreation = false;
+
+    Entity *parent = nullptr;
 };
 
 COMPONENT(EntityGroupInfo, ENTITY_LIST, MAX_ENTITY);

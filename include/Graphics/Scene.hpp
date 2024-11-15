@@ -3,6 +3,7 @@
 
 #include <Graphics/ObjectGroup.hpp>
 #include <Graphics/Camera.hpp>
+#include <Timer.hpp>
 
 struct MeshGroup
 {
@@ -67,10 +68,23 @@ class Scene
         void cull();
 
         uint getDrawCalls();
+        uint getPolyCount();
+        uint getVertexCount();
+        uint getMaterialCount();
+        uint getTotalMeshes();
+        uint getShadowMapCount();
+
+        BenchTimer cullTime = BenchTimer("Scene Culling");
+        BenchTimer callsTime = BenchTimer("Calls");
+        BenchTimer depthOnlyCallsTime = BenchTimer("Depth Only Calls");
+        BenchTimer shadowPassCallsTime = BenchTimer("Shadow Pass Calls");
+        BenchTimer lightBufferTime = BenchTimer("Light Buffer Creation");
+        void endTimers();
 
         MeshMaterial depthOnlyMaterial;
 
         bool useBindlessTextures = false;
+        bool isUSingClusteredLighting(){return useClusteredLighting;};
         void activateClusteredLighting(ivec3 dimention = ivec3(16, 9, 24), float vFar = 5e3);
         void deactivateClusteredLighting();
 

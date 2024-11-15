@@ -47,21 +47,34 @@ void BenchTimer::start()
     lastStartTime = clockmicro::now();
 }
 
+void BenchTimer::hold()
+{
+    if(paused) return;
+
+    clockmicro::time_point now = clockmicro::now();
+    holdDeltaBuff += speed*(now-lastStartTime);   
+}
+
 void BenchTimer::end()
 {
     if(paused) return;
 
     clockmicro::time_point now = clockmicro::now();
-    delta = speed*(now-lastStartTime);
+    delta = speed*(now-lastStartTime) + holdDeltaBuff;
     lastTimeUpdate = now;
     deltaS = delta.count()*MS_TO_S;
     elapsedTime += deltaS;
 
+    holdDeltaBuff = duration(0);
+
     avg = ((avg*avgUpdateCounter)+delta)/(avgUpdateCounter+1);
     avgTotal = ((avgTotal*updateCounter)+delta)/(updateCounter+1);
-
-    if(delta < min || !min.count()) min = delta;
-    if(delta > max || !min.count()) max = delta;
+    
+    if(updateCounter > 25)
+    {
+        if(delta < min || !min.count()) min = delta;
+        if(delta > max || !min.count()) max = delta;
+    }
 
     updateCounter ++;
     avgUpdateCounter ++;

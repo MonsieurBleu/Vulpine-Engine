@@ -493,6 +493,11 @@ void App::mainloopEndRoutine()
     globals.fpsLimiter.waitForEnd();
     globals.appTime.end();
     globals.simulationTime.end();
+
+    scene.endTimers();
+    scene2D.endTimers();
+
+    glFinish();
 }
 
 /*
