@@ -57,11 +57,11 @@ struct WidgetBox
         initMin(min), 
         initMax(max),
         childrenMin(min),
-        childrenMax(max),
+        childrenMax(max)
         // displayMin(UNINITIALIZED_FLOAT),
         // displayMax(UNINITIALIZED_FLOAT)
-        displayMin(0),
-        displayMax(0)
+        // displayMin(0),
+        // displayMax(0)
         {};
     
     WidgetBox(
@@ -70,7 +70,7 @@ struct WidgetBox
         type(FOLLOW_PARENT_BOX), 
         initMin(min), initMax(max),
         childrenMin(min),childrenMax(max),
-        displayMin(0), displayMax(0),
+        // displayMin(0), displayMax(0),
         specialFittingScript(specialFittingScript)
     {};
     
@@ -82,8 +82,8 @@ struct WidgetBox
     vec2 childrenMin;
     vec2 childrenMax;
 
-    vec2 displayMin;
-    vec2 displayMax;
+    vec2 displayMin = vec2(UNINITIALIZED_FLOAT);
+    vec2 displayMax = vec2(UNINITIALIZED_FLOAT);
     vec2 lastMin;
     vec2 lastMax;
 

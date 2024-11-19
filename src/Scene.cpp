@@ -568,6 +568,10 @@ void Scene::remove(ModelRef mesh)
                 if(j->get() == mesh.get())
                 {
                     i->meshes.erase(j);
+
+                    if(!i->meshes.size())
+                        meshes.erase(i);
+                    
                     return;
                 }
     }
@@ -602,6 +606,21 @@ void Scene::remove(ObjectGroupRef group)
             groups.erase(i);
             return;
         }
+    
+    for(auto &m : group->getMeshes())
+    {
+        remove(m);
+    }
+
+    for(auto &l : group->getLights())
+    {
+        remove(l);
+    }
+
+    for(auto &c : group->getChildren())
+    {
+        remove(c);
+    }
 }
 
 void Scene::cull()

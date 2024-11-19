@@ -67,13 +67,14 @@ template<> void Component<WidgetBackground>::ComponentElem::init()
     ui->tileBatch->add(data.tile);
 
     data.tile->scaleScalar(0);
-
+    
     data.batch = ui->tileBatch;
 }
 
 template<> void Component<WidgetBackground>::ComponentElem::clean()
 {
-    data.batch->remove(data.tile);
+    if(data.batch)
+        data.batch->remove(data.tile);
 }
 
 
@@ -241,16 +242,27 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         box.lastMin = tmpMin;
         box.lastMax = tmpMax;
     }
-    
-    // if(box.displayMax.x == UNINITIALIZED_FLOAT)
-    // {
-    //     // box.lastMin = mix(box.min, box.max, 0.25f) - (box.min + box.max)*0.5f;
-    //     // box.lastMax = mix(box.max, box.min, 0.25f) - (box.min + box.max)*0.5f;
-    //     // box.lastMin = box.lastMax = vec2(0);
-    //     // box.lastChangeTime = time;
-    // }
 
-    float a = smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*4.f);
+    // if(parent.comp<WidgetBox>().initMax.x == UNINITIALIZED_FLOAT)
+    // {
+    //     box.displayMax = box.displayMin = vec2(UNINITIALIZED_FLOAT);
+    // }
+    
+    if(box.displayMax.x == UNINITIALIZED_FLOAT && child.get() != &parent)
+    {
+        // std::cout << "YOOOOOOOOOOOOO   " << box.min.x << "\t" << child->comp<EntityInfos>().name << "\n"; 
+        
+        box.lastMin = (box.min + box.max)*0.5f;
+        box.lastMax = (box.min + box.max)*0.5f;
+
+        // box.lastMin = box.lastMax = vec2(0);
+        box.lastChangeTime = time;
+    }
+
+    if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
+        return;
+
+    float a = smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*8.f);
 
     box.displayMin = mix(box.lastMin, box.min, a);
     box.displayMax = mix(box.lastMax, box.max, a);
@@ -622,6 +634,10 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                             state.statusToPropagate = ModelStatus::SHOW;
                             if(button.type == WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT)
                             {
+                                auto usr = ((Entity*)button.usr);
+                                usr->comp<WidgetBox>().displayMin = vec2(UNINITIALIZED_FLOAT);
+                                usr->comp<WidgetBox>().displayMax = vec2(UNINITIALIZED_FLOAT);
+
                                 Entity* p = entity.comp<EntityGroupInfo>().parent;
                                 if(p)
                                     for(auto c : p->comp<EntityGroupInfo>().children)
