@@ -487,6 +487,8 @@ void App::mainloopEndRoutine()
 
     globals.gpuTime.start();
     glfwSwapBuffers(window);
+    glFinish();
+    glFlush();
     globals.gpuTime.end();
 
     globals.mainThreadTime.end();
@@ -496,8 +498,6 @@ void App::mainloopEndRoutine()
 
     scene.endTimers();
     scene2D.endTimers();
-
-    glFinish();
 }
 
 /*
