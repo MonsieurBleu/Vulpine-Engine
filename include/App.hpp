@@ -41,7 +41,6 @@ class App
 
         virtual bool userInput(GLFWKeyInfo input);
         bool baseInput(GLFWKeyInfo input);
-        void setController(Controller *c);
 
         void setIcon(const std::string &filename);
 
@@ -49,6 +48,8 @@ class App
 
 
     public :
+    
+        static void setController(Controller *c);
 
         void resizeCallback(GLFWwindow* window, int width, int height);
 

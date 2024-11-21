@@ -115,6 +115,8 @@ uint MeshGroup::draw(bool useBindlessTextures)
 
 void Scene::updateAllObjects()
 {
+    drawcnt = 0;
+    
     for(auto &i : groups)
         i->update();
 }
@@ -335,7 +337,7 @@ void Scene::generateLightClusters()
 uint Scene::draw()
 {
     callsTime.start();
-    drawcnt = 0;
+    // drawcnt = 0;
 
     for(auto &i : meshes)
         drawcnt += i.draw(useBindlessTextures);
@@ -462,15 +464,15 @@ void Scene::depthOnlyDraw(Camera &camera, bool doCulling)
 
     depthOnlyCallsTime.start();
 
-    if(depthOnlyMaterial != NULL)
+    if(depthOnlyMaterial)
     {
         for(auto i = meshes.begin(); i != meshes.end(); i++)
         {
 
-            if(i->material.depthOnly)
-                i->material.depthOnly->activate();
-            else
-                depthOnlyMaterial->activate();
+            // if(i->material.depthOnly)
+            //     i->material.depthOnly->activate();
+            // else
+            //     depthOnlyMaterial->activate();
             
             ShaderProgram *dom = i->material.depthOnly ? i->material.depthOnly.get() : depthOnlyMaterial.get();
             dom->activate();
@@ -503,7 +505,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool doCulling)
                     if(j->isCulled())
                     {
                         j->setBindlessMaps();
-                        j->drawVAO(true);
+                        drawcnt += j->drawVAO(true);
                     }
             }
             else
@@ -512,7 +514,7 @@ void Scene::depthOnlyDraw(Camera &camera, bool doCulling)
                     if(j->isCulled())
                     {
                         j->bindAllMaps();
-                        j->drawVAO(true);
+                        drawcnt += j->drawVAO(true);
                     }
             }
 

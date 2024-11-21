@@ -56,3 +56,19 @@ class SpectatorController : public Controller
         void clean();
         void init();
 };
+
+class OrbitController : public Controller
+{
+    protected : 
+
+    public : 
+        vec3 position = vec3(0);
+        float distance = 10.f;
+        virtual void update();
+        // virtual bool inputs(GLFWKeyInfo& input);
+        void clean();
+        void init();
+
+        void mouseEvent(vec2 dir, GLFWwindow* window);
+};
+

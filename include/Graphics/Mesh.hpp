@@ -199,7 +199,8 @@ class InstancedMeshModel3D : public MeshModel3D
         size_t drawnInstance = 0;
         
         std::shared_ptr<VertexAttribute> matricesBuffer;
-        std::shared_ptr<ModelInstance*> instances;
+        // std::shared_ptr<ModelInstance*> instances;
+        std::vector<ModelInstance> instances;
 
     public :
 

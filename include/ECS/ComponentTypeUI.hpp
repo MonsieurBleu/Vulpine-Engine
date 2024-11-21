@@ -91,6 +91,8 @@ struct WidgetBox
 
     float lastChangeTime = 0.f;
 
+    bool useClassicInterpolation = false;
+
     void set(vec2 xrange, vec2 yrange);
 
     FittingFunc specialFittingScript;

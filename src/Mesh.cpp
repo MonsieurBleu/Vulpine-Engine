@@ -299,7 +299,8 @@ void InstancedMeshModel3D::allocate(size_t maxInstanceCount)
 
     allocatedInstance = maxInstanceCount;
 
-    instances = std::make_shared<ModelInstance *>(new ModelInstance[allocatedInstance]);
+    // instances = std::make_shared<ModelInstance *>(new ModelInstance[allocatedInstance]);
+    instances.resize(allocatedInstance);
 
     matricesBuffer = std::shared_ptr<VertexAttribute>(new VertexAttribute(
         GenericSharedBuffer(new char[allocatedInstance * sizeof(mat4)]),
@@ -364,7 +365,7 @@ ModelInstance *InstancedMeshModel3D::createInstance()
     if (createdInstance >= allocatedInstance)
         return nullptr;
 
-    ModelInstance *newInstance = &(*instances.get())[createdInstance];
+    ModelInstance *newInstance = &instances[createdInstance];
     createdInstance++;
     return newInstance;
 }
@@ -379,11 +380,14 @@ void InstancedMeshModel3D::updateInstances()
 
     for (size_t i = 0; i < createdInstance; i++)
     {
-        ModelInstance &inst = (*instances)[i];
+        ModelInstance &inst = instances[i];
+
+        inst.update();
 
         if (inst.hide != ModelStatus::HIDE)
         {
-            memcpy((void *)&m[i], (void *)&inst.modelMatrix, sizeof(mat4));
+            // memcpy((void *)&m[i], (void *)&inst.modelMatrix, sizeof(mat4));
+            m[i] = inst.modelMatrix;
             drawnInstance++;
         }
     }

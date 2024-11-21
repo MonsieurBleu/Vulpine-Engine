@@ -236,11 +236,29 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
     float time = globals.appTime.getElapsedTime();
 
-    if(box.min != tmpMin || box.max != tmpMax)
+    if(
+        // tmpMin != vec2(-1, -1) && tmpMax != vec2(1, 1) &&
+        
+        (box.min != tmpMin || box.max != tmpMax)
+        // || box.lastChangeTime == time
+        )
     {
         box.lastChangeTime = time;
-        box.lastMin = tmpMin;
-        box.lastMax = tmpMax;
+        // box.lastMin = tmpMin;
+        // box.lastMax = tmpMax;
+        // box.lastMin = vec2(0);
+        // box.lastMax = vec2(0);
+
+        if(!box.useClassicInterpolation)
+        {
+            box.lastMin = (box.min + box.max)*0.5f;
+            box.lastMax = (box.min + box.max)*0.5f;
+        }
+        else
+        {
+            box.lastMin = tmpMin;
+            box.lastMax = tmpMax;
+        }
     }
 
     // if(parent.comp<WidgetBox>().initMax.x == UNINITIALIZED_FLOAT)
@@ -248,21 +266,30 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     //     box.displayMax = box.displayMin = vec2(UNINITIALIZED_FLOAT);
     // }
     
-    if(box.displayMax.x == UNINITIALIZED_FLOAT && child.get() != &parent)
-    {
-        // std::cout << "YOOOOOOOOOOOOO   " << box.min.x << "\t" << child->comp<EntityInfos>().name << "\n"; 
+    // if(box.displayMax.x == UNINITIALIZED_FLOAT && child.get() != &parent)
+    // {
+    //     // std::cout << "YOOOOOOOOOOOOO   " << box.min.x << "\t" << child->comp<EntityInfos>().name << "\n"; 
         
-        box.lastMin = (box.min + box.max)*0.5f;
-        box.lastMax = (box.min + box.max)*0.5f;
+    //     if(!box.useClassicInterpolation)
+    //     {
+    //         box.lastMin = (box.min + box.max)*0.5f;
+    //         box.lastMax = (box.min + box.max)*0.5f;
 
-        // box.lastMin = box.lastMax = vec2(0);
-        box.lastChangeTime = time;
-    }
+    //     }
+    //     else
+    //     {
+    //         box.useClassicInterpolation = true;
+    //     }
+
+    //     // box.lastMin = box.lastMax = vec2(0);
+    //     box.lastChangeTime = time;
+    // }
 
     if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
         return;
 
-    float a = smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*8.f);
+    float a = smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*4.f);
+    // a = 1.f;
 
     box.displayMin = mix(box.lastMin, box.min, a);
     box.displayMax = mix(box.lastMax, box.max, a);
@@ -341,11 +368,13 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
                 if(child->hasComp<WidgetBox>() && up.status == ModelStatus::HIDE)
                 {
                     auto &b = child->comp<WidgetBox>();
-                    b.displayMin = b.displayMax = vec2(UNINITIALIZED_FLOAT);
+                    // b.displayMin = b.displayMax = vec2(UNINITIALIZED_FLOAT);
                     // b.lastMin = b.lastMax = vec2(0);
                     // b.lastMax.y = b.min.y;
                     // b.lastMax.y = b.max.y;
                     // b.lastChangeTime = globals.appTime.getElapsedTime();
+                    
+                    b.set(vec2(b.initMin.x ,b.initMax.x), vec2(b.initMin.y , b.initMax.y));
                     // b.set(vec2(0), vec2(0));
                 }
 

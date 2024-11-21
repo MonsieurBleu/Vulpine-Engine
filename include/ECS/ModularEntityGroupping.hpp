@@ -43,7 +43,12 @@
 struct EntityGroupInfo
 {
     EntityGroupInfo(){};
-    EntityGroupInfo(const std::vector<EntityRef> & children) : children(children){};
+    EntityGroupInfo(const std::vector<EntityRef> & _children){
+        children.reserve(32000);
+        
+        for(auto c : _children)
+            children.push_back(c);
+    };
 
     std::vector<EntityRef> children;    
     bool markedForDeletion = false;

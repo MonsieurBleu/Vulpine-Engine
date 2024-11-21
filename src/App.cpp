@@ -310,12 +310,16 @@ void App::setController(Controller *c)
     if (globals._currentController)
         globals._currentController->clean();
 
-    c->init();
     globals._currentController = c;
-    glfwSetCursorPosCallback(window, [](GLFWwindow *window, double dx, double dy) {
-        if (globals._currentController)
-            globals._currentController->mouseEvent(vec2(dx, dy), window);
-    });
+
+    if(c)
+    {
+        c->init();
+        glfwSetCursorPosCallback(globals.getWindow(), [](GLFWwindow *window, double dx, double dy) {
+            if (globals._currentController)
+                globals._currentController->mouseEvent(vec2(dx, dy), window);
+        });
+    }
 }
 
 App::App(GLFWwindow *window)
@@ -487,9 +491,9 @@ void App::mainloopEndRoutine()
 
     globals.gpuTime.start();
     glfwSwapBuffers(window);
-    glFinish();
-    glFlush();
+    // glFlush();
     globals.gpuTime.end();
+    // glFinish();
 
     globals.mainThreadTime.end();
     globals.fpsLimiter.waitForEnd();

@@ -109,7 +109,7 @@ class Camera
         void move(vec3 velocity, double deltatime);
 
         void setState(CameraState& newState);
-        const CameraState& getState() const {return state;};
+        CameraState& getState() {return state;};
 };
 
 #endif

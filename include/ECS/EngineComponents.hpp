@@ -1,8 +1,10 @@
 #include <ECS/ModularEntityGroupping.hpp>
 #include <ECS/ComponentTypeUI.hpp>
 
-#undef CURRENT_MAX_COMP_USAGE
-#define CURRENT_MAX_COMP_USAGE 1024
+#ifndef CURRENT_MAX_COMP_USAGE
+// #undef CURRENT_MAX_COMP_USAGE
+#define CURRENT_MAX_COMP_USAGE MAX_ENTITY
+#endif
 
 #undef CURRENT_CATEGORY
 #define CURRENT_CATEGORY UI
