@@ -210,28 +210,6 @@ class Entity
         ;  
 };
 
-#ifdef VULPINE_COMPONENT_IMPL
-COMPONENT_IMPL(EntityInfos)
-
-Entity::~Entity()
-{
-    // std::cout << "Destroying Entity " << comp<EntityInfos>().name << "\t" << this << "\n";
-
-    Component<EntityInfos>::elements[ids[ENTITY_LIST]].enabled = false;
-
-    for(int i = 0; i < ComponentCategory::END; i++)
-        if(ids[i] != NO_ENTITY)
-        {
-            if(ids[i] < ComponentGlobals::lastFreeID[i])
-                ComponentGlobals::lastFreeID[i] = ids[i];
-
-            if(ids[i] == ComponentGlobals::maxID[i]-1)
-                ComponentGlobals::maxID[i]--;
-        }
-}
-
-#endif
-
 #include <memory>
 
 typedef std::shared_ptr<Entity> EntityRef;
@@ -282,9 +260,13 @@ void ManageGarbage()
     int maxID = ComponentGlobals::maxID[Component<T>::category];
     int size = list.size();
 
-    for(int i = 0; i < size && i <= maxID; i++)
+    for(int i = 0; 
+    i < size 
+    // && i <= maxID
+    ; i++)
     {        
-
+        #define NAME(type) #type
+        
         if(list[i].markedForDeletion || (list[i].enabled && !elist[list[i].entityListID].enabled))
         {
             list[i].enabled = false;

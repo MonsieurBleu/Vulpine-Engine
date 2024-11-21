@@ -121,6 +121,8 @@ void Scene::updateAllObjects()
 
 void Scene::genLightBuffer()
 {
+    lightBufferTime.start();
+
     for(auto i : lights)
     {
         lightBuffer.add(*i);
@@ -136,6 +138,8 @@ void Scene::genLightBuffer()
         clusteredLight.update();
         clusteredLight.activate(1);
     }
+
+    lightBufferTime.hold();
 }
 
 #define GLM_ENABLE_EXPERIMENTAL
@@ -330,6 +334,7 @@ void Scene::generateLightClusters()
 
 uint Scene::draw()
 {
+    callsTime.start();
     drawcnt = 0;
 
     for(auto &i : meshes)
@@ -349,10 +354,102 @@ uint Scene::draw()
         }
 
     lightBuffer.reset();
+    callsTime.hold();
     return drawcnt;
 }
 
 uint Scene::getDrawCalls(){return drawcnt;}
+
+uint Scene::getPolyCount()
+{
+    int cnt = 0;
+
+    for(auto &mg : meshes)
+        for(auto &m : mg.meshes)
+            if(m->defaultMode == GL_TRIANGLES)
+                if(m->state.hide != ModelStatus::HIDE && m->isCulled() && m->getVao() && m->getVao()->attributes.size())
+                    {
+                        
+                        auto &a = m->getVao()->attributes[0];
+                        cnt += a.getVertexCount()/3;
+                    }
+
+    for(auto &m : unsortedMeshes)
+        if(m->defaultMode == GL_TRIANGLES)
+            if(m->state.hide != ModelStatus::HIDE && m->isCulled() && m->getVao() && m->getVao()->attributes.size())
+            {
+                auto &a = m->getVao()->attributes[0];
+                cnt += a.getVertexCount()/3;
+            }
+
+    return cnt;
+}
+
+uint Scene::getVertexCount()
+{
+    int cnt = 0;
+
+    for(auto &mg : meshes)
+        for(auto &m : mg.meshes)
+        if(m->state.hide != ModelStatus::HIDE && m->isCulled() && m->getVao() && m->getVao()->attributes.size())
+            {
+                auto &a = m->getVao()->attributes[0];
+                cnt += a.getVertexCount();
+            }
+
+    for(auto &m : unsortedMeshes)
+        if(m->state.hide != ModelStatus::HIDE && m->isCulled() && m->getVao() && m->getVao()->attributes.size())
+        {
+            auto &a = m->getVao()->attributes[0];
+            cnt += a.getVertexCount();
+        }
+
+    return cnt;
+}
+
+uint Scene::getMaterialCount()
+{
+    int cnt = 0;
+
+    for(auto &mg : meshes)
+        for(auto &m : mg.meshes)
+            if(m->state.hide != ModelStatus::HIDE)
+            {
+                cnt ++;
+                break;
+            }
+
+    for(auto &m : unsortedMeshes)
+        if(m->state.hide != ModelStatus::HIDE)
+        {
+            cnt ++;
+        }
+
+    return cnt;
+}
+
+uint Scene::getTotalMeshes()
+{
+    int cnt = 0;
+
+    for(auto &mg : meshes)
+        cnt += mg.meshes.size();
+
+    cnt += unsortedMeshes.size();
+
+    return cnt;
+}
+
+uint Scene::getShadowMapCount()
+{
+    int cnt = 0;
+
+    for(auto &l : lights)
+        if(l->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
+            cnt++;
+
+    return cnt;
+}
 
 // TODO : Add a way to have custom depth vertex shader to some object
 // NOTE : If an object have a non trivial vertex shader, maybe the vertices
@@ -362,6 +459,8 @@ uint Scene::getDrawCalls(){return drawcnt;}
 void Scene::depthOnlyDraw(Camera &camera, bool doCulling)
 {
     // if(doCulling) this->cull();
+
+    depthOnlyCallsTime.start();
 
     if(depthOnlyMaterial != NULL)
     {
@@ -435,10 +534,13 @@ void Scene::depthOnlyDraw(Camera &camera, bool doCulling)
         for(auto i : unsortedMeshes)
             i->drawVAO();
     */
+
+   depthOnlyCallsTime.hold();
 }
 
 void Scene::generateShadowMaps()
 {
+    shadowPassCallsTime.start();
     Camera *tmp = globals.currentCamera;
 
     for(auto i : lights)
@@ -454,6 +556,7 @@ void Scene::generateShadowMaps()
         }
     
     globals.currentCamera = tmp;
+    shadowPassCallsTime.hold();
 }
 
 void Scene::remove(ModelRef mesh)
@@ -465,6 +568,10 @@ void Scene::remove(ModelRef mesh)
                 if(j->get() == mesh.get())
                 {
                     i->meshes.erase(j);
+
+                    if(!i->meshes.size())
+                        meshes.erase(i);
+                    
                     return;
                 }
     }
@@ -499,10 +606,27 @@ void Scene::remove(ObjectGroupRef group)
             groups.erase(i);
             return;
         }
+    
+    for(auto &m : group->getMeshes())
+    {
+        remove(m);
+    }
+
+    for(auto &l : group->getLights())
+    {
+        remove(l);
+    }
+
+    for(auto &c : group->getChildren())
+    {
+        remove(c);
+    }
 }
 
 void Scene::cull()
 {
+    cullTime.start();
+    
     for(auto i = meshes.begin(); i != meshes.end(); i++)
     {
         for(auto j : i->meshes)
@@ -511,6 +635,8 @@ void Scene::cull()
 
     for(auto i : unsortedMeshes)
         i->cull();
+    
+    cullTime.hold();
 }
 
 void Scene::activateClusteredLighting(ivec3 dimention, float vFar)
@@ -526,4 +652,18 @@ void Scene::activateClusteredLighting(ivec3 dimention, float vFar)
 void Scene::deactivateClusteredLighting()
 {
     useClusteredLighting = false;
+}
+
+void Scene::endTimers()
+{
+    cullTime.start();
+    cullTime.end();
+    callsTime.start();
+    callsTime.end();
+    depthOnlyCallsTime.start();
+    depthOnlyCallsTime.end();
+    shadowPassCallsTime.start();
+    shadowPassCallsTime.end();
+    lightBufferTime.start();
+    lightBufferTime .end();
 }

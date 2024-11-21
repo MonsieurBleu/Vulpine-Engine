@@ -5,21 +5,55 @@
 #include <ECS/ModularEntityGroupping.hpp>
 #endif
 
+#ifdef VULPINE_COMPONENT_IMPL
+COMPONENT_IMPL(EntityInfos)
+
+Entity::~Entity()
+{
+    // std::cout << "Destroying Entity " << comp<EntityInfos>().name << "\t" << this << "\n";
+
+    Component<EntityInfos>::elements[ids[ENTITY_LIST]].enabled = false;
+
+    for(int i = 0; i < ComponentCategory::END; i++)
+        if(ids[i] != NO_ENTITY)
+        {
+            if(ids[i] < ComponentGlobals::lastFreeID[i])
+                ComponentGlobals::lastFreeID[i] = ids[i];
+
+            if(ids[i] == ComponentGlobals::maxID[i]-1)
+                ComponentGlobals::maxID[i]--;
+        }
+
+    comp<EntityGroupInfo>().children.clear();
+}
+
+#endif
+
 void ComponentModularity::addChild(Entity &parent, EntityRef child)
 {
     if(!parent.hasComp<EntityGroupInfo>())
         parent.set<EntityGroupInfo>(EntityGroupInfo());
+
+    if(!child->hasComp<EntityGroupInfo>())
+        child->set<EntityGroupInfo>(EntityGroupInfo());
+
+    child->comp<EntityGroupInfo>().parent = &parent;
 
     Reparent(parent, child, parent);
 };
 
 void ComponentModularity::removeChild(Entity &parent, EntityRef child)
 {
+    removeChild(parent, child.get());
+}
+
+void ComponentModularity::removeChild(Entity &parent, Entity* child)
+{
     std::vector<EntityRef> children;
     auto &old = parent.comp<EntityGroupInfo>().children;
     
     for(auto i : old)
-        if(i != child)
+        if(i.get() != child)
             children.push_back(i);
     
     old = children;
@@ -46,7 +80,7 @@ void ComponentModularity::synchronizeChildren(EntityRef parent)
 void ComponentModularity::Reparent(Entity& parent, EntityRef child, Entity& newParent)
 {
     for(auto &i : ReparFuncs)
-        if(child->state[i.ComponentID])
+        if(child->state[i.ComponentID] && parent.state[i.ComponentID])
             i.element(parent, child, newParent);
     
     if(!newParent.hasComp<EntityGroupInfo>())

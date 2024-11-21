@@ -41,6 +41,7 @@ private:
     float elapsedTime = 0.0;
     float deltaS = 0.0;
 
+    duration holdDeltaBuff = duration(0);
 
 public:
 
@@ -52,12 +53,14 @@ public:
     float speed = 1.0;
 
     void end();
+    void hold();
     void start();
 
     void toggle();
     void resume();
     void pause();
     bool isPaused();
+
 
     void setAvgLengthMS(int64_t newLength);
 

@@ -66,6 +66,8 @@ void InputManager::processEventInput(const GLFWKeyInfo &event)
 {
     for (auto handler : eventInputs)
     {
+        if(!handler.activated) continue;
+
         int handlerCode = handler.isScanCode ? glfwGetKeyScancode(handler.keyCode) : handler.keyCode;
         int eventCode = handler.isScanCode ? event.scanCode : event.key;
         if (handlerCode == eventCode && handler.mods == event.mods && handler.action == event.action)

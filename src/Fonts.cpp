@@ -1,12 +1,12 @@
 #include <Graphics/Fonts.hpp>
 #include <Utils.hpp>
 
-std::u32string ftou32str(float f)
+std::u32string ftou32str(float f, int precision)
 {
     std::stringstream s;
     s  
         // << std::setw(4)
-        << std::setprecision(3)
+        << std::setprecision(precision)
         // << std::scientific
         << f;
     

@@ -29,6 +29,8 @@ class RenderPass
         void enable();
         void disable();
         void toggle();
+
+        bool isPassEnable(){return isEnable;};
 };
 
 class SSAOPass : public RenderPass

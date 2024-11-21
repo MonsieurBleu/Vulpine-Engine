@@ -58,6 +58,9 @@ struct EventInput : public GenericInput
     int mods;
     int action;
     bool isScanCode = true;
+
+    bool activated = true;
+
     EventInput(std::string inputName, int keyCode, InputCallback callback, InputFilter filter, int mods, int action,
                bool isScanCode = true)
         : GenericInput{inputName, keyCode, callback, filter}, mods{mods}, action{action}, isScanCode{isScanCode}
@@ -77,27 +80,29 @@ struct ContinuousInput : public GenericInput
 
 namespace InputManager
 {
-inline std::vector<EventInput> eventInputs;
-inline std::vector<ContinuousInput> continuousInputs;
+    inline std::vector<EventInput> eventInputs;
+    inline std::vector<ContinuousInput> continuousInputs;
 
-// generic filter functions
-namespace Filters
-{
-inline InputFilter always = []() { return true; };
-}; // namespace Filters
+    // generic filter functions
+    namespace Filters
+    {
+    inline InputFilter always = []() { return true; };
+    }; // namespace Filters
 
-EventInput &addEventInput(std::string inputName, int keyCode, int mods, int action, InputCallback callback,
-                          InputFilter filter = Filters::always, bool isScanCode = true);
-ContinuousInput &addContinuousInput(std::string inputName, int keyCode, InputCallback callback,
-                                    InputFilter filter = Filters::always);
-void processEventInput(const GLFWKeyInfo &event);
-void processContinuousInputs();
-void clearInputs();
-void clearEventInputs();
-void clearContinuousInputs();
+    EventInput &addEventInput(std::string inputName, int keyCode, int mods, int action, InputCallback callback,
+                            InputFilter filter = Filters::always, bool isScanCode = true);
+    
+    ContinuousInput &addContinuousInput(std::string inputName, int keyCode, InputCallback callback,
+                                        InputFilter filter = Filters::always);
 
-std::string getInputKeyString(std::string inputName);
+    void processEventInput(const GLFWKeyInfo &event);
+    void processContinuousInputs();
+    void clearInputs();
+    void clearEventInputs();
+    void clearContinuousInputs();
 
-}; // namespace InputManager
+    std::string getInputKeyString(std::string inputName);
+
+};
 
 #endif
