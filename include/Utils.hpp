@@ -94,4 +94,9 @@ void checkHeap();
 std::string getFileNameFromPath(const char *path);
 std::string getNameOnlyFromPath(const char *path);
 
+inline constexpr double fromDayMonth(int day, int month)
+{
+    return (day + (month - 1) * 30) / 365.0 + 0.25;
+}
+
 #endif
