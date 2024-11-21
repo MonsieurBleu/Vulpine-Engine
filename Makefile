@@ -26,7 +26,7 @@ endif
 
 
 
-VULPINE_LIB_PATH = VULPINE_LIB_NAME
+VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME)
 
 
 
@@ -88,7 +88,7 @@ DEPFILES := $(VSOURCES:src/%.cpp=.deps/%.d)
 
 
 GSOURCES = $(call rwildcard,../src,*.cpp)
-GOBJ = $(GSOURCES:../src/%.cpp=obj/game/%.o) obj/game/main.o ../build/$(VULPINE_LIB_NAME)
+GOBJ = $(GSOURCES:../src/%.cpp=obj/game/%.o) obj/game/main.o $(VULPINE_LIB_PATH)
 DEPFILES += $(GSOURCES:../src/%.cpp=.deps/game/%.d) .deps/game/main.d
 
 $(DEPFILES):
@@ -102,6 +102,8 @@ vulpine : $(VOBJ)
 # @$(CC) -shared $(VOBJ) $(LINKFLAGS) $(LIBFLAGS) -o $(VULPINE_LIB_PATH) 
 	@ar rcs $(VULPINE_LIB_PATH) $(VOBJ)
 	@$(BUILD_VULPINE)
+
+$(VULPINE_LIB_PATH) : vulpine
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
 	@clang -c -x c -Wno-error $(OPTFLAGS) -fPIC $< -o $@
@@ -123,10 +125,10 @@ game_base_echo :
 	@echo " "
 	@${BUILD_GAME} 
 
-game : VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME) 
+
 game : vulpine
-game : LIBFLAGSG = $(LIBFLAGS) -lvulpineEngine -lreactphysics3d
-game : LINKFLAGS += -L../build -Wl,-rpath,'$$ORIGIN'
+game : LIBFLAGSG = $(LIBFLAGS) -lreactphysics3d
+#game : LINKFLAGS += -L../build -Wl,-rpath,'$$ORIGIN'
 game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@
 	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGSG) -o $(GEXEC)
@@ -145,8 +147,8 @@ obj/game/%.o : ../src/%.cpp
 #************** SECONDARY COMMANDS **************#
 clean : 
 ifeq ($(OS),Windows_NT)
-	@del /s /f /q $(EXEC) obj\*.o .deps\*.d obj\game\*.o .deps\game\*.d
+	@del /s /f /q $(EXEC) obj\*.o .deps\*.d obj\game\*.o .deps\game\*.d $(VULPINE_LIB_PATH)
 else
-	@rm -f $(EXEC) obj/*.o obj/game/*.o .deps/*.d .deps/game/*.d
+	@rm -f $(EXEC) obj/*.o obj/game/*.o .deps/*.d .deps/game/*.d $(VULPINE_LIB_PATH)
 endif
 
