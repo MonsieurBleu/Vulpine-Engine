@@ -95,6 +95,17 @@ public:
     {
         return max;
     };
+
+    void reset()
+    {
+        delta    = duration(0);
+        min      = duration(1e9);
+        max      = duration(0);
+        avgTotal = duration(0);
+
+        updateCounter = 0;
+        elapsedTime = 0;
+    };
 };
 
 std::ostream &operator<<(std::ostream &os, BenchTimer e);
