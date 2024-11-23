@@ -54,14 +54,22 @@ GENERATE_ENUM(ComponentCategory,
 
 class Entity;
 
+
 struct ComponentGlobals
 {
     static inline int lastID = 0;
     static inline int lastFreeID[ComponentCategory::END] = {0};
     static inline int maxID[ComponentCategory::END] = {0};
 
-    static inline std::unordered_map<std::string, int> ComponentNamesMap;
+    static inline std::unordered_map<std::string, int> * ComponentNamesMap;
     static inline std::vector<std::string> ComponentNames;
+
+    static std::unordered_map<std::string, int>& getCNmap()
+    {
+        if(!ComponentNamesMap)
+            ComponentNamesMap = new std::unordered_map<std::string, int>;
+        return *ComponentGlobals::ComponentNamesMap;
+    };
 };
 
 template <typename T>
@@ -109,7 +117,7 @@ class Component
     template<> inline const ComponentCategory Component<_type_>::category = _category_; \
     template<> inline const int ComponentInfos<_type_>::id = __ComponentIDSetupID__##_type_;\
     inline PreLaunchVectorFill<std::string> __ComponentNamesSetupObject__##_type_(ComponentGlobals::ComponentNames, #_type_); \
-    inline PreLaunchMapFill<std::string, int> __ComponentNamesMapSetupObject__##_type_(ComponentGlobals::ComponentNamesMap, #_type_, __ComponentIDSetupID__##_type_);
+    inline PreLaunchMapFill<std::string, int> __ComponentNamesMapSetupObject__##_type_(ComponentGlobals::getCNmap(), #_type_, __ComponentIDSetupID__##_type_);
 
 #ifdef VULPINE_COMPONENT_IMPL
 #define COMPONENT_IMPL(_type_) \
