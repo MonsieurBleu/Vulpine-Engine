@@ -99,4 +99,6 @@ inline constexpr double fromDayMonth(int day, int month)
     return (day + (month - 1) * 30) / 365.0 + 0.25;
 }
 
+bool fileExists(const char *path);
+
 #endif

@@ -148,3 +148,9 @@ std::string getNameOnlyFromPath(const char *path)
 
     return res;
 }
+
+bool fileExists(const char *path)
+{
+    std::ifstream file(path);
+    return file.good(); 
+}
