@@ -341,7 +341,7 @@ inline void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vec
     static GVC_t *gvc = gvContext();
     gvLayout(gvc, g, "dot");
 
-    gvRender(gvc, g, "dot", stdout);
+    // gvRender(gvc, g, "dot", stdout);
     
 
     // for (auto &node : nodes)
