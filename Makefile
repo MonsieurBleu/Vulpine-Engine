@@ -15,11 +15,11 @@ INCLUDE = -Iinclude -IexternalLibs
 
 
 ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread
+	LIBFLAGS = -L./ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread -lgvc -lcgraph -lcdt
 	LINKFLAGS = libglfw3.a libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine.a
 else
-	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 
+	LIBFLAGS = -L./ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 -lgvc -lcgraph -lcdt
 	LINKFLAGS = 
 	VULPINE_LIB_NAME = libvulpineEngine.a
 endif

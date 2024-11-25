@@ -14,6 +14,9 @@
 
 #include <glm/gtx/string_cast.hpp>
 
+#include <graphviz/gvc.h>
+
+
 typedef std::shared_ptr<class EventNode> EventNodePtr;
 
 // TODO: move this whole thing to a cpp file
@@ -31,6 +34,7 @@ class EventNode : public std::enable_shared_from_this<EventNode>
     EventNode(std::string name) : name(name)
     {
     }
+    
     void set(bool state)
     {
         this->state = state;
@@ -107,7 +111,7 @@ class EventNode : public std::enable_shared_from_this<EventNode>
     }
 
     friend class EventGraph;
-    friend class IterativeGraphLayoutSolver;
+    friend void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions, std::vector<std::vector<vec3>> &splines);
 };
 
 
@@ -116,9 +120,10 @@ class EventNodeAnd : public EventNode
 {
   private:
     std::vector<EventNodePtr> parents;
+    static inline int count = 0;
 
   public:
-    EventNodeAnd() : EventNode("AND")
+    EventNodeAnd() : EventNode("AND" + std::to_string(count++))
     {
     }
 
@@ -177,9 +182,10 @@ class EventNodeOr : public EventNode
 {
   private:
     std::vector<EventNodePtr> parents;
+    static inline int count = 0;
 
   public:
-    EventNodeOr() : EventNode("OR")
+    EventNodeOr() : EventNode("OR" + std::to_string(count++))
     {
     }
 
@@ -238,9 +244,10 @@ class EventNodeNot : public EventNode
 {
   private:
     EventNodePtr parent;
+    static inline int count = 0;
 
   public:
-    EventNodeNot() : EventNode("NOT")
+    EventNodeNot() : EventNode("NOT" + std::to_string(count++))
     {
     }
 
@@ -283,107 +290,110 @@ class EventNodeNot : public EventNode
 };
 
 
-// this class solves a graph layout problem
-// it does this by iteratively solving the positions of the nodes by computing the forces between them
-// the forces are computed by the spring model
-class IterativeGraphLayoutSolver
+
+inline void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions, std::vector<std::vector<vec3>> &splines)
 {
-private:
-    std::vector<EventNodePtr> nodes;
-    std::vector<vec3> positions;
-    std::vector<std::vector<int>> adjacency;
 
-    // the spring constant
-    float k = 1;
+    Agraph_t *g;
+    Agnode_t *n;
+    Agedge_t *e;
 
-    // the damping constant
-    float c = 0.1;
+    std::vector<Agnode_t *> agnodes;
+    std::vector<Agedge_t *> agedges;
 
-    // the distance at which the spring force is 0
-    float l = 2;
+    g = agopen((char *)"g", Agdirected, 0);
+    // agsafeset(g, (char *)"splines", (char *)"polyline", (char *)"");
 
-    // the maximum force
-    float maxForce = 2;
+    std::unordered_map<EventNodePtr, Agnode_t *> nodeToAgnode;
 
-    // maximum number of iterations
-    const int MAX_ITERATIONS = 1000;
-public:
-    IterativeGraphLayoutSolver(std::vector<EventNodePtr> nodes) : nodes(nodes)
+    for (auto &node : nodes)
     {
-        int n = nodes.size();
-        for (auto &node : nodes)
-        {
-            vec3 p = vec3(
-                (double)rand() / RAND_MAX,
-                (double)rand() / RAND_MAX,
-                (double)rand() / RAND_MAX) / 10.f;
-            positions.push_back(p);
+        n = agnode(g, (char *)node->getName().c_str(), 1);
+        agsafeset(n, (char *)"shape", (char *)"point", (char *)"");
 
-            std::vector<int> adj(n, -1);
-            for (auto &child : node->children)
+        agnodes.push_back(n);
+        nodeToAgnode[node] = n;
+    }
+
+    std::unordered_map<Agnode_t*, int> agnodeToIndex;
+    for (int i = 0; i < nodes.size(); i++)
+    {
+        positions.push_back(vec3(0));
+        agnodeToIndex[agnodes[i]] = i;
+    }
+
+    std::unordered_map<Agedge_t*, std::pair<Agnode_t*, Agnode_t*>> edgeToNode;
+
+    for (auto &node : nodes)
+    {
+        for (auto &child : node->children)
+        {
+            Agnode_t *n0 = nodeToAgnode[node];
+            Agnode_t *n1 = nodeToAgnode[child];
+            e = agedge(g, n0, n1, 0, 1);
+            agsafeset(e, (char *)"dir", (char *)"none", (char *)"");
+
+            agedges.push_back(e);
+            edgeToNode[e] = std::make_pair(n0, n1);
+        }
+    }
+
+    static GVC_t *gvc = gvContext();
+    gvLayout(gvc, g, "dot");
+
+    gvRender(gvc, g, "dot", stdout);
+    
+
+    // for (auto &node : nodes)
+    // {
+    //     n = agnode(g, (char *)node->getName().c_str(), 0);
+    //     positions[nodeToIndex[node]] = vec3(0, ND_coord(n).y, ND_coord(n).x);
+
+    //     std::vector<std::pair<vec3, vec3>> spline;
+    //     for (auto &child : node->children)
+    //     {
+    //         e = agedge(g, agnode(g, (char *)node->getName().c_str(), 0), agnode(g, (char *)child->getName().c_str(), 0), 0, 1);
+    //         auto spl = ED_spl(e);
+    //         for (int i = 0; i < spl->size; i++)
+    //         {
+    //             auto &point = spl->list[i];
+    //             spline.push_back(std::make_pair(vec3(0, point.sp.y, point.sp.x), vec3(0, point.ep.y, point.ep.x)));
+    //         }
+            
+    //     }
+    //     splines.push_back(spline);
+    // }
+
+    for (auto& n : agnodes)
+    {
+        positions[agnodeToIndex[n]] = vec3(0, ND_coord(n).y, ND_coord(n).x);
+    }
+
+    for (auto& e : agedges)
+    {
+        auto spl = ED_spl(e);
+        std::vector<vec3> spline;
+        for (int i = 0; i < spl->size; i++)
+        {
+            auto &point = spl->list[i];
+            vec3 p0 = vec3(0, ND_coord(edgeToNode[e].first).y, ND_coord(edgeToNode[e].first).x);
+            vec3 p1 = vec3(0, ND_coord(edgeToNode[e].second).y, ND_coord(edgeToNode[e].second).x);
+            spline.push_back(p0);
+            for (int j = 1; j < point.size - 1; j++)
             {
-                int i = std::find(nodes.begin(), nodes.end(), child) - nodes.begin();
-                adj[i] = 1;
+                vec3 p = vec3(0, point.list[j+0].y, point.list[j+0].x);
+                spline.push_back(p);
             }
-            adjacency.push_back(adj);
+            spline.push_back(p1);
         }
+        splines.push_back(spline);
     }
 
-    void solve()
-    {
-        for (int i = 0; i < MAX_ITERATIONS; i++)
-        {
-            update();
-            if (converged())
-                break;
-        }
-    }
 
-    void update()
-    {
-        // take into account adjacency
-        for (int i = 0; i < nodes.size(); i++)
-        {
-            for (int j = 0; j < nodes.size(); j++)
-            {
-                if (i == j)
-                    continue;
-                vec3 diff = positions[j] - positions[i];
-                float dist = length(diff);
-                if (adjacency[i][j] == 1)
-                {
-                    float force = k * (dist - l);
-                    vec3 forceVec = normalize(diff) * force;
-                    positions[i] += forceVec;
-                    positions[j] -= forceVec;
-                }
-            }
-        }
 
-    }
+    agclose(g);
 
-    bool converged()
-    {
-        for (int i = 0; i < nodes.size(); i++)
-        {
-            for (int j = 0; j < nodes.size(); j++)
-            {
-                if (i == j)
-                    continue;
-                vec3 diff = positions[j] - positions[i];
-                float dist = length(diff);
-                if (dist > 0.01)
-                    return false;
-            }
-        }
-        return true;
-    }
-
-    std::vector<vec3> getPositions()
-    {
-        return positions;
-    }
-};
+}
 
 class EventGraph
 {
@@ -441,11 +451,11 @@ class EventGraph
         for (auto &node : nodesSet)
             nodesVec.push_back(node);
 
-        IterativeGraphLayoutSolver solver(nodesVec);
-        solver.solve();
 
-
-        std::vector<vec3> positions = solver.getPositions();
+        
+        std::vector<vec3> positions;
+        std::vector<std::vector<vec3>> Bsplines;
+        generateGraphLayout(nodesVec, positions, Bsplines);
 
         // recenter the positions by computing the bounding box
         vec3 minPos = vec3(1e9);
@@ -461,12 +471,48 @@ class EventGraph
         for (auto &pos : positions)
             pos -= center;
 
+        float scale = 3.0f;
+        // normalize the positions 
+        float maxDist = 0;
+        for (auto &pos : positions)
+            maxDist = max(maxDist, length(pos));
+
+        for (auto &pos : positions)
+        {
+            pos /= maxDist;
+            pos *= scale;
+            pos.x += 0.05f;
+        }
+
+        std::vector<std::vector<vec3>> splines;
+        for (auto &spline : Bsplines)
+        {
+            std::vector<vec3> s;
+            BSpline(spline, s);
+            splines.push_back(s);
+        }
+
+        // apply the same transformation to the splines
+        for (auto &spline : splines)
+        {
+            for (auto &point : spline)
+            {
+                point -= center;
+                point /= maxDist;
+                point *= scale;
+            }
+        }
+
+        
+
+        // std::cout << splines[0][0].first.x << " " << splines[0][0].first.y << " " << splines[0][0].first.z << std::endl;
+
         for (int i = 0; i < nodesVec.size(); i++)
         {
             auto node = nodesVec[i];
             auto pos = positions[i];
 
-            std::cout << node->getName() << " " << to_string(pos) << std::endl;
+            // std::cout << node->getName() << " " << to_string(pos) << std::endl;
 
             ValueHelperRef<std::string> N(new ValueHelper(node->getName(), U" ", vec3(1, 0, 0)));
             N->state.setPosition(pos);
@@ -476,19 +522,25 @@ class EventGraph
 
             valueHelpers.push_back(std::make_pair(N, node));
 
-            for (auto &child : node->children)
+            // for (auto &child : node->children)
+            // {
+            //     auto childPos = positions[std::find(nodesVec.begin(), nodesVec.end(), child) - nodesVec.begin()];
+            //     LineHelperRef L(new LineHelper(pos, childPos, vec3(1, 0, 1)));
+            //     lineHelpers.push_back(std::make_pair(L, node));
+            // }
+
+            for (int j = 0; j < splines[i].size() - 1; j++)
             {
-                auto childPos = positions[std::find(nodesVec.begin(), nodesVec.end(), child) - nodesVec.begin()];
-                LineHelperRef L(new LineHelper(pos, childPos, vec3(1, 0, 1)));
+                LineHelperRef L(new LineHelper(splines[i][j], splines[i][j+1], vec3(1, 0, 1)));
                 lineHelpers.push_back(std::make_pair(L, node));
             }
         }
 
         model = (EntityModel{newObjectGroup()});
-        for (auto &valueHelper : valueHelpers)
-            model->add(valueHelper.first);
         for (auto &lineHelper : lineHelpers)
             model->add(lineHelper.first);
+        for (auto &valueHelper : valueHelpers)
+            model->add(valueHelper.first);
     }
 
     // update the model values by coloring the nodes and edges
@@ -505,10 +557,17 @@ class EventGraph
         for (auto &lineHelper : lineHelpers)
         {
             if (lineHelper.second->get())
-                lineHelper.first->color = vec3(0, 1, 0);
+                lineHelper.first->color = vec3(0, .2, 0);
             else
-                lineHelper.first->color = vec3(1, 0, 0);
+                lineHelper.first->color = vec3(.2, 0, 0);
         }
+    }
+
+    static void update()
+    {
+        for (auto &valueHelper : valueHelpers)
+            valueHelper.second->update();
+        updateModel();
     }
 
     static vec3 getNodePos(std::string name)

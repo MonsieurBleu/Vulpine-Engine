@@ -4,6 +4,8 @@
 
 using namespace glm;
 
+#include <vector>
+
 
 
 float random01Vec2(vec2 uv);
@@ -48,3 +50,39 @@ vec3 screenPosToModel(vec2 screenPos);
     float gold_noise3(vec3 coordinate, float seed);
 
     vec3 ColorHexToV(uint hex);
+
+/****** SPLINE ******/
+
+/**
+ * @brief This function computes the B-Spline curve given a set of control points
+ * 
+ * @param points - the control points
+ * @param spline - the output spline (as a list of points)
+ * @param numSegments - the number of segments to use for the spline (default is 10)
+ */
+inline void BSpline(const std::vector<vec3> &points, std::vector<vec3> &spline, int numSegments = 10)
+{
+    if (points.size() < 2)
+        return;
+
+    std::vector<vec3> controlPoints = points;
+    controlPoints.insert(controlPoints.begin(), controlPoints[0]);
+    controlPoints.push_back(controlPoints.back());
+
+    for (int i = 0; i < controlPoints.size() - 3; i++)
+    {
+        for (int j = 0; j < numSegments; j++)
+        {
+            float t = (float)j / (numSegments - 1);
+            float t2 = t * t;
+            float t3 = t2 * t;
+
+            vec3 p = 0.5f * ((-t3 + 2 * t2 - t) * controlPoints[i] +
+                             (3 * t3 - 5 * t2 + 2) * controlPoints[i + 1] +
+                             (-3 * t3 + 4 * t2 + t) * controlPoints[i + 2] +
+                             (t3 - t2) * controlPoints[i + 3]);
+
+            spline.push_back(p);
+        }
+    }
+}
