@@ -48,10 +48,10 @@ public:
 
     ObjectGroupRef copy();
 
-    const std::deque<ModelRef>& getMeshes() const {return meshes;};
-    const std::deque<ObjectGroupRef>& getChildren() const {return children;};
-    const std::deque<ModelStateRef>& getStates() const {return states;};
-    const std::deque<SceneLight>& getLights() const {return lights;};
+    std::deque<ModelRef>& getMeshes() {return meshes;};
+    std::deque<ObjectGroupRef>& getChildren(){return children;};
+    std::deque<ModelStateRef>& getStates(){return states;};
+    std::deque<SceneLight>& getLights(){return lights;};
 };
 
 #endif

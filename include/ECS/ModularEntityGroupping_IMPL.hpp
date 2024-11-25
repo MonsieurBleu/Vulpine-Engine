@@ -79,6 +79,10 @@ void ComponentModularity::synchronizeChildren(EntityRef parent)
 
 void ComponentModularity::Reparent(Entity& parent, EntityRef child, Entity& newParent)
 {
+
+    // std::cout << "REPARENTING CHILD : " << child->comp<EntityInfos>().name << "\t"
+    // << " TO PARENT " << newParent.comp<EntityInfos>().name << "\n";
+
     for(auto &i : ReparFuncs)
         if(child->state[i.ComponentID] && parent.state[i.ComponentID])
             i.element(parent, child, newParent);
@@ -104,11 +108,15 @@ bool ComponentModularity::canMerge(Entity& parent, EntityRef child)
     bool success = true;
 
     for(auto &i : CheckFuncs)
-        if(child->state[i.ComponentID])
+        if(!parent.state[i.ComponentID])
+        {
+            success = true;
+        }
+        else if(child->state[i.ComponentID])
             success &= i.element(parent, child);
         else
         {
-            WARNING_MESSAGE("TODO : Add message when there ar merge conflicts");
+            WARNING_MESSAGE("TODO : Add message when there are merge conflicts");
             break;
         }
     
@@ -129,23 +137,29 @@ void ComponentModularity::mergeChildren(Entity& parent)
     auto &children = parent.comp<EntityGroupInfo>().children;
     std::vector<EntityRef> newChildren;
 
-    for(auto c : children)
-    {
-        mergeChildren(*c);
-        Entity *ctmp = c.get();
+    std::vector<EntityRef> childrenCopy = children;
 
+    for(auto c : childrenCopy)
+    {
+        if(!c)
+        {   
+            WARNING_MESSAGE("EMPTY CHILDREN WHEN MERGING ENTITY " << parent.comp<EntityInfos>().name << "\n");
+            continue;
+        } 
+        
+        mergeChildren(*c);
+        
         if(canMerge(parent, c))
         {
-            assert(ctmp == c.get());
 
-            int tmpcnt = 0;
-            for(auto j : c->comp<EntityGroupInfo>().children)
+            auto c_childrenCopy = c->comp<EntityGroupInfo>().children;
+            for(auto j : c_childrenCopy)
             {
                 Reparent(*c, j, parent);
-                assert(ctmp == c.get());
+
+                newChildren.push_back(j);
             }
 
-            assert(ctmp == c.get());
             mergeChild(parent, c);
 
             c->comp<EntityGroupInfo>().markedForDeletion = true;
