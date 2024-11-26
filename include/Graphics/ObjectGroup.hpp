@@ -17,6 +17,24 @@ class FastUI_valueMenu;
 
 class ObjectGroup
 {
+
+    struct meshesToBeMerged
+    {
+        meshesToBeMerged(ModelRef m);
+
+        MeshMaterial material;
+        ShaderUniformGroup baseUniforms;
+        ShaderUniformGroup uniforms;
+        std::vector<Texture2D> maps;
+        std::vector<int> mapsLocation;
+
+        std::vector<ModelRef> models;
+
+        bool isCompatible(ModelRef m);
+    };
+
+
+
     friend Scene;
 
 protected:
@@ -26,6 +44,10 @@ protected:
     std::deque<ObjectGroupRef> children;
     std::deque<ModelRef> meshes;
     std::deque<SceneLight> lights;
+
+
+    void populateMeshesToBeMerged(std::vector<meshesToBeMerged> &mtbm);
+
 
 public:
     std::string name;
@@ -52,6 +74,14 @@ public:
     std::deque<ObjectGroupRef>& getChildren(){return children;};
     std::deque<ModelStateRef>& getStates(){return states;};
     std::deque<SceneLight>& getLights(){return lights;};
+
+    /*
+        Return a dupplicate of the group, 
+        with batched together compatible meshes that uses vertex packing.
+
+        Note : Animated, Batched or Instanced meshes can't be merged together.
+    */
+    ObjectGroupRef optimizedBatchedCopy();
 };
 
 #endif

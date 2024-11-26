@@ -10,6 +10,19 @@ using namespace glm;
 
 Texture2D::Texture2D(){}
 
+bool Texture2D::operator==(Texture2D &a)
+{
+    return 
+        loadedChannels == a.loadedChannels
+        && handle == a.handle
+        && _internalFormat == a._internalFormat
+        && _format == a._format
+        && _type == a._type
+        && _filter == a._filter
+        && _wrapMode == a._wrapMode
+        && _resolution == a._resolution;
+}
+
 Texture2D& Texture2D::setResolution(const ivec2 resolution)
 {
     _resolution = resolution;

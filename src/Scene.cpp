@@ -371,17 +371,20 @@ uint Scene::getPolyCount()
             if(m->defaultMode == GL_TRIANGLES)
                 if(m->state.hide != ModelStatus::HIDE && m->isCulled() && m->getVao() && m->getVao()->attributes.size())
                     {
-                        
-                        auto &a = m->getVao()->attributes[0];
-                        cnt += a.getVertexCount()/3;
+                        if(m->getVao().nbFaces)
+                            cnt += m->getVao().nbFaces;
+                        else
+                            cnt += m->getVao()->attributes[0].getVertexCount()/3;
                     }
 
     for(auto &m : unsortedMeshes)
         if(m->defaultMode == GL_TRIANGLES)
             if(m->state.hide != ModelStatus::HIDE && m->isCulled() && m->getVao() && m->getVao()->attributes.size())
             {
-                auto &a = m->getVao()->attributes[0];
-                cnt += a.getVertexCount()/3;
+                if(m->getVao().nbFaces)
+                    cnt += m->getVao().nbFaces;
+                else
+                    cnt += m->getVao()->attributes[0].getVertexCount()/3;
             }
 
     return cnt;

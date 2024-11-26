@@ -58,6 +58,10 @@ class VertexAttribute
         GLuint getLocation() const {return location;};
         GLuint getHandle() const {return handle;};
         GLuint getVertexCount() const {return vertexCount;};
+
+        GLenum getType(){return type;};
+        uint8 getPerVertexSize(){return perVertexSize;};
+        uint8 getPerValuesSize(){return perValuesSize;};
 };
 
 std::ostream& operator<<(std::ostream& os, const VertexAttribute &l);

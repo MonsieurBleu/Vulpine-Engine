@@ -160,6 +160,9 @@ class ShaderUniform
 
         ShaderUniform& setCount(int count);
 
+
+        bool operator==(const ShaderUniform &a);
+
         // ============| DEFAULT NO DATA
 
         ShaderUniform()
@@ -437,7 +440,6 @@ class ShaderUniformGroup
     friend std::ostream& operator<<(std::ostream& os, ShaderUniformGroup g);
 
     private : 
-        std::vector<ShaderUniform> uniforms;
 
         bool safe = false;
         bool autoCheckLocations = true;
@@ -445,6 +447,7 @@ class ShaderUniformGroup
         void sort();
 
     public : 
+        std::vector<ShaderUniform> uniforms;
 
         ShaderUniformGroup(bool autoCheckLocations = true) : autoCheckLocations(autoCheckLocations) {};
 

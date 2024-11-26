@@ -85,9 +85,42 @@ ShaderUniform& ShaderUniform::setCount(int count)
     return *this;
 }
 
+bool ShaderUniform::operator==(const ShaderUniform &a)
+{
+    if(
+        location != a.location
+        || dataState != a.dataState
+        || type != a.type
+        || _count != a._count
+        )
+        return false;
+
+    if(dataState == copiedInAdditionalData)
+    {
+        if(
+               additionalData[0] != a.additionalData[0]
+            || additionalData[1] != a.additionalData[1]
+            || additionalData[2] != a.additionalData[2]
+            || additionalData[3] != a.additionalData[3]
+            || additionalData[4] != a.additionalData[4]
+            || additionalData[5] != a.additionalData[5]
+            || additionalData[6] != a.additionalData[6]
+            || additionalData[7] != a.additionalData[7]
+        )
+            return false;
+    }
+    // else
+    // { 
+    //     if(data != a.data)
+    //         return false;
+    // }
+
+    return true;
+}
+
 ShaderUniformGroup::ShaderUniformGroup(std::vector<ShaderUniform> uniforms, bool autoCheckLocations) 
-                                      : uniforms(uniforms),
-                                        autoCheckLocations(autoCheckLocations)
+                                      : autoCheckLocations(autoCheckLocations),
+                                      uniforms(uniforms)
 {
     sort();
     if(autoCheckLocations)
@@ -218,3 +251,4 @@ std::vector<ShaderUniform>& operator+(std::vector<ShaderUniform>& a, ShaderUnifo
     
     return a;
 }
+

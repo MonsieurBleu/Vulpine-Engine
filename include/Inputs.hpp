@@ -6,6 +6,7 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <list>
 
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
@@ -80,8 +81,8 @@ struct ContinuousInput : public GenericInput
 
 namespace InputManager
 {
-    inline std::vector<EventInput> eventInputs;
-    inline std::vector<ContinuousInput> continuousInputs;
+    inline std::list<EventInput> eventInputs;
+    inline std::list<ContinuousInput> continuousInputs;
 
     // generic filter functions
     namespace Filters

@@ -83,6 +83,9 @@ class Mesh
         Mesh& setMap(Texture2D texture, int location);
         Mesh& setMap(int location, Texture2D texture);
         Mesh& removeMap(int location);
+
+        std::vector<Texture2D>& getMaps(){return maps;};
+        std::vector<int>& getMapsLocation(){return mapsLocation;};
         
         void bindAllMaps();
         void bindMap(int id, int location);

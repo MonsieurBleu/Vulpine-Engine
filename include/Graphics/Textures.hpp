@@ -35,6 +35,8 @@ class Texture2D
         Texture2D();
         ~Texture2D();
 
+        bool operator==(Texture2D &a);
+
         // TODO : add security when the texture is arleady generated
         Texture2D& setResolution(const ivec2 resolution);
         Texture2D& setInternalFormat(GLenum format);
