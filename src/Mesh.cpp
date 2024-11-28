@@ -21,6 +21,31 @@ MeshVao::MeshVao(VertexAttributeGroup *ptr)
 {
 }
 
+void MeshVao::generateEBO()
+{
+    if(!nbFaces || eboHandle.get())
+        return;
+
+    eboHandle = std::shared_ptr<GLuint>(new GLuint());
+
+    glBindVertexArray(this->get()->getHandle());
+
+    glGenBuffers(1, eboHandle.get());
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *eboHandle);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, nbFaces * sizeof(unsigned int), faces.get(), GL_STATIC_DRAW);
+
+    glBindVertexArray(0);
+}
+
+MeshVao::~MeshVao()
+{
+    if (eboHandle && *eboHandle && eboHandle.use_count() == 1)
+    {
+        glDeleteVertexArrays(1, eboHandle.get());
+    }
+}
+
+
 MeshMaterial::MeshMaterial(ShaderProgram *material, ShaderProgram *depthOnlyMaterial)
     : std::shared_ptr<ShaderProgram>(material), depthOnly(depthOnlyMaterial)
 {
@@ -63,6 +88,7 @@ Mesh &Mesh::setVao(MeshVao _vao)
 {
     vao = _vao;
     vao->generate();
+    vao.generateEBO();
     return *this;
 }
 
@@ -183,8 +209,11 @@ GLuint MeshModel3D::drawVAO(bool depthOnly)
 
     glBindVertexArray(vao->getHandle());
 
-    if(vao.faces.get())
-        glDrawElements(defaultMode, vao.nbFaces,  GL_UNSIGNED_INT, vao.faces.get());
+    if(vao.faces.get() && vao.eboHandle.get())
+    {
+        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *vao.eboHandle);
+        glDrawElements(defaultMode, vao.nbFaces,  GL_UNSIGNED_INT, 0);
+    }
     else
         glDrawArrays(defaultMode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
@@ -341,8 +370,8 @@ GLuint InstancedMeshModel3D::drawVAO(bool depthOnly)
 
     glBindVertexArray(vao->getHandle());
 
-    if(vao.faces.get())
-        glDrawElementsInstanced(defaultMode, vao.nbFaces, GL_UNSIGNED_INT, vao.faces.get(), drawnInstance);
+    if(vao.faces.get() && vao.eboHandle.get())
+        glDrawElementsInstanced(defaultMode, vao.nbFaces, GL_UNSIGNED_INT, 0, drawnInstance);
     else
         glDrawArraysInstanced(
             defaultMode,

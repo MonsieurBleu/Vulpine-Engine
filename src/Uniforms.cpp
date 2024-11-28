@@ -109,6 +109,7 @@ bool ShaderUniform::operator==(const ShaderUniform &a)
         )
             return false;
     }
+
     // else
     // { 
     //     if(data != a.data)

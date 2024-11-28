@@ -37,6 +37,14 @@ const std::string TERMINAL_NOTIF    = "\e[1;36m";
     << TERMINAL_WARNING << message \
     << TERMINAL_RESET << "\n\n";
 
+#define ERROR_MESSAGE(message) std::cerr \
+    << TERMINAL_ERROR << "ERROR \xBF from " \
+    << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
+    << TERMINAL_RESET << TERMINAL_ERROR << " at file " << __FILE__ << ":" << __LINE__ \
+    << "\n        \xC0\xC4\xC4 "\
+    << TERMINAL_WARNING << message \
+    << TERMINAL_RESET << "\n\n";
+
 /// FILES
 /*
     TODO : replace with a faster version, using C functions (like in readOBJ)

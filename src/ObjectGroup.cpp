@@ -1,6 +1,8 @@
 #include <Graphics/ObjectGroup.hpp>
 #include <iostream>
 
+#include <Utils.hpp>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
@@ -166,15 +168,15 @@ std::pair<vec3, vec3> ObjectGroup::getMeshesBoundingBox()
     return {minb, maxb};
 }
 
-ObjectGroup::meshesToBeMerged::meshesToBeMerged(ModelRef m)
+ObjectGroup::meshesToBeMerged::meshesToBeMerged(std::pair<ObjectGroup*, ModelRef> m)
 {
-    material = m->getMaterial();
+    material = m.second->getMaterial();
 
-    uniforms = m->uniforms;
-    baseUniforms = m->baseUniforms;
+    uniforms = m.second->uniforms;
+    baseUniforms = m.second->baseUniforms;
 
-    maps = m->getMaps();
-    mapsLocation = m->getMapsLocation();
+    maps = m.second->getMaps();
+    mapsLocation = m.second->getMapsLocation();
 
     models.push_back(m);
 }
@@ -230,19 +232,37 @@ void ObjectGroup::populateMeshesToBeMerged(std::vector<meshesToBeMerged> &mtbm)
         {
             if(i.isCompatible(m))
             {
-                i.models.push_back(m);
+                i.models.push_back({this, m});
                 isCompatible = true;
                 break;       
             }
         }
 
         if(!isCompatible)
-            mtbm.push_back(meshesToBeMerged(m));
+            mtbm.push_back(meshesToBeMerged({this, m}));
     }
+
+    meshes.clear();
 
     for(auto c : children)
     {
         c->populateMeshesToBeMerged(mtbm);
+    }
+}
+
+void ObjectGroup::removeEmptyChildren()
+{
+    for(int i = 0; i < children.size(); i++)
+    {
+        children[i]->removeEmptyChildren();
+
+        if(
+            children[i]->states.empty()
+            && children[i]->lights.empty()
+            && children[i]->meshes.empty()
+            && children[i]->children.empty()
+            )
+            remove(children[i--]);
     }
 }
 
@@ -256,14 +276,24 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
     output->states = states;
     output->lights = lights;
 
+    output->meshes = meshes;
+    for(auto c : children)
+        output->add(c->copy());
+        // output->add(c);
 
 
 
     std::vector<meshesToBeMerged> mtbm;
 
     /****** Creating meshes to be merged ******/
-    update(true);
-    populateMeshesToBeMerged(mtbm);
+    // update(true);
+    // populateMeshesToBeMerged(mtbm);
+
+    output->update(true);
+    output->populateMeshesToBeMerged(mtbm);
+
+
+    // output->children = children;
 
 
     // for(auto &m : mtbm)
@@ -272,7 +302,8 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
 
     //     for(auto i : m.models)
     //     {
-    //         std::cout << "Model " << i->getVao()->getHandle() << "\n";
+    //         std::cout << "Model " << i.second->getVao()->getHandle() << "\t ";
+    //         std::cout << i.first->getMeshes().size() << "\n";
     //     }
     // }
 
@@ -280,14 +311,14 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
 
     for(auto &compatiblesMeshes : mtbm)
     {
-        int size = compatiblesMeshes.models[0]->getVao()->attributes.size();
+        int size = compatiblesMeshes.models[0].second->getVao()->attributes.size();
 
         bool usePacking = false;
         bool use3Dpos = false;
 
         if(size > 0)
         {
-            auto &attr = compatiblesMeshes.models[0]->getVao()->attributes[0];
+            auto &attr = compatiblesMeshes.models[0].second->getVao()->attributes[0];
             usePacking = 
                 attr.getPerVertexSize() == 4 && 
                 (attr.getType() == GL_INT || attr.getType() == GL_UNSIGNED_INT);
@@ -295,9 +326,9 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
 
         if(size > 2)
         {
-            auto &attr = compatiblesMeshes.models[0]->getVao()->attributes[0];
-            auto &attrNor = compatiblesMeshes.models[0]->getVao()->attributes[1];
-            auto &attrUV = compatiblesMeshes.models[0]->getVao()->attributes[2];
+            auto &attr = compatiblesMeshes.models[0].second->getVao()->attributes[0];
+            auto &attrNor = compatiblesMeshes.models[0].second->getVao()->attributes[1];
+            auto &attrUV = compatiblesMeshes.models[0].second->getVao()->attributes[2];
 
             use3Dpos = 
                 attr.getPerVertexSize() == 3 && attr.getType() == GL_FLOAT && 
@@ -306,12 +337,13 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
         }
 
 
-        if(compatiblesMeshes.models.size() == 1 || (!usePacking && !use3Dpos) 
-        // || !usePacking
-        )
+        if(compatiblesMeshes.models.size() == 1 || (!usePacking && !use3Dpos))
         {
+            // for(auto m : compatiblesMeshes.models)
+            //     output->add(m.second);
+
             for(auto m : compatiblesMeshes.models)
-                output->add(m);
+                m.first->add(m.second);
 
             continue;
         }
@@ -321,8 +353,8 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
 
         for(auto m : compatiblesMeshes.models)
         {
-            finalVertexCount += m->getVao()->attributes[0].getVertexCount();
-            finalFacesCount  += m->getVao().nbFaces;
+            finalVertexCount += m.second->getVao()->attributes[0].getVertexCount();
+            finalFacesCount  += m.second->getVao().nbFaces;
         }
 
         GenericSharedBuffer buff1(new char[(usePacking ? sizeof(ivec4) : sizeof(vec3))*(finalVertexCount)]);
@@ -340,29 +372,35 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
         int vid = 0;
         int fid = 0;
 
-        /*
-            TODO : add AABB gestion
-        */
+        vec3 aabbmin(1e12);
+        vec3 aabbmax(-1e12); 
+
         for(auto m : compatiblesMeshes.models)
         {
-            mat4 transform = invModel * m->state.modelMatrix;
+            mat4 transform = invModel * m.second->state.modelMatrix;
 
-            auto *a = m->getVao()->attributes[0].getBufferAddr();
-            auto *b = use3Dpos ? m->getVao()->attributes[1].getBufferAddr() : nullptr;
-            auto *c = use3Dpos ? m->getVao()->attributes[2].getBufferAddr() : nullptr;
+            auto *a = m.second->getVao()->attributes[0].getBufferAddr();
+            auto *b = use3Dpos ? m.second->getVao()->attributes[1].getBufferAddr() : nullptr;
+            auto *c = use3Dpos ? m.second->getVao()->attributes[2].getBufferAddr() : nullptr;
 
-            int vcount = m->getVao()->attributes[0].getVertexCount();
+            vec3 mmax = m.second->getVao()->getAABBMax();
+            vec3 mmin = m.second->getVao()->getAABBMin();
+            mmax = vec3(transform * vec4(mmax, 1));
+            mmin = vec3(transform * vec4(mmin, 1));
 
-            /*
-                TODO : add normals
-            */
+            aabbmax = max(aabbmax, max(mmax, mmin));
+            aabbmin = min(aabbmin, min(mmax, mmin));
+
+            int vcount = m.second->getVao()->attributes[0].getVertexCount();
+
             if(usePacking)
                 for(int i = 0; i < vcount; i++, vid++)
                 {
-                    ivec4 v = ((ivec4*)a)[i];
+                    uvec4 v = ((ivec4*)a)[i];
 
                     vec3 modelPosition = vec3(ivec3(ivec3(v) & (0x00FFFFFF)) - 0x800000)*1e-3f;
                     modelPosition = vec3(transform * vec4(modelPosition, 1));
+
                     ivec3 packedPosition = (ivec3(modelPosition*1e3f) + 0x800000) & (0x00FFFFFF);
 
                     v.x &= ~(0x00FFFFFF);
@@ -373,6 +411,19 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
 
                     v.z &= ~(0x00FFFFFF);
                     v.z |= packedPosition.z;
+
+                    vec3 normal = normalize(vec3((v >> 24u) & (0x7Fu)) * sign(0.1f - vec3((v>>24u)&(0x80u))));
+                    normal = normalize(vec3(transform * vec4(normal, 0)));
+
+                    float maxComponent = round(127.f*max(abs(normal.x), max(abs(normal.y), abs(normal.z))));
+
+                    uvec3 cubeN = abs(round(normal * maxComponent));                   
+                    cubeN |= ivec3(max(sign(-normal)*128.f, vec3(0)));
+
+                    v.x &= (0x00FFFFFF);
+                    v.y &= (0x00FFFFFF);
+                    v.z &= (0x00FFFFFF);
+                    v |= uvec4(cubeN.x<<24, cubeN.y<<24, cubeN.z<<24, 0);
 
                     ((ivec4*)buff1.get())[vid] = v;
                 }
@@ -390,11 +441,11 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
                     ((vec2*)buff3.get())[vid] = ((vec2*)c)[i];
                 }
             
-            int fcount = m->getVao().nbFaces;
+            int fcount = m.second->getVao().nbFaces;
 
             for(int i = 0; i < fcount/3; i++, fid++)
             {
-                ((ivec3*)nfaces.get())[fid] = ((ivec3*)m->getVao().faces.get())[i] + (vid - vcount);
+                ((ivec3*)nfaces.get())[fid] = ((ivec3*)m.second->getVao().faces.get())[i] + (vid - vcount);
             }
         }
 
@@ -418,8 +469,9 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
         batch.nbFaces = finalFacesCount;
         batch.faces = nfaces;
 
-        auto m = compatiblesMeshes.models[0]->copy();
+        auto m = compatiblesMeshes.models[0].second->copy();
         m->setVao(batch);
+        batch->setAABB(aabbmin, aabbmax);
 
         m->state.setPosition(vec3(0)).scaleScalar(1);
 
@@ -427,9 +479,11 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
             m->state.setQuaternion(quat());
         else    
             m->state.setRotation(vec3(0));
-
+        
         output->add(m);
     }
+
+    output->removeEmptyChildren();
 
     return output;
 }   

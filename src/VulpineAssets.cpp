@@ -86,6 +86,9 @@ MeshVao loadVulpineMesh(const char *filename)
 
     vao->setAABB(h.AABBmin, h.AABBmax);
 
+    vao->generate();
+    vao.generateEBO();
+
     return vao;
 };
 

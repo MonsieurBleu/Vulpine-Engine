@@ -43,6 +43,11 @@ class MeshVao : public std::shared_ptr<VertexAttributeGroup>
         uint nbFaces = 0;
         GenericSharedBuffer faces;  
         bool animated = false;
+
+        void generateEBO();
+        std::shared_ptr<GLuint> eboHandle;
+
+        ~MeshVao();
 };
 
 class Mesh

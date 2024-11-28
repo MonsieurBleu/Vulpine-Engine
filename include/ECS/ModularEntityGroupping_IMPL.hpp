@@ -10,7 +10,7 @@ COMPONENT_IMPL(EntityInfos)
 
 Entity::~Entity()
 {
-    // std::cout << "Destroying Entity " << comp<EntityInfos>().name << "\t" << this << "\n";
+    // std::cout << "Destroying Entity " << toStr() << "\n";
 
     Component<EntityInfos>::elements[ids[ENTITY_LIST]].enabled = false;
 
@@ -22,6 +22,8 @@ Entity::~Entity()
 
             if(ids[i] == ComponentGlobals::maxID[i]-1)
                 ComponentGlobals::maxID[i]--;
+            
+            ComponentGlobals::status[i][ids[i]].enabled = false;
         }
 
     comp<EntityGroupInfo>().children.clear();

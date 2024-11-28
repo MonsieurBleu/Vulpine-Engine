@@ -54,12 +54,21 @@ GENERATE_ENUM(ComponentCategory,
 
 class Entity;
 
+struct CategoryStatus
+{
+    bool enabled = false;
+};
+
 
 struct ComponentGlobals
 {
+
+
     static inline int lastID = 0;
     static inline int lastFreeID[ComponentCategory::END] = {0};
     static inline int maxID[ComponentCategory::END] = {0};
+
+    static inline CategoryStatus status[ComponentCategory::END][MAX_ENTITY];
 
     static inline std::unordered_map<std::string, int> * ComponentNamesMap;
     static inline std::vector<std::string> ComponentNames;
@@ -232,9 +241,18 @@ void Component<T>::insert(Entity &entity, const T& data)
     {
         int &lastFreeID = ComponentGlobals::lastFreeID[category];
         id = lastFreeID;
+        ComponentGlobals::status[category][id].enabled = true;
         int maxID = elements.size();
-        while(elements[++lastFreeID].enabled && lastFreeID < maxID);
+
+        // while(elements[++lastFreeID].enabled && lastFreeID < maxID);
+
+        while(ComponentGlobals::status[category][++lastFreeID].enabled  && lastFreeID < maxID && lastFreeID < MAX_ENTITY);
+
+        if(lastFreeID >= MAX_ENTITY-1)
+            ERROR_MESSAGE("ECS has reached max Entity number. Things are goind to be bad!");
+
         ComponentGlobals::maxID[category] = std::max(ComponentGlobals::maxID[category], lastFreeID);
+
     }
 
     elements[id] = {data, &entity, true, false, entity.ids[ENTITY_LIST]};
@@ -327,6 +345,30 @@ struct GlobalComponentToggler
             });
 
             ManageGarbage<T>();
+        }
+    }
+
+    static bool needUpdate()
+    {
+        if(activated)
+        {
+            bool uptodate = true;
+
+            System<EntityInfos>([& uptodate](Entity &entity){
+                uptodate &= entity.hasComp<T>();
+            });
+
+            return !uptodate;
+        }
+        else
+        {
+            bool uptodate = true;
+
+            System<EntityInfos>([& uptodate](Entity &entity){
+                uptodate &= !entity.hasComp<T>();
+            });
+
+            return !uptodate;
         }
     }
 };

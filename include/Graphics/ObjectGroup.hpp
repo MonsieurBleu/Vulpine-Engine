@@ -20,7 +20,7 @@ class ObjectGroup
 
     struct meshesToBeMerged
     {
-        meshesToBeMerged(ModelRef m);
+        meshesToBeMerged(std::pair<ObjectGroup*, ModelRef> m);
 
         MeshMaterial material;
         ShaderUniformGroup baseUniforms;
@@ -28,7 +28,7 @@ class ObjectGroup
         std::vector<Texture2D> maps;
         std::vector<int> mapsLocation;
 
-        std::vector<ModelRef> models;
+        std::vector<std::pair<ObjectGroup*, ModelRef>> models;
 
         bool isCompatible(ModelRef m);
     };
@@ -47,6 +47,7 @@ protected:
 
 
     void populateMeshesToBeMerged(std::vector<meshesToBeMerged> &mtbm);
+    void removeEmptyChildren();
 
 
 public:
