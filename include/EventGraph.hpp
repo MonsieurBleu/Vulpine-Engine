@@ -392,7 +392,6 @@ inline void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vec
 
 
     agclose(g);
-
 }
 
 class EventGraph

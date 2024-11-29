@@ -102,6 +102,8 @@ namespace InputManager
     void clearEventInputs();
     void clearContinuousInputs();
 
+    vec2 getMousePosition();
+
     std::string getInputKeyString(std::string inputName);
 
 };
