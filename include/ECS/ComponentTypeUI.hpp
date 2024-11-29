@@ -93,7 +93,7 @@ struct WidgetBox
 
     bool useClassicInterpolation = false;
 
-    void set(vec2 xrange, vec2 yrange);
+    WidgetBox& set(vec2 xrange, vec2 yrange);
 
     FittingFunc specialFittingScript;
 
