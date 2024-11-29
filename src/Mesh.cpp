@@ -126,6 +126,9 @@ bool Mesh::cull() { return true; };
 
 bool MeshModel3D::cull()
 {
+    if (!vao.get())
+        return culled = false;
+        
     if (state.hide == ModelStatus::HIDE)
         return culled = false;
 
