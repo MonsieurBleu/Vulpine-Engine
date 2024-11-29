@@ -251,3 +251,101 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
 
 }
 
+void DragController2D::init()
+{
+    position = vec2(0);
+    lastPosition = vec2(0);
+    delta = vec2(0);
+    dragging = false;
+    clicked = false;
+}
+
+void DragController2D::clean()
+{
+    position = vec2(0);
+    lastPosition = vec2(0);
+    delta = vec2(0);
+    dragging = false;
+    clicked = false;
+}
+
+// drag controller
+// doesn't take into account the camera, only the mouse position
+// drags the position variable on a 2d plane
+
+void DragController2D::update()
+{
+    clicked = false;
+
+    if (globals.mouseScrollOffset().y != 0)
+    {
+        scale *= 1.0 + globals.mouseScrollOffset().y * 0.1;
+        globals.clearMouseScroll();
+    }
+
+    delta = vec2(0);
+}
+
+bool DragController2D::inputs(GLFWKeyInfo& input)
+{
+    if(input.action == GLFW_PRESS)
+    {
+        if(input.key == GLFW_MOUSE_BUTTON_LEFT)
+        {
+            mouseDown = true;
+
+            return true;
+        }
+    }
+    else if(input.action == GLFW_RELEASE)
+    {
+        if(input.key == GLFW_MOUSE_BUTTON_LEFT)
+        {
+            if (!dragging)
+                clicked = true;
+            dragging = false;
+            mouseDown = false;
+
+            delta = vec2(0);
+            lastPosition = vec2(0);
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void DragController2D::mouseEvent(vec2 pos, GLFWwindow* window)
+{
+    if(mouseDown)
+    {
+        dragging = true;
+        
+        vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
+        vec2 sensitivity(2.0);
+        // adjust sensitivity based on the scale parameter
+        sensitivity *= scale;
+
+        vec2 dir = sensitivity * ((pos-center)/center);
+
+        if(globals.windowHeight() > globals.windowWidth())
+            dir.y *= globals.windowHeight()/globals.windowWidth();
+        else
+            dir.x *= globals.windowWidth()/globals.windowHeight();
+
+        
+
+        if (lastPosition == vec2(0))
+            lastPosition = dir;
+        vec2 off = dir - lastPosition;
+
+        // std::cout << "off : vec2(" << off.x << ", " << off.y << ")" << std::endl;
+
+        lastPosition = dir;
+
+        delta = off;
+
+        position += off;
+    }
+}

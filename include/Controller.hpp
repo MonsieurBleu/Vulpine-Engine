@@ -23,7 +23,7 @@ class Controller
         virtual bool inputs(GLFWKeyInfo& input){return false;};
 
         /**
-         * @brief Called each time the mouse mouve
+         * @brief Called each time the mouse moves
          */
         virtual void mouseEvent(vec2 dir, GLFWwindow* window);
 
@@ -72,3 +72,30 @@ class OrbitController : public Controller
         void mouseEvent(vec2 dir, GLFWwindow* window);
 };
 
+
+// drag controller
+// doesn't take into account the camera, only the mouse position
+class DragController2D : public Controller
+{
+    protected : 
+        vec2 position = vec2(0);
+        vec2 lastPosition = vec2(0);
+        vec2 delta = vec2(0);
+        float scale = 1.f;
+        bool mouseDown = false;
+        bool dragging = false;
+        bool clicked = false;
+
+    public : 
+        virtual void update();
+        virtual bool inputs(GLFWKeyInfo& input);
+        void clean();
+        void init();
+
+        void mouseEvent(vec2 dir, GLFWwindow* window);
+
+        vec2 getPosition(){return position;};
+        vec2 getDelta(){return delta;};
+        bool isDragging(){return dragging;};
+        float getScale(){return scale;};
+};

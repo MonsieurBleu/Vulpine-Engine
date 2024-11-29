@@ -5,6 +5,7 @@
 
 #include <string>
 #include <chrono>
+#include <glm/glm.hpp>
 
 
 /// TERMINAL
@@ -108,5 +109,74 @@ inline constexpr double fromDayMonth(int day, int month)
 }
 
 bool fileExists(const char *path);
+
+// rgba user defined literal
+// source: https://stackoverflow.com/questions/66813961/c-constexpr-constructor-for-colours
+namespace colours
+{
+struct Colour
+{
+    std::uint8_t r;
+    std::uint8_t g;
+    std::uint8_t b;
+    std::uint8_t a;
+
+    constexpr operator glm::vec3() const
+    {
+        return {r / 255.0f, g / 255.0f, b / 255.0f};
+    }
+    constexpr operator glm::vec4() const
+    {
+        return {r / 255.0f, g / 255.0f, b / 255.0f, a / 255.0f};
+    }
+};
+
+// helper to display values
+std::ostream inline &operator<<(std::ostream &os, const Colour &c)
+{
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0') << '{' << std::setw(2) << static_cast<int>(c.r) << ',' << std::setw(2)
+        << static_cast<int>(c.g) << ',' << std::setw(2) << static_cast<int>(c.b) << ',' << std::setw(2)
+        << static_cast<int>(c.a) << '}';
+    return os << oss.str();
+}
+
+// decode a nibble
+constexpr inline std::uint8_t nibble(char n)
+{
+    if (n >= '0' && n <= '9')
+        return n - '0';
+    return n - 'a' + 10;
+}
+
+// decode a byte
+constexpr inline std::uint8_t byte(const char *b)
+{
+    return nibble(b[0]) << 4 | nibble(b[1]);
+}
+
+// User-defined literals - These don't care if you start with '#' or
+// if the strings have the correct length.
+
+constexpr int roff = 1; // offsets in C strings
+constexpr int goff = 3;
+constexpr int boff = 5;
+constexpr int aoff = 7;
+
+namespace literals
+{
+constexpr Colour inline operator""_rgb(const char *s, std::size_t)
+{
+    return {byte(s + roff), byte(s + goff), byte(s + boff), 0xff};
+}
+
+constexpr Colour inline operator""_rgba(const char *s, std::size_t)
+{
+    return {byte(s + roff), byte(s + goff), byte(s + boff), byte(s + aoff)};
+}
+}
+} // namespace colours
+
+using namespace colours::literals;
 
 #endif
