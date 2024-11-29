@@ -120,3 +120,10 @@ std::string InputManager::getInputKeyString(std::string inputName)
 
     return keyString;
 }
+
+vec2 InputManager::getMousePosition()
+{
+    double x, y;
+    glfwGetCursorPos(globals.getWindow(), &x, &y);
+    return vec2(x, y);
+}
