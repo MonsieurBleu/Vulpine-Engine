@@ -33,6 +33,8 @@ struct WidgetState
     bool upToDate = false;
     ModelStatus status = ModelStatus::UNDEFINED;
     ModelStatus statusToPropagate = ModelStatus::UNDEFINED;
+
+    int updateCounter = 0;
 };
 
 class Entity;
@@ -87,11 +89,19 @@ struct WidgetBox
     vec2 lastMin;
     vec2 lastMax;
 
+    vec2 displayRangeMin = vec2(-UNINITIALIZED_FLOAT);
+    vec2 displayRangeMax = vec2(UNINITIALIZED_FLOAT);
+
     float depth = 0.f;
 
     float lastChangeTime = 0.f;
 
     bool useClassicInterpolation = false;
+
+    bool isUnderCursor = false;
+    bool areChildrenUnderCurosor = false;
+
+    vec2 scrollOffset = vec2(0);
 
     WidgetBox& set(vec2 xrange, vec2 yrange);
 

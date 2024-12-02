@@ -115,11 +115,15 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     vec2 tmpMin = box.min;
     vec2 tmpMax = box.max;
 
+    vec2 off = child.get() != &parent && parent.hasComp<WidgetBox>() ? parent.comp<WidgetBox>().scrollOffset : vec2(0);
+
     /********** MODYFING BOX VALUES **********/
     if(&parent != child.get())
     {
         auto &parentBox = parent.comp<WidgetBox>();
         box.depth = parentBox.depth+0.0001;
+
+        box.useClassicInterpolation = box.useClassicInterpolation ? true : parentBox.useClassicInterpolation;
 
         if(box.specialFittingScript)
             box.specialFittingScript(&parent, child.get());
@@ -205,14 +209,39 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         {
             parentBox.childrenMax = max(parentBox.childrenMax, box.max);
             parentBox.childrenMax = max(parentBox.childrenMax, box.min);
-            parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMax);
-            parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMin);
+            // parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMax);
+            // parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMin);
 
             parentBox.childrenMin = min(parentBox.childrenMin, box.max);
             parentBox.childrenMin = min(parentBox.childrenMin, box.min);
-            parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMax);
-            parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMin);
+            // parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMax);
+            // parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMin);
+
+
         }
+
+        if(parentBox.displayRangeMin != vec2(-UNINITIALIZED_FLOAT))
+        {
+            box.displayRangeMin = parentBox.displayRangeMin;
+            // box.displayRangeMin = max(box.displayRangeMin, parentBox.displayRangeMin);
+        }
+
+
+        if(parentBox.displayRangeMax != vec2(UNINITIALIZED_FLOAT))
+        {
+            box.displayRangeMax = parentBox.displayRangeMax;
+            // box.displayRangeMax = min(box.displayRangeMax, parentBox.displayRangeMax);
+        }
+
+
+        box.min += off;
+        box.max += off;
+
+        // box.min = max(box.displayRangeMin, box.min);
+        // box.max = max(box.displayRangeMin, box.max);
+
+        // box.min = min(box.displayRangeMax, box.min);
+        // box.max = min(box.displayRangeMax, box.max);
 
     }
     else
@@ -294,6 +323,21 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     box.displayMin = mix(box.lastMin, box.min, a);
     box.displayMax = mix(box.lastMax, box.max, a);
 
+
+    box.displayMin = max(box.displayRangeMin, box.displayMin);
+    box.displayMax = max(box.displayRangeMin, box.displayMax);
+
+    box.displayMin = min(box.displayRangeMax, box.displayMin);
+    box.displayMax = min(box.displayRangeMax, box.displayMax);
+
+
+
+    // if(box.displayRangeMax != vec2(UNINITIALIZED_FLOAT))
+    // {
+    //     std::cout << "MAX = " << box.displayRangeMax.y << "\t";
+    //     std::cout << "RESULT = " << box.displayMax.y << "\n";
+    // }
+
     // if(hidden) return;
 
     /*
@@ -350,6 +394,8 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 {
     auto &up = child->comp<WidgetState>();
 
+    up.updateCounter ++;
+
     bool isIndirectHST = child->hasComp<WidgetButton>() && child->comp<WidgetButton>().type == WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT;
 
     if(&parent != child.get())
@@ -359,11 +405,11 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
         switch (parentUp.statusToPropagate)
         {
             case ModelStatus::HIDE :
-            // case ModelStateHideStatus::UNDEFINED :
                 up.status = ModelStatus::HIDE;
                 up.statusToPropagate = up.status;
                 break;
             
+            // case ModelStatus::UNDEFINED :
             case ModelStatus::SHOW :
                 if(child->hasComp<WidgetBox>() && up.status == ModelStatus::HIDE)
                 {
@@ -373,12 +419,13 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
                     // b.lastMax.y = b.min.y;
                     // b.lastMax.y = b.max.y;
                     // b.lastChangeTime = globals.appTime.getElapsedTime();
-                    
-                    b.set(vec2(b.initMin.x ,b.initMax.x), vec2(b.initMin.y , b.initMax.y));
+                    if(!b.useClassicInterpolation)
+                        b.set(vec2(b.initMin.x ,b.initMax.x), vec2(b.initMin.y , b.initMax.y));
                     // b.set(vec2(0), vec2(0));
                 }
 
-                up.status = ModelStatus::SHOW;
+                // if(up.status != ModelStatus::HIDE)
+                    up.status = ModelStatus::SHOW;
 
                 if(!child->hasComp<WidgetButton>() || child->comp<WidgetButton>().type != WidgetButton::Type::HIDE_SHOW_TRIGGER)
                     up.statusToPropagate = ModelStatus::SHOW;
@@ -414,8 +461,30 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
                         for(auto c : p->comp<EntityGroupInfo>().children)
                             if(c.get() != e)
                                 c->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
+                    
+                    // e->comp<WidgetState>().statusToPropagate = ModelStatus::SHOW;
 
-                    e->comp<WidgetState>().statusToPropagate = ModelStatus::SHOW;
+                    auto &newStatus = e->comp<WidgetState>().status;
+                    switch (newStatus)
+                    {
+                    case ModelStatus::UNDEFINED :
+                        e->comp<WidgetState>().statusToPropagate = ModelStatus::UNDEFINED;
+                        // newStatus = ModelStatus::SHOW;
+                        break;
+                    
+                    case ModelStatus::HIDE : 
+                        e->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
+
+                    case ModelStatus::SHOW :
+                        e->comp<WidgetState>().statusToPropagate = ModelStatus::SHOW;
+                        // e->comp<WidgetState>().statusToPropagate = ModelStatus::UNDEFINED;
+
+                        // std::cout << e->comp<EntityInfos>().name << "\n";
+                        break;
+
+                    default:
+                        break;
+                    }
                 }
             break;
 
@@ -427,14 +496,16 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
     if(up.statusToPropagate == ModelStatus::UNDEFINED)
         up.statusToPropagate = up.status;
 
+    auto status = up.updateCounter > 2 ? up.status : ModelStatus::HIDE;
+
     if(child->hasComp<WidgetBackground>() && child->comp<WidgetBackground>().tile.get())
-        child->comp<WidgetBackground>().tile->setHideStatus(up.status);
-    
+        child->comp<WidgetBackground>().tile->setHideStatus(status);
+
     if(child->hasComp<WidgetText>() && child->comp<WidgetText>().mesh.get())
-        child->comp<WidgetText>().mesh->state.setHideStatus(up.status);
+        child->comp<WidgetText>().mesh->state.setHideStatus(status);
 
     if(child->hasComp<WidgetSprite>() && child->comp<WidgetSprite>().sprite.get())
-        child->comp<WidgetSprite>().sprite->state.setHideStatus(up.status);
+        child->comp<WidgetSprite>().sprite->state.setHideStatus(status);
 }
 
 // COMPONENT_DEFINE_SYNCH(WidgetStyle)
@@ -529,6 +600,15 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
     static Entity *lastEntityClicked = nullptr;
     if(!down)
         lastEntityClicked = nullptr;
+
+    System<WidgetBox>([screenPos, down, click](Entity &entity){
+        auto &box = entity.comp<WidgetBox>();
+        vec2 cursor = ((screenPos-box.min)/(box.max - box.min));
+        box.isUnderCursor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;
+
+        cursor = ((screenPos-box.childrenMin)/(box.childrenMax - box.childrenMin));
+        box.areChildrenUnderCurosor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;
+    });
 
     System<WidgetBox, WidgetButton, WidgetState>([screenPos, down, click](Entity &entity)
     {
@@ -643,7 +723,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         if(state.status == ModelStatus::HIDE)
             return;
 
-        if(cursor.x < 0 || cursor.y < 0 || cursor.x > 1 || cursor.y > 1)
+        if(!box.isUnderCursor)
             return;
 
         if(click)
