@@ -125,11 +125,11 @@ struct WidgetBackground
 
 struct WidgetButton 
 {
-    typedef std::function<void(float value)> InteractFunc;
-    typedef std::function<float()> UpdateFunc;
+    typedef std::function<void(Entity *caller, float value)> InteractFunc;
+    typedef std::function<float(Entity *caller)> UpdateFunc;
 
-    typedef std::function<void(vec2 value)> InteractFunc2D;
-    typedef std::function<vec2()> UpdateFunc2D;
+    typedef std::function<void(Entity *caller, vec2 value)> InteractFunc2D;
+    typedef std::function<vec2(Entity *caller)> UpdateFunc2D;
 
     enum Type : uint8
     {

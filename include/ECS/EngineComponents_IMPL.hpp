@@ -620,11 +620,11 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         auto &group = entity.comp<EntityGroupInfo>();
 
         if(button.valueUpdate)
-            button.cur = button.valueUpdate();
+            button.cur = button.valueUpdate(&entity);
         
         if(button.valueUpdate2D)
         {
-            vec2 uv = button.valueUpdate2D();
+            vec2 uv = button.valueUpdate2D(&entity);
             button.cur = uv.x;
             button.cur2 = uv.y;
         }
@@ -656,7 +656,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                     v = round(v*button.padding)/button.padding;
                     button.cur = button.min + v*(button.max - button.min);
                     
-                    button.valueChanged(button.cur);
+                    button.valueChanged(&entity, button.cur);
 
                 }
                 if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
@@ -676,7 +676,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                     button.cur = button.min + v.x*(button.max - button.min);
                     button.cur2 = button.min + v.y*(button.max - button.min);
                     
-                    button.valueChanged2D(vec2(button.cur, button.cur2));
+                    button.valueChanged2D(&entity, vec2(button.cur, button.cur2));
 
                 }
                 if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
@@ -699,14 +699,14 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                         text.pop_back();
 
                         if(button.valueChanged)
-                            button.valueChanged(button.cur);
+                            button.valueChanged(&entity, button.cur);
                     }
                     if(click && (cursor.x < 0 || cursor.y < 0 || cursor.x > 1 || cursor.y > 1))
                     {
                         globals.endTextInputs(&entity);
 
                         if(button.valueChanged)
-                            button.valueChanged(button.cur);
+                            button.valueChanged(&entity, button.cur);
                     }
                 }
 
@@ -771,7 +771,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                 if(click)
                 {
                     button.cur = button.cur == 0.f ? 1.f : 0.f;
-                    button.valueChanged(button.cur);
+                    button.valueChanged(&entity, button.cur);
                 }
                 break;
 
