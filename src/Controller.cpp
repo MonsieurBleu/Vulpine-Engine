@@ -2,6 +2,10 @@
 #include <Globals.hpp>
 #include <MathsUtils.hpp>
 
+#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+
 void SpectatorController::clean()
 {
     sprintActivated = false;
@@ -293,8 +297,6 @@ bool DragController2D::inputs(GLFWKeyInfo& input)
         if(input.key == GLFW_MOUSE_BUTTON_LEFT)
         {
             mouseDown = true;
-
-            return true;
         }
     }
     else if(input.action == GLFW_RELEASE)
@@ -308,8 +310,6 @@ bool DragController2D::inputs(GLFWKeyInfo& input)
 
             delta = vec2(0);
             lastPosition = vec2(0);
-
-            return true;
         }
     }
 
@@ -323,29 +323,20 @@ void DragController2D::mouseEvent(vec2 pos, GLFWwindow* window)
         dragging = true;
         
         vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
-        vec2 sensitivity(2.0);
+        vec2 sensitivity(1.5);
         // adjust sensitivity based on the scale parameter
-        sensitivity *= scale;
+        // sensitivity /= scale;
 
-        vec2 dir = sensitivity * ((pos-center)/center);
+        vec2 posNDC = (pos-center)/center;
 
-        if(globals.windowHeight() > globals.windowWidth())
-            dir.y *= globals.windowHeight()/globals.windowWidth();
-        else
-            dir.x *= globals.windowWidth()/globals.windowHeight();
-
-        
+        posNDC *= sensitivity;
 
         if (lastPosition == vec2(0))
-            lastPosition = dir;
-        vec2 off = dir - lastPosition;
+            lastPosition = posNDC;
 
-        // std::cout << "off : vec2(" << off.x << ", " << off.y << ")" << std::endl;
+        delta = posNDC - lastPosition;
 
-        lastPosition = dir;
-
-        delta = off;
-
-        position += off;
+        position += delta;
+        lastPosition = posNDC;
     }
 }

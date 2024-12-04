@@ -28,10 +28,11 @@ class EventNode : public std::enable_shared_from_this<EventNode>
   protected:
     bool state = false;
     std::string name;
+    std::string label;
     std::vector<EventNodePtr> children;
 
   public:
-    EventNode(std::string name) : name(name)
+    EventNode(std::string name, std::string label = "") : name(name), label(label)
     {
     }
     
@@ -110,6 +111,11 @@ class EventNode : public std::enable_shared_from_this<EventNode>
                 child->print(depth + tab, tab, shared_from_this(), explored);
     }
 
+    std::string getLabel()
+    {
+        return label;
+    }
+
     friend class EventGraph;
     friend void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions, std::vector<std::vector<vec3>> &splines);
 };
@@ -123,7 +129,7 @@ class EventNodeAnd : public EventNode
     static inline int count = 0;
 
   public:
-    EventNodeAnd() : EventNode("AND" + std::to_string(count++))
+    EventNodeAnd(std::string label = "") : EventNode("AND_" + std::to_string(count++), label)
     {
     }
 
@@ -185,7 +191,7 @@ class EventNodeOr : public EventNode
     static inline int count = 0;
 
   public:
-    EventNodeOr() : EventNode("OR" + std::to_string(count++))
+    EventNodeOr(std::string label = "") : EventNode("OR_" + std::to_string(count++), label)
     {
     }
 
@@ -247,7 +253,7 @@ class EventNodeNot : public EventNode
     static inline int count = 0;
 
   public:
-    EventNodeNot() : EventNode("NOT" + std::to_string(count++))
+    EventNodeNot(std::string label = "") : EventNode("NOT_" + std::to_string(count++), label)
     {
     }
 
@@ -398,7 +404,7 @@ class EventGraph
 {
   private:
     static inline std::unordered_map<std::string, EventNodePtr> nodes;
-    static inline EntityModel model;
+    static inline EntityModel model = EntityModel{newObjectGroup()};
 
     // the nodes
     static inline std::vector<std::pair<ValueHelperRef<std::string>, EventNodePtr>> valueHelpers;
@@ -413,17 +419,29 @@ class EventGraph
         return nodes[name];
     }
 
+    static std::vector<EventNodePtr> findNodesWithLabel(std::string label)
+    {
+        std::vector<EventNodePtr> res;
+        for (auto &node : nodes)
+            if (node.second->getLabel() == label)
+                res.push_back(node.second);
+        return res;
+    }
+
     static void clear()
     {
         nodes.clear();
     }
 
-    static EventNodePtr addNode(std::string name)
+    static EventNodePtr addNode(std::string name, std::string label = "")
     {
         if (nodes.find(name) != nodes.end())
+        {
+            ERROR_MESSAGE("Node with name " + name + " already exists");
             return nullptr;
+        }
 
-        EventNodePtr node = std::make_shared<EventNode>(name);
+        EventNodePtr node = std::make_shared<EventNode>(name, label);
         nodes[name] = node;
         return node;
     }
