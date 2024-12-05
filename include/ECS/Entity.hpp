@@ -84,8 +84,13 @@ struct ComponentGlobals
 template <typename T>
 struct ComponentInfos
 {
+    #ifdef __clang__
     static inline const int size = 0;
     static inline const int id = 0;
+    #elif defined(__GNUC__)
+    static inline const int size;
+    static inline const int id;
+    #endif
 };
 
 template <typename T>
@@ -111,20 +116,30 @@ class Component
         template<typename ... Args>
         T CopyElision(Args&&... args){return T(args ...);};
 
+        #ifdef __clang__
         static inline const ComponentCategory category = ComponentCategory::ENTITY_LIST; 
+        #elif defined(__GNUC__)
+        static inline const ComponentCategory category; 
+        #endif
+        
         static inline std::array<ComponentElem, ComponentInfos<T>::size> elements;
 
         static void insert(Entity &entity, const T& data);      
 };
 
+#ifdef __clang__
+#define COMPILER_INLINE_PREFIX inline
+#elif defined(__GNUC__)
+#define COMPILER_INLINE_PREFIX
+#endif
 
 
 #define COMPONENT_BASE(_type_, _category_, _size_) \
     static_assert(_size_ <= MAX_ENTITY); \
     inline const int __ComponentIDSetupID__##_type_ = ComponentGlobals::lastID++; \
-    template<> inline const int ComponentInfos<_type_>::size = _size_;\
-    template<> inline const ComponentCategory Component<_type_>::category = _category_; \
-    template<> inline const int ComponentInfos<_type_>::id = __ComponentIDSetupID__##_type_;\
+    template<> COMPILER_INLINE_PREFIX const int ComponentInfos<_type_>::size = _size_;\
+    template<> COMPILER_INLINE_PREFIX const ComponentCategory Component<_type_>::category = _category_; \
+    template<> COMPILER_INLINE_PREFIX const int ComponentInfos<_type_>::id = __ComponentIDSetupID__##_type_;\
     inline PreLaunchVectorFill<std::string> __ComponentNamesSetupObject__##_type_(ComponentGlobals::ComponentNames, #_type_); \
     inline PreLaunchMapFill<std::string, int> __ComponentNamesMapSetupObject__##_type_(ComponentGlobals::getCNmap(), #_type_, __ComponentIDSetupID__##_type_);
 
