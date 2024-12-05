@@ -106,7 +106,7 @@ vulpine : $(VOBJ)
 $(VULPINE_LIB_PATH) : vulpine
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
-	@clang -c -x c -Wno-error $(OPTFLAGS) -fPIC $< -o $@
+	@clang -c -x c -Wno-error $(OPTFLAGS) $(INCLUDE) -fPIC $< -o $@
 	@$(BUILD_FILE_VULPINE) $<
 
 obj/%.o : src/%.cpp
