@@ -11,7 +11,7 @@ WFLAGS += -Wno-unused-variable
 OPTFLAGS =
 
 CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS)
-INCLUDE = -Iinclude -IexternalLibs 
+INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
 
 ifeq ($(OS),Windows_NT)
