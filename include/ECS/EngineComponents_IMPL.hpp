@@ -375,9 +375,13 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
         vec2 tsize = text.mesh->getSize();
 
+        tsize.y = 1.5 * text.mesh->charSize;
+
         tsize.y *= iaspectRatio;
 
-        vec2 tscale = (scale*vec2(0.95, 0.8)/tsize);
+        // vec2 tscale = (scale*vec2(0.95, 0.8)/tsize);
+
+        vec2 tscale = (scale*vec2(0.9, 0.9)/tsize);
 
         tscale = vec2(min(tscale.x, tscale.y));
         tscale.y *= iaspectRatio;

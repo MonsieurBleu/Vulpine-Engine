@@ -105,6 +105,21 @@ void ComponentModularity::Reparent(Entity& parent, EntityRef child, Entity& newP
     }
 };
 
+
+void ComponentModularity::ReparentChildren(Entity& parent)
+{
+    for(auto c : parent.comp<EntityGroupInfo>().children)
+    {   
+        for(auto &i : ReparFuncs)
+            if(c->state[i.ComponentID] && parent.state[i.ComponentID])
+                i.element(parent, c, parent);
+                
+        ReparentChildren(*c);
+    }
+};
+
+
+
 bool ComponentModularity::canMerge(Entity& parent, EntityRef child)
 {
     bool success = true;

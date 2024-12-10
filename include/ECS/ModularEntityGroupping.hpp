@@ -98,6 +98,8 @@ class ComponentModularity
 
         static void Reparent(Entity& parent, EntityRef child, Entity& newParent);
 
+        static void ReparentChildren(Entity& parent);
+
         static bool canMerge(Entity& parent, EntityRef child);
 
         static void mergeChild(Entity& parent, EntityRef child);

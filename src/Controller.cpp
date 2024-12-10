@@ -166,9 +166,10 @@ void OrbitController::update()
     {
         if(globals.mouseScrollOffset().y != 0 && globals.currentCamera->getMouseFollow())
         {
-            distance -= globals.mouseScrollOffset().y*0.5;
+            // distance -= globals.mouseScrollOffset().y*0.5;
+            distance *= 1.f - globals.mouseScrollOffset().y*0.1;
 
-            distance = clamp(distance, 0.1f, 1e7f);
+            distance = clamp(distance, 0.01f, 1e7f);
 
             
             globals.clearMouseScroll();
