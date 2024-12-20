@@ -13,8 +13,10 @@ Scene::Scene()
 
 Scene& Scene::add(ModelRef mesh, bool sort)
 {
-    if(!sort)
+    if(!sort || !mesh->sorted)
     {
+        mesh->sorted = false;
+        
         unsortedMeshes.push_back(mesh);
         return *this;
     }

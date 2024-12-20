@@ -127,6 +127,18 @@ void App::init()
         ShaderUniform(&ambientLight, 15),
     };
 
+
+    globals._standartShaderUniform3D.push_back(ShaderUniform(&sunDir, 17));
+    globals._standartShaderUniform3D.push_back(ShaderUniform(&moonPos, 18));
+    globals._standartShaderUniform3D.push_back(ShaderUniform(&planetPos, 19));
+    globals._standartShaderUniform3D.push_back(ShaderUniform(&tangentSpace, 20));
+    
+    globals._standartShaderUniform2D.push_back(ShaderUniform(&sunDir, 17));
+    globals._standartShaderUniform2D.push_back(ShaderUniform(&moonPos, 18));
+    globals._standartShaderUniform2D.push_back(ShaderUniform(&planetPos, 19));
+    globals._standartShaderUniform2D.push_back(ShaderUniform(&tangentSpace, 20));
+
+
     globals._fullscreenQuad.setVao(MeshVao(new VertexAttributeGroup(
         {VertexAttribute(GenericSharedBuffer((char *)new float[12]{-1.0f, 1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 1.0f, -1.0f,
                                                                    1.0f, 1.0f, -1.0f, -1.0f}),

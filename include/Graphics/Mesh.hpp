@@ -63,6 +63,7 @@ class Mesh
         GLenum defaultMode = GL_TRIANGLES;
         bool invertFaces = false;
         bool depthWrite = true;
+        bool sorted = true;
         bool noBackFaceCulling = false;
         float maxDrawDistSquared = 1e12;
 

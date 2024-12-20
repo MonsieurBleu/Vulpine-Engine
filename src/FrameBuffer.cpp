@@ -65,7 +65,8 @@ void FrameBuffer::activate()
 
     glBindFramebuffer(GL_FRAMEBUFFER, handle);
     // glClearColor(0.2, 0.3, 0.3, 1.0);
-    glClearColor(0.0, 0.0, 0.0, 0.0);
+
+    glClearColor(clearColor.x, clearColor.y, clearColor.z, clearColor.a);
     #ifdef INVERTED_Z
     glClearDepth(0.0f);
     #else
@@ -118,7 +119,8 @@ void RenderBuffer::generate()
                 .setInternalFormat(GL_DEPTH_COMPONENT32F)
                 .setFormat(GL_DEPTH_COMPONENT)
                 .setPixelType(GL_FLOAT)
-                .setFilter(GL_LINEAR)
+                // .setFilter(GL_LINEAR)
+                .setFilter(GL_NEAREST)
                 .setWrapMode(GL_CLAMP_TO_EDGE)
                 .setAttachement(GL_DEPTH_ATTACHMENT))
         .addTexture(

@@ -381,7 +381,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
         // vec2 tscale = (scale*vec2(0.95, 0.8)/tsize);
 
-        vec2 tscale = (scale*vec2(0.9, 0.9)/tsize);
+        vec2 tscale = (scale*vec2(0.9, 0.75)/tsize);
 
         tscale = vec2(min(tscale.x, tscale.y));
         tscale.y *= iaspectRatio;

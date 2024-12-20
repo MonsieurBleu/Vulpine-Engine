@@ -151,11 +151,14 @@ std::pair<vec3, vec3> ObjectGroup::getMeshesBoundingBox()
 
     for(auto i : meshes)
     {
-        vec4 min1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMin(), 1.0);
-        vec4 max1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMax(), 1.0);
+        vec3 min1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMin(), 1.0);
+        vec3 max1 =  i->state.modelMatrix * vec4(i->getVao()->getAABBMax(), 1.0);
 
-        minb = min(minb, vec3(min1));
-        maxb = max(maxb, vec3(max1));
+        minb = min(minb, min1);
+        minb = min(minb, max1);
+
+        maxb = max(maxb, max1);
+        maxb = max(maxb, min1);
     }
 
     for(auto i : children)

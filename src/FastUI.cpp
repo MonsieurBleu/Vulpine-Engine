@@ -65,7 +65,8 @@ SimpleUiTileBatch& SimpleUiTileBatch::batch()
         p[id+5] = rightBottom;
 
         for(int y = 0; y < 6; y++)
-            p[id+y].z = min(i->scale.x, i->scale.y/i->scale.x);
+        //     p[id+y].z = min(i->scale.x, i->scale.y/i->scale.x);
+            p[id+y].z = min(i->scale.x, i->scale.y);
 
         vec4 color[6] = {i->color, i->color, i->color, i->color, i->color, i->color};
         memcpy(&(c[id]), color, 6*sizeof(vec4));

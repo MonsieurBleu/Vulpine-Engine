@@ -46,6 +46,13 @@ class App
 
         void loadAllAssetsInfos(const char *filename);
 
+        
+        vec3 sunDir = vec3(0.0f);
+        vec3 moonPos = vec3(0.0f);
+        vec3 planetPos = vec3(0.0f);
+        vec3 planetRot = vec3(1.0f);
+        vec3 moonRot = vec3(1.0f);
+        mat3 tangentSpace = mat3(1.0f);
 
     public :
     
