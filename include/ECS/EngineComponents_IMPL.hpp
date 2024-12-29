@@ -568,6 +568,11 @@ void updateWidgetsStyle()
         auto &box = entity.comp<WidgetBox>();
         vec2 scale = vec2(box.displayMax - box.displayMin);
 
+        vec2 spriteScale = scale;
+
+        if(entity.hasComp<WidgetStyle>())
+            spriteScale *= entity.comp<WidgetStyle>().spriteScale;
+
 // child->comp<WidgetSprite>().sprite->state.setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth+0.000025);
 
         sprite.sprite->state.setPositionXY(
@@ -578,7 +583,7 @@ void updateWidgetsStyle()
             // box.displayMin * vec2(1, -1)
         )
             .setPositionZ(box.depth+0.000025)
-            .setScale(vec3(scale, 1))
+            .setScale(vec3(spriteScale, 1))
             ;
     });
 }
@@ -666,7 +671,8 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                 if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
                 {
                     float v = button.cur/(button.max-button.min) - button.min;
-                    entity.comp<WidgetStyle>().setspritePosition(vec2(v - 0.5, 0));
+                    auto &style = entity.comp<WidgetStyle>();
+                    style.setspritePosition(vec2(v - 0.5 + style.spriteScale*0.5f*button.min, 0));
                 }
                 break;
             
@@ -681,12 +687,12 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                     button.cur2 = button.min + v.y*(button.max - button.min);
                     
                     button.valueChanged2D(&entity, vec2(button.cur, button.cur2));
-
                 }
                 if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
                 {
                     vec2 v = vec2(button.cur, button.cur2)/(button.max-button.min) - button.min;
-                    entity.comp<WidgetStyle>().setspritePosition(v - 0.5f);
+                    auto &style = entity.comp<WidgetStyle>();
+                    style.setspritePosition(v - 0.5f + style.spriteScale*0.5f*button.min);
                 }
             break;
 

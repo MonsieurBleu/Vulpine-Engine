@@ -179,6 +179,8 @@ struct WidgetStyle
     ChainedMember(WidgetStyle, vec4, backgroundColor2, vec4(vec3(0.125), 0.9))
     ChainedMember(WidgetStyle, UiTileType, backGroundStyle, UiTileType::SQUARE)
     ChainedMember(WidgetStyle, int, automaticTabbing, 0)
+    ChainedMember(WidgetStyle, float, spriteScale, 1)
+
 
     ChainedMember(WidgetStyle, vec2, spritePosition, vec2(0))
 

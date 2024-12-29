@@ -551,9 +551,10 @@ void Scene::generateShadowMaps()
     Camera *tmp = globals.currentCamera;
 
     for(auto i : lights)
-        if(i->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
+        if(i->getInfos()._color.a >= 1e-6 && i->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
         {
             i->shadowMap.activate();
+            globals.currentCamera = tmp;
             i->updateShadowCamera();
             i->shadowCamera.updateFrustum();
             globals.currentCamera = &i->shadowCamera;
@@ -561,8 +562,6 @@ void Scene::generateShadowMaps()
             depthOnlyDraw(i->shadowCamera);
             i->shadowMap.deactivate();
         }
-    
-    globals.currentCamera = tmp;
     shadowPassCallsTime.hold();
 }
 

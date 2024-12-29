@@ -37,7 +37,6 @@ class App
         void activateMainSceneBindlessTextures();
         void activateMainSceneClusteredLighting(ivec3 dimention, float vFar);
 
-        vec3 ambientLight;
 
         virtual bool userInput(GLFWKeyInfo input);
         bool baseInput(GLFWKeyInfo input);
@@ -55,6 +54,8 @@ class App
         mat3 tangentSpace = mat3(1.0f);
 
     public :
+    
+        static inline vec3 ambientLight;
     
         static void setController(Controller *c);
 
