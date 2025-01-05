@@ -25,8 +25,11 @@ else
 endif
 
 
-
-VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME)
+ifeq ($(OS),Windows_NT)
+	VULPINE_LIB_PATH = ..\build\$(VULPINE_LIB_NAME)
+else
+	VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME)
+endif
 
 
 

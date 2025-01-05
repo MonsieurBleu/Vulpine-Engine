@@ -1,7 +1,10 @@
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <algorithm>
 #include <Utils.hpp>
+
+#include <glm/gtc/quaternion.hpp>
 
 std::string readFile(const std::string &filePath) // Mights just use a C approach instead
 {
@@ -154,3 +157,58 @@ bool fileExists(const char *path)
     std::ifstream file(path);
     return file.good(); 
 }
+
+std::ostream& operator<<(std::ostream& os, const glm::vec2& u)
+{
+    os << "vec2(" << u.x << ", " << u.y << ")";
+    return os;
+};
+
+std::ostream& operator<<(std::ostream& os, const glm::vec3& u)
+{
+    os << "vec3(" << u.x << ", " << u.y << ", " << u.z << ")";
+    return os;
+};
+
+std::ostream& operator<<(std::ostream& os, const glm::vec4& u)
+{
+    os << "vec2(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
+    return os;
+}   
+
+std::ostream& operator<<(std::ostream& os, const glm::mat2& u)
+{
+    os << "mat2(" << 
+        "\t" << std::setw(10) << u[0][0] << ", " << std::setw(10) << u[1][0] << "\n" <<
+        "\t" << std::setw(10) << u[1][0] << ", " << std::setw(10) << u[1][1] << "\n" <<
+        ')';
+    return os;
+};
+
+std::ostream& operator<<(std::ostream& os, const glm::mat3& u)
+{
+    os << "mat3(" << 
+        "\t" << std::setw(10) << u[0][0] << ", " << std::setw(10) << u[1][0] << ", " << std::setw(10) << u[2][0] << "\n" <<
+        "\t" << std::setw(10) << u[1][0] << ", " << std::setw(10) << u[1][1] << ", " << std::setw(10) << u[2][1] << "\n" <<
+        "\t" << std::setw(10) << u[2][0] << ", " << std::setw(10) << u[2][1] << ", " << std::setw(10) << u[2][2] << "\n" <<    
+        ')';
+    return os;
+};
+
+std::ostream& operator<<(std::ostream& os, const glm::mat4& u)
+{
+    os << "mat4(" << '\n' <<
+        "\t" << std::setw(10) << u[0][0] << ", " << std::setw(10) << u[1][0] << ", " << std::setw(10) << u[2][0] << ", " << std::setw(10) << u[3][0] << "\n" <<
+        "\t" << std::setw(10) << u[1][0] << ", " << std::setw(10) << u[1][1] << ", " << std::setw(10) << u[2][1] << ", " << std::setw(10) << u[3][1] << "\n" <<
+        "\t" << std::setw(10) << u[2][0] << ", " << std::setw(10) << u[2][1] << ", " << std::setw(10) << u[2][2] << ", " << std::setw(10) << u[3][2] << "\n" <<
+        "\t" << std::setw(10) << u[3][0] << ", " << std::setw(10) << u[3][1] << ", " << std::setw(10) << u[3][2] << ", " << std::setw(10) << u[3][3] << "\n" <<
+        ')';
+    return os;
+};
+
+
+std::ostream& operator<<(std::ostream& os, const glm::quat& u)
+{
+    os << "quat(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
+    return os;
+};
