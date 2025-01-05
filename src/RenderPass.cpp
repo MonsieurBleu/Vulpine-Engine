@@ -93,7 +93,7 @@ void SSAOPass::setup()
             .addUniform(ShaderUniform(globals.renderSizeAddr(), 0))
             .addUniform(ShaderUniform((vec3*)&ssaoKernel[0], 16).setCount(64));
 
-    cameraProjMatrix = ShaderUniform((mat4*)nullptr, 9);
+    cameraProjMatrix = ShaderUniform((mat4*)nullptr, 4);
 };
 
 void SSAOPass::render(Camera &camera)
@@ -105,8 +105,8 @@ void SSAOPass::render(Camera &camera)
         FBO.activate();
         shader.activate();
         cameraProjMatrix.activate();
-        ShaderUniform(inverse(camera.getViewMatrix()), 3).activate();
-        ShaderUniform(camera.getViewMatrix(), 4).activate();
+        ShaderUniform(inverse(camera.getViewMatrix()), 7).activate();
+        ShaderUniform(camera.getViewMatrix(), 3).activate();
         ShaderUniform(normalize(camera.getDirection()), 6).activate();
         ssaoNoiseTexture.bind(3);
         globals.drawFullscreenQuad();

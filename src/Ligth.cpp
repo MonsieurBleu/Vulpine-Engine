@@ -79,7 +79,7 @@ void Light::activateShadows()
 
     shadowMap.addTexture(
         Texture2D()
-            .setFilter(GL_NEAREST)
+            .setFilter(GL_LINEAR)
             .setResolution(cameraResolution)
             .setInternalFormat(GL_DEPTH_COMPONENT32F)
             .setFormat(GL_DEPTH_COMPONENT)
@@ -255,12 +255,12 @@ void DirectionLight::updateShadowCamera()
 
     vec3 cPos = globals.currentCamera->getPosition();
     // cPos.y = 0;
-    // cPos = vec3(0);
+    cPos = vec3(0);
 
     cPos = ceil(cPos);
 
     vec3 cDir = globals.currentCamera->getDirection();
-    // cDir = vec3(0);
+    cDir = vec3(0);
     vec3 position = cPos + vec3(shadowCameraSize.y*0.25)*cDir;
 
     shadowCamera = Camera(ORTHOGRAPHIC);

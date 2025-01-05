@@ -60,11 +60,49 @@ ShaderError Shader::refresh()
             << TERMINAL_ERROR
             << "Error compiling shader "
             << TERMINAL_FILENAME
+            << TERMINAL_UNDERLINE
             << Path
-            << TERMINAL_ERROR
-            << " :\n";
-        std::cerr << ShaderError << std::endl
-                  << TERMINAL_RESET;
+            << TERMINAL_RESET;
+
+        // std::cerr << ShaderError << std::endl
+        //           << TERMINAL_RESET;
+        
+        int cnt = 0;
+        // while(true)
+        for(; cnt < logLength; cnt++)
+        {
+            int lineNB = atoi(ShaderError + cnt + 2) - 1;
+
+            int lineCNT = 0;
+            int j = 0;
+            int codeSize = code.size();
+            for(; j < codeSize; j++)
+                if((lineCNT += (code[j] == '\n')) == lineNB)
+                    break;
+
+            std::cerr << TERMINAL_ERROR << "\n";
+
+            for(; cnt < logLength; cnt++)
+            {
+                if(ShaderError[cnt] == '\n')
+                    break;
+
+                std::cerr << ShaderError[cnt];
+            }
+
+            std::cerr << TERMINAL_INFO << "\n";
+
+            for(j++; j < codeSize; j++)
+            {
+                if(code[j] == '\n')
+                    break;
+
+                std::cerr << code[j];
+            }
+            
+            // std::cerr << "\n" << TERMINAL_RESET;
+        }
+        std::cerr << "\n" << TERMINAL_RESET;
 
         return ShaderCompileError;
     }
