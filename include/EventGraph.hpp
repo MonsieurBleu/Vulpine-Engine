@@ -51,9 +51,9 @@ class EventNode : public std::enable_shared_from_this<EventNode>
     bool state = false;
     std::string name;
     std::string label;
-    std::vector<EventNodePtr> children;
 
   public:
+    std::vector<EventNodePtr> children;
     EventNode(std::string name, std::string label = "", NodeType type = NodeType::NODE)
      : type(type), name(name), label(label)
     {
