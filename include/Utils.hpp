@@ -180,4 +180,16 @@ constexpr Colour inline operator""_rgba(const char *s, std::size_t)
 
 using namespace colours::literals;
 
+
+// glm print overloads
+std::ostream& operator<<(std::ostream& os, const glm::vec2& u);
+std::ostream& operator<<(std::ostream& os, const glm::vec3& u);
+std::ostream& operator<<(std::ostream& os, const glm::vec4& u);
+
+std::ostream& operator<<(std::ostream& os, const glm::mat2& u);
+std::ostream& operator<<(std::ostream& os, const glm::mat3& u);
+std::ostream& operator<<(std::ostream& os, const glm::mat4& u);
+
+std::ostream& operator<<(std::ostream& os, const glm::quat& u);
+
 #endif
