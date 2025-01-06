@@ -100,8 +100,12 @@ class EventNode : public std::enable_shared_from_this<EventNode>
 
     friend class EventGraph;
     friend class EventGraphWidget;
-    friend void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions,
-                                    std::vector<std::vector<vec3>> &splines);
+    friend void generateGraphLayout(
+        const std::vector<EventNodePtr> &nodes, 
+        std::vector<vec3> &positions, 
+        std::vector<std::vector<vec3>> &splines, 
+        std::vector<int> &spline2Node
+    );
 };
 
 typedef std::shared_ptr<class EventNodeAnd> EventNodeAndPtr;
@@ -167,8 +171,12 @@ class EventNodeNot : public EventNode
     friend class EventGraph;
 };
 
-void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions,
-                         std::vector<std::vector<vec3>> &splines);
+void generateGraphLayout(
+    const std::vector<EventNodePtr> &nodes, 
+    std::vector<vec3> &positions, 
+    std::vector<std::vector<vec3>> &splines, 
+    std::vector<int> &spline2Node
+    );
 
 class EventGraph
 {
@@ -176,7 +184,7 @@ class EventGraph
     static inline std::unordered_map<std::string, EventNodePtr> nodes;
     static inline std::vector<vec3> positions;
     static inline std::vector<std::vector<vec3>> Bsplines;
-    static inline std::vector<EventNodePtr> spline2Node;
+    static inline std::vector<int> spline2Node;
 
 
     static inline bool dirty = true;
