@@ -104,7 +104,7 @@ void EventNodeNot::update(bool state, std::vector<EventNodePtr> &explored)
 }
 
 
-void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions, std::vector<std::vector<vec3>> &splines, std::vector<EventNodePtr> &spline2Node)
+void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions, std::vector<std::vector<vec3>> &splines, std::vector<int> &spline2Node)
 {
     Agraph_t *g;
     Agnode_t *n;
@@ -138,6 +138,7 @@ void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec
 
     std::unordered_map<Agedge_t*, std::pair<Agnode_t*, Agnode_t*>> edgeToNode;
 
+    int i = 0;
     for (auto &node : nodes)
     {
         for (auto &child : node->children)
@@ -149,8 +150,9 @@ void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec
 
             agedges.push_back(e);
             edgeToNode[e] = std::make_pair(n0, n1);
-            spline2Node.push_back(node);
+            spline2Node.push_back(i);
         }
+        i++;
     }
 
     GVC_t *gvc = gvContext();
