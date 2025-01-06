@@ -176,6 +176,8 @@ class EventGraph
     static inline std::unordered_map<std::string, EventNodePtr> nodes;
     static inline std::vector<vec3> positions;
     static inline std::vector<std::vector<vec3>> Bsplines;
+    static inline std::vector<EventNodePtr> spline2Node;
+
 
     static inline bool dirty = true;
 
