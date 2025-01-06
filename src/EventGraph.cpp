@@ -104,7 +104,7 @@ void EventNodeNot::update(bool state, std::vector<EventNodePtr> &explored)
 }
 
 
-void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions, std::vector<std::vector<vec3>> &splines)
+void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec3> &positions, std::vector<std::vector<vec3>> &splines, std::vector<EventNodePtr> &spline2Node)
 {
     Agraph_t *g;
     Agnode_t *n;
@@ -149,6 +149,7 @@ void generateGraphLayout(const std::vector<EventNodePtr> &nodes, std::vector<vec
 
             agedges.push_back(e);
             edgeToNode[e] = std::make_pair(n0, n1);
+            spline2Node.push_back(node);
         }
     }
 
@@ -310,7 +311,7 @@ void EventGraph::update()
         for (auto &node : nodesSet)
             nodesVec.push_back(node);
 
-        generateGraphLayout(nodesVec, positions, Bsplines);
+        generateGraphLayout(nodesVec, positions, Bsplines, spline2Node);
         
         dirty = false;
     }
