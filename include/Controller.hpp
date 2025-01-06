@@ -81,12 +81,12 @@ class DragController2D : public Controller
         vec2 position = vec2(0);
         vec2 lastPosition = vec2(0);
         vec2 delta = vec2(0);
-        float scale = 1.f;
         bool mouseDown = false;
         bool dragging = false;
         bool clicked = false;
 
     public : 
+        float scale = 1.f;
         virtual void update();
         virtual bool inputs(GLFWKeyInfo& input);
         void clean();
