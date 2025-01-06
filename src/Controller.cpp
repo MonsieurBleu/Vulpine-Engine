@@ -317,7 +317,7 @@ bool DragController2D::inputs(GLFWKeyInfo& input)
 
 void DragController2D::mouseEvent(vec2 pos, GLFWwindow* window)
 {
-    if(mouseDown)
+    if(mouseDown && globals.currentCamera->getMouseFollow())
     {
         dragging = true;
         

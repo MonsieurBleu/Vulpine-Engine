@@ -256,7 +256,7 @@ class PlottingHelper : public MeshModel3D
         float maxv = 100;
 
         vec4 color;
-        float depth = 1.f;
+        float depth = 0.9;
         
         PlottingHelper(vec4 color = vec4(1), int maxValues = 1000);
 

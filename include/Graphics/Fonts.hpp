@@ -85,7 +85,7 @@ class SingleStringBatch : public MeshModel3D
         int currentTab = 0;
 
     public : 
-        const float charSize = 0.025;
+        float charSize = 0.025;
         void setFont(FontRef newFont);
         std::u32string text;
 
