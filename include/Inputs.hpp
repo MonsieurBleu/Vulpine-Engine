@@ -87,7 +87,7 @@ namespace InputManager
     // generic filter functions
     namespace Filters
     {
-    inline InputFilter always = []() { return true; };
+        extern InputFilter always;
     }; // namespace Filters
 
     EventInput &addEventInput(std::string inputName, int keyCode, int mods, int action, InputCallback callback,

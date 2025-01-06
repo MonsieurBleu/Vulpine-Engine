@@ -36,6 +36,12 @@ vec3 screenPosToModel(vec2 screenPos);
     vec3 directionToEuler(vec3 dir);
 
 
+/***** GEOMETRICAL UTILS ******/
+vec3 projectPointOntoPlane(vec3 point, vec3 planePoint, vec3 planeNormal);
+
+vec3 rayAlignedPlaneIntersect(vec3 origin, vec3 direction, float axis, float axisPosition);
+
+
 /****** COLOR UTILS******/
     vec3 hsv2rgb(vec3 hsv);
 
@@ -60,29 +66,4 @@ vec3 screenPosToModel(vec2 screenPos);
  * @param spline - the output spline (as a list of points)
  * @param numSegments - the number of segments to use for the spline (default is 10)
  */
-inline void BSpline(const std::vector<vec3> &points, std::vector<vec3> &spline, int numSegments = 10)
-{
-    if (points.size() < 2)
-        return;
-
-    std::vector<vec3> controlPoints = points;
-    controlPoints.insert(controlPoints.begin(), controlPoints[0]);
-    controlPoints.push_back(controlPoints.back());
-
-    for (int i = 0; i < controlPoints.size() - 3; i++)
-    {
-        for (int j = 0; j < numSegments; j++)
-        {
-            float t = (float)j / (numSegments - 1);
-            float t2 = t * t;
-            float t3 = t2 * t;
-
-            vec3 p = 0.5f * ((-t3 + 2 * t2 - t) * controlPoints[i] +
-                             (3 * t3 - 5 * t2 + 2) * controlPoints[i + 1] +
-                             (-3 * t3 + 4 * t2 + t) * controlPoints[i + 2] +
-                             (t3 - t2) * controlPoints[i + 3]);
-
-            spline.push_back(p);
-        }
-    }
-}
+void BSpline(const std::vector<vec3> &points, std::vector<vec3> &spline, int numSegments = 10);
