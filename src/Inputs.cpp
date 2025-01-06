@@ -1,6 +1,8 @@
 #include <Globals.hpp>
 #include <Inputs.hpp>
 
+InputFilter InputManager::Filters::always = [](){return !globals.isTextInputsActive();};
+
 void giveCallbackToApp(GLFWKeyInfo input)
 {
     inputs.add(input);

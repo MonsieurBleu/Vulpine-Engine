@@ -48,6 +48,8 @@ void App::loadAllAssetsInfos(const char *filename)
             Loader<AnimationRef>::addInfosTextless(p);
         else if (!strcmp(ext, ".vulpineMesh"))
             Loader<MeshVao>::addInfosTextless(p);
+        else if (!strcmp(ext, ".obj"))
+            Loader<MeshVao>::addInfosTextless(p);
         else if (!strcmp(ext, ".vulpineSkeleton"))
             Loader<SkeletonRef>::addInfosTextless(p);
         else if (!strcmp(ext, ".ktx") || !strcmp(ext, ".ktx2") || !strcmp(ext, ".png") || !strcmp(ext, ".jpg"))
@@ -263,6 +265,8 @@ bool App::baseInput(GLFWKeyInfo input)
             // used = true;
             break;
 
+        case GLFW_MOUSE_BUTTON_MIDDLE :
+            globals._mouseMiddleClickDown = false;
         default:
             break;
         }
@@ -279,6 +283,12 @@ bool App::baseInput(GLFWKeyInfo input)
         case GLFW_MOUSE_BUTTON_RIGHT:
             globals._mouseRightClick = true;
             globals._mouseRightClickDown = true;
+            // used = true;
+            break;
+
+        case GLFW_MOUSE_BUTTON_MIDDLE:
+            globals._mouseMiddleClick = true;
+            globals._mouseMiddleClickDown = true;
             // used = true;
             break;
 

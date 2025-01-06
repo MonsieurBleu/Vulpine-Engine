@@ -147,3 +147,46 @@ vec3 ColorHexToV(uint hex)
 {
     return vec3((hex>>16)%256, (hex>>8)%256, hex%256)/256.f;
 }
+
+vec3 projectPointOntoPlane(vec3 point, vec3 planePoint, vec3 planeNormal) {
+    vec3 normalizedNormal = normalize(planeNormal);
+    vec3 pointToPlane = point - planePoint;
+    float distance = dot(pointToPlane, normalizedNormal);
+    vec3 projection = point - distance * normalizedNormal;
+    
+    return projection;
+}
+
+vec3 rayAlignedPlaneIntersect(vec3 origin, vec3 direction, float axis, float axisPosition)
+{
+    float t = (axisPosition - origin[axis]) / (sign(direction[axis])*max(abs(direction[axis]), 1e-5f));
+    return origin + t * direction;
+}
+
+
+void BSpline(const std::vector<vec3> &points, std::vector<vec3> &spline, int numSegments)
+{
+    if (points.size() < 2)
+        return;
+
+    std::vector<vec3> controlPoints = points;
+    controlPoints.insert(controlPoints.begin(), controlPoints[0]);
+    controlPoints.push_back(controlPoints.back());
+
+    for (int i = 0; i < controlPoints.size() - 3; i++)
+    {
+        for (int j = 0; j < numSegments; j++)
+        {
+            float t = (float)j / (numSegments - 1);
+            float t2 = t * t;
+            float t3 = t2 * t;
+
+            vec3 p = 0.5f * ((-t3 + 2 * t2 - t) * controlPoints[i] +
+                             (3 * t3 - 5 * t2 + 2) * controlPoints[i + 1] +
+                             (-3 * t3 + 4 * t2 + t) * controlPoints[i + 2] +
+                             (t3 - t2) * controlPoints[i + 3]);
+
+            spline.push_back(p);
+        }
+    }
+}

@@ -203,8 +203,6 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
     && globals.currentCamera->getMouseFollow()
     )
     {
-
-
         static vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
 
         
@@ -217,7 +215,7 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
         else
             dir.y /= globals.windowWidth()/globals.windowHeight();
 
-        if(globals.mouseRightClickDown())
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && globals.mouseMiddleClickDown())
         {
             vec3 front = normalize(globals.currentCamera->getPosition() - position);
 
@@ -232,7 +230,7 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
         }
         else
 
-        if(globals.mouseLeftClickDown())
+        if(globals.mouseMiddleClickDown())
         {
             float yaw = radians(dir.x);
             float pitch = radians(dir.y);
