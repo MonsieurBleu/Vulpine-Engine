@@ -81,6 +81,7 @@ class DragController2D : public Controller
         vec2 position = vec2(0);
         vec2 lastPosition = vec2(0);
         vec2 delta = vec2(0);
+        vec2 mousePosNDC = vec2(0);
         bool mouseDown = false;
         bool dragging = false;
         bool clicked = false;

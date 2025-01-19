@@ -317,25 +317,26 @@ bool DragController2D::inputs(GLFWKeyInfo& input)
 
 void DragController2D::mouseEvent(vec2 pos, GLFWwindow* window)
 {
+    vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
+    
+    // adjust sensitivity based on the scale parameter
+    // sensitivity /= scale;
+
+    mousePosNDC = (pos-center)/center;
+
     if(mouseDown && globals.currentCamera->getMouseFollow())
     {
         dragging = true;
-        
-        vec2 center(globals.windowWidth()*0.5, globals.windowHeight()*0.5);
+
         vec2 sensitivity(1.5);
-        // adjust sensitivity based on the scale parameter
-        // sensitivity /= scale;
-
-        vec2 posNDC = (pos-center)/center;
-
-        posNDC *= sensitivity;
-
+        vec2 mousePosNDCSentsitivity = mousePosNDC * sensitivity;
+        
         if (lastPosition == vec2(0))
-            lastPosition = posNDC;
+            lastPosition = mousePosNDCSentsitivity;
 
-        delta = posNDC - lastPosition;
+        delta = mousePosNDCSentsitivity - lastPosition;
 
         position += delta;
-        lastPosition = posNDC;
+        lastPosition = mousePosNDCSentsitivity;
     }
 }

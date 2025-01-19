@@ -67,3 +67,14 @@ vec3 rayAlignedPlaneIntersect(vec3 origin, vec3 direction, float axis, float axi
  * @param numSegments - the number of segments to use for the spline (default is 10)
  */
 void BSpline(const std::vector<vec3> &points, std::vector<vec3> &spline, int numSegments = 10);
+
+/**
+ * @brief This function computes the bezier curve given 4 control points
+ * @param p0 - the first control point (the start point)
+ * @param p1 - the second control point
+ * @param p2 - the third control point
+ * @param p3 - the fourth control point (the end point)
+ * @param spline - the output spline (as a list of points)
+ * @param numSegments - the number of segments to use for the spline (default is 10)
+ */
+void BezierCurve(const vec3 &p0, const vec3 &p1, const vec3 &p2, const vec3 &p3, std::vector<vec3> &spline, int numSegments = 10);
