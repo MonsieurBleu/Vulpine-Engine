@@ -1,11 +1,9 @@
 
-// #ifndef VULPINE_UI_BLUEPRINT_IMPL
+
 #include <Blueprint/EngineBlueprintUI.hpp>
 #include <MathsUtils.hpp>
 #include <Helpers.hpp>
-#include <Game.hpp>
 #include <Constants.hpp>
-// #endif
 
 WidgetBox::FittingFunc VulpineBlueprintUI::SmoothSliderFittingFunc = [](Entity* parent, Entity* child){ 
     auto &cbox = child->comp<WidgetBox>();
