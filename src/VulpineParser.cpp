@@ -111,7 +111,7 @@ uft8* VulpineTextBuff::read()
     
     while(readBreakChar()) readhead++;
 
-    if(eof) return nullptr;
+    if(eof) return new uft8('\0');
     
     uft8 *beg = data + readhead;
 

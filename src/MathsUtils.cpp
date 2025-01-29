@@ -190,3 +190,20 @@ void BSpline(const std::vector<vec3> &points, std::vector<vec3> &spline, int num
         }
     }
 }
+
+void BezierCurve(const vec3 &p0, const vec3 &p1, const vec3 &p2, const vec3 &p3, std::vector<vec3> &spline, int numSegments)
+{
+    for (int i = 0; i < numSegments; i++)
+    {
+        float t = (float)i / (numSegments - 1);
+        float t2 = t * t;
+        float t3 = t2 * t;
+
+        vec3 p = (-t3 + 3 * t2 - 3 * t + 1) * p0 +
+                 (3 * t3 - 6 * t2 + 3 * t) * p1 +
+                 (-3 * t3 + 3 * t2) * p2 +
+                 t3 * p3;
+
+        spline.push_back(p);
+    }
+}
