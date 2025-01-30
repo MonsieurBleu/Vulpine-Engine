@@ -11,41 +11,63 @@
 
 /// TERMINAL
 const std::string TERMINAL_UNDERLINE = "\033[4m";
-const std::string TERMINAL_ERROR    = "\e[1;31m";
-const std::string TERMINAL_INFO     = "\033[94m";
-const std::string TERMINAL_OK       = "\033[92m";
-const std::string TERMINAL_RESET    = "\033[0m";
-const std::string TERMINAL_TIMER    = "\033[93m";
-const std::string TERMINAL_FILENAME = "\033[95m";
-const std::string TERMINAL_WARNING  = "\e[38;5;208m";
-const std::string TERMINAL_NOTIF    = "\e[1;36m";
+const std::string TERMINAL_ERROR     = "\e[1;31m";
+const std::string TERMINAL_INFO      = "\033[94m";
+const std::string TERMINAL_OK        = "\033[92m";
+const std::string TERMINAL_RESET     = "\033[0m";
+const std::string TERMINAL_TIMER     = "\033[93m";
+const std::string TERMINAL_FILENAME  = "\033[95m";
+const std::string TERMINAL_WARNING   = "\e[38;5;208m";
+const std::string TERMINAL_NOTIF     = "\e[36m";
 
 
-#define FILE_ERROR_MESSAGE(filename, message) std::cerr \
-    << TERMINAL_ERROR << "Error \xBF loading file " \
-    << TERMINAL_TIMER << filename \
-    << TERMINAL_ERROR << " from "\
-    << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
-    << TERMINAL_RESET << TERMINAL_ERROR << " at file " << __FILE__ << ":" << __LINE__ \
-    << "\n      \xC0\xC4\xC4 "\
-    << TERMINAL_WARNING << message \
-    << TERMINAL_RESET << "\n\n";
+#define FILE_ERROR_MESSAGE(filename, message) std::cerr     \
+    << TERMINAL_ERROR     << "ERROR   |"                    \
+    << TERMINAL_RESET     << " while loading file "         \
+    << TERMINAL_FILENAME  << filename << "\n"               \
+    << TERMINAL_ERROR     << "        |"                    \
+    << TERMINAL_RESET     << " from "                       \
+    << TERMINAL_UNDERLINE                                   \
+    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
+    << TERMINAL_RESET                                       \
+    << TERMINAL_RESET     << " at file "                    \
+    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
+    << TERMINAL_ERROR     << "\n        |> " << message     \
+    << TERMINAL_RESET     << "\n\n";
 
-#define WARNING_MESSAGE(message) std::cerr \
-    << TERMINAL_WARNING << "WARNING \xBF from " \
-    << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
-    << TERMINAL_RESET << TERMINAL_WARNING << " at file " << __FILE__ << ":" << __LINE__ \
-    << "\n        \xC0\xC4\xC4 "\
-    << TERMINAL_WARNING << message \
-    << TERMINAL_RESET << "\n\n";
+#define WARNING_MESSAGE(message) std::cerr                  \
+    << TERMINAL_WARNING   << "WARNING |"                    \
+    << TERMINAL_RESET     << " from "                       \
+    << TERMINAL_UNDERLINE                                   \
+    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
+    << TERMINAL_RESET                                       \
+    << TERMINAL_RESET     << " at file "                    \
+    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
+    << TERMINAL_WARNING   << "\n        |> " << message     \
+    << TERMINAL_RESET     << "\n\n";
 
-#define ERROR_MESSAGE(message) std::cerr \
-    << TERMINAL_ERROR << "ERROR \xBF from " \
-    << TERMINAL_UNDERLINE << __PRETTY_FUNCTION__ \
-    << TERMINAL_RESET << TERMINAL_ERROR << " at file " << __FILE__ << ":" << __LINE__ \
-    << "\n        \xC0\xC4\xC4 "\
-    << TERMINAL_WARNING << message \
-    << TERMINAL_RESET << "\n\n";
+
+#define ERROR_MESSAGE(message) std::cerr                    \
+    << TERMINAL_ERROR     << "ERROR   |"                    \
+    << TERMINAL_RESET     << " from "                       \
+    << TERMINAL_UNDERLINE                                   \
+    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
+    << TERMINAL_RESET                                       \
+    << TERMINAL_RESET     << " at file "                    \
+    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
+    << TERMINAL_ERROR     << "\n        |> " << message     \
+    << TERMINAL_RESET     << "\n\n";
+
+#define NOTIF_MESSAGE(message) std::cerr                    \
+    << TERMINAL_NOTIF     << "NOTIF   |"                    \
+    << TERMINAL_RESET     << " from "                       \
+    << TERMINAL_UNDERLINE                                   \
+    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
+    << TERMINAL_RESET                                       \
+    << TERMINAL_RESET     << " at file "                    \
+    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
+    << TERMINAL_NOTIF     << "\n        |> " << message     \
+    << TERMINAL_RESET     << "\n\n";
 
 /// FILES
 /*

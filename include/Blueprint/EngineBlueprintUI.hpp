@@ -4,6 +4,8 @@
 // #include <ECS/EngineComponents.hpp>
 // #endif
 
+#include <Timer.hpp>
+
 #define UI_BASE_COMP VulpineBlueprintUI::UIcontext, WidgetState()
 
 namespace VulpineColorUI
