@@ -57,8 +57,6 @@ void App::loadAllAssetsInfos(const char *filename)
     }
 };
 
-float UI_res_scale = 2;
-
 void App::resizeCallback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -74,7 +72,7 @@ void App::resizeCallback(GLFWwindow *window, int width, int height)
     ivec2 newres = vec2(width, height) * globals._renderScale;
 
     renderBuffer.resizeAll(newres);
-    screenBuffer2D.resizeAll(vec2(width, height) * UI_res_scale);
+    screenBuffer2D.resizeAll(vec2(width, height) * globals._UI_res_scale);
 
     Bloom.getFBO().resizeAll(newres);
     Bloom.getFBO2().resizeAll(newres);
@@ -153,7 +151,7 @@ void App::init()
 
     screenBuffer2D
         .addTexture(Texture2D()
-                        .setResolution(ivec2(vec2(globals._renderSize) * UI_res_scale))
+                        .setResolution(ivec2(vec2(globals._renderSize) * globals._UI_res_scale))
                         .setInternalFormat(GL_SRGB8_ALPHA8)
                         .setFormat(GL_RGBA)
                         .setPixelType(GL_UNSIGNED_BYTE)
@@ -161,7 +159,7 @@ void App::init()
                         .setWrapMode(GL_CLAMP_TO_EDGE)
                         .setAttachement(GL_COLOR_ATTACHMENT0))
         .addTexture(Texture2D()
-                        .setResolution(ivec2(vec2(globals._renderSize) * UI_res_scale))
+                        .setResolution(ivec2(vec2(globals._renderSize) * globals._UI_res_scale))
                         .setInternalFormat(GL_DEPTH_COMPONENT)
                         .setFormat(GL_DEPTH_COMPONENT)
                         .setPixelType(GL_UNSIGNED_BYTE)

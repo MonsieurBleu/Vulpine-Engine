@@ -15,11 +15,13 @@
 typedef std::basic_ostringstream<char32_t> UFT32Stream;
 
 class Game;
+class NoiseApp;
 
 class Globals
 {
     friend App;
     friend Game;
+    friend NoiseApp;
 
 private:
     AppState _state;
@@ -33,6 +35,7 @@ private:
     ivec2 _windowSize;
     ivec2 _renderSize;
     float _renderScale = 1.0;
+    float _UI_res_scale = 2.0;
 
     std::vector<ShaderUniform> _standartShaderUniform2D;
     std::vector<ShaderUniform> _standartShaderUniform3D;
