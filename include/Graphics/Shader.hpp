@@ -54,16 +54,18 @@ class ShaderProgram
 
         GLuint program = NO_PROGRAM;
 
+
+        std::shared_ptr<GLuint> handle;
+
+
+    public :
+        
         Shader vert;
         Shader frag;
         Shader geom;
         Shader tesc;
         Shader tese;
 
-        std::shared_ptr<GLuint> handle;
-
-
-    public :
         ShaderUniformGroup uniforms;
 
         ShaderProgram(){};

@@ -152,7 +152,8 @@ void App::init()
     screenBuffer2D
         .addTexture(Texture2D()
                         .setResolution(ivec2(vec2(globals._renderSize) * globals._UI_res_scale))
-                        .setInternalFormat(GL_SRGB8_ALPHA8)
+                        // .setInternalFormat(GL_SRGB8_ALPHA8)
+                        .setInternalFormat(GL_RGBA8)
                         .setFormat(GL_RGBA)
                         .setPixelType(GL_UNSIGNED_BYTE)
                         .setFilter(GL_LINEAR)
@@ -237,7 +238,7 @@ void App::setIcon(const std::string &filename)
 
 bool App::userInput(GLFWKeyInfo input)
 {
-    return false;
+    return baseInput(input);
 };
 
 bool App::baseInput(GLFWKeyInfo input)
