@@ -37,6 +37,12 @@ Ephemeral_Component(WidgetUI_Context)
 
 /***************** UI BASE VULPINE SYSTEMS *****************/
 
-void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context& ui);
+void updateEntityCursor(
+    vec2 screenPos, 
+    bool down, 
+    bool click, 
+    WidgetUI_Context& ui,
+    bool showEntityUnderCursorHint = true
+);
 
 void updateWidgetsStyle();

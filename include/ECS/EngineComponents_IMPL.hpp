@@ -588,7 +588,7 @@ void updateWidgetsStyle()
     });
 }
 
-void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context& ui)
+void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context& ui, bool showEntityUnderCursorHint)
 {
     screenPos = (screenPos/vec2(globals.windowSize()))*2.f - 1.f;
 
@@ -801,7 +801,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
     if(lastEntityUnderCursor != entityUnderCursor)
         lastTimeChangeEUC = globals.appTime.getElapsedTime();
 
-    if(entityUnderCursor)
+    if(entityUnderCursor && showEntityUnderCursorHint)
     {
         float t = globals.appTime.getElapsedTime() - lastTimeChangeEUC;
 

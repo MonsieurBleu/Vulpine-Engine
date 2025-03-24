@@ -16,14 +16,6 @@ namespace VulpineColorUI
     inline vec4 LightBackgroundColor1 = vec4(242, 234,  222, BASE_ALPHA)/255.f;
     inline vec4 LightBackgroundColor2 = vec4(242, 234,  222, ALPHA2)/255.f;
 
-    // inline vec4 LightBackgroundColor1 = vec4(vec3(.1), BASE_ALPHA/255.);
-    // inline vec4 LightBackgroundColor2 = vec4(vec3(.1), ALPHA2/255.);
-
-    // inline vec4 DarkBackgroundColor1  = vec4(1.);
-    // inline vec4 DarkBackgroundColor1Opaque  = vec4(1.);
-    // inline vec4 DarkBackgroundColor2  = vec4(1.);
-    // inline vec4 DarkBackgroundColor2Opaque  = vec4(1.);
-
     inline vec4 DarkBackgroundColor1  = vec4( 70,  63,  60, BASE_ALPHA)/255.f;
     inline vec4 DarkBackgroundColor1Opaque  = vec4( 70,  63,  60, 255)/255.f;    
     inline vec4 DarkBackgroundColor2  = 0.5f*vec4( 53,  49,  48, BASE_ALPHA)/255.f;
