@@ -44,6 +44,8 @@ void App::loadAllAssetsInfos(const char *filename)
             Loader<MeshMaterial>::addInfos(p);
         else if (!strcmp(ext, ".vulpineMeshModel"))
             Loader<MeshModel3D>::addInfos(p);
+        else if (!strcmp(ext, ".vulpineTexture2D"))
+            Loader<Texture2D>::addInfos(p);
         else if (!strcmp(ext, ".vulpineAnimation"))
             Loader<AnimationRef>::addInfosTextless(p);
         else if (!strcmp(ext, ".vulpineMesh"))

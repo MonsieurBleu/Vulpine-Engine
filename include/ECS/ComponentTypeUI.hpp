@@ -41,6 +41,8 @@ class Entity;
 
 struct WidgetBox
 {
+    static inline vec2 tabbingSpacingScale = vec2(1.);
+
     typedef std::function<void(Entity* parent, Entity* child)> FittingFunc;
 
     enum Type : uint8

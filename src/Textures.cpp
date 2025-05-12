@@ -278,6 +278,8 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
     generated = true;
 
     bindlessHandleRef = std::make_shared<GLuint>(0);
+
+    setFilter(GL_LINEAR_MIPMAP_LINEAR);
     
     return *(this);
 }

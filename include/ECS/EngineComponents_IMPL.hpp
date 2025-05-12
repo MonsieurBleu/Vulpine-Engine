@@ -162,7 +162,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
             vec2 scale = screen/(parentBox.max - parentBox.min)*0.5f;
 
-            vec2 space = 1.25f * 0.0075f*scale;
+            vec2 space = 1.25f*0.0075f*scale*WidgetBox::tabbingSpacingScale;
 
             box.initMin = tabCoord + space;
             box.initMax = tabCoord - space + idim;
