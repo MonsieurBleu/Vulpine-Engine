@@ -156,6 +156,9 @@ Texture2D& Texture2D::generate(bool forceTexImageCall)
             );
         }
     }
+
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.5f);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.f);
     
     return *this;
 }
