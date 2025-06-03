@@ -124,7 +124,9 @@ namespace VulpineBlueprintUI
             std::unordered_map<std::string, EntityRef>& list,
             WidgetButton::InteractFunc ifunc, 
             WidgetButton::UpdateFunc ufunc,
-            float verticalLenghtReduction = 0.f
+            float verticalLenghtReduction = 0.f,
+            vec4 color = VulpineColorUI::LightBackgroundColor1,
+            float nameSizeRatio = 0.f
         );
 
 }

@@ -317,8 +317,8 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
         return;
 
-    float a = smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*4.f);
-    // a = 1.f;
+    float a = WidgetBox::smoothingAnimationSpeed == 0.f ?
+        1. :smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*WidgetBox::smoothingAnimationSpeed);
 
     box.displayMin = mix(box.lastMin, box.min, a);
     box.displayMax = mix(box.lastMax, box.max, a);
@@ -612,7 +612,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 
     System<WidgetBox>([screenPos, down, click](Entity &entity){
         auto &box = entity.comp<WidgetBox>();
-        vec2 cursor = ((screenPos-box.min)/(box.max - box.min));
+        vec2 cursor = ((screenPos-box.displayMin)/(box.displayMax - box.displayMin));
         box.isUnderCursor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;
 
         cursor = ((screenPos-box.childrenMin)/(box.childrenMax - box.childrenMin));
@@ -638,7 +638,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
             button.cur2 = uv.y;
         }
 
-        vec2 cursor = ((screenPos-box.min)/(box.max - box.min));
+        vec2 cursor = ((screenPos-box.displayMin)/(box.displayMax - box.displayMin));
 
         
         switch (button.type)

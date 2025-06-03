@@ -43,6 +43,8 @@ struct WidgetBox
 {
     static inline vec2 tabbingSpacingScale = vec2(1.);
 
+    static inline float smoothingAnimationSpeed = 4.f;
+
     typedef std::function<void(Entity* parent, Entity* child)> FittingFunc;
 
     enum Type : uint8

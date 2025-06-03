@@ -851,20 +851,27 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
     std::unordered_map<std::string, EntityRef>& list,
     WidgetButton::InteractFunc ifunc, 
     WidgetButton::UpdateFunc ufunc,
-    float verticalLenghtReduction
+    float verticalLenghtReduction,
+    vec4 color,
+    float nameSizeRatio 
 )
 {
-    auto searchInput = NamedEntry(U"Search", TextInput(
-        name + " search bar", [](std::u32string &name)
-        {
-            if(!name.size())
-                name = U"...";
-        },
-        []()
-        {
-            return U"";
-        }
-    ));
+    auto searchInput = NamedEntry(U"Search"
+        , TextInput(
+            name + " search bar", [](std::u32string &name)
+            {
+                if(!name.size())
+                    name = U"...";
+            },
+            []()
+            {
+                return U"";
+            }
+        )
+        , 0.5
+        , false
+        , color
+    );
 
     Entity *searchInputPTR = searchInput.get();
 
@@ -872,7 +879,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
         , UI_BASE_COMP
         , WidgetStyle()
             // .setautomaticTabbing(50)
-        , WidgetBox([&list, ufunc, ifunc, searchInputPTR](Entity *parent, Entity *child)
+        , WidgetBox([&list, ufunc, ifunc, searchInputPTR, color](Entity *parent, Entity *child)
         {
             /**** Creating Children *****/
             for(auto &i : list)
@@ -893,6 +900,8 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
                             })
                         )
                     );
+
+                    button->comp<WidgetStyle>().setbackgroundColor1(mix(color, VulpineColorUI::LightBackgroundColor1, 0.25f));
 
                     i.second->comp<WidgetBox>()
                         .set(vec2(-1, 1), vec2(1, 5))
@@ -978,7 +987,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
         })
     );
 
-    listScreen->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.95 - verticalLenghtReduction*0.05));
+    
 
     // Entity *listScreenPTR = listScreen.get();
 
@@ -1023,7 +1032,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
     //         return U"";
     //     }
     // ));
-
+    
     auto scrollZone = newEntity(name + " scroll zone list"
         , UI_BASE_COMP
         , WidgetStyle()
@@ -1055,9 +1064,11 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
         , EntityGroupInfo({listScreen})
     );
 
+    listScreen->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.95 - verticalLenghtReduction*0.05));
+
     scrollZone->comp<WidgetBox>().set(vec2(-1, 1), vec2(-0.9 -0.1*verticalLenghtReduction, 1));
 
-    searchInput->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.90 -0.1*verticalLenghtReduction));
+    searchInput->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.9 -0.1*verticalLenghtReduction));
 
     searchInput->comp<WidgetStyle>().setautomaticTabbing(1);
 
@@ -1070,6 +1081,8 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
             
         })
         );
-
-    return p;
+    if(nameSizeRatio <= 0.f)
+        return p;
+    else
+        return NamedEntry(UFTconvert.from_bytes(name), p, nameSizeRatio, true, color);
 }
