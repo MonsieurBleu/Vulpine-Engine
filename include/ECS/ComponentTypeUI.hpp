@@ -185,6 +185,7 @@ struct WidgetStyle
     ChainedMember(WidgetStyle, int, automaticTabbing, 0)
     ChainedMember(WidgetStyle, float, spriteScale, 1)
 
+    ChainedMember(WidgetStyle, bool, useInternalSpacing, true)
 
     ChainedMember(WidgetStyle, vec2, spritePosition, vec2(0))
 

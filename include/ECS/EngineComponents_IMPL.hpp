@@ -164,6 +164,9 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
             vec2 space = 1.25f*0.0075f*scale*WidgetBox::tabbingSpacingScale;
 
+            if(parent.hasComp<WidgetStyle>() && !parent.comp<WidgetStyle>().useInternalSpacing)
+                space = vec2(0);
+
             box.initMin = tabCoord + space;
             box.initMax = tabCoord - space + idim;
 

@@ -38,6 +38,7 @@ EntityRef VulpineBlueprintUI::SmoothSlider(
         , WidgetStyle()
             .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
             .setbackgroundColor1(VulpineColorUI::LightBackgroundColor2)
+            
         , WidgetButton(WidgetButton::Type::SLIDER, ifunc, ufunc)
             .setmin(min).setmax(max).setpadding(padding)
         , EntityGroupInfo({
@@ -203,7 +204,8 @@ EntityRef VulpineBlueprintUI::ValueInputSlider(
         , UI_BASE_COMP
         , WidgetBox()
         , WidgetStyle()
-            // .setautomaticTabbing(1)
+            .setautomaticTabbing(1)
+            .setuseInternalSpacing(false)
         , EntityGroupInfo({s, t})
     );
 
@@ -253,6 +255,7 @@ EntityRef VulpineBlueprintUI::ValueInputSlider(
         , WidgetBox()
         , WidgetStyle()
             .setautomaticTabbing(1)
+            .setuseInternalSpacing(false)
         , EntityGroupInfo({s, t})
     );
 
@@ -268,6 +271,8 @@ EntityRef VulpineBlueprintUI::NamedEntry(
     vec4 color 
 )
 {
+    int tabbing = nameRatioSize == 0.5f ? (vertical ? 2 : 1) : 0;
+
     nameRatioSize = nameRatioSize*2. - 1.;
 
     vec2 titleRange = vec2(-1, nameRatioSize-0.01);
@@ -280,12 +285,14 @@ EntityRef VulpineBlueprintUI::NamedEntry(
         );
         
     auto &entryName = entry->comp<EntityInfos>().name;
+    
 
     return newEntity(entryName + " - Menu"
         , UI_BASE_COMP
         , WidgetBox()
         , WidgetStyle()
-            // .setautomaticTabbing(1)
+            .setautomaticTabbing(tabbing)
+            .setuseInternalSpacing(false)
         , EntityGroupInfo({
             newEntity(entryName + " - Helper Name"
                 , UI_BASE_COMP
@@ -303,6 +310,7 @@ EntityRef VulpineBlueprintUI::NamedEntry(
             entry
         })
     );
+
 }
 
 EntityRef VulpineBlueprintUI::ColorSelectionScreen(
@@ -482,7 +490,6 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
             .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
             .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1)
             .setbackgroundColor2(VulpineColorUI::DarkBackgroundColor2)
-
             .settextColor1(VulpineColorUI::LightBackgroundColor1)
             .settextColor2(VulpineColorUI::HightlightColor1)
         , WidgetText(U"")
