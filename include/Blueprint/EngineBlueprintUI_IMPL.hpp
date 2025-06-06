@@ -59,7 +59,8 @@ EntityRef  VulpineBlueprintUI::Toggable(
     const std::string &name,
     const std::string &icon,
     WidgetButton::InteractFunc ifunc, 
-    WidgetButton::UpdateFunc ufunc
+    WidgetButton::UpdateFunc ufunc,
+    vec3 color
 )
 {
     auto e = newEntity(name
@@ -68,8 +69,10 @@ EntityRef  VulpineBlueprintUI::Toggable(
         , WidgetBackground()
         , WidgetStyle()
             .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
-            .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
-            .setbackgroundColor2(VulpineColorUI::LightBackgroundColor2)
+            .setbackgroundColor1(vec4(color, 1.))
+            // .setbackgroundColor2(VulpineColorUI::LightBackgroundColor2)
+            // .setbackgroundColor2(vec4(rgb2hsv(hsv2rgb(vec3(color)) * vec3(1, .5, 2)), color.a*.5))
+            .setbackgroundColor2(vec4(color, ALPHA2/255.f))
             .settextColor1(VulpineColorUI::DarkBackgroundColor1)
         , WidgetButton(WidgetButton::Type::CHECKBOX, ifunc, ufunc)
     );
