@@ -53,6 +53,7 @@ vec3 directionToEuler(vec3 dir)
 
 vec3 hsv2rgb(vec3 hsv)
 {
+    hsv = clamp(hsv, vec3(0), vec3(1));
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
     vec3 p = abs(fract(vec3(hsv.x) + vec3(K)) * vec3(6.0) - vec3(K.w));
     return hsv.z * mix(vec3(K.x), clamp(p - vec3(K.x), vec3(0.0), vec3(1.0)), hsv.y);

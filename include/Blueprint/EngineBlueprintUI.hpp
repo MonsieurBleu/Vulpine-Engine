@@ -11,7 +11,7 @@
 namespace VulpineColorUI
 {
     #define BASE_ALPHA 0.95f*255.f
-    #define ALPHA2     0.8f*255.f
+    #define ALPHA2     0.625f*255.f
 
     inline vec4 LightBackgroundColor1 = vec4(242, 234,  222, BASE_ALPHA)/255.f;
     inline vec4 LightBackgroundColor2 = vec4(242, 234,  222, ALPHA2)/255.f;
@@ -26,6 +26,9 @@ namespace VulpineColorUI
     inline vec4 HightlightColor3 = vec4(217, 38,  144,  BASE_ALPHA)/255.f;
     inline vec4 HightlightColor4 = vec4(249, 192,  25,  BASE_ALPHA)/255.f;
     inline vec4 HightlightColor5 = vec4(170, 60,   230, BASE_ALPHA)/255.f;
+
+    inline vec4 HightlightColor6 = vec4(44, 211, 91, BASE_ALPHA)/255.f;
+    inline vec4 HightlightColor7 = vec4(211, 44, 63, BASE_ALPHA)/255.f;
 }   
 
 namespace VulpineBlueprintUI
@@ -46,7 +49,8 @@ namespace VulpineBlueprintUI
             const std::string &name,
             const std::string &icon,
             WidgetButton::InteractFunc ifunc, 
-            WidgetButton::UpdateFunc ufunc
+            WidgetButton::UpdateFunc ufunc,
+            vec3 color = VulpineColorUI::LightBackgroundColor1
         );
 
         EntityRef ValueInput(
