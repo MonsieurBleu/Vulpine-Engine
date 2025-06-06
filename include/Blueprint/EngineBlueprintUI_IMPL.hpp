@@ -10,7 +10,7 @@ WidgetBox::FittingFunc VulpineBlueprintUI::SmoothSliderFittingFunc = [](Entity* 
     auto &pbutton = parent->comp<WidgetButton>();
 
     cbox.initMin = vec2(-1);
-    float v = pbutton.cur/(pbutton.max - pbutton.min) - pbutton.min;
+    float v = (pbutton.cur - pbutton.min)/(pbutton.max - pbutton.min);
 
     vec2 tmpMax = cbox.initMax;
     cbox.initMax = vec2(v*2.f - 1, 1);
