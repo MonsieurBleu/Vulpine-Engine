@@ -11,15 +11,17 @@ WFLAGS += -Wno-unused-variable
 OPTFLAGS =
 
 CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS)
-INCLUDE = -Iinclude -IexternalLibs -I../externalLibs -I /usr/local/include/LuaCpp -I /usr/include/lua5.4/
+INCLUDE = -Iinclude -IexternalLibs -I../externalLibs -I /usr/include/lua5.4/
 
+
+#  TODO : update links for windows
 
 ifeq ($(OS),Windows_NT)
 	LIBFLAGS = -L./ -Llibs/ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread -lgvc -lcgraph -lcdt
 	LINKFLAGS = libglfw3.a libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine.a
 else
-	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 -lgvc -lcgraph -lcdt -llua5.4
+	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 -lgvc -lcgraph -lcdt -lluajit-5.1
 	LINKFLAGS = 
 	VULPINE_LIB_NAME = libvulpineEngine.a
 endif

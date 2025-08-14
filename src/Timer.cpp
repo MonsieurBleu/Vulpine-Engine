@@ -45,6 +45,7 @@ void BenchTimer::start()
         else return;
     }
     lastStartTime = clockmicro::now();
+    
 }
 
 void BenchTimer::hold()
@@ -53,9 +54,10 @@ void BenchTimer::hold()
 
     clockmicro::time_point now = clockmicro::now();
     holdDeltaBuff += speed*(now-lastStartTime);   
+    holdCounter ++;
 }
 
-void BenchTimer::end()
+void BenchTimer::stop()
 {
     if(paused) return;
 
@@ -85,6 +87,8 @@ void BenchTimer::end()
         avgUpdateCounter = 0;
         avgLast = avg;
     }
+
+    holdCounter = 0;
 }
 
 void BenchTimer::setAvgLengthMS(int64_t newLength)
@@ -104,6 +108,8 @@ std::ostream& operator<<(std::ostream& os, BenchTimer e)
     os << TERMINAL_INFO <<"\tavgTotal : " << TERMINAL_NOTIF <<e.avgTotal.count() << "ms\n";
     os << TERMINAL_INFO <<"\tavg      : " << TERMINAL_NOTIF <<e.avgLast.count() << "ms\n";
     os << TERMINAL_INFO <<"\tupdateCounter  : " << TERMINAL_NOTIF << e.updateCounter << "\n";
+    os << TERMINAL_INFO <<"\tholdCounter : " << TERMINAL_NOTIF << e.holdCounter << "\n";
+    os << TERMINAL_INFO <<"\tavgPerHold : " << TERMINAL_NOTIF << e.delta.count()/(float)e.holdCounter << "\n";
     // os << TERMINAL_INFO <<"\tlastTimeUpdate : " << TERMINAL_NOTIF << e.lastTimeUpdate.time_since_epoch().count() << "\n";
     os << TERMINAL_RESET;
     return os;

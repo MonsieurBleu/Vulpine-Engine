@@ -663,13 +663,13 @@ void Scene::deactivateClusteredLighting()
 void Scene::endTimers()
 {
     cullTime.start();
-    cullTime.end();
+    cullTime.stop();
     callsTime.start();
-    callsTime.end();
+    callsTime.stop();
     depthOnlyCallsTime.start();
-    depthOnlyCallsTime.end();
+    depthOnlyCallsTime.stop();
     shadowPassCallsTime.start();
-    shadowPassCallsTime.end();
+    shadowPassCallsTime.stop();
     lightBufferTime.start();
-    lightBufferTime .end();
+    lightBufferTime .stop();
 }

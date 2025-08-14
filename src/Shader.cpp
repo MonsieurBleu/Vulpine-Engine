@@ -243,7 +243,7 @@ ShaderError ShaderProgram::compileAndLink()
     // useCount[program]++;
     handle = std::make_shared<GLuint>(program);
 
-    timer.end();
+    timer.stop();
 
     #ifdef SHOW_SHADER_PROGRAM_LOADING
     std::cout

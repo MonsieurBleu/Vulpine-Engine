@@ -5,9 +5,9 @@
 #define PI2  6.283185307179586f
 #define iPI  0.318309886183790f
 #define iPI2 0.159154943091895f
-#define E    2.718281828459045f
+#define CONST_E    2.718281828459045f
 #define PHI  1.618033988749894f
 #define SQR2 1.414213562373095f
-#define G    9.80665f
+#define CONST_G    9.80665f
 
 #endif

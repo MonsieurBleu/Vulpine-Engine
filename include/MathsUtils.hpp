@@ -39,6 +39,7 @@ vec3 screenPosToModel(vec2 screenPos);
 /***** GEOMETRICAL UTILS ******/
 vec3 projectPointOntoPlane(vec3 point, vec3 planePoint, vec3 planeNormal);
 
+// Don't remember what it does *exactly*, but it's used for a yygizmo
 vec3 rayAlignedPlaneIntersect(vec3 origin, vec3 direction, float axis, float axisPosition);
 
 

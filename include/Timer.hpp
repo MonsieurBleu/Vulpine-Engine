@@ -37,6 +37,7 @@ private:
     clockmicro::time_point lastStartTime;
 
     uint64_t updateCounter = 0;
+    uint32_t holdCounter = 0;
 
     float elapsedTime = 0.0;
     float deltaS = 0.0;
@@ -52,7 +53,7 @@ public:
 
     float speed = 1.0;
 
-    void end();
+    void stop();
     void hold();
     void start();
 

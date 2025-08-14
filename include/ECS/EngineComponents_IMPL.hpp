@@ -9,6 +9,8 @@
 #include <AssetManager.hpp>
 #include <Globals.hpp>
 
+#include <Scripting/ScriptInstance.hpp>
+
 template<> void Component<WidgetSprite>::ComponentElem::init()
 {
     if(data.name.size())
@@ -109,8 +111,6 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     auto &box = child->comp<WidgetBox>();
 
     bool hidden = child->hasComp<WidgetState>() && child->comp<WidgetState>().status == ModelStatus::HIDE;
-
-    // if(hidden) return;
 
     vec2 tmpMin = box.min;
     vec2 tmpMax = box.max;
@@ -320,20 +320,28 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
         return;
 
+    if(hidden) return;
+
     float a = WidgetBox::smoothingAnimationSpeed == 0.f ?
         1. :smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*WidgetBox::smoothingAnimationSpeed);
 
-    box.displayMin = mix(box.lastMin, box.min, a);
-    box.displayMax = mix(box.lastMax, box.max, a);
-
+    if(a < 1. && Loader<ScriptInstance>::loadingInfos.find("WidgetBox_SmoothSync") != Loader<ScriptInstance>::loadingInfos.end())
+    {
+        Loader<ScriptInstance>::get("WidgetBox_SmoothSync").run(box.lastMin, box.lastMax, box.min, box.max, a);
+        box.displayMin = threadState["displayMin"];
+        box.displayMax = threadState["displayMax"];
+    }
+    else
+    {
+        box.displayMin = box.min;
+        box.displayMax = box.max;
+    }
 
     box.displayMin = max(box.displayRangeMin, box.displayMin);
     box.displayMax = max(box.displayRangeMin, box.displayMax);
 
     box.displayMin = min(box.displayRangeMax, box.displayMin);
     box.displayMax = min(box.displayRangeMax, box.displayMax);
-
-
 
     // if(box.displayRangeMax != vec2(UNINITIALIZED_FLOAT))
     // {

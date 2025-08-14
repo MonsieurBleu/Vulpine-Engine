@@ -7,6 +7,8 @@
 #include <Graphics/Skeleton.hpp>
 #include <AssetManagerUtils.hpp>
 
+#include <Scripting/ScriptInstance.hpp>
+
 /*
     TODO : adding Uniforms loading
 */
@@ -322,6 +324,17 @@ AnimationRef& Loader<AnimationRef>::loadFromInfos()
     LOADER_ASSERT(NEW_VALUE)
 
     r = Animation::load(buff->read());
+
+    EXIT_ROUTINE_AND_RETURN
+}
+
+template<>
+ScriptInstance& Loader<ScriptInstance>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+    LOADER_ASSERT(NEW_VALUE)
+
+    r = ScriptInstance(buff->read());
 
     EXIT_ROUTINE_AND_RETURN
 }

@@ -13,6 +13,8 @@
 #include <Graphics/Skeleton.hpp>
 #include <Uniforms.hpp>
 
+#include <Scripting/ScriptInstance.hpp>
+
 std::mutex inputMutex;
 std::mutex physicsMutex;
 InputBuffer inputs;
@@ -57,6 +59,22 @@ void App::loadAllAssetsInfos(const char *filename)
         else if (!strcmp(ext, ".ktx") || !strcmp(ext, ".ktx2") || !strcmp(ext, ".png") || !strcmp(ext, ".jpg"))
             Loader<Texture2D>::addInfosTextless(p, "source");
     }
+
+    for (auto f : std::filesystem::recursive_directory_iterator("scripts"))
+    {
+        if (f.is_directory())
+            continue;
+
+        char ext[1024];
+        char p[4096];
+
+        strcpy(ext, (char *)f.path().extension().string().c_str());
+        strcpy(p, (char *)f.path().string().c_str());
+
+        if (!strcmp(ext, ".lua"))
+            Loader<ScriptInstance>::addInfosTextless(p);
+    }
+
 };
 
 void App::resizeCallback(GLFWwindow *window, int width, int height)
@@ -510,21 +528,30 @@ void App::mainloopPreRenderRoutine()
 
 void App::mainloopEndRoutine()
 {
-    globals.cpuTime.end();
+    globals.cpuTime.stop();
 
     globals.gpuTime.start();
     glfwSwapBuffers(window);
     // glFlush();
-    globals.gpuTime.end();
+    globals.gpuTime.stop();
     // glFinish();
 
-    globals.mainThreadTime.end();
+    globals.mainThreadTime.stop();
     globals.fpsLimiter.waitForEnd();
-    globals.appTime.end();
-    globals.simulationTime.end();
+    globals.appTime.stop();
+    globals.simulationTime.stop();
 
     scene.endTimers();
     scene2D.endTimers();
+
+    for(auto &i : Loader<ScriptInstance>::loadedAssets)
+    {
+        i.second.getTimer().start();
+        i.second.getTimer().stop();
+    }
+
+    ScriptInstance::getGlobalTimer().start();
+    ScriptInstance::getGlobalTimer().stop();
 }
 
 /*

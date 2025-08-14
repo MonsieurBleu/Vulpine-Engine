@@ -94,7 +94,7 @@ float getValue(vec3 c)
 }
 
 float gold_noise3(vec3 coordinate, float seed){
-    return 0.5 - fract(tan(distance(coordinate*vec3(seed+PHI*00000.1), vec3(PHI*00000.1, PI*00000.1, E)))*SQR2*10000.0);
+    return 0.5 - fract(tan(distance(coordinate*vec3(seed+PHI*00000.1), vec3(PHI*00000.1, PI*00000.1, CONST_E)))*SQR2*10000.0);
 }
 
 float random01Vec2(vec2 uv)
