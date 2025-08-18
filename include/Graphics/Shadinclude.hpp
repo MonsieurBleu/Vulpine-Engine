@@ -73,7 +73,7 @@ public:
 	static std::string shaderDefines;
 
 	// Return the source code of the complete shader
-	static std::string load(std::string &path, const std::string &includeIndentifier = "#include ", const std::string &defines = "")
+	static std::string load(std::string &path, std::vector<std::string> &dependencies, const std::string &includeIndentifier = "#include ", const std::string &defines = "")
 	{
 		static bool isRecursiveCall = false;
 
@@ -109,7 +109,8 @@ public:
 				// By using recursion, the new include file can be extracted
 				// and inserted at this location in the shader source code
 				isRecursiveCall = true;
-				fullSourceCode += load(lineBuffer, includeIndentifier);
+				dependencies.push_back(lineBuffer);
+				fullSourceCode += load(lineBuffer, dependencies, includeIndentifier);
 
 				// Do not add this line to the shader source code, as the include
 				// path would generate a compilation issue in the final source code

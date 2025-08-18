@@ -4,6 +4,8 @@
 #include <iostream>
 #include <Graphics/Shadinclude.hpp>
 
+#include <algorithm>
+
 std::string Shadinclude::shaderDefines;
 
 // uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
@@ -30,12 +32,14 @@ void Shader::prepareLoading(const std::string &path, const std::string &defines)
         type = GL_TESS_CONTROL_SHADER;
 }
 
-ShaderError Shader::refresh()
+ShaderError Shader::refresh(std::vector<std::string> &dependencies)
 {
     shader = glCreateShader(type);
 
+    dependencies.push_back(Path);
+
     // std::string code = readFile(Path);
-    std::string code = Shadinclude::load(Path, "#include ", defines);
+    std::string code = Shadinclude::load(Path, dependencies, "#include ", defines);
 
     if (code.empty())
         return ShaderNoFile;
@@ -168,14 +172,23 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
     compileAndLink();
 }
 
+bool ShaderProgram::needRefresh()
+{
+    for(auto &i : dependencies)
+        if(Shader::fileWatchers[i].second)
+            return true;
+    
+    return false;
+}
 
 ShaderError ShaderProgram::compileAndLink()
 {
     BenchTimer timer;
     timer.start();
+    dependencies.clear();
 
     //// COMPILING SHADERS
-    ShaderError serrf = frag.refresh();
+    ShaderError serrf = frag.refresh(dependencies);
     ShaderError serrv = ShaderOk;
     ShaderError serrg = ShaderOk;
     ShaderError serrtc = ShaderOk;
@@ -183,20 +196,31 @@ ShaderError ShaderProgram::compileAndLink()
 
 
     if (!vert.get_Path().empty())
-        serrv = vert.refresh();
+        serrv = vert.refresh(dependencies);
 
     if (!geom.get_Path().empty())
-        serrg = geom.refresh();
+        serrg = geom.refresh(dependencies);
 
     if (!tesc.get_Path().empty())
-        serrv = tesc.refresh();
+        serrv = tesc.refresh(dependencies);
 
     if (!tese.get_Path().empty())
-        serrg = tese.refresh();
+        serrg = tese.refresh(dependencies);
 
     if (serrf != ShaderOk || serrv != ShaderOk || serrg != ShaderOk || serrtc != ShaderOk || serrte != ShaderOk)
         return ShaderCompileError;
 
+    sort(dependencies.begin(), dependencies.end());
+    dependencies.erase(unique(dependencies.begin(), dependencies.end()), dependencies.end());
+
+    for(auto &i : dependencies)
+    {
+        if(Shader::fileWatchers.find(i) == Shader::fileWatchers.end())
+        {
+            Shader::fileWatchers.insert({i, {Filewatcher(i), false}});
+        }
+    }
+    
     ///// CREATING PROGRAM AND LINKING EVERYTHING
     program = glCreateProgram();
 
@@ -262,8 +286,10 @@ ShaderError ShaderProgram::compileAndLink()
     return ShaderOk;
 }
 
-ShaderError ShaderProgram::reset()
+ShaderError ShaderProgram::reset(bool hotReload)
 {
+    if(hotReload && !needRefresh()) return ShaderError::ShaderOk;
+
     glDeleteProgram(program);
     return compileAndLink();
 }

@@ -26,9 +26,9 @@ private:
     duration min      = duration(1e9);
     duration max      = duration(0);
     duration avgTotal = duration(0);
+    duration avgLast  = duration(0);
+    duration avg      = duration(0);
 
-    duration avgLast;
-    duration avg;
     clockmicro::time_point avgLastUpdate;
     uint64_t avgUpdateCounter = 0;
     int64_t avgLength = 500 * NS_TO_MS;

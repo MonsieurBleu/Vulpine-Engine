@@ -1,8 +1,12 @@
 #include <Graphics/Fonts.hpp>
 #include <Utils.hpp>
+#include <bits/stdc++.h>
 
 std::u32string ftou32str(float f, int precision)
 {
+    // if(abs(f) <= 1e-6f) f = 0.f;
+    bool activateDigitSpacing = true;
+
     std::stringstream s;
     s  
         // << std::setw(4)
@@ -10,7 +14,37 @@ std::u32string ftou32str(float f, int precision)
         // << std::scientific
         << f;
     
-    return UFTconvert.from_bytes(s.str());
+    int digitCount = 0;
+    std::string rstr;
+    std::string str = s.str();
+
+    for(auto i = str.rbegin(); i != str.rend(); i++)
+        if(*i == '.')
+        {
+            activateDigitSpacing = false;
+            break;
+        }
+
+    for(auto i = str.rbegin(); i != str.rend(); i++)
+    {
+        if(activateDigitSpacing)
+            digitCount++;
+
+        if(!activateDigitSpacing && *i == '.')
+            activateDigitSpacing = true;
+
+        rstr += *i;
+
+        if(digitCount == 3)
+        {
+            rstr += " ";
+            digitCount = 0;
+        }
+    }
+    
+    std::reverse(rstr.begin(), rstr.end());
+
+    return UFTconvert.from_bytes(rstr);
 }
 
 UFT32Stream &operator<<(UFT32Stream &os, const float f)
