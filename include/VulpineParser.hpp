@@ -35,6 +35,12 @@ class VulpineTextBuff
 
         void loadFromFile(const char *filename);
         uft8 *data = nullptr;
+        
+        /* 
+            This string can be used as a buffer to get a safe ptr to the name of the asset file. 
+            It's used for self named vulpine files ie files that give their name to the asset described inside it.
+        */
+        std::string assetFileName;
 
         size_t getSize(){return size;};
         size_t getReadHead(){return readhead;};

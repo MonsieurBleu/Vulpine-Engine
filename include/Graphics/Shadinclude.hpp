@@ -7,7 +7,7 @@
 #include <Constants.hpp>
 #include <Utils.hpp>
 
-#define SHADER_INCLUDE_FOLDER "shader/.include/"
+#include <AssetManager.hpp>
 
 //	===========
 //	Shadinclude
@@ -104,7 +104,11 @@ public:
 				// std::string pathOfThisFile;
 				// getFilePath(path, pathOfThisFile);
 				// lineBuffer.insert(0, pathOfThisFile);
-                lineBuffer.insert(0, SHADER_INCLUDE_FOLDER);
+                // lineBuffer.insert(0, SHADER_INCLUDE_FOLDER);
+				while(lineBuffer.back() == ' ' || lineBuffer.back() == '\t')
+					lineBuffer.pop_back();
+
+				lineBuffer = Loader<ShaderInclPath>::get(lineBuffer).path;
 
 				// By using recursion, the new include file can be extracted
 				// and inserted at this location in the shader source code

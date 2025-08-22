@@ -87,7 +87,7 @@ void SSAOPass::setup()
 
     shader = ShaderProgram(
         "shader/post-process/SSAO.frag", 
-        "shader/post-process/basic.vert", 
+        "shader/post-process/PP_basic.vert", 
         "")
             // .addUniform(ShaderUniform(camera.getProjectionMatrixAddr(), 9))
             .addUniform(ShaderUniform(globals.renderSizeAddr(), 0))
@@ -131,7 +131,7 @@ void BloomPass::setup()
 {
     shader = ShaderProgram(
         "shader/post-process/Bloom.frag", 
-        "shader/post-process/basic.vert", 
+        "shader/post-process/PP_basic.vert", 
         "",
         globals.standartShaderUniform2D());
     
@@ -182,7 +182,7 @@ void SkyboxPass::setup()
 {
     shader = ShaderProgram(
         "shader/skybox/" + shaderFileName, 
-        "shader/post-process/basic.vert", 
+        "shader/post-process/PP_basic.vert", 
         "",
         globals.standartShaderUniform2D());
 

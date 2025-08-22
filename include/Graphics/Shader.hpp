@@ -25,6 +25,17 @@ enum ShaderError
     ShaderLinkingError
 };
 
+/*
+    Some simple class to store the path of a source file.
+    It's used to enable all the asset manager features for shader source files.
+*/
+struct ShaderFragPath {std::string path;};
+struct ShaderVertPath {std::string path;};
+struct ShaderGeomPath {std::string path;};
+struct ShaderTescPath {std::string path;};
+struct ShaderTesePath {std::string path;};
+struct ShaderInclPath {std::string path;};
+
 class Shader
 {
     private :

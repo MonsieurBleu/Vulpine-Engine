@@ -891,6 +891,27 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
             // .setautomaticTabbing(50)
         , WidgetBox([&list, ufunc, ifunc, searchInputPTR, color](Entity *parent, Entity *child)
         {
+            auto &children = child->comp<EntityGroupInfo>().children;
+            std::vector<EntityRef> childrenCopy;
+
+            for(auto &i : children)
+            {
+                auto elem = list.find(i->comp<EntityInfos>().name);
+
+                // if(elem != list.end() && elem->second.get())
+                // {
+                //     i = elem->second;
+                // }
+
+                if(elem != list.end() && i.get())
+                {
+                    elem->second = i;
+                }
+            }
+                
+            // children = childrenCopy;
+
+
             /**** Creating Children *****/
             for(auto &i : list)
                 if(!i.second.get())
@@ -920,14 +941,21 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
                     i.second->comp<WidgetBox>().useClassicInterpolation = true;
                 }
 
-            auto &children = child->comp<EntityGroupInfo>().children;
 
-            std::vector<EntityRef> childrenCopy;
+            // auto &children = child->comp<EntityGroupInfo>().children;
+            // std::vector<EntityRef> childrenCopy;
+
+            childrenCopy.clear();
             for(auto i : children)
-                if(list.find(i->comp<EntityInfos>().name) != list.end())
+            {
+                auto elem = list.find(i->comp<EntityInfos>().name);
+                if(elem != list.end() && elem->second.get())
                     childrenCopy.push_back(i);
+            }
                 
             children = childrenCopy;
+
+
 
             std::sort(
                 children.begin(),

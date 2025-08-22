@@ -39,7 +39,7 @@ class Loader
         {};
 
         VulpineTextBuffRef buff;
-        char* name = nullptr;
+        const char* name = nullptr;
         char* values = nullptr;
         char* end = nullptr;
 
@@ -56,7 +56,7 @@ class Loader
 
                 if(infos == Loader<T>::loadingInfos.end())
                 {
-                    FILE_ERROR_MESSAGE(elem, "No loader information was loaded for this element.")
+                    FILE_ERROR_MESSAGE(elem, "No loader information was loaded for the element " << elem << ".")
                     return Loader<T>::loadedAssets.begin()->second;
                 }
 
@@ -74,12 +74,17 @@ class Loader
         static Loader<T>& addInfos(VulpineTextBuffRef buff)
         {
             bool infoMustBeLoaded = false;
-            char *ptr = buff->read();
+            const char *ptr = buff->read();
 
             if(*ptr == '|')
             {
                 ptr = buff->read();
                 infoMustBeLoaded = true;
+            }
+            if(*ptr == '~')
+            {
+                buff->assetFileName = getNameOnlyFromPath(buff->getSource().c_str());
+                ptr = buff->assetFileName.c_str();
             }
 
             auto check = loadingInfos.find(ptr);
@@ -98,7 +103,7 @@ class Loader
         {
             VulpineTextBuffRef autoText(new VulpineTextBuff());
 
-            std::string id = getNameOnlyFromPath(filename) + " : " + prefix + " " + filename + " ; "; 
+            std::string id = getNameOnlyFromPath(filename) + " : " + prefix + " \"" + filename + "\" ; "; 
 
             autoText->alloc(id.size());
             strcpy(autoText->data, id.c_str());

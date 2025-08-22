@@ -327,7 +327,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
     if(a < 1. && Loader<ScriptInstance>::loadingInfos.find("WidgetBox_SmoothSync") != Loader<ScriptInstance>::loadingInfos.end())
     {
-        Loader<ScriptInstance>::get("WidgetBox_SmoothSync").run(box.lastMin, box.lastMax, box.min, box.max, a);
+        Loader<ScriptInstance>::get("WidgetBox_SmoothSync").run(box.lastMin, box.lastMax, box.min, box.max, a, (int)box.useClassicInterpolation);
         box.displayMin = threadState["displayMin"];
         box.displayMax = threadState["displayMax"];
     }

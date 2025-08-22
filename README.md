@@ -186,13 +186,13 @@ my-project/
 - [X] Vulpine Engine Asset Convertor
   - [X] Assimp integration  
   - [X] KTX2 integration 
-  - [X] .vulpineMesh
-  - [X] .vulpineSkeleton
-  - [X] .vulpineAnimation
-  - [ ] .vulpineNavigationGraph
-  - [ ] .vulpineBody
-  - [ ] .vulpineLights
-  - [ ] .vulpineScene
+  - [X] .vMesh
+  - [X] .vSkeleton
+  - [X] .vAnimation
+  - [ ] .vNavigationGraph
+  - [ ] .vBody
+  - [ ] .vLights
+  - [ ] .vScene
 
 - [X] 3D
   - [X] Easy VAO Creation & Update
