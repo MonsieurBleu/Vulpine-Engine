@@ -15,6 +15,8 @@
 
 #include <Scripting/ScriptInstance.hpp>
 
+#include <ModManager.hpp>
+
 std::mutex inputMutex;
 std::mutex physicsMutex;
 InputBuffer inputs;
@@ -28,7 +30,10 @@ void App::loadAllAssetsInfos(const char *filename)
     for (auto f : std::filesystem::recursive_directory_iterator(filename))
     {
         if (f.is_directory())
+        {
+            // std::cout << f.path() << "\n";
             continue;
+        }
 
         char ext[1024];
         char p[4096];
@@ -36,25 +41,25 @@ void App::loadAllAssetsInfos(const char *filename)
         strcpy(ext, (char *)f.path().extension().string().c_str());
         strcpy(p, (char *)f.path().string().c_str());
 
-        if (!strcmp(ext, ".vulpineGroup"))
+        if (!strcmp(ext, ".vGroup"))
             Loader<ObjectGroup>::addInfos(p);
-        else if (!strcmp(ext, ".vulpineGroupRef"))
+        else if (!strcmp(ext, ".vGroupRef"))
             Loader<ObjectGroupRef>::addInfos(p);
-        else if (!strcmp(ext, ".vulpineModel"))
+        else if (!strcmp(ext, ".vModel"))
             Loader<MeshModel3D>::addInfos(p);
-        else if (!strcmp(ext, ".vulpineMaterial"))
+        else if (!strcmp(ext, ".vMaterial"))
             Loader<MeshMaterial>::addInfos(p);
-        else if (!strcmp(ext, ".vulpineMeshModel"))
+        else if (!strcmp(ext, ".vMeshModel"))
             Loader<MeshModel3D>::addInfos(p);
-        else if (!strcmp(ext, ".vulpineTexture2D"))
+        else if (!strcmp(ext, ".vTexture2D"))
             Loader<Texture2D>::addInfos(p);
-        else if (!strcmp(ext, ".vulpineAnimation"))
+        else if (!strcmp(ext, ".vAnimation"))
             Loader<AnimationRef>::addInfosTextless(p);
-        else if (!strcmp(ext, ".vulpineMesh"))
+        else if (!strcmp(ext, ".vMesh"))
             Loader<MeshVao>::addInfosTextless(p);
         else if (!strcmp(ext, ".obj"))
             Loader<MeshVao>::addInfosTextless(p);
-        else if (!strcmp(ext, ".vulpineSkeleton"))
+        else if (!strcmp(ext, ".vSkeleton"))
             Loader<SkeletonRef>::addInfosTextless(p);
         else if (!strcmp(ext, ".ktx") || !strcmp(ext, ".ktx2") || !strcmp(ext, ".png") || !strcmp(ext, ".jpg"))
             Loader<Texture2D>::addInfosTextless(p, "source");
@@ -217,20 +222,6 @@ void App::init()
 #endif
 
     glLineWidth(3.0);
-
-    // globals.basicMaterial = MeshMaterial(
-    //     new ShaderProgram(
-    //         "shader/foward/basic.frag",
-    //         "shader/foward/basic.vert",
-    //         "",
-    //         globals.standartShaderUniform3D()));
-
-    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicHelper.vulpineMaterial");
-    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicFont3D.vulpineMaterial");
-    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/basicPBR.vulpineMaterial");
-    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/animatedPBR.vulpineMaterial");
-    // Loader<MeshMaterial>::addInfos("shader/vulpineMaterials/mdFont.vulpineMaterial");
-    loadAllAssetsInfos("shader/vulpineMaterials/");
 }
 
 void App::activateMainSceneBindlessTextures()
@@ -367,126 +358,6 @@ App::App(GLFWwindow *window)
     : window(window), renderBuffer(globals.renderSizeAddr()), SSAO(renderBuffer), Bloom(renderBuffer)
 {
     globals._window = window;
-    // if(!alCall(alDistanceModel, AL_INVERSE_DISTANCE_CLAMPED))
-    // {
-    //     std::cerr << "ERROR: Could not set Distance Model to AL_INVERSE_DISTANCE_CLAMPED" << std::endl;
-    // }
-
-    // glfwSetKeyCallback(window, [](GLFWwindow* window, int key, int scancode, int action, int mods)
-    // {
-    //     giveCallbackToApp(GLFWKeyInfo{window, key, scancode, action, mods});
-    // });
-
-    // glfwSetMouseButtonCallback(window, [](GLFWwindow* window, int button, int action, int mods){
-    //     giveCallbackToApp(GLFWKeyInfo{window, button, button, action, mods});
-    // });
-
-    // /*
-    //     TODO :
-    //         Test if the videoMode automaticlly update
-    // */
-    // globals._videoMode = glfwGetVideoMode(glfwGetPrimaryMonitor());
-
-    // glfwGetWindowSize(window, &globals._windowSize.x, &globals._windowSize.y);
-    // globals._renderSize = ivec2(globals._windowSize.x*globals._renderScale,
-    // globals._windowSize.y*globals._renderScale);
-
-    // globals._standartShaderUniform2D =
-    // {
-    //     ShaderUniform(globals.windowSizeAddr(), 0),
-    //     ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
-    // };
-
-    // globals._standartShaderUniform3D =
-    // {
-    //     ShaderUniform(globals.windowSizeAddr(),               0),
-    //     ShaderUniform(globals.appTime.getElapsedTimeAddr(),   1),
-    //     ShaderUniform(camera.getProjectionViewMatrixAddr(),   2),
-    //     ShaderUniform(camera.getViewMatrixAddr(),             3),
-    //     ShaderUniform(camera.getProjectionMatrixAddr(),       4),
-    //     ShaderUniform(camera.getPositionAddr(),               5),
-    //     ShaderUniform(camera.getDirectionAddr(),              6),
-    //     ShaderUniform(&ambientLight,                         15),
-    // };
-
-    // globals._fullscreenQuad.setVao(
-    //     MeshVao(new VertexAttributeGroup(
-    //         {
-    //             VertexAttribute(
-    //                 GenericSharedBuffer(
-    //                     (char *)new float[12]{-1.0f,  1.0f, 1.0f, 1.0f,  -1.0f, -1.0f, 1.0f,  -1.0f, 1.0f, 1.0f,
-    //                     -1.0f, -1.0f}
-    //                     ),
-    //                 0,
-    //                 6,
-    //                 2,
-    //                 GL_FLOAT,
-    //                 false
-    //             )
-    //         }
-    //     )));
-
-    // globals._fullscreenQuad.getVao()->generate();
-    // renderBuffer.generate();
-    // SSAO.setup();
-    // Bloom.setup();
-
-    // screenBuffer2D
-    //     .addTexture(
-    //         Texture2D().
-    //             setResolution(globals.windowSize())
-    //             .setInternalFormat(GL_SRGB8_ALPHA8)
-    //             .setFormat(GL_RGBA)
-    //             .setPixelType(GL_UNSIGNED_BYTE)
-    //             .setFilter(GL_LINEAR)
-    //             .setWrapMode(GL_CLAMP_TO_EDGE)
-    //             .setAttachement(GL_COLOR_ATTACHMENT0))
-    //     .addTexture(
-    //         Texture2D()
-    //             .setResolution(globals.windowSize())
-    //             .setInternalFormat(GL_DEPTH_COMPONENT)
-    //             .setFormat(GL_DEPTH_COMPONENT)
-    //             .setPixelType(GL_UNSIGNED_BYTE)
-    //             .setFilter(GL_LINEAR)
-    //             .setWrapMode(GL_CLAMP_TO_EDGE)
-    //             .setAttachement(GL_DEPTH_ATTACHMENT))
-    //     .generate();
-
-    // globals.currentCamera = &camera;
-
-    // glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-
-    // glfwSetCharCallback(window, [](GLFWwindow* window, unsigned int codepoint)
-    // {
-    //     globals.textInputString.push_back(codepoint);
-    // });
-
-    // glfwSetScrollCallback(window, [](GLFWwindow* window, double xoffset, double yoffset)
-    // {
-    //     globals._scrollOffset = vec2(xoffset, yoffset);
-    //     GLFWKeyInfo i;
-    //     i.key = 0;
-    //     inputs.add(i);
-    // });
-
-    // /// CENTER WINDOW
-    // glfwSetWindowPos(
-    //     window,
-    //     (globals.screenResolution().x - globals.windowWidth())/2,
-    //     (globals.screenResolution().y - globals.windowHeight())/2);
-
-    // #ifdef INVERTED_Z
-    // glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
-    // #endif
-
-    // glLineWidth(3.0);
-
-    // globals.basicMaterial = MeshMaterial(
-    //     new ShaderProgram(
-    //         "shader/foward/basic.frag",
-    //         "shader/foward/basic.vert",
-    //         "",
-    //         globals.standartShaderUniform3D()));
 }
 
 void App::mainloopStartRoutine()

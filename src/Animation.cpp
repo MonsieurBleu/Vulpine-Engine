@@ -15,14 +15,9 @@ AnimationRef Animation::load(const std::string &filename)
     // FILE *file = fopen(filename.c_str(), "rb");
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file)
-    {
-        std::cerr << TERMINAL_ERROR
-                  << "Animation::load : can't open file "
-                  << TERMINAL_FILENAME
-                  << filename
-                  << TERMINAL_ERROR
-                  << ".\n"
-                  << TERMINAL_RESET;
+    {        
+        ERROR_MESSAGE("Can't open file '" << filename << "'")
+        assert(false);
         return nullptr;
     }
 

@@ -48,6 +48,31 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
         {
             preproc = buff->read();
         }
+        else if(!strcasecmp(elem, "frag"))
+        {
+            std::string name(buff->read());
+            elems.push_back(Loader<ShaderFragPath>::get(name).path.c_str());
+        }
+        else if(!strcasecmp(elem, "vert"))
+        {
+            std::string name(buff->read());
+            elems.push_back(Loader<ShaderVertPath>::get(name).path.c_str());
+        }
+        else if(!strcasecmp(elem, "geom"))
+        {
+            std::string name(buff->read());
+            elems.push_back(Loader<ShaderGeomPath>::get(name).path.c_str());
+        }
+        else if(!strcasecmp(elem, "tesc"))
+        {
+            std::string name(buff->read());
+            elems.push_back(Loader<ShaderTescPath>::get(name).path.c_str());
+        }
+        else if(!strcasecmp(elem, "tese"))
+        {
+            std::string name(buff->read());
+            elems.push_back(Loader<ShaderTesePath>::get(name).path.c_str());
+        }
         else
             elems.push_back(elem);
     }
@@ -106,13 +131,13 @@ MeshVao& Loader<MeshVao>::loadFromInfos()
     char *file = buff->read();
     const char* ext = getFileExtensionC(file);
 
-    if(!strcasecmp(ext, "vulpineMesh"))
+    if(!strcasecmp(ext, "vMesh"))
         r = loadVulpineMesh(file); 
     else
     if(!strcasecmp(ext, "obj"))
         r = readOBJ(file);
     else
-        FILE_ERROR_MESSAGE(name, "File extension '" << ext << "' not recognized. Expected .vulpineMesh or .obj")
+        FILE_ERROR_MESSAGE(name, "File extension '" << ext << "' not recognized. Expected .vMesh or .obj")
 
     LOADER_ASSERT(END_VALUE)
     EXIT_ROUTINE_AND_RETURN
@@ -338,3 +363,13 @@ ScriptInstance& Loader<ScriptInstance>::loadFromInfos()
 
     EXIT_ROUTINE_AND_RETURN
 }
+
+#define GEN_SHADER_PATH_LOADER(type) template<>type& Loader<type>::loadFromInfos() \
+    { EARLY_RETURN_IF_LOADED LOADER_ASSERT(NEW_VALUE) r.path = std::string(buff->read()); EXIT_ROUTINE_AND_RETURN}
+
+GEN_SHADER_PATH_LOADER(ShaderFragPath);
+GEN_SHADER_PATH_LOADER(ShaderVertPath);
+GEN_SHADER_PATH_LOADER(ShaderGeomPath);
+GEN_SHADER_PATH_LOADER(ShaderTescPath);
+GEN_SHADER_PATH_LOADER(ShaderTesePath);
+GEN_SHADER_PATH_LOADER(ShaderInclPath);
