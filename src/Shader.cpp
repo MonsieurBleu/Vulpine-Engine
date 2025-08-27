@@ -291,7 +291,14 @@ ShaderError ShaderProgram::reset(bool hotReload)
     if(hotReload && !needRefresh()) return ShaderError::ShaderOk;
 
     glDeleteProgram(program);
-    return compileAndLink();
+    auto error = compileAndLink();
+
+    if(hotReload && error == ShaderError::ShaderOk)
+    {
+        NOTIF_MESSAGE("Compiled successfully shader program with sources : " << frag.get_Path() << " " << vert.get_Path() << " " << geom.get_Path());
+    }
+
+    return error;
 }
 
 void ShaderProgram::activate() const

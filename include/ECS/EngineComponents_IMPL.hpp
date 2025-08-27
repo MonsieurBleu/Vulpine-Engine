@@ -317,8 +317,8 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     //     box.lastChangeTime = time;
     // }
 
-    if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
-        return;
+    // if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
+    //     return;
 
     if(hidden) return;
 
@@ -342,6 +342,13 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
     box.displayMin = min(box.displayRangeMax, box.displayMin);
     box.displayMax = min(box.displayRangeMax, box.displayMax);
+
+    box.displayMin = min(box.displayMin, box.displayMax);
+    // vec2 mintmp = min(box.displayMin, box.displayMax);
+    // vec2 maxtmp = max(box.displayMin, box.displayMax);
+    // box.displayMin = mintmp;
+    // box.displayMax = maxtmp;
+    
 
     // if(box.displayRangeMax != vec2(UNINITIALIZED_FLOAT))
     // {
@@ -622,7 +629,18 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         lastEntityClicked = nullptr;
 
     System<WidgetBox>([screenPos, down, click](Entity &entity){
+
         auto &box = entity.comp<WidgetBox>();
+        if(box.displayMin.x > box.displayMax.x || box.displayMin.y > box.displayMax.y)
+        {
+            box.isUnderCursor = false;
+            WARNING_MESSAGE(
+                "Wrong WidgetBox logic for entity '" 
+                << entity.comp<EntityInfos>().name 
+                << "' display minimal range is greated than display maximal range")
+            return;
+        }
+
         vec2 cursor = ((screenPos-box.displayMin)/(box.displayMax - box.displayMin));
         box.isUnderCursor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;
 
@@ -666,7 +684,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 
             case WidgetButton::Type::CHECKBOX :
                 if(entity.hasComp<WidgetStyle>())
-                    style.useAltBackgroundColor = button.cur > 0.f;
+                    style.useAltBackgroundColor = style.useAltTextColor = button.cur > 0.f;
                 break;
             
             case WidgetButton::Type::SLIDER :

@@ -10,7 +10,7 @@ COMPONENT_IMPL(EntityInfos)
 
 Entity::~Entity()
 {
-    // std::cout << "Destroying Entity " << toStr() << "\n";
+    // std::cout << "Destroying " << toStr() << "\n";
 
     Component<EntityInfos>::elements[ids[ENTITY_LIST]].enabled = false;
 

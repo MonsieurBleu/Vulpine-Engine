@@ -74,6 +74,8 @@ EntityRef  VulpineBlueprintUI::Toggable(
             // .setbackgroundColor2(vec4(rgb2hsv(hsv2rgb(vec3(color)) * vec3(1, .5, 2)), color.a*.5))
             .setbackgroundColor2(vec4(color, ALPHA2/255.f))
             .settextColor1(VulpineColorUI::DarkBackgroundColor1)
+            // .settextColor2(VulpineColorUI::LightBackgroundColor1)
+            .settextColor2(VulpineColorUI::DarkBackgroundColor1)
         , WidgetButton(WidgetButton::Type::CHECKBOX, ifunc, ufunc)
     );
 
@@ -720,7 +722,8 @@ EntityRef VulpineBlueprintUI::TimerPlot(
 EntityRef VulpineBlueprintUI::ColoredConstEntry(
     const std::string &name,
     std::function<std::u32string()> toText,
-    vec4 color
+    vec4 color,
+    bool vertical
 )
 {
     vec4 color2 = color;
@@ -730,12 +733,12 @@ EntityRef VulpineBlueprintUI::ColoredConstEntry(
         , UI_BASE_COMP
         , WidgetBox()
         , WidgetStyle()
-            // .setautomaticTabbing(1)
+            .setautomaticTabbing(vertical ? 2 : 1)
         , EntityGroupInfo({
             newEntity(name
                 , UI_BASE_COMP
                 , WidgetBox(vec2(-1, -0.01), vec2(-1, 1))
-                , WidgetText()
+                , WidgetText(U"**" + UFTconvert.from_bytes(name) + U"**")
                 , WidgetBackground()
                 , WidgetStyle()
                     .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
@@ -743,6 +746,7 @@ EntityRef VulpineBlueprintUI::ColoredConstEntry(
                     .settextColor1(VulpineColorUI::DarkBackgroundColor1)
                     // .settextColor1(color)
                     .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
+                    // .setbackgroundColor1(color)
             ),
 
             newEntity(name + "- text"
@@ -878,7 +882,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
                 return U"";
             }
         )
-        , 0.5
+        , 0.333
         , false
         , color
     );
@@ -1104,9 +1108,9 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
 
     listScreen->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.95 - verticalLenghtReduction*0.05));
 
-    scrollZone->comp<WidgetBox>().set(vec2(-1, 1), vec2(-0.9 -0.1*verticalLenghtReduction, 1));
+    scrollZone->comp<WidgetBox>().set(vec2(-1, 1), vec2(-0.925 -0.05*verticalLenghtReduction, 1));
 
-    searchInput->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.9 -0.1*verticalLenghtReduction));
+    searchInput->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.925 -0.05*verticalLenghtReduction));
 
     searchInput->comp<WidgetStyle>().setautomaticTabbing(1);
 

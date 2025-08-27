@@ -178,10 +178,25 @@ void OrbitController::update()
         globals.currentCamera->setForceLookAtPoint(true);
         
         globals.currentCamera->lookAt(position);
+        
+        if(enable2DView)
+        {
+            // globals.currentCamera->setType(CameraType::ORTHOGRAPHIC);
+            // globals.currentCamera->wup = vec3(1, 0, 0);
+            globals.currentCamera->setPosition(position + 
+                View2DLock*distance
+                );
+        }
+        else
+        {
+            // globals.currentCamera->setType(CameraType::PERSPECTIVE);
+            // globals.currentCamera->wup = vec3(0, 1, 0);
+            globals.currentCamera->setPosition(position + 
+                normalize(globals.currentCamera->getPosition() - position)*distance
+                );
+        }
 
-        globals.currentCamera->setPosition(position + 
-            normalize(globals.currentCamera->getPosition() - position)*distance
-            );
+        globals.currentCamera->updateProjectionViewMatrix();
     }
 }
 
@@ -219,18 +234,19 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
         {
             vec3 front = normalize(globals.currentCamera->getPosition() - position);
 
-            vec3 right = normalize(cross(front, vec3(0, 1, 0)));
+            const vec3 wup = abs(dot(front, vec3(0, -1, 0))) < 0.1 ? vec3(0, 1, 0) : vec3(1, 0, 0);
+
+            vec3 right = normalize(cross(front, wup));
             vec3 up = normalize(cross(front, right));
             
             vec3 off = -0.02f*right*dir.x + 0.02f*up*dir.y;
             position += off;
 
-
             globals.currentCamera->setPosition(globals.currentCamera->getPosition() + off);
         }
         else
 
-        if(globals.mouseMiddleClickDown())
+        if(globals.mouseMiddleClickDown() && !enable2DView)
         {
             float yaw = radians(dir.x);
             float pitch = radians(dir.y);

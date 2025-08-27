@@ -57,7 +57,7 @@ void Camera::updateViewMatrix()
     else
         state.lookpoint = state.position + state.direction;
     
-    viewMatrix = glm::lookAt(state.position, state.lookpoint, vec3(0, 1, 0));
+    viewMatrix = glm::lookAt(state.position, state.lookpoint, wup);
 }
 
 void Camera::updateProjectionMatrix()
@@ -93,7 +93,7 @@ void Camera::updateFrustum()
     {
         const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
 
-        const vec3 right = normalize(cross(vec3(0, 1, 0), front));
+        const vec3 right = normalize(cross(wup, front));
         const vec3 up = cross(right, front);
         const vec3 p = state.position;
         const float d = length(p);
@@ -191,7 +191,7 @@ void Camera::move(vec3 velocity, double deltatime)
     velocity *= deltatime;
     state.position += state.direction * velocity.x;
 
-    state.position += cross(vec3(0.f, 1.f, 0.f), state.direction) * velocity.z;
+    state.position += cross(wup, state.direction) * velocity.z;
 
     state.position.y += velocity.y;
 }
@@ -199,4 +199,9 @@ void Camera::move(vec3 velocity, double deltatime)
 void Camera::setState(CameraState &newState)
 {
     state = newState;
+}
+
+void Camera::setType(CameraType t)
+{
+    type = t;
 }

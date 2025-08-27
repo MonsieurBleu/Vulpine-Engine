@@ -193,7 +193,7 @@ class Entity
             ss << TERMINAL_NOTIF << TERMINAL_UNDERLINE << comp<EntityInfos>().name << TERMINAL_RESET << " "; 
         
             for(auto &i : ComponentCategoryMap)
-                if(i.second != ComponentCategory::END)
+                if(i.second != ComponentCategory::END && ids[i.second] != -1)
                     ss << "  " << TERMINAL_FILENAME << i.first << "[" << TERMINAL_TIMER << ids[i.second] << "]";
 
             ss << TERMINAL_OK << "}\n" << TERMINAL_RESET;

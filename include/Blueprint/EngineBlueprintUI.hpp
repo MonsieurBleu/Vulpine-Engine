@@ -103,7 +103,8 @@ namespace VulpineBlueprintUI
         EntityRef ColoredConstEntry(
             const std::string &name,
             std::function<std::u32string()> toText,
-            vec4 color = VulpineColorUI::LightBackgroundColor1
+            vec4 color = VulpineColorUI::LightBackgroundColor1,
+            bool vertical = false
         );
 
         EntityRef TimerPlot(

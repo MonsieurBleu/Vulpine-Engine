@@ -40,7 +40,7 @@ const AssetVersion& ModList::getBestVersionFromList(
     const std::string &name
 )
 {
-    assert(!versions.empty());
+    // assert(!versions.empty());
 
     for(auto &mod : list)
     {

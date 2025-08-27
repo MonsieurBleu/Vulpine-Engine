@@ -61,6 +61,8 @@ class Camera
     public: 
         float width = 1920.f;
         float height = 1080.f;
+
+        vec3 wup = vec3(0, 1, 0);
         
         CameraState state;
         
@@ -109,6 +111,7 @@ class Camera
         void move(vec3 velocity, double deltatime);
 
         void setState(CameraState& newState);
+        void setType(CameraType t);
         CameraState& getState() {return state;};
 };
 

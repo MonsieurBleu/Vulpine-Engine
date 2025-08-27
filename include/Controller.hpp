@@ -69,6 +69,9 @@ class OrbitController : public Controller
         void clean();
         void init();
 
+        bool enable2DView = false;
+        vec3 View2DLock = vec3(0, -1, 0);
+
         void mouseEvent(vec2 dir, GLFWwindow* window);
 };
 
