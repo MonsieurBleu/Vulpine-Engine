@@ -116,9 +116,10 @@ struct WidgetBox
 struct WidgetText
 {
     WidgetText(){};
-    WidgetText(std::u32string newText) : text(newText){};
+    WidgetText(std::u32string newText, StringAlignement align = StringAlignement::CENTERED) : text(newText), align(align){};
     SingleStringBatchRef mesh;
     std::u32string text;
+    StringAlignement align;
 };
 
 struct WidgetBackground
@@ -185,7 +186,7 @@ struct WidgetStyle
     ChainedMember(WidgetStyle, int, automaticTabbing, 0)
     ChainedMember(WidgetStyle, float, spriteScale, 1)
 
-    ChainedMember(WidgetStyle, bool, useInternalSpacing, true)
+    ChainedMember(WidgetStyle, bool, useInternalSpacing, false)
 
     ChainedMember(WidgetStyle, vec2, spritePosition, vec2(0))
 

@@ -145,22 +145,22 @@ EntityRef VulpineBlueprintUI::ValueInput(
         }
     );
 
-    auto incr = Toggable("n+", "", 
+    auto incr = Toggable("(+)", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() + smallIncrement, minV, maxV));},
         [PASS_ARG_COPY](Entity *e){return 1.f;}
     );
 
-    auto decr = Toggable("n-", "", 
+    auto decr = Toggable("(-)", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() - smallIncrement, minV, maxV));},
         [PASS_ARG_COPY](Entity *e){return 1.f;}
     );
 
-    auto Bincr = Toggable("n++", "", 
+    auto Bincr = Toggable("[++]", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() + bigIncrement, minV, maxV));},
         [PASS_ARG_COPY](Entity *e){return 1.f;}
     );
 
-    auto Bdecr = Toggable("n--", "", 
+    auto Bdecr = Toggable("[--]", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() - bigIncrement, minV, maxV));},
         [PASS_ARG_COPY](Entity *e){return 1.f;}
     );
@@ -170,8 +170,13 @@ EntityRef VulpineBlueprintUI::ValueInput(
         , WidgetBox()
         , WidgetStyle()
             .setautomaticTabbing(1)
+            .setuseInternalSpacing(false)
         , EntityGroupInfo({
-            Bdecr, decr, textInput, incr, Bincr
+            Bdecr, 
+            decr, 
+            textInput, 
+            incr, 
+            Bincr
         })
     );
 

@@ -101,6 +101,8 @@ class VulpineTextOutput
         uft8 *&getReadHead(); 
         const uft8 *&getReadHeadConst(); 
 
+        int getTabLevel() const;
+
         uft8 *getData(); 
 
         void saveAs(const char *filename);

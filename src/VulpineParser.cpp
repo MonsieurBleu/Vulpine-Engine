@@ -236,6 +236,11 @@ void VulpineTextOutput::NewLine()
     *(readhead++) = '\n';
 }
 
+int VulpineTextOutput::getTabLevel()const
+{
+    return tabLevel;
+}
+
 void VulpineTextOutput::write(const char *src, int wsize)
 {
     if((data + size)-readhead < glm::max(256, wsize)) 

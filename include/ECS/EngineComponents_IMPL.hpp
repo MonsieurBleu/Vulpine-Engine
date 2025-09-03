@@ -11,6 +11,16 @@
 
 #include <Scripting/ScriptInstance.hpp>
 
+COMPONENT_DEFINE_REPARENT(EntityGroupInfo)
+{
+    // if(!child->hasComp<EntityGroupInfo>())
+    // {
+    //     child->set<EntityGroupInfo>(EntityGroupInfo());
+    // }
+
+    // child->comp<EntityGroupInfo>().parent = &parent;
+}
+
 template<> void Component<WidgetSprite>::ComponentElem::init()
 {
     if(data.name.size())
@@ -404,9 +414,24 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         tscale = vec2(min(tscale.x, tscale.y));
         tscale.y *= iaspectRatio;
 
+        vec2 initialPos;
+
+        switch(text.align)
+        {
+            case CENTERED :
+                initialPos = vec2(0.5, -0.5f);
+                break;
+            
+            case TO_LEFT :
+                initialPos = vec2(0.0, -0.5f);
+                break;
+            
+            default : break;
+        }
+
         text.mesh->state 
             .setPositionXY(
-                pos + vec2(0.5f, -0.5f)*(scale - text.mesh->getSize()*tscale))
+                pos + initialPos*(scale - text.mesh->getSize()*tscale))
             .setPositionZ(box.depth+0.00005)
             .setScale(vec3(tscale, 1));
     }
@@ -422,6 +447,12 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 
     if(&parent != child.get())
     {
+        if(isIndirectHST)
+        {
+            return;
+        }
+            // NOTIF_MESSAGE(child->comp<EntityInfos>().name);
+
         auto &parentUp = parent.comp<WidgetState>();
 
         switch (parentUp.statusToPropagate)
@@ -449,7 +480,14 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
                 // if(up.status != ModelStatus::HIDE)
                     up.status = ModelStatus::SHOW;
 
-                if(!child->hasComp<WidgetButton>() || child->comp<WidgetButton>().type != WidgetButton::Type::HIDE_SHOW_TRIGGER)
+                if(
+                    !child->hasComp<WidgetButton>() || 
+                    (
+                        child->comp<WidgetButton>().type != WidgetButton::Type::HIDE_SHOW_TRIGGER
+                        // &&
+                        // child->comp<WidgetButton>().type != WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT
+                    )
+                )
                     up.statusToPropagate = ModelStatus::SHOW;
 
                 break;
@@ -548,6 +586,7 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 //     if(child->hasComp<WidgetText>() && child->comp<WidgetText>().mesh.get())
 //         child->comp<WidgetText>().mesh->state.setHideStatus(up.status);
 // }
+
 
 void updateWidgetsStyle()
 {

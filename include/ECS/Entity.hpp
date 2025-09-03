@@ -181,7 +181,11 @@ class Entity
         Entity(const std::string &name, components&&... component) : Entity(name)
         {
             templatePass{(set(component), 0) ...};
+
+            setChildrenInfos();
         };
+
+        void setChildrenInfos();
 
         ~Entity();
 

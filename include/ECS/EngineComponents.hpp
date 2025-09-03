@@ -9,6 +9,10 @@
 #undef CURRENT_CATEGORY
 #define CURRENT_CATEGORY UI
 
+/***************** ECS BASE VULPINE COMPONENTS *****************/
+
+Aligned_Component(EntityGroupInfo)
+
 /***************** UI BASE VULPINE COMPONENTS *****************/
 
 /* TODO : remove ?*/

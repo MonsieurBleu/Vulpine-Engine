@@ -25,8 +25,9 @@ Entity::~Entity()
             
             ComponentGlobals::status[i][ids[i]].enabled = false;
         }
-
-    comp<EntityGroupInfo>().children.clear();
+    
+    if(hasComp<EntityGroupInfo>())
+        comp<EntityGroupInfo>().children.clear();
 }
 
 #endif
@@ -67,15 +68,16 @@ void ComponentModularity::synchronizeChildren(EntityRef parent)
         if(parent->state[i.ComponentID])
             i.element(*parent, parent);
 
-    for(auto &c : parent->comp<EntityGroupInfo>().children)
-    {
-        synchronizeChildren(c);
-        
-        for(auto &i : SynchFuncs)
-            if(c->state[i.ComponentID])
-                i.element(*parent, c);
+    if(parent->hasComp<EntityGroupInfo>())
+        for(auto &c : parent->comp<EntityGroupInfo>().children)
+        {
+            synchronizeChildren(c);
+            
+            for(auto &i : SynchFuncs)
+                if(c->state[i.ComponentID])
+                    i.element(*parent, c);
 
-    }
+        }
 }
 
 

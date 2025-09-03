@@ -44,10 +44,16 @@ struct EntityGroupInfo
 {
     EntityGroupInfo(){};
     EntityGroupInfo(const std::vector<EntityRef> & _children){
-        children.reserve(32000);
+        // children.reserve(32000); /* TODO : WHY DID I PUT THAT HERE*/
         
         for(auto c : _children)
+        {
+            // if(!c->hasComp<EntityGroupInfo>())
+            // {
+            //     c->set<EntityGroupInfo>(EntityGroupInfo());
+            // }
             children.push_back(c);
+        }
     };
 
     std::vector<EntityRef> children;    
@@ -57,8 +63,23 @@ struct EntityGroupInfo
     Entity *parent = nullptr;
 };
 
-COMPONENT(EntityGroupInfo, ENTITY_LIST, MAX_ENTITY);
+#ifdef VULPINE_COMPONENT_IMPL
+void Entity::setChildrenInfos()
+{
+    if(hasComp<EntityGroupInfo>())
+    for(auto child : comp<EntityGroupInfo>().children)
+    {
+        if(!child->hasComp<EntityGroupInfo>())
+        {
+            child->set<EntityGroupInfo>(EntityGroupInfo());
+        }
 
+        child->comp<EntityGroupInfo>().parent = this;
+    }
+}
+#endif
+
+// COMPONENT(EntityGroupInfo, ENTITY_LIST, MAX_ENTITY);
 
 class ComponentModularity
 {
