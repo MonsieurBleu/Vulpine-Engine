@@ -69,6 +69,8 @@ void Entity::setChildrenInfos()
     if(hasComp<EntityGroupInfo>())
     for(auto child : comp<EntityGroupInfo>().children)
     {
+        if(!child) continue;
+
         if(!child->hasComp<EntityGroupInfo>())
         {
             child->set<EntityGroupInfo>(EntityGroupInfo());

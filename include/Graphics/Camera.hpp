@@ -59,6 +59,8 @@ class Camera
         Frustum frustum;
 
     public: 
+
+        float dimentionFactor = 1.f;
         float width = 1920.f;
         float height = 1080.f;
 
@@ -112,6 +114,7 @@ class Camera
 
         void setState(CameraState& newState);
         void setType(CameraType t);
+        CameraType getType();
         CameraState& getState() {return state;};
 };
 

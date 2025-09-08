@@ -134,6 +134,9 @@ bool MeshModel3D::cull()
 
     if (!state.frustumCulled)
         return culled = true;
+    
+    // if(globals.currentCamera->getType() != CameraType::PERSPECTIVE)
+    //     return true;
 
     // return culled = false;
 

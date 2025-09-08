@@ -74,9 +74,9 @@ void Camera::updateProjectionMatrix()
 
     case ORTHOGRAPHIC:
 #ifdef INVERTED_Z
-        projectionMatrix = glm::ortho<float>(-width / 2, width / 2, -height / 2, height / 2, state.farPlane, state.nearPlane);
+        projectionMatrix = glm::ortho<float>(-dimentionFactor*width / 2, dimentionFactor*width / 2, -dimentionFactor*height / 2, dimentionFactor*height / 2, state.farPlane, state.nearPlane);
 #else
-        projectionMatrix = glm::ortho<float>(-width / 2, width / 2, -height / 2, height / 2, state.nearPlane, state.farPlane);
+        projectionMatrix = glm::ortho<float>(-dimentionFactor*width / 2, dimentionFactor*width / 2, -dimentionFactor*height / 2, dimentionFactor*height / 2, state.nearPlane, state.farPlane);
 #endif
         break;
 
@@ -132,15 +132,15 @@ void Camera::updateFrustum()
     else
     {
         const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
-        const vec3 right = normalize(cross(vec3(0, 1, 0), front));
+        const vec3 right = normalize(cross(wup, front));
         const vec3 up = cross(right, front);
         const vec3 p = state.position;
         
         const float n = state.nearPlane;
         const float f = state.farPlane;
 
-        const float w = width/2;
-        const float h = height/2;
+        const float w = dimentionFactor*width/2;
+        const float h = dimentionFactor*height/2;
  
         frustum.near.position = p + (n * front);
         frustum.near.normal = front;
@@ -204,4 +204,9 @@ void Camera::setState(CameraState &newState)
 void Camera::setType(CameraType t)
 {
     type = t;
+}
+
+CameraType Camera::getType()
+{
+    return type;
 }

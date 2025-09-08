@@ -65,6 +65,7 @@ class OrbitController : public Controller
         vec3 position = vec3(0);
         vec2 subWindowCenter = vec2(0.5);
         float distance = 10.f;
+        float orthoNear = 10.f;
         virtual void update();
         // virtual bool inputs(GLFWKeyInfo& input);
         void clean();

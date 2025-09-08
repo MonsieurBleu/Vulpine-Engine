@@ -154,7 +154,7 @@ void Controller::mouseEvent(vec2 dir, GLFWwindow* window)
 void OrbitController::init()
 {
     globals.currentCamera->setForceLookAtPoint(true);
-    globals.currentCamera->setPosition(vec3(10, 0, 0));
+    globals.currentCamera->setPosition(vec3(-10, 10, 0));
 }
 
 void OrbitController::clean()
@@ -168,10 +168,15 @@ void OrbitController::update()
     {
         if(globals.mouseScrollOffset().y != 0 && globals.currentCamera->getMouseFollow())
         {
-            // distance -= globals.mouseScrollOffset().y*0.5;
-            distance *= 1.f - globals.mouseScrollOffset().y*0.1;
-
-            distance = clamp(distance, 0.01f, 1e7f);
+            if(glfwGetKey(globals.getWindow(), GLFW_KEY_LEFT_SHIFT))
+            {
+                orthoNear -= globals.mouseScrollOffset().y*0.1;
+            }
+            else
+            {
+                distance *= 1.f - globals.mouseScrollOffset().y*0.1;
+                distance = clamp(distance, 0.01f, 1e7f);
+            }
 
             
             globals.clearMouseScroll();
@@ -186,8 +191,10 @@ void OrbitController::update()
             // globals.currentCamera->setType(CameraType::ORTHOGRAPHIC);
             // globals.currentCamera->wup = vec3(1, 0, 0);
             globals.currentCamera->setPosition(position + 
-                View2DLock*distance
+                View2DLock*orthoNear
                 );
+            
+            globals.currentCamera->dimentionFactor = distance/1000.f;
         }
         else
         {
