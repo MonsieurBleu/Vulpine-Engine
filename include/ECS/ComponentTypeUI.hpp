@@ -99,6 +99,7 @@ struct WidgetBox
     float depth = 0.f;
 
     float lastChangeTime = 0.f;
+    int synchCounter = 0;
 
     bool useClassicInterpolation = false;
 
@@ -160,7 +161,7 @@ struct WidgetButton
         UpdateFunc2D valueUpdate2D
         ) : type(type), valueChanged2D(valueChanged2D), valueUpdate2D(valueUpdate2D){};
 
-    ChainedMember(WidgetButton, float, cur, 0)
+    ChainedMember(WidgetButton, float, cur, 1)
     ChainedMember(WidgetButton, float, cur2, 0)
     ChainedMember(WidgetButton, float, min, 0)
     ChainedMember(WidgetButton, float, max, 1)

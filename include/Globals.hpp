@@ -54,6 +54,8 @@ private:
     std::u32string textInputString;
     void *currentTextInputUser = nullptr;
 
+    std::vector<std::string> _dropInput;
+
     uint _drawCalls3D = 0;
 
     int _windowHasFocus = false;
@@ -167,6 +169,9 @@ public:
      * @retval `false` if the given pointer is not the current user
      */
     bool getTextInputs(void *user, std::u32string &buff);
+
+    const std::vector<std::string> & getDropInput();
+    void clearDropInput();
 
     int windowHasFocus();
 

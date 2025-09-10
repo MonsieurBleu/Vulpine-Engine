@@ -192,7 +192,13 @@ void Scene::generateLightClusters()
     static std::vector<std::pair<vec3, vec3>> AABBs;
     int aabbID = 0;
 
-    if(AABBs.empty())
+    bool cameraIsORtho = globals.currentCamera->getType() == CameraType::ORTHOGRAPHIC;
+
+    if(
+        // AABBs.empty() || 
+        // cameraIsORtho
+        true
+    )
     {
         AABBs.resize(clusteredLight.gridSize());
         for(float x = 1.f; x <= dimf.x; x++)
@@ -229,7 +235,47 @@ void Scene::generateLightClusters()
 
         for(int i = 0; i < buffSize; i+= MAX_LIGHT_PER_CLUSTER) 
             buff[i] = lmax;
+        
+        if(cameraIsORtho)
+        {
+            for(int i = 0; i < lmax; i++)
+            {
+                const LightInfos &l = lbuffv[i];
+                
+                float maxXid = dim.x;
+                float maxYid = dim.y;
+                float maxZid = dim.z;
 
+                float minXid = 0;
+                float minYid = 0;
+                float minZid = 0;
+
+                for(int x = minXid; x < maxXid; x++)
+                for(int y = minYid; y < maxYid; y++)
+                for(int z = minZid; z < maxZid; z++)
+                {
+                    aabbID = x*dim.z*dim.y + y*dim.z + z;
+                    vec3 minP = AABBs[aabbID].first;
+                    vec3 maxP = AABBs[aabbID].second;
+
+                    const vec3 p = vec3(l._position);
+                    const vec3 closest = p-max(minP, min(maxP, p));
+                    bool culled = dot(closest, closest) <= l._direction.x*l._direction.x;
+
+                    if(culled)
+                    {
+                        int cid = MAX_LIGHT_PER_CLUSTER*aabbID;
+                        const int maxCID = cid + MAX_LIGHT_PER_CLUSTER - 1;
+
+                        while(buff[cid] != lmax && cid < maxCID) cid++;
+
+                        buff[cid] = i;
+                        buff[cid+1] = lmax;
+                    }
+                }
+            }
+        }
+        else
         for(int i = 0; i < lmax; i++)
         {
             const LightInfos &l = lbuffv[i];
@@ -242,7 +288,7 @@ void Scene::generateLightClusters()
             float maxDepth = -0.5*(l._position.z - l._direction.x)/far;
             int maxZid = clamp((int)(maxDepth*dim.z)+1, 0, dim.z);
             
-            if(!maxZid) continue;
+            if(!maxZid && !cameraIsORtho) continue;
 
             float depthFront = 1.f/(l._position.z);
 

@@ -160,7 +160,10 @@ vec3 projectPointOntoPlane(vec3 point, vec3 planePoint, vec3 planeNormal) {
 
 vec3 rayAlignedPlaneIntersect(vec3 origin, vec3 direction, float axis, float axisPosition)
 {
-    float t = (axisPosition - origin[axis]) / (sign(direction[axis])*max(abs(direction[axis]), 1e-5f));
+    float dsign = direction[axis] == 0.f ? 1. : sign(direction[axis]);
+
+    float t = (axisPosition - origin[axis]) / (dsign*max(abs(direction[axis]), 1e-5f));
+
     return origin + t * direction;
 }
 

@@ -5,6 +5,7 @@
 // #endif
 
 #include <Timer.hpp>
+#include <Helpers.hpp>
 
 #define UI_BASE_COMP VulpineBlueprintUI::UIcontext, WidgetState()
 
@@ -110,7 +111,7 @@ namespace VulpineBlueprintUI
         EntityRef TimerPlot(
             BenchTimer &timer, 
             vec4(color),
-            std::function<vec2()> getMinmax
+            std::function<vec2(PlottingHelper*)> getMinmax
         );
 
         void AddToSelectionMenu(

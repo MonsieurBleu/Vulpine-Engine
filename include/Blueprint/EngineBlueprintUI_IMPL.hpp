@@ -698,7 +698,7 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
 EntityRef VulpineBlueprintUI::TimerPlot(
     BenchTimer &timer, 
     vec4(color),
-    std::function<vec2()> getMinmax
+    std::function<vec2(PlottingHelper*)> getMinmax
     )
 {
     auto infos = newEntity(timer.name + " - Infos Plo"
@@ -712,7 +712,7 @@ EntityRef VulpineBlueprintUI::TimerPlot(
 
                 PlottingHelper* p = (PlottingHelper*)child->comp<WidgetSprite>().sprite.get();
 
-                vec2 minmax = getMinmax();
+                vec2 minmax = getMinmax(p);
                 p->minv = minmax.x;
                 p->maxv = minmax.y;
                 p->push(timer.getDeltaMS());

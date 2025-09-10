@@ -123,6 +123,15 @@ void App::init()
         giveCallbackToApp(GLFWKeyInfo{window, button, button, action, mods});
     });
 
+    glfwSetDropCallback(window, [](GLFWwindow* window, int path_count, const char** paths){
+        globals._dropInput.reserve(path_count);
+
+        for(int i = 0; i < path_count; i++)
+        {
+            globals._dropInput.push_back(paths[i]);
+        }
+    });
+
     globals._gameScene = &scene;
     globals._gameScene2D = &scene2D;
 

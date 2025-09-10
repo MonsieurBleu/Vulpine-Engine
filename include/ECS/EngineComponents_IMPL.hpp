@@ -118,7 +118,9 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     // if(&parent == child.get() && child->comp<EntityGroupInfo>().parent)
     //     return;
 
+    
     auto &box = child->comp<WidgetBox>();
+    box.synchCounter ++;
 
     bool hidden = child->hasComp<WidgetState>() && child->comp<WidgetState>().status == ModelStatus::HIDE;
 
@@ -197,6 +199,12 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
             case WidgetBox::Type::FOLLOW_SIBLINGS_BOX :
                 parentMax = parentBox.childrenMax;
                 parentMin = parentBox.childrenMin;
+
+                if(box.synchCounter < 25)
+                {
+                    parentMax = parentMin = vec2(0);
+                    // NOTIF_MESSAGE("TYO");
+                }
                 break;
 
             default: break;

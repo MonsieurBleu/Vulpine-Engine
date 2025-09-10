@@ -266,6 +266,8 @@ class PlottingHelper : public MeshModel3D
 
         void push(float f);
 
+        const std::deque<float> & getValues() const {return values;}; 
+
     private :
         int maxValues;
 };

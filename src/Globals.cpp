@@ -85,4 +85,5 @@ int Globals::windowHasFocus(){return _windowHasFocus;};
 
 GLFWwindow *Globals::getWindow(){return _window;};
 
-
+const std::vector<std::string> &Globals::getDropInput(){return _dropInput;};
+void Globals::clearDropInput(){_dropInput.clear();};
