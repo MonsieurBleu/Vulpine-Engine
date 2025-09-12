@@ -248,8 +248,9 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
     ktxTexture2 *kTexture2 = (ktxTexture2 *)kTexture;
     if(ktxTexture_NeedsTranscoding(kTexture))
     {
-        ktx_texture_transcode_fmt_e tf;
-    
+        // ktx_texture_transcode_fmt_e tf;
+        ktx_transcode_fmt_e tf;
+
         // Using VkGetPhysicalDeviceFeatures or GL_COMPRESSED_TEXTURE_FORMATS or
         // extension queries, determine what compressed texture formats are
         // supported and pick a format. For example
@@ -309,7 +310,9 @@ Texture2D& Texture2D::loadFromFileKTX_IO(const char* filename)
     ktxTexture2 *kTexture2 = (ktxTexture2 *)kTexture;
     if(ktxTexture_NeedsTranscoding(kTexture))
     {
-        ktx_texture_transcode_fmt_e tf;
+        // ktx_texture_transcode_fmt_e tf;
+
+        ktx_transcode_fmt_e tf;
     
         // Using VkGetPhysicalDeviceFeatures or GL_COMPRESSED_TEXTURE_FORMATS or
         // extension queries, determine what compressed texture formats are

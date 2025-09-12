@@ -11,17 +11,17 @@ WFLAGS += -Wno-unused-variable
 OPTFLAGS =
 
 CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS)
-INCLUDE = -Iinclude -IexternalLibs -I../externalLibs -I /usr/include/lua5.4/
+INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
 
 #  TODO : update links for windows
 
 ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -L./ -Llibs/ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread -lgvc -lcgraph -lcdt -lluajit -llua51
+	LIBFLAGS = -L./ -Llibs/ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread -lgvc -lcgraph -lcdt -lluajit -llua51 -lassimp
 	LINKFLAGS = libglfw3.a libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine.a
 else
-	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 -lgvc -lcgraph -lcdt -lluajit-5.1
+	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp
 	LINKFLAGS = 
 	VULPINE_LIB_NAME = libvulpineEngine.a
 endif
@@ -111,7 +111,7 @@ vulpine : $(VOBJ)
 $(VULPINE_LIB_PATH) : vulpine
 
 obj/MINIVOBRIS_IMPLEMENTATION.o : src/MINIVOBRIS_IMPLEMENTATION.cpp
-	@clang -c -x c -Wno-error $(OPTFLAGS) $(INCLUDE) -fPIC $< -o $@
+	@$(CC) -c -x c -Wno-error $(OPTFLAGS) $(INCLUDE) -fPIC $< -o $@
 	@$(BUILD_FILE_VULPINE) $<
 
 obj/%.o : src/%.cpp

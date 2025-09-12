@@ -12,10 +12,11 @@
 namespace VulpineColorUI
 {
     #define BASE_ALPHA 0.95f*255.f
-    #define ALPHA2     0.625f*255.f
+    // #define ALPHA2     0.625f*255.f
+    #define ALPHA2     0.2*255.f
 
     inline vec4 LightBackgroundColor1 = vec4(242, 234,  222, BASE_ALPHA)/255.f;
-    inline vec4 LightBackgroundColor2 = vec4(242, 234,  222, ALPHA2)/255.f;
+    inline vec4 LightBackgroundColor2 = vec4(242, 234,  222, ALPHA2*0.f)/255.f;
 
     inline vec4 DarkBackgroundColor1  = vec4( 70,  63,  60, BASE_ALPHA)/255.f;
     inline vec4 DarkBackgroundColor1Opaque  = vec4( 70,  63,  60, 255)/255.f;    

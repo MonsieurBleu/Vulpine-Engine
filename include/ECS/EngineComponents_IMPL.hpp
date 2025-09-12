@@ -726,7 +726,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 
             case WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT : 
                 if(entity.hasComp<WidgetStyle>())
-                    style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE;
+                    style.useAltTextColor = style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE;
                 break;
 
             case WidgetButton::Type::CHECKBOX :

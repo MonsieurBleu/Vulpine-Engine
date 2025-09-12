@@ -73,9 +73,10 @@ EntityRef  VulpineBlueprintUI::Toggable(
             // .setbackgroundColor2(VulpineColorUI::LightBackgroundColor2)
             // .setbackgroundColor2(vec4(rgb2hsv(hsv2rgb(vec3(color)) * vec3(1, .5, 2)), color.a*.5))
             .setbackgroundColor2(vec4(color, ALPHA2/255.f))
+
             .settextColor1(VulpineColorUI::DarkBackgroundColor1)
-            // .settextColor2(VulpineColorUI::LightBackgroundColor1)
-            .settextColor2(VulpineColorUI::DarkBackgroundColor1)
+            .settextColor2(VulpineColorUI::LightBackgroundColor1)
+            // .settextColor2(VulpineColorUI::DarkBackgroundColor1)
         , WidgetButton(WidgetButton::Type::CHECKBOX, ifunc, ufunc)
     );
 
@@ -350,9 +351,9 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
         },
         [setColor, getColor]()
         {
-            char str[8];
+            char str[9];
             float f = round(rgb2hsv(getColor()).r*360.f);
-            std::snprintf(str, 5, "%*.f", 0, f); 
+            std::snprintf(str, 9, "%*.f", 0, f); 
             return UFTconvert.from_bytes(str);
         }
     );
@@ -377,9 +378,9 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
         },
         [setColor, getColor]()
         {
-            char str[8];
+            char str[9];
             float f = round(rgb2hsv(getColor()).g*100.f);
-            std::snprintf(str, 5, "%*.f", 0, f); 
+            std::snprintf(str, 9, "%*.f", 0, f); 
             return UFTconvert.from_bytes(str);
         }
     );
@@ -404,9 +405,9 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
         },
         [setColor, getColor]()
         {
-            char str[8];
+            char str[9];
             float f = round(rgb2hsv(getColor()).b*100.f);
-            std::snprintf(str, 5, "%*.f", 0, f); 
+            std::snprintf(str, 9, "%*.f", 0, f); 
             return UFTconvert.from_bytes(str);
         }
     );
@@ -431,9 +432,9 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
         },
         [setColor, getColor]()
         {
-            char str[8];
+            char str[9];
             float f = round(getColor().r*255.f);
-            std::snprintf(str, 5, "%*.f", 0, f); 
+            std::snprintf(str, 9, "%*.f", 0, f); 
             return UFTconvert.from_bytes(str);
         }
     );
@@ -458,9 +459,9 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
         },
         [setColor, getColor]()
         {
-            char str[8];
+            char str[9];
             float f = round(getColor().g*255.f);
-            std::snprintf(str, 5, "%*.f", 0, f); 
+            std::snprintf(str, 9, "%*.f", 0, f); 
             return UFTconvert.from_bytes(str);
         }
     );
@@ -485,9 +486,9 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
         },
         [setColor, getColor]()
         {
-            char str[8];
+            char str[9];
             float f = round(getColor().b*255.f);
-            std::snprintf(str, 5, "%*.f", 0, f); 
+            std::snprintf(str, 9, "%*.f", 0, f); 
             return UFTconvert.from_bytes(str);
         }
     );
@@ -791,6 +792,7 @@ void VulpineBlueprintUI::AddToSelectionMenu(
             .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
             .setbackgroundColor2(VulpineColorUI::LightBackgroundColor2)
             .settextColor1(VulpineColorUI::DarkBackgroundColor1)
+            .settextColor2(VulpineColorUI::LightBackgroundColor1)
             .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
         , WidgetBackground()
         , WidgetButton(WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT).setusr((uint64)info.get())
