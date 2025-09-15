@@ -123,7 +123,7 @@ class DataLoader
 
     public : 
 
-        static void write(const T & data, VulpineTextOutputRef out);
+        static VulpineTextOutputRef write(const T & data, VulpineTextOutputRef out);
 
         static T read(VulpineTextBuffRef buff);
         static T read(VulpineTextBuffRef buff, Entity *e);

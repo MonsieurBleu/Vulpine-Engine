@@ -7,6 +7,5 @@
 #include <glm/glm.hpp>
 using namespace glm;
 
-
 glm::mat4 toGLM(const aiMatrix4x4& from);
 glm::vec3 toGLM(const aiVector3D a);

@@ -21,7 +21,7 @@ ifeq ($(OS),Windows_NT)
 	LINKFLAGS = libglfw3.a libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine.a
 else
-	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw -lGL -lktx -lopenal -lX11 -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp
+	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp
 	LINKFLAGS = 
 	VULPINE_LIB_NAME = libvulpineEngine.a
 endif

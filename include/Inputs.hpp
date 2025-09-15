@@ -11,6 +11,8 @@
 #define GLFW_DLL
 #include <GLFW/glfw3.h>
 
+#include <glm/glm.hpp>
+
 struct GLFWKeyInfo
 {
     GLFWwindow *window;
@@ -102,7 +104,7 @@ namespace InputManager
     void clearEventInputs();
     void clearContinuousInputs();
 
-    vec2 getMousePosition();
+    glm::vec2 getMousePosition();
 
     std::string getInputKeyString(std::string inputName);
 

@@ -92,13 +92,13 @@ constexpr auto type_name() {
 
 /************ DATA LOADER WRITE  ************/
     #define DATA_WRITE_FUNC(T) template<> \
-        void DataLoader<T>::write(const T & data, VulpineTextOutputRef out)
+        VulpineTextOutputRef DataLoader<T>::write(const T & data, VulpineTextOutputRef out)
 
     #define DATA_WRITE_INIT(T) out->Entry(); WRITE_NAME(T, out); out->Tabulate();
 
     #define DATA_WRITE_INIT_AN(T) out->Tabulate();
 
-    #define DATA_WRITE_END out->Break();
+    #define DATA_WRITE_END out->Break(); return out;
 
     #define DATA_WRITE_FUNC_INIT(T) DATA_WRITE_FUNC(T) { DATA_WRITE_INIT(T)
     #define DATA_WRITE_END_FUNC  DATA_WRITE_END; }

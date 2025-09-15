@@ -1,3 +1,5 @@
+#include <assimp/config.h>
+#include <assimp/scene.h>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -761,6 +763,10 @@ int assetConvertor(int argc, char **argv)
     return EXIT_SUCCESS;
 }
 
+
+/*
+    TODO : redo and use only simple vulpine-wide features
+*/
 VEAC::FileConvertStatus VEAC::ConvertSceneFile(
     const std::string &path,
     const std::string &folder,
@@ -771,8 +777,14 @@ VEAC::FileConvertStatus VEAC::ConvertSceneFile(
 )
 {
     Assimp::Importer importer;
+
+    // importer.SetPropertyBool(AI_CONFIG_FBX_CONVERT_TO_M, true);
     importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, scale);
 
+    importer.SetPropertyBool(AI_CONFIG_PP_PTV_KEEP_HIERARCHY, true);
+
+    // AI_CONFIG_
+    
     const aiScene *scene = importer.ReadFile(path, aiImportFlags);
 
     if (nullptr == scene)
@@ -782,21 +794,87 @@ VEAC::FileConvertStatus VEAC::ConvertSceneFile(
         return VEAC::FileConvertStatus::FILE_MISSING;
     }
 
+    // if (scene->mNumMeshes)
+    // {
+    //     for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+    //     {
+    //         aiMesh &mesh = *scene->mMeshes[i];
 
-    if (scene->mNumMeshes)
+    //         std::cout << mesh.mName.C_Str() << "\n";
+    //         std::cout << "\t" << mesh.mNumVertices << "\n";
+    //         std::cout << "\t" << toGLM(mesh.mAABB.mMin) << "\n";
+    //         std::cout << "\t" << toGLM(mesh.mAABB.mMax) << "\n";
+
+            
+    //     }   
+    // }
+
+    /*
+        If we want to get full entities from the file, we need to do things differently
+
+        The scene must be structured in a certain way :
+            root : 
+                entity_1
+                    graphic
+                        meshes
+                    physics
+                        primitives meshes
+                entity 2
+                    ...
+    */
+    if(vulpineImportFlags & 1<<VEAC::SceneConvertOption::OBJECT_AS_ENTITY)
+    for(int i = 0; i < scene->mRootNode->mNumChildren; i++)
     {
-        for (unsigned int i = 0; i < scene->mNumMeshes; i++)
+        aiNode *collection = scene->mRootNode->mChildren[i];
+
+        std::cout << collection->mName.C_Str() << "\n";
+        std::cout << "\t" << collection->mNumChildren << "\n";
+
+        for(int j = 0; j < collection->mNumChildren; j++)
         {
-            aiMesh &mesh = *scene->mMeshes[i];
+            aiNode *component = collection->mChildren[j];
 
-            std::cout << mesh.mNumVertices << "\n";
-            // std::cout << mesh.mNumFaces << "\n";
+            if(strcasestr(component->mName.C_Str(), "graphic"))
+            {
+                NOTIF_MESSAGE("Graphic !")
+            }
+            else 
+            if(strcasestr(component->mName.C_Str(), "physic"))
+            {
+                NOTIF_MESSAGE("Physic !")
+                for(int k = 0; k < component->mNumChildren; k++)
+                {
+                    aiNode *collider = component->mChildren[k];
 
-            std::cout << toGLM(mesh.mAABB.mMin) << "\n";
-            std::cout << toGLM(mesh.mAABB.mMax) << "\n";
-        }   
+                    if(strcasestr(collider->mName.C_Str(), "capsule"))
+                    {
+                        std::cout << "\tcapsule\n";
+
+                        // CapsuleShape 
+
+                    }
+                    if(strcasestr(collider->mName.C_Str(), "cube"))
+                    {
+                        std::cout << "\tcube\n";
+                    }
+                    if(strcasestr(collider->mName.C_Str(), "sphere"))
+                    {
+                        std::cout << "\tsphere\n";
+                    }
+                }
+            }
+            else
+            {
+                FILE_ERROR_MESSAGE(
+                    (path + ":" + collection->mName.C_Str()), 
+                    "Entity Collection '" << component->mName.C_Str() << "' not recognized. "
+                    << "Either something is wrong with the scene layout, or the VEAC entity export option was used by mistake."
+                )
+            }
+
+        }
+
     }
-
 
     return VEAC::FileConvertStatus::ALL_GOOD;
 }
