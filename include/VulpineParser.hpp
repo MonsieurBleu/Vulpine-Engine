@@ -70,6 +70,9 @@ float fromStr(const char *ptr);
 template<>
 glm::vec3 fromStr(const char *ptr);
 
+template<>
+glm::quat fromStr(const char *ptr);
+
 class VulpineTextOutput
 {
     private : 

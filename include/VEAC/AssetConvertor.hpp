@@ -30,8 +30,9 @@ namespace VulpineAssetConvertor
 
     /**
      * @brief Convert an assimp mesh to vulpine mesh and saves it inside the given folder
+     * @return Saved file name
      */
-    void saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder = "", VEAC_EXPORT_FORMAT format = FORMAT_DEFAULT);
+    std::string saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder = "", VEAC_EXPORT_FORMAT format = FORMAT_DEFAULT);
 
 
     /**

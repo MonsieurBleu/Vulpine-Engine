@@ -139,7 +139,7 @@ public:
         mat4 scaleMatrix = glm::scale(mat4(1.0), scale);
         mat4 translateMatrix = translate(mat4(1.0), position);
 
-        modelMatrix = translateMatrix * rotationMatrix * scaleMatrix;
+        modelMatrix = translateMatrix * scaleMatrix * rotationMatrix;
 
         _needUpdate = false;
 

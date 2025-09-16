@@ -1,5 +1,6 @@
 #pragma once
 #include <VulpineParser.hpp>
+#include <string>
 #include <unordered_map>
 #include <cassert>
 
@@ -103,7 +104,7 @@ class Loader
         {
             VulpineTextBuffRef autoText(new VulpineTextBuff());
 
-            std::string id = getNameOnlyFromPath(filename) + " : " + prefix + " \"" + filename + "\" ; "; 
+            std::string id = "\"" + getNameOnlyFromPath(filename) + "\" : " + prefix + " \"" + filename + "\" ; "; 
 
             autoText->alloc(id.size());
             strcpy(autoText->data, id.c_str());

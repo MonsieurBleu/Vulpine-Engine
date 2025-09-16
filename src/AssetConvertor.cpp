@@ -67,7 +67,7 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
 
     if(format == FORMAT_SANCTIA)
     {
-        assert(mesh.GetNumColorChannels() == 8);
+        // assert(mesh.GetNumColorChannels() == 8);
 
         vec3 *positions = (vec3 *)mesh.mVertices;
         vec3 *normals = (vec3 *)mesh.mNormals;
@@ -81,40 +81,8 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
             /* POSITION */
             o |= uvec4(ivec4(round(positions[i]*1e3f), 0) + 0x800000);
 
-            // std::cout 
-            // << TERMINAL_OK    << to_string(positions[i]) << "\t" 
-            // << TERMINAL_NOTIF << to_string(ivec3(o)) << "\t"
-            // << TERMINAL_TIMER << to_string(vec3(ivec3(o.x, o.y, o.z) - 0x800000)*1e-3f) 
-            // << TERMINAL_RESET << "\n";
-            
-
-
-            /* NORMALS */
-            // const vec3 s = sign(normals[i])/127.f;
-
             float maxdot = 0.f;
             uvec3 cubeN(0.f);
-
-            // for(float x = 0; x < 127.5f; x++)
-            // for(float y = 0; y < 127.5f; y++)
-            // for(float z = 0; z < 127.5f; z++)
-            // {
-            //     vec3 n = normalize(s*vec3(x, y, z));
-
-            //     float d = dot(normals[i], n);
-            //     if(d > maxdot)
-            //     {
-            //         maxdot = d; 
-            //         cubeN = uvec3(x, y, z);
-
-            //         // if(d > 0.90) break;
-
-            //     }
-            //     // else
-            //     //     y += (1.0-d)*50.0;
-            // }
-
-            // cubeN = round((1.f + normals[i])*127.f);
 
             for(float scale = 0; scale < 127.5; scale+= 1.0)
             {
@@ -129,38 +97,30 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
                 }
             }
 
-            // std::cout << "Best correspondence with normal " 
-            //     << TERMINAL_OK       << to_string(normals[i]) 
-            //     << TERMINAL_RESET    << "\tfound with " 
-            //     << TERMINAL_NOTIF    << to_string(ivec3(cubeN))
-            //     << TERMINAL_RESET    << "\tobtaining decompressed normal " 
-            //     << TERMINAL_WARNING  << to_string(normalize(s * vec3(cubeN)/127.f))
-            //     << TERMINAL_RESET    << " with a dvalue of " 
-            //     << TERMINAL_FILENAME << dot(normals[i], normalize(s * vec3(cubeN)/127.f))
-            //     << TERMINAL_RESET    << "\n";
-
             cubeN |= uvec3(max(sign(normals[i])*-128.f, vec3(0)));
 
             o |= uvec4(cubeN.x<<24, cubeN.y<<24, cubeN.z<<24, 0);
-            
-            // assert(o.w == 0);
             o.w = 0;
 
-            /* COLORS */
-            o.w |= uint(roundf(mesh.mColors[0][i].r*31));
-            o.w |= uint(roundf(mesh.mColors[0][i].g*63))<<5;
-            o.w |= uint(roundf(mesh.mColors[0][i].b*31))<<11;
+            if(mesh.GetNumColorChannels() == 8)
+            {
+                /* COLORS */
+                o.w |= uint(roundf(mesh.mColors[0][i].r*31));
+                o.w |= uint(roundf(mesh.mColors[0][i].g*63))<<5;
+                o.w |= uint(roundf(mesh.mColors[0][i].b*31))<<11;
+    
+                /* METALNESS - SMOOTHNESS - EMISSIVE */
+                o.w |= uint(roundf(mesh.mColors[1][i].r   ))<<16;
+                o.w |= uint(roundf(mesh.mColors[2][i].r*15))<<17;
+                o.w |= uint(roundf(mesh.mColors[3][i].r*7 ))<<21;
+    
+                /* STREAKNESS - PAPERNESS - BLOODYNESS - DIRTYNESS */
+                o.w |= uint(roundf(mesh.mColors[4][i].r*7))<<24;
+                o.w |= uint(roundf(mesh.mColors[5][i].r  ))<<27;
+                o.w |= uint(roundf(mesh.mColors[6][i].r*3))<<28;
+                o.w |= uint(roundf(mesh.mColors[7][i].r*3))<<30;
+            }
 
-            /* METALNESS - SMOOTHNESS - EMISSIVE */
-            o.w |= uint(roundf(mesh.mColors[1][i].r   ))<<16;
-            o.w |= uint(roundf(mesh.mColors[2][i].r*15))<<17;
-            o.w |= uint(roundf(mesh.mColors[3][i].r*7 ))<<21;
-
-            /* STREAKNESS - PAPERNESS - BLOODYNESS - DIRTYNESS */
-            o.w |= uint(roundf(mesh.mColors[4][i].r*7))<<24;
-            o.w |= uint(roundf(mesh.mColors[5][i].r  ))<<27;
-            o.w |= uint(roundf(mesh.mColors[6][i].r*3))<<28;
-            o.w |= uint(roundf(mesh.mColors[7][i].r*3))<<30;
         }
 
     }
@@ -202,7 +162,7 @@ void VEAC::getElementMeshSkinned(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, S
 /*
     TODO : adapt to new bone ids with the Stencil_BoneMap
 */
-void VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder, VEAC_EXPORT_FORMAT format)
+std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder, VEAC_EXPORT_FORMAT format)
 {
     VulpineMesh_Header h;
     STENCIL_MeshInfos infos;
@@ -229,7 +189,7 @@ void VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::
 
     aiString name(folder);
     name.Append(mesh.mName.C_Str());
-    name.Append(".vulpineMesh");
+    name.Append(".vMesh");
 
     std::ofstream file(name.C_Str(), std::ios::out | std::ios::binary);
 
@@ -274,6 +234,8 @@ void VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::
                   << name.C_Str()
                   << TERMINAL_RESET
                   << "\n";
+        
+        return name.C_Str();
     }
     else
     {
@@ -283,6 +245,8 @@ void VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::
                   << name.C_Str()
                   << TERMINAL_RESET
                   << "\n";
+        
+        return "";
     }
 }
 

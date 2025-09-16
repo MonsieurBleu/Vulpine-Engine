@@ -145,9 +145,15 @@ std::string getNameOnlyFromPath(const char *path)
     std::string name = getFileNameFromPath(path);
     std::string res;
 
-    int i = 0;
-    for(; name[i] != '\0' && name[i] != '.' ; i++)
+    int lastPoint = name.size()-1;
+    for(; lastPoint && name[lastPoint] != '.' ; lastPoint--);
+
+    for(int i = 0; i < lastPoint; i++)
         res += name[i];
+
+    // int i = 0;
+    // for(; name[i] != '\0' && name[i] != '.' ; i++)
+    //     res += name[i];
 
     return res;
 }

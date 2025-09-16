@@ -15,6 +15,8 @@ template<typename T> void loadAllInfos(std::string type)
 {
     auto assetList = AssetLoadInfos::assetList[type];
 
+    Loader<T>::loadingInfos.clear();
+
     for(auto &assetVersions : assetList)
     {
         AssetVersion asset = modImportanceList.getCorrectVersionToUse(assetVersions.second, type, assetVersions.first);

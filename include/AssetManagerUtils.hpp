@@ -76,6 +76,9 @@ constexpr auto type_name() {
                     if(!strcmp(stateMember, "rotation"))\
                         stateRefTmp.setRotation(radians(fromStr<vec3>(buff->read())));\
                     else \
+                    if(!strcmp(stateMember, "quaternion"))\
+                        stateRefTmp.setQuaternion(fromStr<quat>(buff->read()));\
+                    else \
                     if(!strcmp(stateMember, "scalev3"))\
                         stateRefTmp.setScale(fromStr<vec3>(buff->read()));\
                     else \

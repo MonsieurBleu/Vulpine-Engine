@@ -176,6 +176,15 @@ glm::vec3 fromStr(const char *ptr)
     return v;
 }
 
+template<>
+glm::quat fromStr(const char *ptr)
+{
+    // return glm::vec3(atof(ptr), atof(ptr+9), atof(ptr+18));
+    glm::quat v;
+    sscanf(ptr, "%f %f %f %f", &v.w, &v.x, &v.y, &v.z);
+    return v;
+}
+
 
 void VulpineTextOutput::alloc(int _size)
 {

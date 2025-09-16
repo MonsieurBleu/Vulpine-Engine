@@ -249,7 +249,7 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
             vec3 right = normalize(cross(front, wup));
             vec3 up = normalize(cross(front, right));
             
-            float speed = 0.02*distance;
+            float speed = 0.03*distance;
             vec3 off = speed*right*dir.x - speed*up*dir.y;
             position += off;
 
@@ -259,8 +259,8 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
 
         if(globals.mouseMiddleClickDown() && !enable2DView)
         {
-            float yaw = radians(dir.x);
-            float pitch = radians(dir.y);
+            float yaw = radians(3.*dir.x);
+            float pitch = radians(3.*dir.y);
 
 
             vec3 up = vec3(0,1,0);
