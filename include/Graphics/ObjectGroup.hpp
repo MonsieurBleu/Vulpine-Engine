@@ -53,6 +53,9 @@ protected:
 public:
     std::string name;
 
+    ObjectGroup(){};
+    ObjectGroup(std::string name) : name(name){};
+
     ModelState3D state;
     
     virtual void update(bool forceUpdate = false);

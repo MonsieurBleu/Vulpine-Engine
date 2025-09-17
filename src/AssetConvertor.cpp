@@ -120,7 +120,13 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
                 o.w |= uint(roundf(mesh.mColors[6][i].r*3))<<28;
                 o.w |= uint(roundf(mesh.mColors[7][i].r*3))<<30;
             }
-
+            else
+            {
+                /* COLORS */
+                o.w |= uint(roundf(1.f*31));
+                o.w |= uint(roundf(1.f*63))<<5;
+                o.w |= uint(roundf(1.f*31))<<11;
+            }
         }
 
     }
