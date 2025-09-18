@@ -8,9 +8,13 @@ WFLAGS += -Wno-unused-lambda-capture
 WFLAGS += -Wno-delete-non-virtual-dtor
 WFLAGS += -Wno-unused-variable
 
+ifeq ($(OS),Windows_NT)
+	WFLAGS += -Wno-deprecated-declarations
+endif
+
 OPTFLAGS =
 
-CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS)
+CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS) 
 INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
 
@@ -65,9 +69,13 @@ MOVE_DOWN=${ESC}[1B
 
 CR=
 
-
-TO_LIB_LINE = $(ECHO_N) ${STRDEC} ${MOVE_UP} ${CLEAR_LINE} \r ${STRDEC}
-TO_PRO_LINE = $(ECHO_N) ${STRDEC} ${CLEAR_LINE} \r ${STRDEC}
+ifeq ($(OS),Windows_NT)
+	TO_LIB_LINE = $(ECHO_N) .
+	TO_PRO_LINE = $(ECHO_N) .
+else
+	TO_LIB_LINE = $(ECHO_N) ${STRDEC} ${MOVE_UP} ${CLEAR_LINE} \r ${STRDEC}
+	TO_PRO_LINE = $(ECHO_N) ${STRDEC} ${CLEAR_LINE} \r ${STRDEC}
+endif
 
 # TO_PRO_LINE = bash -c 'lines=$$(tput lines); echo -e  "\033[2K\033[G"' 
 # TO_LIB_LINE = bash -c 'lines=$$(tput lines); echo -e "\033[1A;1H\033[2K\033[G"'

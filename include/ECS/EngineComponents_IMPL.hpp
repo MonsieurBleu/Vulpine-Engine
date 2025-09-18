@@ -657,13 +657,14 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 {
     screenPos = (screenPos/vec2(globals.windowSize()))*2.f - 1.f;
 
-    static EntityRef cursorHelp = newEntity("cursor button help", ui
-            , WidgetState()
-            , WidgetBox(vec2(0), vec2(0))
-            , WidgetBackground()
-            , WidgetText(U"")
-            , WidgetStyle().setbackgroundColor1(vec4(vec3(0.1), 1)).settextColor1(vec4(0.9, 0.9, 0.25, 1))
-    );
+    if(!cursorHelp)
+        cursorHelp = newEntity("cursor button help", ui
+                , WidgetState()
+                , WidgetBox(vec2(0), vec2(0))
+                , WidgetBackground()
+                , WidgetText(U"")
+                , WidgetStyle().setbackgroundColor1(vec4(vec3(0.1), 1)).settextColor1(vec4(0.9, 0.9, 0.25, 1))
+        );
 
     static Entity *entityUnderCursor = nullptr;
     static float lastTimeChangeEUC = 0.f;

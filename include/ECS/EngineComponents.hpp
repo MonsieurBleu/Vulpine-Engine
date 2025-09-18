@@ -15,6 +15,8 @@ Aligned_Component(EntityGroupInfo)
 
 /***************** UI BASE VULPINE COMPONENTS *****************/
 
+static inline EntityRef cursorHelp;
+
 /* TODO : remove ?*/
 Ephemeral_Component(WidgetSprite)
 template<> void Component<WidgetSprite>::ComponentElem::init();
