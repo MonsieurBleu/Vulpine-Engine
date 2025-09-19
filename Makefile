@@ -1,4 +1,5 @@
 #************** COMPILER SETUP VARIABLES **************#
+
 # CC = /bin/time -f "\n\ttime : %e \n" clang++
 CC = clang++
 WFLAGS = -Wall -Wno-strict-aliasing 
@@ -12,6 +13,7 @@ ifeq ($(OS),Windows_NT)
 	WFLAGS += -Wno-deprecated-declarations
 endif
 
+BUILD_DIR = 
 OPTFLAGS =
 
 CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS) 
@@ -23,18 +25,18 @@ INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 ifeq ($(OS),Windows_NT)
 	LIBFLAGS = -L./ -Llibs/ -lmingw32 -lglew32 -lglfw3 -lopengl32 -lktx -lsoft_oal -lpthread -lgvc -lcgraph -lcdt -lluajit -llua51 -lassimp
 	LINKFLAGS = libglfw3.a libglfw3dll.a
-	VULPINE_LIB_NAME = libvulpineEngine.a
+	VULPINE_LIB_NAME = libvulpineEngine_WIN64.a
 else
 	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp
 	LINKFLAGS = 
-	VULPINE_LIB_NAME = libvulpineEngine.a
+	VULPINE_LIB_NAME = libvulpineEngine_UNIX.a
 endif
 
 
 ifeq ($(OS),Windows_NT)
-	VULPINE_LIB_PATH = ..\build\$(VULPINE_LIB_NAME)
+	VULPINE_LIB_PATH = ..\$(BUILD_DIR)\$(VULPINE_LIB_NAME)
 else
-	VULPINE_LIB_PATH = ../build/$(VULPINE_LIB_NAME)
+	VULPINE_LIB_PATH = ../$(BUILD_DIR)/$(VULPINE_LIB_NAME)
 endif
 
 
@@ -85,8 +87,8 @@ BUILD_FILE_VULPINE = ${TO_LIB_LINE} && echo ${STRDEC}${BOLD}${ORANGE}Vulpine Mod
 BUILD_FILE_GAME    = ${TO_PRO_LINE} && $(ECHO_N) ${STRDEC}${BOLD}${CYAN}Built ${RESET}${STRDEC} 
 LINKING_EXECUTABLE = ${TO_PRO_LINE} && $(ECHO_N) ${STRDEC}${BOLD}${UNDERLINE}${BLUE}Linking${RESET}${STRDEC} 
 
-BUILD_GAME    = ${TO_PRO_LINE} && $(ECHO_N) ${STRDEC}${BOLD}${CYAN}Builting Game...${RESET}${STRDEC} 
-GAME_READY = ${TO_PRO_LINE} && echo ${STRDEC}${BOLD}${UNDERLINE}${BLUE}Game is now compiled and linked!${RESET}${STRDEC} 
+BUILD_GAME    = ${TO_PRO_LINE} && $(ECHO_N) ${STRDEC}${BOLD}${CYAN}Builting $(GEXECP)...${RESET}${STRDEC} 
+GAME_READY = ${TO_PRO_LINE} && echo ${STRDEC}${BOLD}${UNDERLINE}${BLUE}$(GEXECP) is now compiled and linked!${RESET}${STRDEC} 
 
 DEPFLAGS_BASE = -MT $@ -MMD -MP -MF .deps
 VDEPFLAGS = $(DEPFLAGS_BASE)/$*.d
@@ -128,10 +130,11 @@ obj/%.o : src/%.cpp
 
 
 #************** GAME BUILDING **************#
+GEXEC =
 ifeq ($(OS),Windows_NT)
-GEXEC = ..\build\Game.exe
+GEXECP = ..\$(BUILD_DIR)\$(GEXEC)
 else
-GEXEC = ../build/Game
+GEXECP = ../$(BUILD_DIR)/$(GEXEC)
 endif
 
 game_base_echo : 
@@ -141,10 +144,10 @@ game_base_echo :
 
 game : vulpine
 game : LIBFLAGSG = $(LIBFLAGS) -lreactphysics3d
-#game : LINKFLAGS += -L../build -Wl,-rpath,'$$ORIGIN'
+#game : LINKFLAGS += -L../$(BUILD_DIR) -Wl,-rpath,'$$ORIGIN'
 game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@
-	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGSG) -o $(GEXEC)
+	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGSG) -o $(GEXECP)
 	@${GAME_READY}
 
 obj/game/main.o : ../main.cpp
