@@ -69,6 +69,12 @@ const std::string TERMINAL_NOTIF     = "\e[36m";
     << TERMINAL_NOTIF     << "\n        |> " << message     \
     << TERMINAL_RESET     << "\n\n";
 
+#ifdef _WIN32
+    // #include <shlwapi.h>
+    // #define strcasestr StrStrI
+    #include <string.h>
+#endif
+
 /// FILES
 /*
     TODO : replace with a faster version, using C functions (like in readOBJ)

@@ -33,8 +33,8 @@ void loadAllModdedAssetsInfos(const char *filename)
     for (auto f : std::filesystem::recursive_directory_iterator(filename))
     {
         if (f.is_directory()) continue;
-        std::string path = f.path();
-        AssetVersion version(f.path());
+        std::string path = f.path().string();
+        AssetVersion version(path);
         AssetLoadInfos::addToGlobalList(version);
     }
 

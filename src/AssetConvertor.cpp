@@ -26,6 +26,13 @@
 
 #include <VEAC/AssetConvertor.hpp>
 
+#ifdef _WIN32
+    #include <shlwapi.h>
+    #define STR_CASE_STR(str1, str2) StrStrIA(str1, str2)
+#else
+    #define STR_CASE_STR(str1, str2) strcasestr(str1, str2)
+#endif
+
 glm::mat4 toGLM(const aiMatrix4x4& from)
 {
     glm::mat4 to;
@@ -803,30 +810,30 @@ VEAC::FileConvertStatus VEAC::ConvertSceneFile(
         {
             aiNode *component = collection->mChildren[j];
 
-            if(strcasestr(component->mName.C_Str(), "graphic"))
+            if(STR_CASE_STR(component->mName.C_Str(), "graphic"))
             {
                 NOTIF_MESSAGE("Graphic !")
             }
             else 
-            if(strcasestr(component->mName.C_Str(), "physic"))
+            if(STR_CASE_STR(component->mName.C_Str(), "physic"))
             {
                 NOTIF_MESSAGE("Physic !")
                 for(int k = 0; k < component->mNumChildren; k++)
                 {
                     aiNode *collider = component->mChildren[k];
 
-                    if(strcasestr(collider->mName.C_Str(), "capsule"))
+                    if(STR_CASE_STR(collider->mName.C_Str(), "capsule"))
                     {
                         std::cout << "\tcapsule\n";
 
                         // CapsuleShape 
 
                     }
-                    if(strcasestr(collider->mName.C_Str(), "cube"))
+                    if(STR_CASE_STR(collider->mName.C_Str(), "cube"))
                     {
                         std::cout << "\tcube\n";
                     }
-                    if(strcasestr(collider->mName.C_Str(), "sphere"))
+                    if(STR_CASE_STR(collider->mName.C_Str(), "sphere"))
                     {
                         std::cout << "\tsphere\n";
                     }
