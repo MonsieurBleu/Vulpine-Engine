@@ -124,7 +124,7 @@ AssetVersion::AssetVersion(const std::string &file) : file(file)
         }
     }
 
-    if(versionName.back() == ' ') versionName.pop_back();
+    if(!versionName.empty() && versionName.back() == ' ') versionName.pop_back();
 
     if(versionName.empty()) versionName = "Base_Game";
 

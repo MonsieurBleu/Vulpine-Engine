@@ -1,3 +1,4 @@
+#include "Utils.hpp"
 #include <Helpers.hpp>
 #include <Globals.hpp>
 #include <iostream>
@@ -898,7 +899,7 @@ void PlottingHelper::updateData()
 
     vec4 *pos = (vec4*)getVao()->attributes[0].getBufferAddr();
 
-    for(int i = 0; i < maxValues; i++)
+    for(int i = 0; i < maxValues-1; i++)
     {
         int id = i*6;
         vec2 xRange = vec2(i, i+1)/float(maxValues-1);
