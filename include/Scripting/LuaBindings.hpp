@@ -1,5 +1,6 @@
 #pragma once
 
+
 #define SOL_LUAJIT 1
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
@@ -18,7 +19,7 @@ namespace VulpineLuaBindings
 
     // static void states(sol::state& lua);
 
-    // static void entities(sol::state& lua);
+    static void Entities(sol::state& lua);
 }
 
 #define OVERLOAD_OP(type1, type2)[](const type1 &v1, const type2 &v2){return v1 VLB_GLM_CUR_OPERATOR v2;}
@@ -44,6 +45,7 @@ namespace VulpineLuaBindings
         {
             glm(lua);
             VulpineTypes(lua);
+            Entities(lua);
         }
 
     #endif
@@ -208,7 +210,7 @@ namespace VulpineLuaBindings
     }
 #endif
 
-#include <MappedEnum.hpp>
+#include "MappedEnum.hpp"
 
 #define CURRENT_CLASS_BINDING
 #define METHOD_BINDING(method) class_binding[#method] = & CURRENT_CLASS_BINDING::method;
@@ -249,4 +251,66 @@ namespace VulpineLuaBindings
         )
     }
 
-#endif
+#endif 
+
+#ifdef VLB_ENT_IMPL
+    #include "ECS/Entity.hpp"
+    #include "ECS/ComponentTypeUI.hpp"
+    #include "ECS/ModularEntityGroupping.hpp"
+
+    void VulpineLuaBindings::Entities(sol::state &lua)
+    {
+        // TODO: figure out how to add bindings for sanctia types
+        #undef CURRENT_CLASS_BINDING
+        #define CURRENT_CLASS_BINDING Entity
+        CREATE_CLASS_USERTYPE(Entity, (), ())
+        class_binding["toStr"] = & Entity::toStr;
+        // ADD_METHOD_BINDINGS(
+            // toStr
+
+            // comp<EntityGroupInfo>,
+            // comp<EntityInfos>,
+            // comp<WidgetBackground>,
+            // comp<WidgetBox>,
+            // comp<WidgetButton>,
+            // comp<WidgetSprite>,
+            // comp<WidgetState>,
+            // comp<WidgetStyle>,
+            // comp<WidgetText>,
+            // comp<WidgetUI_Context>,
+
+            // hasComp<EntityGroupInfo>,
+            // hasComp<EntityInfos>,
+            // hasComp<WidgetBackground>,
+            // hasComp<WidgetBox>,
+            // hasComp<WidgetButton>,
+            // hasComp<WidgetSprite>,
+            // hasComp<WidgetState>,
+            // hasComp<WidgetStyle>,
+            // hasComp<WidgetText>,
+            // hasComp<WidgetUI_Context>,
+
+            // set<EntityGroupInfo>,
+            // set<EntityInfos>,
+            // set<WidgetBackground>,
+            // set<WidgetBox>,
+            // set<WidgetButton>,
+            // set<WidgetSprite>,
+            // set<WidgetState>,
+            // set<WidgetStyle>,
+            // set<WidgetText>,
+            // set<WidgetUI_Context>,
+
+            // removeComp<EntityGroupInfo>,
+            // removeComp<EntityInfos>,
+            // removeComp<WidgetBackground>,
+            // removeComp<WidgetBox>,
+            // removeComp<WidgetButton>,
+            // removeComp<WidgetSprite>,
+            // removeComp<WidgetState>,
+            // removeComp<WidgetStyle>,
+            // removeComp<WidgetText>,
+            // removeComp<WidgetUI_Context>,
+        // );
+    }
+#endif 

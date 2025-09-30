@@ -5,7 +5,40 @@
 
 // typedef std::shared_ptr<sol::state> LuaStateRef;
 
+// inline void my_panic(sol::optional<std::string> maybe_msg) {
+//     std::cerr << "Lua panic: ";
+//     if(maybe_msg) {
+//         std::cerr << maybe_msg->c_str();
+//     }
+//     std::cerr << std::endl;
+// }
+
+// inline int my_exception_handler(lua_State* L, sol::optional<const std::exception&> maybe_exception, sol::string_view description) {
+// 	// L is the lua state, which you can wrap in a state_view if necessary
+// 	// maybe_exception will contain exception, if it exists
+// 	// description will either be the what() of the exception or a description saying that we hit the general-case catch(...)
+// 	std::cout << "An exception occurred in a function, here's what it says ";
+// 	if (maybe_exception) {
+// 		std::cout << "(straight from the exception): ";
+// 		const std::exception& ex = *maybe_exception;
+// 		std::cout << ex.what() << std::endl;
+// 	}
+// 	else {
+// 		std::cout << "(from the description parameter): ";
+// 		std::cout.write(description.data(), static_cast<std::streamsize>(description.size()));
+// 		std::cout << std::endl;
+// 	}
+
+// 	// you must push 1 element onto the stack to be
+// 	// transported through as the error object in Lua
+// 	// note that Lua -- and 99.5% of all Lua users and libraries -- expects a string
+// 	// so we push a single string (in our case, the description of the error)
+// 	return sol::stack::push(L, description);
+// }
+
+
 inline thread_local std::string threadStateName;
+// inline thread_local sol::state threadState(sol::c_call<decltype(&my_panic), &my_panic>);
 inline thread_local sol::state threadState;
 
 class ScriptInstance : sol::load_result 
@@ -43,7 +76,7 @@ class ScriptInstance : sol::load_result
                     << file 
                     << "\' called from the thread \'" 
                     <<  threadStateName 
-                    << "\', wich is not the script's original creator. Execution won't proceed."
+                    << "\', which is not the script's original creator. Execution won't proceed."
                 )
                 return;
             }
@@ -55,8 +88,12 @@ class ScriptInstance : sol::load_result
             {
                 instanceTimer.start();
                 getGlobalTimer().start();
-        
+
                 (*this)(args...);
+
+                // sol::protected_function func = get<sol::protected_function>();
+                // func(args...);
+
         
                 instanceTimer.hold();
                 getGlobalTimer().hold();
