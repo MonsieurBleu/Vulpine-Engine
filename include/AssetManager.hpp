@@ -108,9 +108,23 @@ class Loader
 
             autoText->alloc(id.size());
             strcpy(autoText->data, id.c_str());
+            strcpy(autoText->originalData, id.c_str());
 
             return addInfos(autoText);
         };
+
+        static void erase(const std::string &elem)
+        {
+            auto asset = loadedAssets.find(elem);
+
+            if(asset != loadedAssets.end())
+            {
+                loadedAssets.erase(elem);
+                auto buff = loadingInfos[elem]->buff; 
+                buff->resetData();
+                addInfos(buff);
+            }
+        }
         
         T& loadFromInfos();
 };

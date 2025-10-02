@@ -1,10 +1,21 @@
+#include "Graphics/Camera.hpp"
 #include <Graphics/Textures.hpp>
+#include <GL/glu.h>
+#include <cstring>
+#include <glm/ext/vector_int2.hpp>
 #include <iostream>
 #include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 #include <Utils.hpp>
 #include <Timer.hpp>
 
 #include <ktx.h>
+
+#define TINYEXR_IMPLEMENTATION
+#define TINYEXR_USE_MINIZ 0
+#define TINYEXR_USE_STB_ZLIB 1
+#define TINYEXR_USE_THREAD 1
+#include <tinyexr.h>
 
 using namespace glm;
 
@@ -85,9 +96,21 @@ Texture2D::~Texture2D()
 {
     if(handle && handleRef.use_count() == 1)
     {
+        // if(_pixelSource) freeSource();
+        
         glDeleteTextures(1, &handle);
     }
 }
+
+void Texture2D::freeSource()
+{
+    // if(_type == GL_FLOAT)
+    if(_pixelSource)
+    {
+        delete((float *)_pixelSource); 
+        _pixelSource = nullptr;
+    }
+};
 
 Texture2D& Texture2D::deleteHandle()
 {
@@ -110,38 +133,18 @@ Texture2D& Texture2D::generate(bool forceTexImageCall)
         
         handleRef = std::make_shared<GLuint>(handle);
 
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            _internalFormat,
-            _resolution.x,
-            _resolution.y,
-            0,
-            _format,
-            _type,
-            _pixelSource
-        );
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
+
+        if(_filter == GL_LINEAR_MIPMAP_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        else 
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
 
-        bindlessHandleRef = std::make_shared<GLuint>(0);
-
-        generated = true;
-    }
-    else
-    {
-        glBindTexture(GL_TEXTURE_2D, handle);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
-
-        if(forceTexImageCall)
+        if(!_pixelSource)
         {
             glTexImage2D(
                 GL_TEXTURE_2D,
@@ -154,6 +157,65 @@ Texture2D& Texture2D::generate(bool forceTexImageCall)
                 _type,
                 _pixelSource
             );
+        }
+        else
+        {
+            gluBuild2DMipmaps(
+                GL_TEXTURE_2D, 
+                _internalFormat, 
+                _resolution.x, 
+                _resolution.y, 
+                _format,
+                _type,
+                _pixelSource
+            );
+        }
+
+        bindlessHandleRef = std::make_shared<GLuint>(0);
+
+        generated = true;
+    }
+    else
+    {
+        glBindTexture(GL_TEXTURE_2D, handle);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
+
+        if(_filter == GL_LINEAR_MIPMAP_LINEAR)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        else 
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
+
+        if(forceTexImageCall)
+        {
+            if(!_pixelSource)
+            {
+                glTexImage2D(
+                    GL_TEXTURE_2D,
+                    0,
+                    _internalFormat,
+                    _resolution.x,
+                    _resolution.y,
+                    0,
+                    _format,
+                    _type,
+                    _pixelSource
+                );
+            }
+            else
+            {
+                gluBuild2DMipmaps(
+                    GL_TEXTURE_2D, 
+                    _internalFormat, 
+                    _resolution.x, 
+                    _resolution.y, 
+                    _format,
+                    _type,
+                    _pixelSource
+                );
+            }
         }
     }
 
@@ -201,8 +263,6 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
     stbi_hdr_to_ldr_gamma(1.0f);
     stbi_hdr_to_ldr_scale(1.0f);
 
-    // BenchTimer timer;
-    // timer.start();
     int n, fileStatus;
     fileStatus = stbi_info(filename, &_resolution.x, &_resolution.y, &n);
 
@@ -225,6 +285,102 @@ Texture2D& Texture2D::loadFromFileHDR(const char* filename)
 
     return *(this);
 }
+
+Texture2D& Texture2D::loadFromFileEXR(const char* filename)
+{
+    const char* err = nullptr; 
+    int fileStatus = 0;
+
+
+    // fileStatus = LoadEXR((float **)&_pixelSource, &_resolution.x, &_resolution.y, filename, &err);
+    // // fileStatus = LoadEXRWithLayer((float **)&_pixelSource, &_resolution.x, &_resolution.y, filename, "Z", &err);
+
+    // if(fileStatus != TINYEXR_SUCCESS)
+    // {
+    //     FILE_ERROR_MESSAGE(filename, err);
+    //     FreeEXRErrorMessage(err); 
+    //     return *(this);
+    // }
+    
+
+
+    // 1. Read EXR version.
+    EXRVersion exr_version;
+
+    fileStatus = ParseEXRVersionFromFile(&exr_version, filename);
+    if (fileStatus)
+    {
+        FILE_ERROR_MESSAGE(filename, "Invalid EXR file");
+        return *(this);
+    }
+
+    if (exr_version.multipart) {
+        // must be multipart flag is false.
+        return *(this);
+    }
+
+    // 2. Read EXR header
+    EXRHeader exr_header;
+    InitEXRHeader(&exr_header);
+
+    fileStatus = ParseEXRHeaderFromFile(&exr_header, &exr_version, filename, &err);
+    if (fileStatus)
+    {
+        FILE_ERROR_MESSAGE(filename, err);
+        FreeEXRErrorMessage(err); // free's buffer for an error message
+        return *(this);
+    }
+
+    // // Read HALF channel as FLOAT.
+    for (int i = 0; i < exr_header.num_channels; i++) {
+      if (exr_header.pixel_types[i] == TINYEXR_PIXELTYPE_HALF) {
+        exr_header.requested_pixel_types[i] = TINYEXR_PIXELTYPE_FLOAT;
+      }
+    }
+
+    EXRImage exr_image;
+    InitEXRImage(&exr_image);
+    
+    fileStatus = LoadEXRImageFromFile(&exr_image, &exr_header, filename, &err);
+    if (fileStatus)
+    {
+        FILE_ERROR_MESSAGE(filename, err);
+        FreeEXRHeader(&exr_header);
+        FreeEXRErrorMessage(err); // free's buffer for an error message
+        return *(this);
+    }
+
+    // _pixelSource = exr_image.images[0];
+    _pixelSource = new float[exr_image.width*exr_image.height];
+    memcpy((void *)_pixelSource, (void *)exr_image.images[0], sizeof(float)*exr_image.width*exr_image.height);
+
+    _resolution.x = exr_image.width;
+    _resolution.y = exr_image.height;
+
+    // NOTIF_MESSAGE(exr_image.num_channels << " " << exr_image.num_tiles)
+    
+    // 3. Access image data
+    // `exr_image.images` will be filled when EXR is scanline format.
+    // `exr_image.tiled` will be filled when EXR is tiled format.
+
+    // 4. Free image data
+
+
+
+    FreeEXRImage(&exr_image);
+    FreeEXRHeader(&exr_header);
+
+    setPixelType(GL_FLOAT);
+    setInternalFormat(GL_DEPTH_COMPONENT32F);
+    setFormat(GL_DEPTH_COMPONENT);
+    setWrapMode(GL_CLAMP);
+    // setFilter(GL_LINEAR);
+    setFilter(GL_LINEAR_MIPMAP_LINEAR);
+    bindlessHandleRef = std::make_shared<GLuint>(0);
+
+    return *(this);
+}
+
 
 Texture2D& Texture2D::loadFromFileKTX(const char* filename)
 {
@@ -359,3 +515,12 @@ GLuint64 Texture2D::getBindlessHandle()
     }
     return *bindlessHandleRef;
 }
+
+ivec2 Texture2D::getResolution() const {return _resolution;};
+GLenum Texture2D::getInternalFormat() const {return _internalFormat;};
+GLenum Texture2D::getFormat() const {return _format;};
+GLenum Texture2D::getPixelType() const {return _type;};
+GLenum Texture2D::getFilter() const {return _filter;};
+GLenum Texture2D::getAttachement() const {return _attachement;};
+GLenum Texture2D::getWrapMode() const {return _wrapMode;};
+const void * Texture2D::getPixelSource() const {return _pixelSource;};

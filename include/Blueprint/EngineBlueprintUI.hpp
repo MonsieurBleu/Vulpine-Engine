@@ -47,93 +47,93 @@ namespace VulpineBlueprintUI
         vec4 color = VulpineColorUI::LightBackgroundColor1
         );
 
-        EntityRef Toggable(
-            const std::string &name,
-            const std::string &icon,
-            WidgetButton::InteractFunc ifunc, 
-            WidgetButton::UpdateFunc ufunc,
-            vec3 color = VulpineColorUI::LightBackgroundColor1
+    EntityRef Toggable(
+        const std::string &name,
+        const std::string &icon,
+        WidgetButton::InteractFunc ifunc, 
+        WidgetButton::UpdateFunc ufunc,
+        vec3 color = VulpineColorUI::LightBackgroundColor1
+    );
+
+    EntityRef ValueInput(
+        const std::string &name,
+        std::function<void(float f)> setValue, 
+        std::function<float()> getValue,
+        float minV, float maxV,
+        float smallIncrement, float bigIncrement
         );
 
-        EntityRef ValueInput(
-            const std::string &name,
-            std::function<void(float f)> setValue, 
-            std::function<float()> getValue,
-            float minV, float maxV,
-            float smallIncrement, float bigIncrement
-            );
-
-        EntityRef TextInput(
-            const std::string &name,
-            std::function<void(std::u32string &)> fromText, 
-            std::function<std::u32string()> toText
-            );
-
-        EntityRef ValueInputSlider(
-            const std::string &name,
-            float min, float max, int padding, 
-            WidgetButton::InteractFunc ifunc, 
-            WidgetButton::UpdateFunc ufunc,
-            std::function<void(std::u32string &)> fromText, 
-            std::function<std::u32string()> toText,
-            vec4 color = VulpineColorUI::LightBackgroundColor1
-            );
-        
-        EntityRef ValueInputSlider(
-            const std::string &name,
-            float min, float max, int padding, 
-            std::function<void(float f)> setValue, 
-            std::function<float()> getValue,
-            vec4 color = VulpineColorUI::LightBackgroundColor1
-            );
-
-        EntityRef ColorSelectionScreen(
-            const std::string &name,
-            std::function<vec3()> getColor, 
-            std::function<void(vec3)> setColor
+    EntityRef TextInput(
+        const std::string &name,
+        std::function<void(std::u32string &)> fromText, 
+        std::function<std::u32string()> toText
         );
 
-        EntityRef NamedEntry(
-            const std::u32string &name,
-            EntityRef entry,
-            float nameRatioSize = 0.5f,
-            bool vertical = false,
-            vec4 color = VulpineColorUI::LightBackgroundColor1
-        );
-
-
-        EntityRef ColoredConstEntry(
-            const std::string &name,
-            std::function<std::u32string()> toText,
-            vec4 color = VulpineColorUI::LightBackgroundColor1,
-            bool vertical = false
-        );
-
-        EntityRef TimerPlot(
-            BenchTimer &timer, 
-            vec4(color),
-            std::function<vec2(PlottingHelper*)> getMinmax
-        );
-
-        void AddToSelectionMenu(
-            EntityRef titlesParent, 
-            EntityRef infosParent,  
-            EntityRef info,
-            const std::string &name,
-            const std::string &icon = ""
+    EntityRef ValueInputSlider(
+        const std::string &name,
+        float min, float max, int padding, 
+        WidgetButton::InteractFunc ifunc, 
+        WidgetButton::UpdateFunc ufunc,
+        std::function<void(std::u32string &)> fromText, 
+        std::function<std::u32string()> toText,
+        vec4 color = VulpineColorUI::LightBackgroundColor1
         );
     
-        EntityRef SceneInfos(Scene& scene);
-
-
-        EntityRef StringListSelectionMenu(
-            const std::string &name,
-            std::unordered_map<std::string, EntityRef>& list,
-            WidgetButton::InteractFunc ifunc, 
-            WidgetButton::UpdateFunc ufunc,
-            float verticalLenghtReduction = 0.f,
-            vec4 color = VulpineColorUI::LightBackgroundColor1,
-            float nameSizeRatio = 0.f
+    EntityRef ValueInputSlider(
+        const std::string &name,
+        float min, float max, int padding, 
+        std::function<void(float f)> setValue, 
+        std::function<float()> getValue,
+        vec4 color = VulpineColorUI::LightBackgroundColor1
         );
+
+    EntityRef ColorSelectionScreen(
+        const std::string &name,
+        std::function<vec3()> getColor, 
+        std::function<void(vec3)> setColor
+    );
+
+    EntityRef NamedEntry(
+        const std::u32string &name,
+        EntityRef entry,
+        float nameRatioSize = 0.5f,
+        bool vertical = false,
+        vec4 color = VulpineColorUI::LightBackgroundColor1
+    );
+
+
+    EntityRef ColoredConstEntry(
+        const std::string &name,
+        std::function<std::u32string()> toText,
+        vec4 color = VulpineColorUI::LightBackgroundColor1,
+        bool vertical = false
+    );
+
+    EntityRef TimerPlot(
+        BenchTimer &timer, 
+        vec4(color),
+        std::function<vec2(PlottingHelper*)> getMinmax
+    );
+
+    void AddToSelectionMenu(
+        EntityRef titlesParent, 
+        EntityRef infosParent,  
+        EntityRef info,
+        const std::string &name,
+        const std::string &icon = ""
+    );
+
+    EntityRef SceneInfos(Scene& scene);
+
+
+    EntityRef StringListSelectionMenu(
+        const std::string &name,
+        std::unordered_map<std::string, EntityRef>& list,
+        WidgetButton::InteractFunc ifunc, 
+        WidgetButton::UpdateFunc ufunc,
+        float verticalLenghtReduction = 0.f,
+        vec4 color = VulpineColorUI::LightBackgroundColor1,
+        float nameSizeRatio = 0.f
+    );
 
 }

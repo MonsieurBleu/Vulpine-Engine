@@ -49,8 +49,8 @@ class SpectatorController : public Controller
         void updateDirectionStateWASD();
 
     public : 
-        float speed = 2.0;
-        float sprintFactor = 15.0;
+        float speed = 20.0;
+        float sprintFactor = 40.0;
         virtual void update();
         virtual bool inputs(GLFWKeyInfo& input);
         void clean();
