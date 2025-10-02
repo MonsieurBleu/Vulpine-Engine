@@ -355,6 +355,12 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         box.displayMax = box.max;
     }
 
+    if (Loader<ScriptInstance>::loadingInfos.find("test_ent") != Loader<ScriptInstance>::loadingInfos.end())
+    {
+        Loader<ScriptInstance>::get("test_ent").run(parent);
+        // std::cout << "TEST ENT = " << (std::string)threadState["t"] << "\n";
+    }
+
     box.displayMin = max(box.displayRangeMin, box.displayMin);
     box.displayMax = max(box.displayRangeMin, box.displayMax);
 

@@ -245,6 +245,9 @@ VertexAttributeGroup &VertexAttributeGroup::genAABB()
     if (!attributes.size())
         return *this;
 
+    if (attributes[0].getPerVertexSize() < 3 || attributes[0].getType() != GL_FLOAT)
+        return *this;
+    
     vec3 *b = (vec3 *)attributes[0].getBufferAddr();
     int size = attributes[0].getVertexCount();
 
