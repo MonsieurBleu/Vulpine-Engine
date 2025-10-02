@@ -198,7 +198,7 @@ class Entity
         
             for(auto &i : ComponentCategoryMap)
                 if(i.second != ComponentCategory::END && ids[i.second] != -1)
-                    ss << "  " << TERMINAL_FILENAME << i.first << "[" << TERMINAL_TIMER << ids[i.second] << "]";
+                    ss << "  " << TERMINAL_FILENAME << i.first << "[" << TERMINAL_TIMER << ids[i.second] << TERMINAL_FILENAME << "]";
 
             ss << TERMINAL_OK << "}\n" << TERMINAL_RESET;
             return ss.str();
