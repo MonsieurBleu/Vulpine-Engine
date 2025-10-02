@@ -84,7 +84,7 @@ This application uses different libraries :
 
 Important modules :
 - [Vulpine Engine Shader Library](https://github.com/MonsieurBleu/VESL--Vulpine-Engine-Shader-Library)
-- [(deprecated) Vulpine Engine Assets Convertor](https://github.com/MonsieurBleu/VEAC-Vulpine-Engine-Asset-Convertor)
+- [(deprecated, now included inside the engine) Vulpine Engine Assets Convertor](https://github.com/MonsieurBleu/VEAC-Vulpine-Engine-Asset-Convertor)
 
 Project structure recommended with Vulpine :
 ```
