@@ -170,7 +170,7 @@ void OrbitController::update()
         {
             if(glfwGetKey(globals.getWindow(), GLFW_KEY_LEFT_SHIFT))
             {
-                orthoNear -= globals.mouseScrollOffset().y*0.1;
+                orthoNear -= globals.mouseScrollOffset().y;
             }
             else
             {

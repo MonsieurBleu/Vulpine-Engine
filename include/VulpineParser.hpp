@@ -35,6 +35,7 @@ class VulpineTextBuff
 
         void loadFromFile(const char *filename);
         uft8 *data = nullptr;
+        uft8 *originalData = nullptr;
         
         /* 
             This string can be used as a buffer to get a safe ptr to the name of the asset file. 
@@ -52,6 +53,8 @@ class VulpineTextBuff
         void setHead(const uft8 *ptr);
 
         void alloc(int size);
+
+        void resetData();
 
         uft8* read();
 };

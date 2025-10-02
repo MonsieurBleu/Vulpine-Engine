@@ -47,10 +47,21 @@ class Texture2D
         Texture2D& setAttachement(GLenum attachement);
         Texture2D& setWrapMode(GLenum wrapMode);
 
+        ivec2 getResolution() const;
+        GLenum getInternalFormat() const;
+        GLenum getFormat() const;
+        GLenum getPixelType() const;
+        GLenum getFilter() const;
+        GLenum getAttachement() const;
+        GLenum getWrapMode() const;
+        const void * getPixelSource() const;
+
         /* Memory leak of the texture information when using stb */
         Texture2D& loadFromFile(const char* filename);
         /* Memory leak of the texture information when using stb */
         Texture2D& loadFromFileHDR(const char* filename);
+
+        Texture2D& loadFromFileEXR(const char* filename);
 
         Texture2D& loadFromFileKTX(const char* filename);
         Texture2D& loadFromFileKTX_IO(const char* filename);
@@ -74,7 +85,7 @@ class Texture2D
         GLuint getHandle(){return handle;};
         GLuint64 getBindlessHandle();
         GLenum getAttachement(){return _attachement;};
-        ivec2 getResolution(){return _resolution;};
         const ivec2* getResolutionAddr() const {return &_resolution;};
-        const void *getPixelSource() const {return _pixelSource;};
+
+        void freeSource();
 };

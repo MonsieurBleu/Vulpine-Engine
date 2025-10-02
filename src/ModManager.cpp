@@ -194,11 +194,17 @@ void AssetLoadInfos::addToGlobalList(AssetVersion &asset)
         {{"ktx2", "Texture2D"}, {true, "source"}},
         {{"png", "Texture2D"}, {true, "source"}},
         {{"jpg", "Texture2D"}, {true, "source"}},
+        {{"jpeg", "Texture2D"}, {true, "source"}},
+        {{"tga", "Texture2D"}, {true, "source"}},
+        {{"psd", "Texture2D"}, {true, "source"}},
+        {{"bmp", "Texture2D"}, {true, "source"}},
+        {{"gif", "Texture2D"}, {true, "source"}},
+        {{"pic", "Texture2D"}, {true, "source"}},
+        {{"ppm", "Texture2D"}, {true, "source"}},
+        {{"pgm", "Texture2D"}, {true, "source"}},
+        {{"exr", "Texture2D"}, {true, "source"}},
 
-        
-        {{"lua", "ScriptInstance"}, {true, ""}},
-        
-
+        {{"lua", "ScriptInstance"}, {true, ""}}
     };
 
     for(auto i : filetypes)

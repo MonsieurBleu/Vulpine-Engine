@@ -12,6 +12,7 @@ VulpineTextBuff::VulpineTextBuff(const char *filename)
 VulpineTextBuff::~VulpineTextBuff()
 {
     if(data) delete [] data;
+    if(originalData) delete [] originalData;
 }
 
 void VulpineTextBuff::loadFromFile(const char *filename)
@@ -36,10 +37,13 @@ void VulpineTextBuff::loadFromFile(const char *filename)
     file.clear();
     file.seekg( 0, std::ios_base::beg );
 
-    data = new uft8[size+1];
+    // data = new uft8[size+1];
+    alloc(size);
     file.read((char *)data, size);
     file.close();
     data[size] = '\0';
+
+    memcpy(originalData, data, size);
 }
 
 void VulpineTextBuff::alloc(int size)
@@ -47,6 +51,19 @@ void VulpineTextBuff::alloc(int size)
     this->size = size;
     data = new uft8[size+1];
     data[size] = '\0';
+
+    originalData = new uft8[size+1];
+    originalData[size] = '\0';
+}
+
+void VulpineTextBuff::resetData()
+{
+    memcpy(data, originalData, size);
+    eof = false;
+    stringMode = false;
+    commentsMode = false;
+    clearHeadLoc = true;
+    readhead = 0;
 }
 
 bool VulpineTextBuff::readBreakChar()

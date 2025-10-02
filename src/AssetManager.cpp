@@ -170,6 +170,9 @@ Texture2D& Loader<Texture2D>::loadFromInfos()
             if(!strcasecmp(ext, "hdr"))
                 r.loadFromFileHDR(file);
             else
+            if(!strcasecmp(ext, "exr"))
+                r.loadFromFileEXR(file);
+            else
                 FILE_ERROR_MESSAGE(name, "Image extension '" << ext << "' not supported by Vulpine.");
         }
         else
