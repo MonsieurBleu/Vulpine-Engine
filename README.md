@@ -19,7 +19,7 @@ Vulpine is a free and open-source game engine built in C++. It aims to provide p
   Follow us on &nbsp; <a href="https://bsky.app/profile/vulpinegames.bsky.social">
     <img src="https://upload.wikimedia.org/wikipedia/commons/7/7a/Bluesky_Logo.svg" width="20">
     Blue Sky
-  </a> &nbsp; &nbsp; <a href="https://www.youtube.com/@VulpineGameStudioyoutuve logo">
+  </a> &nbsp; &nbsp; <a href="https://www.youtube.com/@VulpineGameStudio">
     <img src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png" width="20">
     Youtube
   </a> 
