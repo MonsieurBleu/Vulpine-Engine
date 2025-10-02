@@ -1,16 +1,43 @@
-<h1 align="center"> Vulpine Engine </h1> <br>
+
 
 <p align="center">
 <image width="400" height="400" src="https://github.com/MonsieurBleu/Game-Engine/assets/97893210/e051c85c-d509-4b99-ad3e-a5ffb777c521">
 </image></p>
 
+
 <p align="center">
   Light, modular and smart as a fox!
 </p>
 
-## Presentation
+<h1 align="center"> Vulpine Engine </h1> <br>
 
+<p align="center">
 Vulpine is a free and open-source game engine built in C++. It aims to provide powerful yet lightweight tools for creating games and interactive environments, featuring a unique take on hierarchical ECS and modding-oriented asset streaming.
+</p>
+
+<p align="center">
+  Follow us on &nbsp; <a href="https://bsky.app/profile/vulpinegames.bsky.social">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/7/7a/Bluesky_Logo.svg" width="20">
+    Blue Sky
+  </a> &nbsp; &nbsp; <a href="https://www.youtube.com/@VulpineGameStudioyoutuve logo">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/e/ef/Youtube_logo.png" width="20">
+    Youtube
+  </a> 
+
+</p>
+
+<p align="center">
+
+  
+</p>
+
+<p align="center">
+
+
+  
+</p>
+
+
 
 ## General Features
 
