@@ -140,9 +140,9 @@ private :
     clockmicro::time_point lasTickTime;
 
 public : 
-
     void tick();
-    float timeSinceLastTickMS();
+    // returns dt in seconds
+    float timeSinceLastTick(); 
 };
 
 
