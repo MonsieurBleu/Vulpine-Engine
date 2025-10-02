@@ -253,6 +253,8 @@ namespace VulpineLuaBindings
 
 #endif 
 
+// #define VLB_ENT_IMPL
+
 #ifdef VLB_ENT_IMPL
     #include "ECS/Entity.hpp"
     #include "ECS/ComponentTypeUI.hpp"
@@ -264,7 +266,13 @@ namespace VulpineLuaBindings
         #undef CURRENT_CLASS_BINDING
         #define CURRENT_CLASS_BINDING Entity
         CREATE_CLASS_USERTYPE(Entity, (), ())
-        class_binding["toStr"] = & Entity::toStr;
+        // std::cout << "Binding Entity\n";
+        // class_binding["a"] = [](Entity &e){ return "e"; };
+
+        METHOD_BINDING(toStr)
+
+        lua.set_function("EntityToStr", [](Entity &e){ return e.toStr(); });
+
         // ADD_METHOD_BINDINGS(
             // toStr
 
