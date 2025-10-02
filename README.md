@@ -10,55 +10,57 @@
 
 ## Presentation
 
-Vulpine is a free and open source game engine built in C++. It aims at giving powerfull yet lightweight tools to make games and interactible environement, such as an unique take on hierarchical ECS and modding oriented asset streaming.
+Vulpine is a free and open-source game engine built in C++. It aims to provide powerful yet lightweight tools for creating games and interactive environments, featuring a unique take on hierarchical ECS and modding-oriented asset streaming.
 
 ## General Features
 
 - 3D scene management
-- Skeletal animations
-- Clustered Lighting
+- Skeletal animation
+- Clustered lighting
 - Terrain rendering
 - Input management and player controllers
-- Built-in debug and benchmark tools
-- Custom fast to load, compress and decompress geometry file format
-- Custom JSON-like language made to be easy to edit and very efficient to parse
-- Servral image loading supports includes jpg, png, tiff, gif, ktx, exr, hdr
-- 3D Sound system, powered by the OpenAL Soft project
-- Asset conversion tools, powered by the ASSIMP project
-- Full LUA scripting support including user-made bindings and multithread support, powered by the SOL2 project
+- Built-in debug and benchmarking tools
+- Custom geometry file format optimized for fast loading, compression, and decompression
+- Custom JSON-like language designed to be easy to edit and highly efficient to parse
+- Several image loading formats supported, including JPG, PNG, TIFF, GIF, KTX, EXR, and HDR
+- 3D sound system powered by the OpenAL Soft project
+- Asset conversion tools powered by the ASSIMP project
+- Full Lua scripting support, including user-made bindings and multithreaded support, powered by the SOL2 project
 
 ## Unique features 
 
 ### Modular Entity Groupping
 
-Game logic in Vulpine is done with a unique Modular Entity Grouping system, made to combine the modularity of ECS based game logic with fully customazible object graph relation and manipulation. In this module, each component can have a different way of interacting with parent or children of their respective entity, these operation includes synching, reparenting, merging, merge compatibility checks, file writing/loading and creation/deletion routines. This system can be used to create custom level manipulation, logic and optimization that are content and logic aware.
+Game logic in Vulpine is handled through a unique Modular Entity Grouping system, designed to combine the modularity of ECS-based game logic with fully customizable object graph relationships and manipulation. In this module, each component can interact with the parent or children of its respective entity in different ways. These operations include syncing, reparenting, merging, merge compatibility checks, file writing/loading, and creation/deletion routines. This system can be used to create custom level manipulation, logic, and optimization that are both content-aware and logic-aware.
 
-In the Sanctia project, for instance, it is used to reduce drawcalls and general scene weight by merging all static elements while retaining the full integrity of the region's logic.
+In the Sanctia project, for example, it is used to reduce draw calls and overall scene weight by merging all static elements while preserving the full integrity of the region's logic.
 
 
 ### Asset Management
 
-All supported files format that can be loaded by Vulpine uses an Asset Manager that scans the game files at each startup to compile loading informations. Each asset is referenced only by his name, streamlining the creation process by removing any obligations to write or update specific file locations. If it's in there, and you want it, the engine will find it for you.
+All supported file formats that can be loaded by Vulpine use an Asset Manager, which scans the game files at each startup to compile loading information. Each asset is referenced only by its name, streamlining the creation process by removing the need to write or update specific file locations. If it’s there and you want it, the engine will find it for you.
 
-Modding is also fully supported, each asset inside a mod folder will be marked by the engine and will be tracked seperatly. Mods can also be contained inside other mods, creating a sub-mods, this can be done recursivly without any limitations. Overwriting or adding any game asset can be simply done by dropping it inside your mod folder. It is that easy ! Any folder, anywhere, can be marked as a mod by simply adding ``[0-9]`` at the beginning of his name. The number inside the bracket correspond to a default overwriting importance. For exemple, in the Sanctia project, 0 represents base game assets, 1 user mods and 2 compatibility patchs. This metod streamline the user experience by handling automaticly default mod order, while still giving the option to modify the order of each mod seperatly in a dedicated file.
+Modding is also fully supported. Each asset inside a mod folder is marked by the engine and tracked separately. Mods can also be contained within other mods, creating sub-mods recursively without limitation. Overwriting or adding any game asset is as simple as dropping it into your mod folder. Any folder, anywhere, can be marked as a mod by adding [0-9] at the beginning of its name. The number inside the brackets corresponds to a default overwrite priority. For example, in the Sanctia project, 0 represents base game assets, 1 user mods, and 2 compatibility patches. This method streamlines the user experience by automatically handling the default mod order while still allowing the order of each mod to be modified separately in a dedicated file.
 
-The last important point for modding support is that load order doesn't exist in Vulpine, because the engine is aware of all available ressources. This leads the mod order to simply affects overwrite important of assets, but no dependencies error can be triggered by the mod order.
+The last important point for modding support is that load order doesn’t exist in Vulpine, because the engine is aware of all available resources. This means mod order only affects the overwrite priority of assets, and no dependency errors can be caused by mod order.
 
 
 ## Planned Features
 
-- Path finding
-- Cascaded shadowmap
+- Pathfinding
+- Cascaded shadow maps
 - Procedural texture generation tools
-- Better controller supports
-- Game implementation example using tools and ECS made for the Sanctia Project
+- Improved controller support
+- Game implementation example using the tools and ECS created for the Sanctia project
 
 
 ## Project Built With Vulpine 
 
-- [Game Repo Example](https://github.com/MonsieurBleu/Vulpine-Engine-Game-Repo-Example) a simple game built with the engine to showcase how to setup things.
+- [(deprecated) Game Repo Example](https://github.com/MonsieurBleu/Vulpine-Engine-Game-Repo-Example) a simple game built with the engine to showcase how to setup things.
 - ["Les bois de Vulpigniac"](https://github.com/MonsieurBleu/Renerds-Code-Game-Jam-2024) made for the Code Game Jam 2024.
 - [Height Maps](https://github.com/MonsieurBleu/Height-Maps) first implemntation of terrain rendering.
+- [Real Time Spatially Varying Noise](https://github.com/MonsieurBleu/Real-Time-Spatially-Varying-Noise), a simple application to create and test 2D noises created for a master thesis.
+- Sanctia, an open-world medieval role-simulation currently in development.
 
 ## Portability & Dependencies 
 
