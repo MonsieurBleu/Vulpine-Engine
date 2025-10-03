@@ -16,7 +16,7 @@ endif
 BUILD_DIR = 
 OPTFLAGS =
 
-CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS) 
+CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS) -Wno-deprecated-declarations
 INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
 
@@ -143,7 +143,7 @@ game_base_echo :
 
 
 game : vulpine
-game : LIBFLAGSG = $(LIBFLAGS) -lreactphysics3d
+game : LIBFLAGSG = $(LIBFLAGS) /usr/lib/libreactphysics3d.a
 #game : LINKFLAGS += -L../$(BUILD_DIR) -Wl,-rpath,'$$ORIGIN'
 game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@

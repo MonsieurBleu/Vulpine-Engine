@@ -214,111 +214,367 @@ namespace VulpineLuaBindings
 
 #define CURRENT_CLASS_BINDING
 #define METHOD_BINDING(method) class_binding[#method] = & CURRENT_CLASS_BINDING::method;
-#define ADD_METHOD_BINDINGS(...) MAPGEN_FOR_EACH(METHOD_BINDING, __VA_ARGS__)
+#define METHOD_BINDING_TEMPLATED_SINGLE(method, classType) class_binding[#method"_"#classType] = & CURRENT_CLASS_BINDING::method<classType>;
+#define METHOD_BINDING_TEMPLATED(method, ...) MAPGEN_FOR_EACH_ONE_ARG(METHOD_BINDING_TEMPLATED_SINGLE, method, __VA_ARGS__)
+#define ADD_MEMBER_BINDINGS(...) MAPGEN_FOR_EACH(METHOD_BINDING, __VA_ARGS__)
+#define ADD_REFERENCE(thing) &thing
+#define ADD_OVERLOADED_METHOD(name, ...) class_binding[#name] = sol::overload(MAPGEN_FOR_EACH(ADD_REFERENCE, __VA_ARGS__));
+#define ENUM_BINDING(enumType) for(auto &i : enumType##Map) {sol::object obj = lua[#enumType][i.first]; auto dir = static_cast<enumType>(obj.as<typename std::underlying_type<enumType>::type>()); }
 
-#define TO_STR(maccro) #maccro
+#define TO_STR(macro) #macro
 #define CLASS_CONSTRUCTOR(args) , CURRENT_CLASS_BINDING args
 #define CREATE_CLASS_USERTYPE(class, default, ...) sol::usertype<CURRENT_CLASS_BINDING> class_binding = lua.new_usertype<CURRENT_CLASS_BINDING>(#class, sol::call_constructor, sol::constructors<CURRENT_CLASS_BINDING default MAPGEN_FOR_EACH(CLASS_CONSTRUCTOR, __VA_ARGS__)>());
-
 // #define VLB_VLT_IMPL
 
 #ifdef VLB_VLT_IMPL
 
     #include <Timer.hpp>
+    #include <Matrix.hpp>
 
     void VulpineLuaBindings::VulpineTypes(sol::state &lua)
     {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING BenchTimer
+        /* TODO: Serialize:
+            - MeshMaterial
+            - ModelRef
+            - Scene
+        */
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING BenchTimer
 
-        CREATE_CLASS_USERTYPE(BenchTimer, (), (std::string))
-        ADD_METHOD_BINDINGS(
-            stop, 
-            hold, 
-            start, 
-            toggle, 
-            resume, 
-            pause, 
-            isPaused, 
-            setAvgLengthMS, 
-            getDelta, 
-            getElapsedTime,
-            getElapsedTimeAddr,
-            getUpdateCounter,
-            getLastAvg,
-            getMax,
-            reset
-        )
+            CREATE_CLASS_USERTYPE(BenchTimer, (), (std::string))
+            ADD_MEMBER_BINDINGS(
+                stop, 
+                hold, 
+                start, 
+                toggle, 
+                resume, 
+                pause, 
+                isPaused, 
+                setAvgLengthMS, 
+                getDelta, 
+                getElapsedTime,
+                getElapsedTimeAddr,
+                getUpdateCounter,
+                getLastAvg,
+                getMax,
+                reset
+            )
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING ModelState3D
+
+            CREATE_CLASS_USERTYPE(ModelState3D, (), ())
+            ADD_MEMBER_BINDINGS(
+                position,
+                scale,
+                rotation,
+                lookAtPoint,
+                rotationMatrix,
+                modelMatrix,
+                frustumCulled,
+                hide,
+                quaternion,
+                useQuaternion,
+                setHideStatus,
+                scaleScalar,
+                setScale,
+                setPosition,
+                setPositionXY,
+                setPositionZ,
+                setQuaternion,
+                setRotation,
+                lookAt,
+                update,
+                forceUpdate,
+                needUpdate
+            );
+
+            lua.new_enum(
+                "ModelStatus",
+                "HIDE", ModelStatus::HIDE,
+                "SHOW", ModelStatus::SHOW,
+                "UNDEFINED", ModelStatus::UNDEFINED
+            );
+        }
     }
 
 #endif 
 
-// #define VLB_ENT_IMPL
+
+/*
+#define VLB_ENT_IMPL
+#define INSTANTLY_KILL_ME_IF_THIS_IS_DEFINED
+//*/
+#ifdef INSTANTLY_KILL_ME_IF_THIS_IS_DEFINED
+    #error "silly!!! :3 (<- you) forgot to comment out the defines in LuaBindings.hpp"
+#endif
 
 #ifdef VLB_ENT_IMPL
     #include "ECS/Entity.hpp"
     #include "ECS/ComponentTypeUI.hpp"
     #include "ECS/ModularEntityGroupping.hpp"
+    #include "Graphics/Fonts.hpp"
+    #include "Graphics/Scene.hpp"
 
     void VulpineLuaBindings::Entities(sol::state &lua)
     {
-        // TODO: figure out how to add bindings for sanctia types
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING Entity
-        CREATE_CLASS_USERTYPE(Entity, (), ())
-        // std::cout << "Binding Entity\n";
-        // class_binding["a"] = [](Entity &e){ return "e"; };
+        /* TODO: Serialize:
+            - WidgetText
+            - SimpleUiTile
+            - SimpleUiTileBatch
+        */
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING Entity
+            CREATE_CLASS_USERTYPE(Entity, (), ())
 
-        METHOD_BINDING(toStr)
+            // METHOD_BINDING_TEMPLATED_SINGLE(comp, EntityInfos)
+            // METHOD_BINDING_TEMPLATED_SINGLE(comp, WidgetBox)
+            METHOD_BINDING_TEMPLATED(
+                comp, 
+                    EntityInfos,
+                    EntityGroupInfo,
+                    WidgetBackground,
+                    WidgetBox,
+                    WidgetButton,
+                    WidgetSprite,
+                    WidgetState,
+                    WidgetStyle,
+                    WidgetText,
+            )
 
-        lua.set_function("EntityToStr", [](Entity &e){ return e.toStr(); });
+            METHOD_BINDING_TEMPLATED(
+                hasComp, 
+                    EntityInfos,
+                    EntityGroupInfo,
+                    WidgetBackground,
+                    WidgetBox,
+                    WidgetButton,
+                    WidgetSprite,
+                    WidgetState,
+                    WidgetStyle,
+                    WidgetText,
+            )
 
-        // ADD_METHOD_BINDINGS(
-            // toStr
+            METHOD_BINDING_TEMPLATED(
+                set, 
+                    EntityInfos,
+                    EntityGroupInfo,
+                    WidgetBackground,
+                    WidgetBox,
+                    WidgetButton,
+                    WidgetSprite,
+                    WidgetState,
+                    WidgetStyle,
+                    WidgetText,
+            )
 
-            // comp<EntityGroupInfo>,
-            // comp<EntityInfos>,
-            // comp<WidgetBackground>,
-            // comp<WidgetBox>,
-            // comp<WidgetButton>,
-            // comp<WidgetSprite>,
-            // comp<WidgetState>,
-            // comp<WidgetStyle>,
-            // comp<WidgetText>,
-            // comp<WidgetUI_Context>,
+            METHOD_BINDING_TEMPLATED(
+                removeComp, 
+                    EntityInfos,
+                    EntityGroupInfo,
+                    WidgetBackground,
+                    WidgetBox,
+                    WidgetButton,
+                    WidgetSprite,
+                    WidgetState,
+                    WidgetStyle,
+                    WidgetText,
+            )
 
-            // hasComp<EntityGroupInfo>,
-            // hasComp<EntityInfos>,
-            // hasComp<WidgetBackground>,
-            // hasComp<WidgetBox>,
-            // hasComp<WidgetButton>,
-            // hasComp<WidgetSprite>,
-            // hasComp<WidgetState>,
-            // hasComp<WidgetStyle>,
-            // hasComp<WidgetText>,
-            // hasComp<WidgetUI_Context>,
+            ADD_MEMBER_BINDINGS(
+                toStr,
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING EntityInfos
+            CREATE_CLASS_USERTYPE(EntityInfos, (), ())
+            lua.new_usertype<EntityInfos>(
+                "EntityInfos",
+                "name", &EntityInfos::name
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING WidgetBox
+            CREATE_CLASS_USERTYPE(WidgetBox, (vec2, vec2, WidgetBox::Type), (WidgetBox::FittingFunc))
+            ADD_MEMBER_BINDINGS(
+                min,
+                max,
+                initMin,
+                initMax,
+                childrenMin,
+                childrenMax,
+                displayMin,
+                displayMax,
+                lastMin,
+                lastMax,
+                displayRangeMin,
+                displayRangeMax,
+                depth,
+                lastChangeTime,
+                synchCounter,
+                useClassicInterpolation,
+                isUnderCursor,
+                areChildrenUnderCurosor,
+                scrollOffset,
+                type
+            );
 
-            // set<EntityGroupInfo>,
-            // set<EntityInfos>,
-            // set<WidgetBackground>,
-            // set<WidgetBox>,
-            // set<WidgetButton>,
-            // set<WidgetSprite>,
-            // set<WidgetState>,
-            // set<WidgetStyle>,
-            // set<WidgetText>,
-            // set<WidgetUI_Context>,
+            lua.new_enum(
+                "WidgetBoxType",
+                "FOLLOW_PARENT_BOX", WidgetBox::Type::FOLLOW_PARENT_BOX,
+                "FOLLOW_SIBLINGS_BOX", WidgetBox::Type::FOLLOW_SIBLINGS_BOX
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING EntityGroupInfo
+            CREATE_CLASS_USERTYPE(EntityGroupInfo, (), (std::vector<EntityRef> &))
+            ADD_MEMBER_BINDINGS(
+                children,
+                markedForDeletion, // TODO: check if we even want to expose those two
+                markedForCreation,
+                parent
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING WidgetBackground
+            CREATE_CLASS_USERTYPE(WidgetBackground, (), ())
+            ADD_MEMBER_BINDINGS(
+                tile,
+                batch
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING WidgetButton
+            CREATE_CLASS_USERTYPE(
+                WidgetButton, 
+                (WidgetButton::Type), 
+                (
+                    WidgetButton::Type, 
+                    WidgetButton::InteractFunc, 
+                    WidgetButton::UpdateFunc
+                ),
+                (
+                    WidgetButton::Type, 
+                    WidgetButton::InteractFunc2D, 
+                    WidgetButton::UpdateFunc2D
+                )
+            );
+            ADD_MEMBER_BINDINGS(
+                type,
+                cur,
+                setcur,
+                cur2,
+                setcur2,
+                min,
+                setmin,
+                max,
+                setmax,
+                padding,
+                setpadding,
+                usr,
+                setusr
+                // valueChanged,
+                // valueUpdate,
+                // valueChanged2D,
+                // valueUpdate2D,
+                // material
+            );
 
-            // removeComp<EntityGroupInfo>,
-            // removeComp<EntityInfos>,
-            // removeComp<WidgetBackground>,
-            // removeComp<WidgetBox>,
-            // removeComp<WidgetButton>,
-            // removeComp<WidgetSprite>,
-            // removeComp<WidgetState>,
-            // removeComp<WidgetStyle>,
-            // removeComp<WidgetText>,
-            // removeComp<WidgetUI_Context>,
-        // );
+            lua.new_enum(
+                "WidgetButtonType",
+                "HIDE_SHOW_TRIGGER", WidgetButton::HIDE_SHOW_TRIGGER,
+                "HIDE_SHOW_TRIGGER_INDIRECT", WidgetButton::HIDE_SHOW_TRIGGER_INDIRECT,
+                "CHECKBOX", WidgetButton::CHECKBOX,
+                "TEXT_INPUT", WidgetButton::TEXT_INPUT,
+                "SLIDER", WidgetButton::SLIDER,
+                "SLIDER_2D", WidgetButton::SLIDER_2D
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING WidgetSprite
+            CREATE_CLASS_USERTYPE(WidgetSprite, (), (std::string&), (ModelRef))
+            ADD_MEMBER_BINDINGS(
+                sprite,
+                name,
+                scene
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING WidgetState
+            CREATE_CLASS_USERTYPE(WidgetState, (), ())
+            ADD_MEMBER_BINDINGS(
+                upToDate,
+                status,
+                statusToPropagate,
+                updateCounter
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING WidgetStyle
+            CREATE_CLASS_USERTYPE(WidgetStyle, (), ())
+            ADD_MEMBER_BINDINGS(
+                textColor1,
+                settextColor1,
+                textColor2,
+                settextColor2,
+                backgroundColor1,
+                setbackgroundColor1,
+                backgroundColor2,
+                setbackgroundColor2,
+                backGroundStyle,
+                setbackGroundStyle,
+                automaticTabbing,
+                setautomaticTabbing,
+                spriteScale,
+                setspriteScale,
+                useInternalSpacing,
+                setuseInternalSpacing,
+                spritePosition,
+                setspritePosition,
+                useAltBackgroundColor,
+                useAltTextColor
+            );
+
+            lua.new_enum(
+                "UiTileType",
+                "SQUARE", UiTileType::SQUARE,
+                "SQUARE_ROUNDED", UiTileType::SQUARE_ROUNDED,
+                "CIRCLE", UiTileType::CIRCLE,
+                "SATURATION_VALUE_PICKER", UiTileType::SATURATION_VALUE_PICKER,
+                "HUE_PICKER", UiTileType::HUE_PICKER,
+                "ATMOSPHERE_VIEWER", UiTileType::ATMOSPHERE_VIEWER
+            );
+        }
+        {
+            #undef CURRENT_CLASS_BINDING
+            #define CURRENT_CLASS_BINDING WidgetText
+            CREATE_CLASS_USERTYPE(
+                WidgetText, 
+                (), 
+                (std::u32string, StringAlignment)
+            );
+            ADD_MEMBER_BINDINGS(
+                mesh,
+                text,
+                align
+            );
+
+            lua.new_enum(
+                "StringAlignment",
+                "TO_LEFT", StringAlignment::TO_LEFT,
+                "CENTERED", StringAlignment::CENTERED
+            );
+        }
     }
 #endif 
