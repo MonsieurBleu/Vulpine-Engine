@@ -72,7 +72,7 @@ class FontUFT8
 
 typedef std::shared_ptr<FontUFT8> FontRef;
 
-enum StringAlignement
+enum StringAlignment
 {
     TO_LEFT, CENTERED
 };
@@ -89,7 +89,7 @@ class SingleStringBatch : public MeshModel3D
         void setFont(FontRef newFont);
         std::u32string text;
 
-        StringAlignement align = TO_LEFT;
+        StringAlignment align = TO_LEFT;
 
         /*
             TODO : add inteligent buffer overwrite (the whole thing is not re-allocated if the place is arleady here)
