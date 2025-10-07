@@ -1,6 +1,7 @@
 #pragma once
 
 
+
 #define SOL_LUAJIT 1
 #define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
@@ -19,7 +20,7 @@ namespace VulpineLuaBindings
 
     // static void states(sol::state& lua);
 
-    static void Entities(sol::state& lua);
+    void Entities(sol::state& lua);
 }
 
 #define OVERLOAD_OP(type1, type2)[](const type1 &v1, const type2 &v2){return v1 VLB_GLM_CUR_OPERATOR v2;}
@@ -317,14 +318,11 @@ namespace VulpineLuaBindings
     #include "ECS/ModularEntityGroupping.hpp"
     #include "Graphics/Fonts.hpp"
     #include "Graphics/Scene.hpp"
+    #include "AssetManager.hpp"
+    #include "VulpineParser.hpp"
 
     void VulpineLuaBindings::Entities(sol::state &lua)
     {
-        /* TODO: Serialize:
-            - WidgetText
-            - SimpleUiTile
-            - SimpleUiTileBatch
-        */
         {
             #undef CURRENT_CLASS_BINDING
             #define CURRENT_CLASS_BINDING Entity
@@ -574,6 +572,27 @@ namespace VulpineLuaBindings
                 "StringAlignment",
                 "TO_LEFT", StringAlignment::TO_LEFT,
                 "CENTERED", StringAlignment::CENTERED
+            );
+        }
+        {
+            lua.set_function(
+                "entityWriteToFile",
+                [](const EntityRef& entity, const char* filename)
+                {
+                    VulpineTextOutputRef out(new VulpineTextOutput());
+                    // std::cout << "Writing entity to " << filename << "\n";
+                    DataLoader<EntityRef>::write(entity, out);
+                    out->saveAs(filename);
+                }
+            );
+
+            lua.set_function(
+                "entityReadFromFile",
+                [](const char* filename) -> EntityRef
+                {
+                    VulpineTextBuffRef in(new VulpineTextBuff(filename));
+                    return DataLoader<EntityRef>::read(in);
+                }
             );
         }
     }

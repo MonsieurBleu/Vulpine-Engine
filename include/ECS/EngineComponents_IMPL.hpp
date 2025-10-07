@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "Entity.hpp"
 #ifndef VULPINE_COMPONENT_IMPL
 #include <ECS/EngineComponents.hpp>
 #endif
@@ -355,9 +356,9 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         box.displayMax = box.max;
     }
 
-    if (Loader<ScriptInstance>::loadingInfos.find("test_ent") != Loader<ScriptInstance>::loadingInfos.end())
+    if (child->comp<EntityInfos>().name == "Current Application Menus" && Loader<ScriptInstance>::loadingInfos.find("test_ent") != Loader<ScriptInstance>::loadingInfos.end())
     {
-        Loader<ScriptInstance>::get("test_ent").run(parent);
+        Loader<ScriptInstance>::get("test_ent").run(child, globals.appTime.getUpdateCounter());
     }
 
     box.displayMin = max(box.displayRangeMin, box.displayMin);
