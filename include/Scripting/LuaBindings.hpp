@@ -320,6 +320,7 @@ namespace VulpineLuaBindings
     #include "Graphics/Scene.hpp"
     #include "AssetManager.hpp"
     #include "VulpineParser.hpp"
+    #include "Utils.hpp"
 
     void VulpineLuaBindings::Entities(sol::state &lua)
     {
@@ -577,21 +578,36 @@ namespace VulpineLuaBindings
         {
             lua.set_function(
                 "entityWriteToFile",
-                [](const EntityRef& entity, const char* filename)
+                [](const Entity& entity, const char* filename)
                 {
+                    // TODO: improve this with asset checking
                     VulpineTextOutputRef out(new VulpineTextOutput());
                     // std::cout << "Writing entity to " << filename << "\n";
-                    DataLoader<EntityRef>::write(entity, out);
+                    EntityRef e = std::make_shared<Entity>(entity);
+                    DataLoader<EntityRef>::write(e, out);
                     out->saveAs(filename);
                 }
             );
 
             lua.set_function(
                 "entityReadFromFile",
-                [](const char* filename) -> EntityRef
+                [](const char* asset_name, Entity& parent) -> Entity&
                 {
-                    VulpineTextBuffRef in(new VulpineTextBuff(filename));
-                    return DataLoader<EntityRef>::read(in);
+                    auto info = Loader<EntityRef>::loadingInfos.find(asset_name);
+                    if (info == Loader<EntityRef>::loadingInfos.end()) {
+                        FILE_ERROR_MESSAGE(asset_name, "Entity not found in asset manager");
+                        throw std::runtime_error(std::string("Could not find asset with name ") + asset_name);
+                    }
+
+                    std::string filename = info->second->buff->getSource();
+                    VulpineTextBuffRef in(new VulpineTextBuff(filename.c_str()));
+                    EntityRef e = DataLoader<EntityRef>::read(in);
+
+                    if(!e)
+                        throw std::runtime_error("Could not read entity from file");
+                    
+                    ComponentModularity::addChild(parent, e);
+                    return *e;
                 }
             );
         }
