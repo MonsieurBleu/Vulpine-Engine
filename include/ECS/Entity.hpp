@@ -39,6 +39,7 @@ GENERATE_ENUM(ComponentCategory,
     PHYSIC,     // Components that contains physic related elements, should be manipulated with the physic mutex in mind, or in the physics thread directly 
     SOUND,      // Components that contains Sound related elements
     AI,         // Components that contains AI related elements, should be manipulated with the AI mutex in mind, or in the AI thread directly 
+    SCRIPTING,  // Components that contains Scripting related elements
     END 
 );
 
