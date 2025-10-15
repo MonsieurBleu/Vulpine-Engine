@@ -286,6 +286,14 @@ bool App::baseInput(GLFWKeyInfo input)
 
         case GLFW_MOUSE_BUTTON_MIDDLE :
             globals._mouseMiddleClickDown = false;
+
+        case GLFW_MOUSE_BUTTON_4 :
+            globals._mouse4ClickDown = false;
+            break;
+
+        case GLFW_MOUSE_BUTTON_5 :
+            globals._mouse5ClickDown = false;
+            break;
         default:
             break;
         }
@@ -309,6 +317,16 @@ bool App::baseInput(GLFWKeyInfo input)
             globals._mouseMiddleClick = true;
             globals._mouseMiddleClickDown = true;
             // used = true;
+            break;
+
+        case GLFW_MOUSE_BUTTON_4:
+            globals._mouse4Click = true;
+            globals._mouse4ClickDown = true;
+            break;
+
+        case GLFW_MOUSE_BUTTON_5:
+            globals._mouse5Click = true;
+            globals._mouse5ClickDown = true;
             break;
 
         case GLFW_KEY_V:
