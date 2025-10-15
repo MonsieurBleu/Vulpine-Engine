@@ -1,10 +1,14 @@
 #include <Scripting/LuaBindings.hpp>
+#include <lua.h>
+#include <sol/variadic_args.hpp>
 
+// MARK: Bind all
 void VulpineLuaBindings::bindAll(sol::state& lua)
 {
     glm(lua);
     VulpineTypes(lua);
     Entities(lua);
+    Utils(lua);
 }
 
 #include <glm/glm.hpp>
@@ -14,6 +18,7 @@ void VulpineLuaBindings::bindAll(sol::state& lua)
 using namespace glm;
 #include<MathsUtils.hpp>
 
+// MARK: GLM Bindings
 void VulpineLuaBindings::glm(sol::state &lua)
 {
 
@@ -57,7 +62,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         sol::meta_function::addition,       type##_add, \
         sol::meta_function::subtraction,    type##_sub,  \
         sol::meta_function::index, [](type & m, const int i){return m[i];}
-    
+// MARK: GLM Types
     /*** Setting up glm vector type with operator bindings ***/
     lua.new_usertype<vec2>("vec2", 
         sol::call_constructor, sol::constructors<vec2(), vec2(float), vec2(float, float)>(),
@@ -108,7 +113,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         sol::meta_function::addition, quat_add,
         sol::meta_function::subtraction, quat_sub
     );
-
+// MARK: GLM Funcs
     /*** Setting up glm functions bindings ***/
     lua.set_function("mix",
         sol::overload(
@@ -144,7 +149,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
             LAMBDA_BIND_2(cross, vec3, vec3)
         )
     );
-
+// MARK: Vulpine Math
     /*** Setting up vulpine math utils functions bindings ***/
     lua.set_function("hsv2rgb",LAMBDA_BIND_1(hsv2rgb, vec3));
     lua.set_function("rgb2hsv", LAMBDA_BIND_1(rgb2hsv, vec3));
@@ -164,14 +169,9 @@ void VulpineLuaBindings::glm(sol::state &lua)
 
 #include <Timer.hpp>
 #include <Matrix.hpp>
-
 void VulpineLuaBindings::VulpineTypes(sol::state &lua)
 {
-    /* TODO: Serialize:
-        - MeshMaterial
-        - ModelRef
-        - Scene
-    */
+    // MARK: Bench Timer
     {
         #undef CURRENT_CLASS_BINDING
         #define CURRENT_CLASS_BINDING BenchTimer
@@ -195,6 +195,7 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
             reset
         )
     }
+    // MARK: ModelState3D
     {
         #undef CURRENT_CLASS_BINDING
         #define CURRENT_CLASS_BINDING ModelState3D
@@ -245,6 +246,7 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
 
 void VulpineLuaBindings::Entities(sol::state &lua)
 {
+    // MARK: Entity
     {
         #undef CURRENT_CLASS_BINDING
         #define CURRENT_CLASS_BINDING Entity
@@ -308,6 +310,7 @@ void VulpineLuaBindings::Entities(sol::state &lua)
             toStr,
         );
     }
+    // MARK: Components
     {
         #undef CURRENT_CLASS_BINDING
         #define CURRENT_CLASS_BINDING EntityInfos
@@ -315,6 +318,17 @@ void VulpineLuaBindings::Entities(sol::state &lua)
         lua.new_usertype<EntityInfos>(
             "EntityInfos",
             "name", &EntityInfos::name
+        );
+    }
+        {
+        #undef CURRENT_CLASS_BINDING
+        #define CURRENT_CLASS_BINDING EntityGroupInfo
+        CREATE_CLASS_USERTYPE(EntityGroupInfo, (), (std::vector<EntityRef> &))
+        ADD_MEMBER_BINDINGS(
+            children,
+            // markedForDeletion, // TODO: check if we even want to expose those two
+            // markedForCreation,
+            parent
         );
     }
     {
@@ -352,17 +366,6 @@ void VulpineLuaBindings::Entities(sol::state &lua)
     }
     {
         #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING EntityGroupInfo
-        CREATE_CLASS_USERTYPE(EntityGroupInfo, (), (std::vector<EntityRef> &))
-        ADD_MEMBER_BINDINGS(
-            children,
-            markedForDeletion, // TODO: check if we even want to expose those two
-            markedForCreation,
-            parent
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
         #define CURRENT_CLASS_BINDING WidgetBackground
         CREATE_CLASS_USERTYPE(WidgetBackground, (), ())
         ADD_MEMBER_BINDINGS(
@@ -375,17 +378,7 @@ void VulpineLuaBindings::Entities(sol::state &lua)
         #define CURRENT_CLASS_BINDING WidgetButton
         CREATE_CLASS_USERTYPE(
             WidgetButton, 
-            (WidgetButton::Type), 
-            (
-                WidgetButton::Type, 
-                WidgetButton::InteractFunc, 
-                WidgetButton::UpdateFunc
-            ),
-            (
-                WidgetButton::Type, 
-                WidgetButton::InteractFunc2D, 
-                WidgetButton::UpdateFunc2D
-            )
+            (WidgetButton::Type), ()
         );
         ADD_MEMBER_BINDINGS(
             type,
@@ -485,7 +478,6 @@ void VulpineLuaBindings::Entities(sol::state &lua)
             (std::u32string, StringAlignment)
         );
         ADD_MEMBER_BINDINGS(
-            mesh,
             text,
             align
         );
@@ -496,6 +488,7 @@ void VulpineLuaBindings::Entities(sol::state &lua)
             "CENTERED", StringAlignment::CENTERED
         );
     }
+// MARK: Entity file IO
     {
         lua.set_function(
             "entityWriteToFile",
@@ -529,6 +522,108 @@ void VulpineLuaBindings::Entities(sol::state &lua)
                 
                 ComponentModularity::addChild(parent, e);
                 return *e;
+            }
+        );
+    }
+    // MARK: Modularity
+    {
+        sol::table componentModularityTable = lua.create_table();
+        componentModularityTable.set_function(
+            "addChild",
+            [](Entity &parent, Entity& child)
+            {
+                ComponentModularity::addChild(parent, std::make_shared<Entity>(child));
+            }
+        );
+
+        componentModularityTable.set_function(
+            "removeChild",
+            [](Entity &parent, Entity& child)
+            {
+                ComponentModularity::removeChild(parent, &child);
+            }
+        );
+
+        componentModularityTable.set_function(
+            "synchronizeChildren",
+            [](Entity& parent)
+            {
+                ComponentModularity::synchronizeChildren(std::make_shared<Entity>(parent));
+            }
+        );
+
+        componentModularityTable.set_function(
+            "reparent",
+            [](Entity& oldParent, Entity& child, Entity& newParent)
+            {
+                ComponentModularity::Reparent(oldParent, std::make_shared<Entity>(child), newParent);
+            }
+        );
+
+        componentModularityTable.set_function(
+            "reparentChildren",
+            [](Entity& parent)
+            {
+                ComponentModularity::ReparentChildren(parent);
+            }
+        );
+
+        componentModularityTable.set_function(
+            "canMerge",
+            [](Entity& parent, Entity& child) -> bool
+            {
+                return ComponentModularity::canMerge(parent, std::make_shared<Entity>(child));
+            }
+        );
+
+        componentModularityTable.set_function(
+            "mergeChild",
+            [](Entity& parent, Entity& child) -> bool
+            {
+                if(ComponentModularity::canMerge(parent, std::make_shared<Entity>(child)))
+                {
+                    for(auto &i : ComponentModularity::MergeFuncs)
+                        if(parent.state[i.ComponentID] && child.state[i.ComponentID])
+                            i.element(parent, std::make_shared<Entity>(child));
+                    
+                    ComponentModularity::removeChild(parent, &child);
+                    return true;
+                }
+                return false;
+            }
+        );
+
+        componentModularityTable.set_function(
+            "mergeChildren",
+            [](Entity& parent)
+            {
+                ComponentModularity::mergeChildren(parent);
+            }
+        );
+        lua["ComponentModularity"] = componentModularityTable;
+    }
+}
+
+// MARK: Utils
+void VulpineLuaBindings::Utils(sol::state &lua)
+{
+    {
+        lua.set_function(
+            "print",
+            [&](sol::variadic_args args)
+            {
+                lua_Debug ar;
+                lua_getstack(lua, 1, &ar);
+                lua_getinfo(lua, "Sl", &ar);
+                std::string file = ar.short_src;
+                int line = ar.currentline;
+                // TODO: either add a define or remove the `Sanctia-Release/` for release builds
+                std::cout << "[" << "Sanctia-Release/" << file << ":" << line << "] ";
+                for(auto arg : args)
+                {
+                    std::cout << lua["tostring"](arg.get<sol::object>()).get<std::string>() << " ";
+                }
+                std::cout << std::endl;
             }
         );
     }

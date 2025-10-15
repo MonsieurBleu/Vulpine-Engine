@@ -1,8 +1,120 @@
 #pragma once
 
-#define SOL_LUAJIT 1
+#define SOL_LUAJIT          1
 #define SOL_ALL_SAFETIES_ON 1
+#define SOL_PRINT_ERRORS    1
 #include <sol/sol.hpp>
+
+
+
+/* WIP Lua annotation generator for better IDE support
+ * Can kinda work but cannot get things like function arguments names which kinda defeats the point of IDE support
+#include <cxxabi.h>
+namespace LuaAnnotationGenerator {
+std::string demangled(char const* tname)
+{
+    std::unique_ptr<char, void (*)(void*)>
+        name { abi::__cxa_demangle(tname, 0, 0, nullptr), std::free };
+    return { name.get() };
+}
+
+class LuaAnnotation {
+public:
+    virtual std::string toString() = 0;
+};
+
+// template <typename T>
+// class LuaAnnotationEnum : LuaAnnotation {
+//     std::string name;
+//     std::vector<std::pair<std::string, T>> values;
+// public:
+//     LuaAnnotationEnum(const std::string& name) : name(name) {}
+//     void addValue(const std::string& name, T value) {values.push_back({name, value});}
+//     std::string toString() override {
+//         std::string res = "---@enum " + name + "\n";
+//         for(auto& v : values) {
+//             res += "---@field " + v.first + " " + demangled(typeid(T).name()) 
+//         }
+//         return res;
+//     }
+// };
+
+class LuaAnnotationFunction : LuaAnnotation {
+    std::string name;
+    std::vector<std::string> args; 
+    std::string returnType;
+public:
+    LuaAnnotationFunction(const std::string& name) : name(name) {}
+    void addArg(const std::string& type) {args.push_back(type);}
+    void setReturnType(const std::string& type) {returnType = type;}
+    std::string toString() override {
+        std::string res;
+        for(auto& a : args) {
+            res += "---@param " + a.first + " " + a.second + "\n";
+        }
+        if(!returnType.empty())
+            res += "---@return " + returnType + "\n";
+        res += "function " + name + "(";
+        for(size_t i = 0; i < args.size(); i++) {
+            res += args[i].first;
+            if(i < args.size() - 1)
+                res += ", ";
+        }
+        res += ") end\n";
+        return res;
+    }
+
+    std::string toFunctionTypeString(std::string className) {
+        std::string res = "fun(self: " + className + ", ";
+        for(size_t i = 0; i < args.size(); i++) {
+            res += args[i].first + ": " + args[i].second;
+            if(i < args.size() - 1)
+                res += ", ";
+        }
+        res += ")";
+        if(!returnType.empty())
+            res += ": " + returnType;
+        return res;
+    }
+};
+
+class LuaAnnotationClass : LuaAnnotation {
+    std::string name;
+    std::vector<std::pair<std::string, std::string>> members; // name, type
+    std::vector<LuaAnnotationFunction> methods;
+public:
+    LuaAnnotationClass(const std::string& name) : name(name) {}
+    void addMember(const std::string& name, const std::string& type) {members.push_back({name, type});}
+    void addMethod(const LuaAnnotationFunction& method) {methods.push_back(method);}
+    std::string toString() override {
+        std::string res = "---@class " + name + "\n";
+        for(auto& m : members) {
+            res += "---@field " + m.first + " " + m.second + "\n";
+        }
+        for(auto& meth : methods) {
+            res += meth.toFunctionTypeString(name) + "\n";
+        }
+        return res;
+    }
+};
+
+class LuaAnnotationGenerator {
+    std::vector<std::shared_ptr<LuaAnnotation>> annotations;
+public:
+    void addAnnotation(const std::shared_ptr<LuaAnnotation>& annotation) {
+        annotations.push_back(annotation);
+    }
+    std::string generate() {
+        std::string res;
+        for(auto& ann : annotations) {
+            res += ann->toString() + "\n";
+        }
+        return res;
+    }
+};
+
+} // namespace LuaAnnotationGenerator
+*/
 
 namespace VulpineLuaBindings
 {
@@ -19,6 +131,8 @@ namespace VulpineLuaBindings
     // static void states(sol::state& lua);
 
     void Entities(sol::state& lua);
+
+    void Utils(sol::state& lua);
 }
 
 #define OVERLOAD_OP(type1, type2)[](const type1 &v1, const type2 &v2){return v1 VLB_GLM_CUR_OPERATOR v2;}
