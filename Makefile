@@ -8,6 +8,7 @@ WFLAGS += -Wno-unused-private-field
 WFLAGS += -Wno-unused-lambda-capture 
 WFLAGS += -Wno-delete-non-virtual-dtor
 WFLAGS += -Wno-unused-variable
+WFLAGS += -Wno-macro-redefined
 
 ifeq ($(OS),Windows_NT)
 	WFLAGS += -Wno-deprecated-declarations
