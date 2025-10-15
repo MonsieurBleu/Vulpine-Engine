@@ -3,9 +3,9 @@
 #include "Entity.hpp"
 #include "MappedEnum.hpp"
 #include <vector>
-#include <AssetManager.hpp>
+#include "AssetManager.hpp"
 
-GENERATE_ENUM(
+GENERATE_ENUM_FAST_REVERSE(
     ScriptHook,
     ON_INIT,
     ON_UPDATE,
@@ -23,7 +23,13 @@ private:
 public:
     Script();
     Script(std::string scriptAssetName, ScriptHook hook);
-
+    
+    template <typename... Args>
+    Script(std::string scriptAssetName, ScriptHook hook, Args... args)
+    {
+        addScript(scriptAssetName, hook);
+        addScript(args...);
+    }
 
     void run_OnInit();
     void run_OnUpdate();
@@ -34,4 +40,6 @@ public:
 
     bool isInitialized() const { return initialized; }
     void setInitialized(bool val) { initialized = val; }
+
+    friend class DataLoader<Script>;
 };
