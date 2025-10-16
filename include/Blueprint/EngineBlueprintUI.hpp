@@ -7,7 +7,7 @@
 #include <Timer.hpp>
 #include <Helpers.hpp>
 
-#define UI_BASE_COMP VulpineBlueprintUI::UIcontext, WidgetState()
+#define UI_BASE_COMP VulpineBlueprintUI::UIcontext, WidgetState(), WidgetBox()
 
 namespace VulpineColorUI
 {

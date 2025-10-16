@@ -102,6 +102,7 @@ namespace VulpineAssetConvertor
     FileConvertStatus ConvertSceneFile(
         const std::string &path,
         const std::string &folder,
+        const std::string &skeletonTarget,
         VEAC_EXPORT_FORMAT format,
         unsigned int aiImportFlags,
         unsigned int vulpineImportFlags,

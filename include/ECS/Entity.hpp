@@ -1,5 +1,12 @@
 #pragma once 
 
+#ifndef ENTITY_HEADER_SAFE_INCLUDE
+    static_assert(
+        false, 
+        "Entity.hpp included outside of the safe environement. Please, only include this header once inside the game's header ECS definition. Always include the game version of the ECS, not this one, no matter what."
+    );
+#endif
+
 #include <MappedEnum.hpp>
 #include <VulpineBitSet.hpp>
 #include <array>
