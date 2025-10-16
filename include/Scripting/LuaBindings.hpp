@@ -154,14 +154,12 @@ namespace VulpineLuaBindings
 
 #define CURRENT_CLASS_BINDING
 #define METHOD_BINDING(method) class_binding[#method] = & CURRENT_CLASS_BINDING::method;
-#define METHOD_BINDING_TEMPLATED_SINGLE(method, classType) \
-    class_binding[#method"_"#classType] = & CURRENT_CLASS_BINDING::method<classType>;
+#define METHOD_BINDING_TEMPLATED_SINGLE(method, classType) class_binding[#method"_"#classType] = & CURRENT_CLASS_BINDING::method<classType>;
 #define METHOD_BINDING_TEMPLATED(method, ...) MAPGEN_FOR_EACH_ONE_ARG(METHOD_BINDING_TEMPLATED_SINGLE, method, __VA_ARGS__)
 #define ADD_MEMBER_BINDINGS(...) MAPGEN_FOR_EACH(METHOD_BINDING, __VA_ARGS__)
 #define ADD_REFERENCE(thing) &thing
 #define ADD_OVERLOADED_METHOD(name, ...) class_binding[#name] = sol::overload(MAPGEN_FOR_EACH(ADD_REFERENCE, __VA_ARGS__));
 #define ENUM_BINDING(enumType) for(auto &i : enumType##Map) {sol::object obj = lua[#enumType][i.first]; auto dir = static_cast<enumType>(obj.as<typename std::underlying_type<enumType>::type>()); }
-
 
 #define TO_STR(macro) #macro
 #define CLASS_CONSTRUCTOR(args) , CURRENT_CLASS_BINDING args

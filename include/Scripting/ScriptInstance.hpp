@@ -48,6 +48,9 @@ class ScriptInstance : sol::load_result
         std::string file;
         BenchTimer instanceTimer;        
         bool built = false;
+        TickTimer compileTimer;
+        TickTimer errorTimer;
+        bool firstCompileTry = true;
         
     public :
 
@@ -81,7 +84,12 @@ class ScriptInstance : sol::load_result
                 return;
             }
 
-            if(!built)
+            // NOTIF_MESSAGE(
+            //     "compile timer last time" <<
+            //     compileTimer.timeSinceLastTickMS() << "ms " << 
+            //     compileTimer.lasTickTime.time_since_epoch().count()
+            // )
+            if(!built && (compileTimer.timeSinceLastTick() > 1.0 || firstCompileTry))
                 compile();
 
             if(built)
@@ -89,10 +97,32 @@ class ScriptInstance : sol::load_result
                 instanceTimer.start();
                 getGlobalTimer().start();
 
-                (*this)(args...);
+                try {
+                    (*this)(args...);
+                }
+                catch (const sol::error &e) {
+                    if (errorTimer.timeSinceLastTick() > 1.0) {
+                        errorTimer.tick();
+                        ERROR_MESSAGE("Error while running script \'" << file << "\': " << e.what())
+                    }
+                }
+                catch (const std::exception &e) {
+                    if (errorTimer.timeSinceLastTick() > 1.0) {
+                        errorTimer.tick();
+                        ERROR_MESSAGE("Exception while running script \'" << file << "\': " << e.what())
+                    }
+                }
+                catch (...) {
+                    if (errorTimer.timeSinceLastTick() > 1.0) {
+                        errorTimer.tick();
+                        ERROR_MESSAGE("Unknown exception while running script \'" << file << "\'")
+                    }
+                }
 
                 // sol::protected_function func = get<sol::protected_function>();
                 // func(args...);
+
+                
 
         
                 instanceTimer.hold();
@@ -100,22 +130,3 @@ class ScriptInstance : sol::load_result
             }
         };
 };
-
-#ifdef SCRIPT_INSTANCE_IMPL
-
-    ScriptInstance::ScriptInstance(const std::string& file) : file(file), filewatcher(file){}
-
-    void ScriptInstance::compile()
-    {
-        *(sol::load_result*)(this) = threadState.load_file(file);
-        built = true;
-    }
-
-    BenchTimer& ScriptInstance::getTimer(){return instanceTimer;}
-    BenchTimer& ScriptInstance::getGlobalTimer(){return globalTimers[threadStateName];}
-
-    const std::string & ScriptInstance::getFileName() const {return file;}
-
-    void ScriptInstance::triggerRecompileOnNextRun(){built = false;}
-
-#endif

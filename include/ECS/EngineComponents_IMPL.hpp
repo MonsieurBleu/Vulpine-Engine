@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include "Entity.hpp"
 #ifndef VULPINE_COMPONENT_IMPL
 #include <ECS/EngineComponents.hpp>
 #endif
@@ -353,12 +354,6 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     {
         box.displayMin = box.min;
         box.displayMax = box.max;
-    }
-
-    if (Loader<ScriptInstance>::loadingInfos.find("test_ent") != Loader<ScriptInstance>::loadingInfos.end())
-    {
-        Loader<ScriptInstance>::get("test_ent").run(parent);
-        // std::cout << "TEST ENT = " << (std::string)threadState["t"] << "\n";
     }
 
     box.displayMin = max(box.displayRangeMin, box.displayMin);

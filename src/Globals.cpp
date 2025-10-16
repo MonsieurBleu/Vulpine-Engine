@@ -33,6 +33,11 @@ bool Globals::mouseRightClickDown(){return _mouseRightClickDown;};
 bool Globals::mouseMiddleClick(){return _mouseMiddleClick;};
 bool Globals::mouseMiddleClickDown(){return _mouseMiddleClickDown;};
 
+bool Globals::mouse4Click(){return _mouse4Click;};
+bool Globals::mouse4ClickDown(){return _mouse4ClickDown;};
+bool Globals::mouse5Click(){return _mouse5Click;};
+bool Globals::mouse5ClickDown(){return _mouse5ClickDown;};
+
 vec2 Globals::mouseScrollOffset(){return _scrollOffset;};
 void Globals::clearMouseScroll(){_scrollOffset = vec2(0);};
 

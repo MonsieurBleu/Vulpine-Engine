@@ -141,7 +141,7 @@ void LimitTimer::deactivate(){activated = false;}
 void LimitTimer::toggle(){activated = !activated;}
 bool LimitTimer::isActivated(){return activated;}
 
-float TickTimer::timeSinceLastTickMS()
+float TickTimer::timeSinceLastTick()
 {
     duration delta = (clockmicro::now()-lasTickTime);
     return delta.count()/1e3f;

@@ -39,6 +39,7 @@ GENERATE_ENUM(ComponentCategory,
     PHYSIC,     // Components that contains physic related elements, should be manipulated with the physic mutex in mind, or in the physics thread directly 
     SOUND,      // Components that contains Sound related elements
     AI,         // Components that contains AI related elements, should be manipulated with the AI mutex in mind, or in the AI thread directly 
+    SCRIPTING,  // Components that contains Scripting related elements
     END 
 );
 
@@ -198,7 +199,7 @@ class Entity
         
             for(auto &i : ComponentCategoryMap)
                 if(i.second != ComponentCategory::END && ids[i.second] != -1)
-                    ss << "  " << TERMINAL_FILENAME << i.first << "[" << TERMINAL_TIMER << ids[i.second] << "]";
+                    ss << "  " << TERMINAL_FILENAME << i.first << "[" << TERMINAL_TIMER << ids[i.second] << TERMINAL_FILENAME << "]";
 
             ss << TERMINAL_OK << "}\n" << TERMINAL_RESET;
             return ss.str();

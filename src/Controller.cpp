@@ -239,7 +239,10 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
         // else
         //     dir.y /= globals.windowWidth()/globals.windowHeight();
 
-        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && globals.mouseMiddleClickDown())
+        // im adding mouse 4 cause my middle mouse doesnt work >:3
+        bool input = globals.mouseMiddleClickDown() || globals.mouse4ClickDown();
+
+        if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && input)
         {
             vec3 front = normalize(globals.currentCamera->getPosition() - position);
 
@@ -257,7 +260,7 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
         }
         else
 
-        if(globals.mouseMiddleClickDown() && !enable2DView)
+        if(input && !enable2DView)
         {
             float yaw = radians(3.*dir.x);
             float pitch = radians(3.*dir.y);

@@ -1,5 +1,6 @@
 #include <ECS/ModularEntityGroupping.hpp>
 #include <ECS/ComponentTypeUI.hpp>
+#include <ECS/ComponentTypeScripting.hpp>
 
 #ifndef CURRENT_MAX_COMP_USAGE
 // #undef CURRENT_MAX_COMP_USAGE
@@ -40,6 +41,8 @@ Ephemeral_Component(WidgetButton)
 
 Ephemeral_Component(WidgetUI_Context)
 
+/***************** SCRIPTING COMPONENTS *****************/
+Coherent_Component(Script)
 
 /***************** UI BASE VULPINE SYSTEMS *****************/
 
@@ -51,4 +54,4 @@ void updateEntityCursor(
     bool showEntityUnderCursorHint = true
 );
 
-void updateWidgetsStyle();
+void updateWidgetsStyle(); 
