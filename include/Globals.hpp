@@ -51,6 +51,12 @@ private:
     bool _mouseMiddleClick = false;
     bool _mouseMiddleClickDown = false;
 
+    bool _mouse4Click = false;
+    bool _mouse4ClickDown = false;
+
+    bool _mouse5Click = false;
+    bool _mouse5ClickDown = false;
+
     std::u32string textInputString;
     void *currentTextInputUser = nullptr;
 
@@ -125,6 +131,12 @@ public:
 
     bool mouseMiddleClick();
     bool mouseMiddleClickDown();
+
+    bool mouse4Click();
+    bool mouse4ClickDown();
+
+    bool mouse5Click();
+    bool mouse5ClickDown();
 
     vec2 mouseScrollOffset();
     void clearMouseScroll();

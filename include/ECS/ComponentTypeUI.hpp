@@ -117,10 +117,10 @@ struct WidgetBox
 struct WidgetText
 {
     WidgetText(){};
-    WidgetText(std::u32string newText, StringAlignement align = StringAlignement::CENTERED) : text(newText), align(align){};
+    WidgetText(std::u32string newText, StringAlignment align = StringAlignment::CENTERED) : text(newText), align(align){};
     SingleStringBatchRef mesh;
     std::u32string text;
-    StringAlignement align;
+    StringAlignment align;
 };
 
 struct WidgetBackground

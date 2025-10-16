@@ -1,10 +1,13 @@
 #include "Utils.hpp"
 #include <Helpers.hpp>
 #include <Globals.hpp>
+#include <cstdlib>
+#include <glm/geometric.hpp>
 #include <iostream>
 #include <MathsUtils.hpp>
 #include <Constants.hpp>
 #include <AssetManager.hpp>
+#include <string>
 
 PointLightHelperMODEL::PointLightHelperMODEL(ScenePointLight light) : light(light)
 {
@@ -534,7 +537,7 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
     }
 
     const float b = 0.01;
-    const float t = 0.15;
+    const float t = 0.25;
 
     int id = 0;
     pos[id++] = vec3( b, 0,  b); pos[id++] = vec3(-b, 0,  b);
@@ -547,11 +550,6 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
     pos[id++] = vec3( b, 0, -b); pos[id++] = vec3( 0, t,  0);
     pos[id++] = vec3(-b, 0, -b); pos[id++] = vec3( 0, t,  0);
 
-    // pos[id++] = vec3( b, 0,  0); pos[id++] = vec3( 0, t,  0);
-    // pos[id++] = vec3(-0, 0,  b); pos[id++] = vec3( 0, t,  0);
-    // pos[id++] = vec3( b, 0, -0); pos[id++] = vec3( 0, t,  0);
-    // pos[id++] = vec3(-0, 0, -b); pos[id++] = vec3( 0, t,  0);
-
     MeshVao vao(new 
         VertexAttributeGroup({
             VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
@@ -561,10 +559,17 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
     );
 
     ModelRef boneHelper = newModel(Loader<MeshMaterial>::get("basicHelper"), vao);
-    boneHelper->uniforms.add(ShaderUniform(&color, 20));
-
     boneHelper->noBackFaceCulling = true;
     boneHelper->defaultMode = GL_LINES;
+
+    ModelRef boneHelperUp = boneHelper->copy();
+
+    boneHelper->uniforms.add(ShaderUniform(&color, 20));
+    boneHelperUp->uniforms.add(ShaderUniform(vec3(0, 1, 0), 20));
+
+    boneHelperUp->state.scaleScalar(0.5);
+
+
     // boneHelper->depthWrite = false;
 
 
@@ -573,6 +578,25 @@ SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(stat
     {
         bones.push_back(boneHelper->copy());
         add(bones.back());
+
+
+        bonesUp.push_back(boneHelperUp->copy());
+        add(bonesUp.back());
+
+
+
+        texts.push_back(ValueHelperRef<std::string>(new ValueHelper<std::string>(
+            state.skeleton->boneNames[i], U"", 
+            vec3(hsv2rgb(vec3((float)(rand()%256)/256.f, 0.25, 1)))
+        )));
+        texts.back()->update();
+        add(texts.back());
+
+        texts[i]->depthWrite = false;
+        bones[i]->depthWrite = false;
+
+        bones[i]->sorted = false;
+        texts[i]->sorted = false;
     }
 };
 
@@ -581,7 +605,36 @@ void SkeletonHelper::update(bool forceUpdate)
     int s = state.size();
     for(int i = 0; i < s; i++)
     {
+        
+
         bones[i]->state.modelMatrix = state[i] * inverse(state.skeleton->operator[](i).t);
+        // bones[i]->state.modelMatrix = inverse(state.skeleton->operator[](i).t);
+
+        // std::cout << bones[i]->state.modelMatrix << "\n";
+
+        mat4 m = bones[i]->state.modelMatrix;
+        vec3 posiiton = vec3(m * vec4(0, 0, 0, 1));
+
+        
+        bones[i]->state.position = posiiton;
+        
+        bones[i]->state.setQuaternion(quat(mat3(m)));
+
+        int child = state.skeleton->operator[](i).children[0];
+
+        float scale = child == 0 ? 0.25 : 4.*distance(posiiton, bones[child]->state.position); 
+
+        bones[i]->state.setScale(vec3(1, scale, 1));
+        
+        // texts[i]->state.setPosition(0.5f*(posiiton + bones[child]->state.position));
+        texts[i]->state.setPosition(posiiton);
+        texts[i]->state.scaleScalar(0.25);
+        // texts[i]->state.scaleScalar(0.25*distance(globals.currentCamera->getPosition(), vec3(texts[i]->state.modelMatrix*vec4(texts[i]->state.position, 1))));
+
+
+        bonesUp[i]->state.position = posiiton;
+        bonesUp[i]->state.setScale(vec3(0.25));
+        bonesUp[i]->state.setQuaternion(directionToQuat(quat(mat3(m)) * vec3(0, 1, 0)));
     }
 
     ObjectGroup::update();

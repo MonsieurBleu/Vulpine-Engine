@@ -61,9 +61,9 @@ struct AnimationBoneData
 struct AnimationKeyframeData
 {
     float time;
-    vec3 translation;
-    quat rotation;
-    vec3 scale;
+    vec3 translation = vec3(0);
+    quat rotation = quat();
+    vec3 scale = vec3(1);
 };
 
 // similar to animationkeyframedata but has no time component

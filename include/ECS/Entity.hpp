@@ -174,7 +174,7 @@ class Entity
         VulpineBitSet<MAX_COMP> state;
         int ids[ComponentCategory::END] = {NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY};
 
-        Entity(){set<EntityInfos>(EntityInfos{});};
+        Entity() : Entity("Unamed Entity"){};
         Entity(const std::string &name){set<EntityInfos>(EntityInfos{name});};
 
         template<typename ... components>

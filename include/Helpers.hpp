@@ -1,11 +1,13 @@
 #pragma once
 
+#include <Graphics/Mesh.hpp>
 #include <Graphics/ObjectGroup.hpp>
 #include <Graphics/Skeleton.hpp>
 #include <NavGraph.hpp>
 #include <Graphics/Fonts.hpp>
 #include <AssetManager.hpp>
 #include <Globals.hpp>
+#include <vector>
 
 class PointLightHelperMODEL : public MeshModel3D
 {
@@ -138,6 +140,9 @@ class SkeletonHelper : public ObjectGroup
 {
     private : 
         std::vector<ModelRef> bones;
+        std::vector<ModelRef> bonesUp;
+        // std::vector<ModelRef> bonesRight;
+        std::vector<ModelRef> texts;
         const SkeletonAnimationState &state;
 
     public :

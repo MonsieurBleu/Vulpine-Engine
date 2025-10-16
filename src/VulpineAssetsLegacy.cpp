@@ -31,6 +31,7 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
     const int vn = 0x6E76;
 
     char *reader = data;
+    data[fsize-1] = '\0';
 
     int faceCounter = 0;
 
@@ -38,7 +39,7 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
     {
         reader = strchr(reader, '\n');
 
-        if (!reader)
+        if (!reader || strlen(reader) < 8)
             break;
 
         reader++;

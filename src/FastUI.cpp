@@ -156,7 +156,7 @@ FastUI_menuTitle::FastUI_menuTitle(FastUI_context& ui, std::u32string name) : Fa
     // title->state.setPosition(vec3(padding.x, -padding.y, 0));
     title->state.setPosition(vec3(vec2(0.5, -0.5)*(bSize-title->getSize()), 0));
 
-    title->align = StringAlignement::CENTERED;
+    title->align = StringAlignment::CENTERED;
 
     (*this)->add(background);
 

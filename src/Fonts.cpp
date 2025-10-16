@@ -1,6 +1,7 @@
 #include <Graphics/Fonts.hpp>
 #include <Utils.hpp>
 #include <bits/stdc++.h>
+#include <cstring>
 
 std::u32string ftou32str(float f, int precision)
 {
@@ -273,6 +274,7 @@ FontUFT8 &FontUFT8::readCSV(const std::string filename)
     fread(data, fsize, 1, csv);
     fclose(csv);
     char *reader = data;
+    data[fsize-1] = '\0';
 
     while (reader < data + fsize && reader != (char *)0x1)
     {
@@ -298,6 +300,8 @@ FontUFT8 &FontUFT8::readCSV(const std::string filename)
 
         // std::cout << reader << " " << info.unicode << "\n";
         reader = strchr(reader, '\n') + 1;
+
+
     }
 
     delete[] data;
