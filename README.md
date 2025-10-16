@@ -112,7 +112,7 @@ Important modules :
 Project structure recommended with Vulpine :
 ```
 my-project/
-├── build/
+├── Game/
 │   ├── data/
 │   ├── saves/
 │   ├── shader/  <===== VESL submodule
@@ -124,9 +124,6 @@ my-project/
 │   └── Game.o
 ├── src/
 │   └── Game.cpp
-├── .gitattributes
-├── .gitignore
-├── .gitmodules
 ├── Makefile
 └── main.cpp
 ```
