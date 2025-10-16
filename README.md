@@ -117,7 +117,7 @@ Project structure recommended with Vulpine :
 ```
 my-project/
 ├── build/
-│   ├── ressources/
+│   ├── data/
 │   ├── saves/
 │   ├── shader/  <===== VESL submodule
 │   └── Game.exe

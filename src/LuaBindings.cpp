@@ -16,7 +16,7 @@ void VulpineLuaBindings::bindAll(sol::state& lua)
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 using namespace glm;
-#include<MathsUtils.hpp>
+#include <MathsUtils.hpp>
 
 // MARK: GLM Bindings
 void VulpineLuaBindings::glm(sol::state &lua)
