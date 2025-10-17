@@ -91,9 +91,10 @@ namespace VulpineAssetConvertor
     GENERATE_ENUM_FAST_REVERSE(SceneConvertOption,
         OBJECT_AS_ENTITY,
         SCENE_AS_ENTITY,
-        IGNORE_MESH,
+        // IGNORE_MESH,
         EXPORT_ANIMATIONS,
-        CREATE_TOP_PRIORITY_MOD
+        RETARGET_ANIMATIONS,
+        // CREATE_TOP_PRIORITY_MOD
     )
 
     /**

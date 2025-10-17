@@ -107,7 +107,7 @@ namespace InputManager
     glm::vec2 getMousePosition();
 
     std::string getInputKeyString(std::string inputName);
-
+    std::string getInputKeyString(const EventInput& input);
 };
 
 #endif

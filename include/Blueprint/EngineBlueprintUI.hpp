@@ -60,7 +60,7 @@ namespace VulpineBlueprintUI
         std::function<void(float f)> setValue, 
         std::function<float()> getValue,
         float minV, float maxV,
-        float smallIncrement, float bigIncrement
+        float smallIncrement = 0.f, float bigIncrement = 0.f
         );
 
     EntityRef TextInput(

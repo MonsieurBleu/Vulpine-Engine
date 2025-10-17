@@ -691,7 +691,11 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         }
 
         vec2 cursor = ((screenPos-box.displayMin)/(box.displayMax - box.displayMin));
-        box.isUnderCursor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;
+
+        if(entity.hasComp<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
+            box.isUnderCursor = false;
+        else
+            box.isUnderCursor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;
 
         cursor = ((screenPos-box.childrenMin)/(box.childrenMax - box.childrenMin));
         box.areChildrenUnderCurosor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;

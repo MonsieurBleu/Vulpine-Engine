@@ -146,6 +146,20 @@ EntityRef VulpineBlueprintUI::ValueInput(
         }
     );
 
+    if(smallIncrement == 0.f || bigIncrement == 0.f)
+    {
+        return newEntity(name + " - value input"
+            , UI_BASE_COMP
+            , WidgetBox()
+            , WidgetStyle()
+                .setautomaticTabbing(1)
+                .setuseInternalSpacing(false)
+            , EntityGroupInfo({
+                textInput
+            })
+        );
+    }
+
     auto incr = Toggable("(+)", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() + smallIncrement, minV, maxV));},
         [PASS_ARG_COPY](Entity *e){return 1.f;}
@@ -183,8 +197,6 @@ EntityRef VulpineBlueprintUI::ValueInput(
 
     #undef PASS_ARG_COPY
 }
-
-
 
 EntityRef VulpineBlueprintUI::ValueInputSlider(
     const std::string &name,
@@ -317,6 +329,10 @@ EntityRef VulpineBlueprintUI::NamedEntry(
                     .setbackgroundColor1(color)
                     .settextColor1(VulpineColorUI::DarkBackgroundColor1)
                     .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+
+                    // .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor2)
+                    // .settextColor1(color)
+                    // .setbackGroundStyle(UiTileType::SQUARE)
             ),
             entry
         })
@@ -1095,7 +1111,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
 
             if(box.isUnderCursor)
             {
-                box.scrollOffset.y += off.y*0.1;
+                box.scrollOffset.y += off.y*0.05;
 
                 box.scrollOffset.y = clamp(
                     box.scrollOffset.y,
