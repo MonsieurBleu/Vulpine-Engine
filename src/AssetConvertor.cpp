@@ -1,7 +1,3 @@
-#include <assimp/anim.h>
-#include <assimp/config.h>
-#include <assimp/matrix4x4.h>
-#include <assimp/scene.h>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -39,6 +35,11 @@
 #include <Constants.hpp>
 
 #include <Globals.hpp>
+
+#include <assimp/anim.h>
+#include <assimp/config.h>
+#include <assimp/matrix4x4.h>
+#include <assimp/scene.h>
 
 #ifdef _WIN32
     #include <shlwapi.h>

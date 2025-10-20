@@ -371,8 +371,8 @@ Texture2D& Texture2D::loadFromFileEXR(const char* filename)
     FreeEXRHeader(&exr_header);
 
     setPixelType(GL_FLOAT);
-    setInternalFormat(GL_DEPTH_COMPONENT32F);
-    setFormat(GL_DEPTH_COMPONENT);
+    setInternalFormat(GL_R32F);
+    setFormat(GL_RED);
     setWrapMode(GL_CLAMP);
     // setFilter(GL_LINEAR);
     setFilter(GL_LINEAR_MIPMAP_LINEAR);

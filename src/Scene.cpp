@@ -152,8 +152,8 @@ void Scene::genLightBuffer()
 void Scene::generateLightClusters()
 {
     const float hNFratio = clusteredLight.ivFar;
-    const float near = globals.currentCamera->getState().nearPlane;
-    const float far = clusteredLight.vFar;
+    const float near_ = globals.currentCamera->getState().nearPlane;
+    const float far_ = clusteredLight.vFar;
 
     const ivec3 dim = clusteredLight.dim();
     const vec3 dimf = vec3(dim);
@@ -282,10 +282,10 @@ void Scene::generateLightClusters()
 
             if(l._infos.a != POINT_LIGHT) continue;
 
-            float minDepth = -0.5*(l._position.z + l._direction.x)/far;
+            float minDepth = -0.5*(l._position.z + l._direction.x)/far_;
             int minZid = clamp((int)(minDepth*dim.z), 0, dim.z);
 
-            float maxDepth = -0.5*(l._position.z - l._direction.x)/far;
+            float maxDepth = -0.5*(l._position.z - l._direction.x)/far_;
             int maxZid = clamp((int)(maxDepth*dim.z)+1, 0, dim.z);
             
             if(!maxZid && !cameraIsORtho) continue;
@@ -312,7 +312,7 @@ void Scene::generateLightClusters()
             maxY = maxY*-0.5 + 0.5;
             int maxYid = clamp((int)(maxY*dim.y) + (maxSphereY > 0.f ? 2 : 1), 0, dim.y);
 
-            if(l._position.z + l._direction.x > -near)
+            if(l._position.z + l._direction.x > -near_)
             {
                 minYid = 0; maxYid = dim.y; minXid = 0; maxXid = dim.x;
             }

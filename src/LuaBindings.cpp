@@ -1,6 +1,7 @@
 #include <Scripting/LuaBindings.hpp>
 #include <lua.h>
-#include <sol/variadic_args.hpp>
+// #include <sol/variadic_args.hpp>
+#include <sol/sol.hpp>
 
 // MARK: Bind all
 void VulpineLuaBindings::bindAll(sol::state& lua)

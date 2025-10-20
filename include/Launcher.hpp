@@ -68,9 +68,9 @@ int launchGame(GameType **game, std::string name, Params... initParams)
     glewExperimental = GL_TRUE;
     glewInit();
 
-    // glEnable(GL_DEBUG_OUTPUT);
-    // glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
-    // glDebugMessageCallback(MessageCallback, 0);
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageCallback(MessageCallback, 0);
 
     if (true)
     {
