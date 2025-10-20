@@ -329,7 +329,10 @@ void SingleStringBatch::batchText()
     size_t size = text.size();
     int usedChar = 0;
     if (!size)
-        return;
+    {
+        text = U" ";
+        // return;
+    }
 
     // depthWrite = false;
     depthWrite = true;

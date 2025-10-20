@@ -404,6 +404,9 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
     float iaspectRatio = (float)(globals.windowWidth())/(float)(globals.windowHeight());
 
+    float res = sqrt((float)(globals.windowWidth())*(float)(globals.windowHeight()));
+    res = (float)globals.windowWidth();
+
     if(child->hasComp<WidgetText>())
     {
         auto &text = child->comp<WidgetText>();
@@ -421,6 +424,13 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         vec2 tscale = (scale*vec2(0.9, 0.75)/tsize);
 
         tscale = vec2(min(tscale.x, tscale.y));
+
+        tscale = min(
+            tscale, 
+            vec2(1100)/res
+        );
+
+
         tscale.y *= iaspectRatio;
 
         vec2 initialPos;
@@ -870,7 +880,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
             case WidgetButton::Type::TEXT_INPUT :
                 if(entity.hasComp<WidgetText>() && click)
                 {
-                    globals.useTextInputs(&entity);
+                    globals.useTextInputs(&entity, entity.comp<WidgetText>().text);
                 }
                 break;
 

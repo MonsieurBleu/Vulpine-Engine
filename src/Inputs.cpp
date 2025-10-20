@@ -114,6 +114,14 @@ std::string InputManager::getInputKeyString(std::string inputName)
 
 std::vector<std::pair<std::string, int>> nonPrintableKeysNames = 
 {
+    {"MOUSE BUTTON 1", 0},
+    {"MOUSE BUTTON 2", 1},
+    {"MOUSE BUTTON 3", 2},
+    {"MOUSE BUTTON 4", 3},
+    {"MOUSE BUTTON 5", 4},
+    {"MOUSE BUTTON 6", 5},
+    {"MOUSE BUTTON 7", 6},
+    {"MOUSE BUTTON 8", 7},
     {"0", 48},
     {"1", 49},
     {"2", 50},

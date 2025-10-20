@@ -152,7 +152,7 @@ public:
      * @retval `true` if the text input is arleady used
      * @retval `false` if the text input is not used
      */
-    bool useTextInputs(void *user);
+    bool useTextInputs(void *user, const std::u32string & baseInput = U"");
 
     /**
      * @brief End the given user's right to use the text input buffer

@@ -69,6 +69,10 @@ namespace VulpineBlueprintUI
         std::function<std::u32string()> toText
         );
 
+    EntityRef TextInput(
+        const std::string &name
+        );
+
     EntityRef ValueInputSlider(
         const std::string &name,
         float min, float max, int padding, 
