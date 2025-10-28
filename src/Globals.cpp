@@ -45,9 +45,10 @@ Scene *Globals::getScene() const {return _gameScene;};
 
 Scene *Globals::getScene2D() const {return _gameScene2D;};
 
-bool Globals::useTextInputs(void* user)
+bool Globals::useTextInputs(void* user, const std::u32string &baseInput)
 {
     textInputString.clear();
+    textInputString = baseInput;
     bool ret = currentTextInputUser == nullptr;
     currentTextInputUser = user;
     return ret;

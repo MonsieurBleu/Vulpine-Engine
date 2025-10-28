@@ -1,3 +1,5 @@
+#include "Matrix.hpp"
+#include "VulpineParser.hpp"
 #include <AssetManager.hpp>
 #include <VulpineAssets.hpp>
 #include <Graphics/ObjectGroup.hpp>
@@ -8,6 +10,8 @@
 #include <AssetManagerUtils.hpp>
 
 #include <Scripting/ScriptInstance.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <strings.h>
 
 /*
     TODO : adding Uniforms loading
@@ -336,10 +340,83 @@ template<>
 SkeletonRef& Loader<SkeletonRef>::loadFromInfos()
 {
     EARLY_RETURN_IF_LOADED
-    LOADER_ASSERT(NEW_VALUE)
+
+    // LOADER_ASSERT(NEW_VALUE)
 
     r = std::make_shared<Skeleton>();
-    r->load(buff->read());
+
+    while (NEW_VALUE)
+    {
+        char *member = buff->read();
+
+        if(!strcasecmp(member, "bin"))
+        {
+            r->load(buff->read());
+        }
+        else
+        {
+            SkeletonBone b;
+
+            ModelState3D tmp;
+
+            while (NEW_VALUE)
+            {
+                char *submember = buff->read();
+                const char *value = nullptr;
+
+                if(!strcasecmp(submember, "position"))
+                {
+                    value = buff->read();
+                    tmp.setPosition(FastTextParser::read<vec3>(value));
+                }
+                else
+                if(!strcasecmp(submember, "quaternion"))
+                {
+                    value = buff->read();
+                    tmp.setQuaternion(FastTextParser::read<quat>(value));
+                }
+                else
+                if(!strcasecmp(submember, "scale"))
+                {
+                    value = buff->read();
+                    tmp.setScale(FastTextParser::read<vec3>(value));
+                }
+                else
+                if(!strcasecmp(submember, "parent"))
+                {
+                    value = buff->read();
+                    b.parent = FastTextParser::read<int>(value);
+                }
+                else
+                if(!strcasecmp(submember, "children"))
+                {
+                    int cnt = 0;
+
+                    while (NEW_VALUE)
+                    {
+                        value = buff->read();
+                        b.children[cnt] = FastTextParser::read<int>(value);
+
+                        if(value > buff->data + buff->getReadHead())
+                            buff->setHead(value);
+                    }
+                }
+                else
+                    FILE_ERROR_MESSAGE(name, "SkeletonBone member '" << submember << "' not recognized.");
+
+                if(value > buff->data + buff->getReadHead())
+                    buff->setHead(value);
+                
+            }
+
+            tmp.update();
+            b.t = tmp.modelMatrix;
+            r->boneNames.push_back(member);
+            r->push_back(b);
+        }
+    }
+
+    r->initRest();
     r->name = name;
 
     EXIT_ROUTINE_AND_RETURN
@@ -350,7 +427,7 @@ AnimationRef& Loader<AnimationRef>::loadFromInfos()
 {
     EARLY_RETURN_IF_LOADED
     LOADER_ASSERT(NEW_VALUE)
-
+    
     r = Animation::load(buff->read());
 
     EXIT_ROUTINE_AND_RETURN

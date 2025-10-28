@@ -42,7 +42,12 @@ struct FrustumPlane
 
 struct Frustum
 {
-    FrustumPlane top, bottom, right, left, far, near;
+    FrustumPlane top;
+    FrustumPlane bottom;
+    FrustumPlane right;
+    FrustumPlane left;
+    FrustumPlane far_;
+    FrustumPlane near_;
 };
 
 class Camera 

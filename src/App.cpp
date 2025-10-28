@@ -398,7 +398,7 @@ void App::mainloopStartRoutine()
     globals._mouseLeftClick = false;
     globals._mouseRightClick = false;
 
-    glfwPollEvents();
+    // glfwPollEvents();
     globals._windowHasFocus = glfwGetWindowAttrib(window, GLFW_FOCUSED);
 
     double mpx, mpy;
@@ -430,6 +430,7 @@ void App::mainloopEndRoutine()
 
     globals.gpuTime.start();
     glfwSwapBuffers(window);
+    glfwPollEvents();
     // glFlush();
     globals.gpuTime.stop();
     // glFinish();

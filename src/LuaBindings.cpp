@@ -1,6 +1,7 @@
 #include <Scripting/LuaBindings.hpp>
 #include <lua.h>
-#include <sol/variadic_args.hpp>
+// #include <sol/variadic_args.hpp>
+#include <sol/sol.hpp>
 
 // MARK: Bind all
 void VulpineLuaBindings::bindAll(sol::state& lua)
@@ -16,7 +17,9 @@ void VulpineLuaBindings::bindAll(sol::state& lua)
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 using namespace glm;
-#include<MathsUtils.hpp>
+#include <MathsUtils.hpp>
+
+#include <Utils.hpp>
 
 // MARK: GLM Bindings
 void VulpineLuaBindings::glm(sol::state &lua)
@@ -89,30 +92,35 @@ void VulpineLuaBindings::glm(sol::state &lua)
     );
 
     /*** Setting up glm matrices type with operator bindings ***/
-    lua.new_usertype<mat2>("mat2",
-        sol::call_constructor, sol::constructors<mat2(), mat2(float), mat2(float, float, float, float)>(),
-        SET_OVERLOAD_OPS(mat2)
-    );
+        lua.new_usertype<mat2>("mat2",
+            sol::call_constructor, sol::constructors<mat2(), mat2(float), mat2(float, float, float, float)>(),
+            SET_OVERLOAD_OPS(mat2)
+        );
 
-    lua.new_usertype<mat3>("mat3",
-        sol::call_constructor, sol::constructors<mat3(), mat3(float), mat3(float, float, float, float, float, float, float, float, float)>(),
-        SET_OVERLOAD_OPS(mat3)
-    );
+        lua.new_usertype<mat3>("mat3",
+            sol::call_constructor, sol::constructors<mat3(), mat3(quat), mat3(float), mat3(float, float, float, float, float, float, float, float, float)>(),
+            SET_OVERLOAD_OPS(mat3)
+        );
 
-    lua.new_usertype<mat4>("mat4",
-        sol::call_constructor, sol::constructors<mat4(), mat4(float), mat4(float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float)>(),
-        SET_OVERLOAD_OPS(mat4)
-    );
+        lua.new_usertype<mat4>("mat4",
+            sol::call_constructor, sol::constructors<mat4(), mat4(quat), mat4(float), mat4(float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float)>(),
+            SET_OVERLOAD_OPS(mat4)
+        );
 
-    lua.new_usertype<quat>("quat",
-        sol::call_constructor, sol::constructors<quat(), quat(float, float, float, float), quat(vec3), quat(mat3), quat(mat4), quat(quat), quat(vec3, vec3), quat(float, vec3)>(),
-        sol::meta_function::multiplication, sol::overload(
-            [](const quat &v1, const quat &v2){return v1*v2;},
-            [](const quat &v1, const vec3 &v2){return v1*v2;}
-        ),
-        sol::meta_function::addition, quat_add,
-        sol::meta_function::subtraction, quat_sub
-    );
+        lua.new_usertype<quat>("quat",
+            sol::call_constructor, sol::constructors<quat(), quat(float, float, float, float), quat(vec3), quat(mat3), quat(mat4), quat(quat), quat(vec3, vec3), quat(float, vec3)>(),
+            sol::meta_function::multiplication, sol::overload(
+                [](const quat &v1, const quat &v2){return v1*v2;},
+                [](const quat &v1, const vec3 &v2){return v1*v2;}
+            ),
+            sol::meta_function::addition, quat_add,
+            sol::meta_function::subtraction, quat_sub,
+            "x", &quat::x,
+            "y", &quat::y,
+            "z", &quat::z,
+            "w", &quat::w
+        );
+
 // MARK: GLM Funcs
     /*** Setting up glm functions bindings ***/
     lua.set_function("mix",
@@ -149,6 +157,24 @@ void VulpineLuaBindings::glm(sol::state &lua)
             LAMBDA_BIND_2(cross, vec3, vec3)
         )
     );
+
+    lua.set_function("normalize", 
+        sol::overload(
+            LAMBDA_BIND_1(normalize, vec2),
+            LAMBDA_BIND_1(normalize, vec3),
+            LAMBDA_BIND_1(normalize, vec4)
+        )
+    );
+
+    lua.set_function("inverse", 
+        sol::overload(
+            LAMBDA_BIND_1(inverse, quat),
+            LAMBDA_BIND_1(inverse, mat2),
+            LAMBDA_BIND_1(inverse, mat3),
+            LAMBDA_BIND_1(inverse, mat4)
+        )
+    );
+
 // MARK: Vulpine Math
     /*** Setting up vulpine math utils functions bindings ***/
     lua.set_function("hsv2rgb",LAMBDA_BIND_1(hsv2rgb, vec3));
@@ -164,11 +190,16 @@ void VulpineLuaBindings::glm(sol::state &lua)
 
     lua.set_function("projectPointOntoPlane", LAMBDA_BIND_3_CPY(projectPointOntoPlane, vec3, vec3, vec3));
     lua.set_function("rayAlignedPlaneIntersect", LAMBDA_BIND_4_CPY(rayAlignedPlaneIntersect, vec3, vec3, float, float));
-    
+ 
+    lua.set_function("angle", LAMBDA_BIND_1(angle, quat));
+    lua.set_function("axis", LAMBDA_BIND_1(axis, quat));
+    lua.set_function("angleAxis", LAMBDA_BIND_2(angleAxis, const float, const vec3));
+    lua.set_function("radians", LAMBDA_BIND_1(radians, const float));
 }
 
 #include <Timer.hpp>
 #include <Matrix.hpp>
+#include <Utils.hpp>
 void VulpineLuaBindings::VulpineTypes(sol::state &lua)
 {
     // MARK: Bench Timer
@@ -233,376 +264,20 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
             "UNDEFINED", ModelStatus::UNDEFINED
         );
     }
-}
 
-#include "ECS/Entity.hpp"
-#include "ECS/ComponentTypeUI.hpp"
-#include "ECS/ModularEntityGroupping.hpp"
-#include "Graphics/Fonts.hpp"
-#include "Graphics/Scene.hpp"
-#include "AssetManager.hpp"
-#include "VulpineParser.hpp"
-#include "Utils.hpp"
-
-void VulpineLuaBindings::Entities(sol::state &lua)
-{
-    // MARK: Entity
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING Entity
-        CREATE_CLASS_USERTYPE(Entity, (), ())
-
-        // METHOD_BINDING_TEMPLATED_SINGLE(comp, EntityInfos)
-        // METHOD_BINDING_TEMPLATED_SINGLE(comp, WidgetBox)
-        METHOD_BINDING_TEMPLATED(
-            comp, 
-                EntityInfos,
-                EntityGroupInfo,
-                WidgetBackground,
-                WidgetBox,
-                WidgetButton,
-                WidgetSprite,
-                WidgetState,
-                WidgetStyle,
-                WidgetText,
-        )
-
-        METHOD_BINDING_TEMPLATED(
-            hasComp, 
-                EntityInfos,
-                EntityGroupInfo,
-                WidgetBackground,
-                WidgetBox,
-                WidgetButton,
-                WidgetSprite,
-                WidgetState,
-                WidgetStyle,
-                WidgetText,
-        )
-
-        METHOD_BINDING_TEMPLATED(
-            set, 
-                EntityInfos,
-                EntityGroupInfo,
-                WidgetBackground,
-                WidgetBox,
-                WidgetButton,
-                WidgetSprite,
-                WidgetState,
-                WidgetStyle,
-                WidgetText,
-        )
-
-        METHOD_BINDING_TEMPLATED(
-            removeComp, 
-                EntityInfos,
-                EntityGroupInfo,
-                WidgetBackground,
-                WidgetBox,
-                WidgetButton,
-                WidgetSprite,
-                WidgetState,
-                WidgetStyle,
-                WidgetText,
-        )
-
-        ADD_MEMBER_BINDINGS(
-            toStr,
-        );
-    }
-    // MARK: Components
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING EntityInfos
-        CREATE_CLASS_USERTYPE(EntityInfos, (), ())
-        lua.new_usertype<EntityInfos>(
-            "EntityInfos",
-            "name", &EntityInfos::name
-        );
-    }
+    // MARK: Utils
+    lua.set_function("STR_CASE_STR", [](const std::string &a, const std::string &b){return STR_CASE_STR(a.c_str(), b.c_str()) != nullptr;});
+        
+    lua.set_function("replace", 
+        [](std::string a, const std::string &b, const std::string &c)
         {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING EntityGroupInfo
-        CREATE_CLASS_USERTYPE(EntityGroupInfo, (), (std::vector<EntityRef> &))
-        ADD_MEMBER_BINDINGS(
-            children,
-            // markedForDeletion, // TODO: check if we even want to expose those two
-            // markedForCreation,
-            parent
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING WidgetBox
-        CREATE_CLASS_USERTYPE(WidgetBox, (vec2, vec2, WidgetBox::Type), (WidgetBox::FittingFunc))
-        ADD_MEMBER_BINDINGS(
-            min,
-            max,
-            initMin,
-            initMax,
-            childrenMin,
-            childrenMax,
-            displayMin,
-            displayMax,
-            lastMin,
-            lastMax,
-            displayRangeMin,
-            displayRangeMax,
-            depth,
-            lastChangeTime,
-            synchCounter,
-            useClassicInterpolation,
-            isUnderCursor,
-            areChildrenUnderCurosor,
-            scrollOffset,
-            type
-        );
-
-        lua.new_enum(
-            "WidgetBoxType",
-            "FOLLOW_PARENT_BOX", WidgetBox::Type::FOLLOW_PARENT_BOX,
-            "FOLLOW_SIBLINGS_BOX", WidgetBox::Type::FOLLOW_SIBLINGS_BOX
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING WidgetBackground
-        CREATE_CLASS_USERTYPE(WidgetBackground, (), ())
-        ADD_MEMBER_BINDINGS(
-            tile,
-            batch
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING WidgetButton
-        CREATE_CLASS_USERTYPE(
-            WidgetButton, 
-            (WidgetButton::Type), ()
-        );
-        ADD_MEMBER_BINDINGS(
-            type,
-            cur,
-            setcur,
-            cur2,
-            setcur2,
-            min,
-            setmin,
-            max,
-            setmax,
-            padding,
-            setpadding,
-            usr,
-            setusr
-            // valueChanged,
-            // valueUpdate,
-            // valueChanged2D,
-            // valueUpdate2D,
-            // material
-        );
-
-        lua.new_enum(
-            "WidgetButtonType",
-            "HIDE_SHOW_TRIGGER", WidgetButton::HIDE_SHOW_TRIGGER,
-            "HIDE_SHOW_TRIGGER_INDIRECT", WidgetButton::HIDE_SHOW_TRIGGER_INDIRECT,
-            "CHECKBOX", WidgetButton::CHECKBOX,
-            "TEXT_INPUT", WidgetButton::TEXT_INPUT,
-            "SLIDER", WidgetButton::SLIDER,
-            "SLIDER_2D", WidgetButton::SLIDER_2D
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING WidgetSprite
-        CREATE_CLASS_USERTYPE(WidgetSprite, (), (std::string&), (ModelRef))
-        ADD_MEMBER_BINDINGS(
-            sprite,
-            name,
-            scene
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING WidgetState
-        CREATE_CLASS_USERTYPE(WidgetState, (), ())
-        ADD_MEMBER_BINDINGS(
-            upToDate,
-            status,
-            statusToPropagate,
-            updateCounter
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING WidgetStyle
-        CREATE_CLASS_USERTYPE(WidgetStyle, (), ())
-        ADD_MEMBER_BINDINGS(
-            textColor1,
-            settextColor1,
-            textColor2,
-            settextColor2,
-            backgroundColor1,
-            setbackgroundColor1,
-            backgroundColor2,
-            setbackgroundColor2,
-            backGroundStyle,
-            setbackGroundStyle,
-            automaticTabbing,
-            setautomaticTabbing,
-            spriteScale,
-            setspriteScale,
-            useInternalSpacing,
-            setuseInternalSpacing,
-            spritePosition,
-            setspritePosition,
-            useAltBackgroundColor,
-            useAltTextColor
-        );
-
-        lua.new_enum(
-            "UiTileType",
-            "SQUARE", UiTileType::SQUARE,
-            "SQUARE_ROUNDED", UiTileType::SQUARE_ROUNDED,
-            "CIRCLE", UiTileType::CIRCLE,
-            "SATURATION_VALUE_PICKER", UiTileType::SATURATION_VALUE_PICKER,
-            "HUE_PICKER", UiTileType::HUE_PICKER,
-            "ATMOSPHERE_VIEWER", UiTileType::ATMOSPHERE_VIEWER
-        );
-    }
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING WidgetText
-        CREATE_CLASS_USERTYPE(
-            WidgetText, 
-            (), 
-            (std::u32string, StringAlignment)
-        );
-        ADD_MEMBER_BINDINGS(
-            text,
-            align
-        );
-
-        lua.new_enum(
-            "StringAlignment",
-            "TO_LEFT", StringAlignment::TO_LEFT,
-            "CENTERED", StringAlignment::CENTERED
-        );
-    }
-// MARK: Entity file IO
-    {
-        lua.set_function(
-            "entityWriteToFile",
-            [](const Entity& entity, const char* filename)
-            {
-                // TODO: improve this with asset checking
-                VulpineTextOutputRef out(new VulpineTextOutput());
-                // std::cout << "Writing entity to " << filename << "\n";
-                EntityRef e = std::make_shared<Entity>(entity);
-                DataLoader<EntityRef>::write(e, out);
-                out->saveAs(filename);
-            }
-        );
-
-        lua.set_function(
-            "entityReadFromFile",
-            [](const char* asset_name, Entity& parent) -> Entity&
-            {
-                auto info = Loader<EntityRef>::loadingInfos.find(asset_name);
-                if (info == Loader<EntityRef>::loadingInfos.end()) {
-                    FILE_ERROR_MESSAGE(asset_name, "Entity not found in asset manager");
-                    throw std::runtime_error(std::string("Could not find asset with name ") + asset_name);
-                }
-
-                std::string filename = info->second->buff->getSource();
-                VulpineTextBuffRef in(new VulpineTextBuff(filename.c_str()));
-                EntityRef e = DataLoader<EntityRef>::read(in);
-
-                if(!e)
-                    throw std::runtime_error("Could not read entity from file");
-                
-                ComponentModularity::addChild(parent, e);
-                return *e;
-            }
-        );
-    }
-    // MARK: Modularity
-    {
-        sol::table componentModularityTable = lua.create_table();
-        componentModularityTable.set_function(
-            "addChild",
-            [](Entity &parent, Entity& child)
-            {
-                ComponentModularity::addChild(parent, std::make_shared<Entity>(child));
-            }
-        );
-
-        componentModularityTable.set_function(
-            "removeChild",
-            [](Entity &parent, Entity& child)
-            {
-                ComponentModularity::removeChild(parent, &child);
-            }
-        );
-
-        componentModularityTable.set_function(
-            "synchronizeChildren",
-            [](Entity& parent)
-            {
-                ComponentModularity::synchronizeChildren(std::make_shared<Entity>(parent));
-            }
-        );
-
-        componentModularityTable.set_function(
-            "reparent",
-            [](Entity& oldParent, Entity& child, Entity& newParent)
-            {
-                ComponentModularity::Reparent(oldParent, std::make_shared<Entity>(child), newParent);
-            }
-        );
-
-        componentModularityTable.set_function(
-            "reparentChildren",
-            [](Entity& parent)
-            {
-                ComponentModularity::ReparentChildren(parent);
-            }
-        );
-
-        componentModularityTable.set_function(
-            "canMerge",
-            [](Entity& parent, Entity& child) -> bool
-            {
-                return ComponentModularity::canMerge(parent, std::make_shared<Entity>(child));
-            }
-        );
-
-        componentModularityTable.set_function(
-            "mergeChild",
-            [](Entity& parent, Entity& child) -> bool
-            {
-                if(ComponentModularity::canMerge(parent, std::make_shared<Entity>(child)))
-                {
-                    for(auto &i : ComponentModularity::MergeFuncs)
-                        if(parent.state[i.ComponentID] && child.state[i.ComponentID])
-                            i.element(parent, std::make_shared<Entity>(child));
-                    
-                    ComponentModularity::removeChild(parent, &child);
-                    return true;
-                }
-                return false;
-            }
-        );
-
-        componentModularityTable.set_function(
-            "mergeChildren",
-            [](Entity& parent)
-            {
-                ComponentModularity::mergeChildren(parent);
-            }
-        );
-        lua["ComponentModularity"] = componentModularityTable;
-    }
+            replace(a, b, c);
+            return a;
+        }
+    );
 }
+
+
 
 // MARK: Utils
 void VulpineLuaBindings::Utils(sol::state &lua)

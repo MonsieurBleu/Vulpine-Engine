@@ -88,6 +88,8 @@ class AnimationController
     }
 
 public:
+    AnimationController(){};
+
      AnimationController(
         const std::vector<AnimationControllerTransition> &_transitions, 
         AnimationRef &initialState, 
@@ -183,7 +185,9 @@ public:
                 // std::cout << "a: " << a << "\n";
                 // std::cout << "time: " << time << "\n";
                 // std::cout << "transitionTime: " << transitionTime << "\n";
+
                 currentAnimation->onExitAnimation(usr);
+                
                 currentAnimation = currentTransition->to;
                 animationStart = transitionStart;
                 animationTime = transitionTime;

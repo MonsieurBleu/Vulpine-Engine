@@ -1,5 +1,7 @@
 #pragma once 
 
+#include <Matrix.hpp>
+
 #include <cstring>
 
 #include "VEAC/vulpineFormats.hpp"
@@ -50,6 +52,35 @@ namespace VulpineAssetConvertor
      */
     void saveAsVulpineAnimation(const aiAnimation &anim, Stencil_BoneMap &bonesInfosMap, std::string filename);
 
+    /**
+     * @brief Save an assimp animation, after trying to retarget to a given skeleton
+     */
+    void retargetVulpineAnimation(
+        const aiAnimation &anim, 
+        Stencil_BoneMap &bonesInfosMap, 
+        std::string filename, 
+        std::string dirname, 
+        std::string skeletonName, 
+        std::string retargetMethodeName);
+
+
+    /**
+    * @brief This function will delete all nodes inside the scene's graphe
+    * that contain idendity matrix transformation. This greatly helps reducing
+    * the number of bones in the skeleton.
+    *
+    * This method is made for scenes with only meshes-empty nodes that
+    * represent bones. If you have lights or other non meshes or bones element
+    * this can cause undefined behaviour when exporting to vulpine formats.
+    *
+    * @attention If somehow the format imported by assimp contains meshes
+        inside the hierarchy of the bones, you can be screwed when
+        exporting it.
+    */
+    void optimizeSceneBones(const aiScene &scene, Stencil_BoneMap &bonesInfosMap);
+
+    ModelState3D toModelState(mat4 m);
+    ModelState3D toModelState(aiMatrix4x4 ai);
 
     GENERATE_ENUM_FAST_REVERSE(FileConvertStatus,
         ALL_GOOD,
@@ -60,8 +91,10 @@ namespace VulpineAssetConvertor
     GENERATE_ENUM_FAST_REVERSE(SceneConvertOption,
         OBJECT_AS_ENTITY,
         SCENE_AS_ENTITY,
-        IGNORE_MESH,
-        CREATE_TOP_PRIORITY_MOD
+        // IGNORE_MESH,
+        EXPORT_ANIMATIONS,
+        RETARGET_ANIMATIONS,
+        // CREATE_TOP_PRIORITY_MOD
     )
 
     /**
@@ -70,6 +103,7 @@ namespace VulpineAssetConvertor
     FileConvertStatus ConvertSceneFile(
         const std::string &path,
         const std::string &folder,
+        const std::string &skeletonTarget,
         VEAC_EXPORT_FORMAT format,
         unsigned int aiImportFlags,
         unsigned int vulpineImportFlags,

@@ -188,7 +188,8 @@ void AssetLoadInfos::addToGlobalList(AssetVersion &asset)
         {{"vAnimation", "AnimationRef"}, {true, ""}},
         {{"vMesh", "MeshVao"}, {true, ""}},
         {{"obj", "MeshVao"}, {true, ""}},
-        {{"vSkeleton", "SkeletonRef"}, {true, ""}},
+        {{"vSkeleton", "SkeletonRef"}, {true, "bin"}},
+        {{"vSkeleton2", "SkeletonRef"}, {false, ""}},
 
         {{"ktx", "Texture2D"}, {true, "source"}},
         {{"ktx2", "Texture2D"}, {true, "source"}},

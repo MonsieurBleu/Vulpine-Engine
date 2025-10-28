@@ -58,19 +58,15 @@ Vulpine is a free and open-source game engine built in C++. It aims to provide p
 
 ### Modular Entity Groupping
 
-Game logic in Vulpine is handled through a unique Modular Entity Grouping system, designed to combine the modularity of ECS-based game logic with fully customizable object graph relationships and manipulation. In this module, each component can interact with the parent or children of its respective entity in different ways. These operations include syncing, reparenting, merging, merge compatibility checks, file writing/loading, and creation/deletion routines. This system can be used to create custom level manipulation, logic, and optimization that are both content-aware and logic-aware.
-
-In the Sanctia project, for example, it is used to reduce draw calls and overall scene weight by merging all static elements while preserving the full integrity of the region's logic.
-
+Game logic in Vulpine is handled through a unique Modular Entity Grouping module, designed to combine the modularity of ECS-based game logic with fully customizable object graph relationships and manipulation. This system can be used to create content-aware level manipulation, logic and optimization.
 
 ### Asset Management
 
-All supported file formats that can be loaded by Vulpine use an Asset Manager, which scans the game files at each startup to compile loading information. Each asset is referenced only by its name, streamlining the creation process by removing the need to write or update specific file locations. If it’s there and you want it, the engine will find it for you.
+> A wise fox never loses what it values.
 
-Modding is also fully supported. Each asset inside a mod folder is marked by the engine and tracked separately. Mods can also be contained within other mods, creating sub-mods recursively without limitation. Overwriting or adding any game asset is as simple as dropping it into your mod folder. Any folder, anywhere, can be marked as a mod by adding [0-9] at the beginning of its name. The number inside the brackets corresponds to a default overwrite priority. For example, in the Sanctia project, 0 represents base game assets, 1 user mods, and 2 compatibility patches. This method streamlines the user experience by automatically handling the default mod order while still allowing the order of each mod to be modified separately in a dedicated file.
-
-The last important point for modding support is that load order doesn’t exist in Vulpine, because the engine is aware of all available resources. This means mod order only affects the overwrite priority of assets, and no dependency errors can be caused by mod order.
-
+Vulpine uses a custom Asset Manager that references all assets by their name, ensuring that no paths are required for anything from shader includes to textures. If it's in there, Vulpine will find it!
+This system also keeps track of all loaded assets and avoids loading the same asset multiple times. 
+Modding support is also fully implemented, giving the ability to create or add anything easily and manage the importance order of every mod. Everything that Vulpine loads can be modded at will.
 
 ## Planned Features
 
@@ -116,8 +112,8 @@ Important modules :
 Project structure recommended with Vulpine :
 ```
 my-project/
-├── build/
-│   ├── ressources/
+├── Game/
+│   ├── data/
 │   ├── saves/
 │   ├── shader/  <===== VESL submodule
 │   └── Game.exe
@@ -128,9 +124,6 @@ my-project/
 │   └── Game.o
 ├── src/
 │   └── Game.cpp
-├── .gitattributes
-├── .gitignore
-├── .gitmodules
 ├── Makefile
 └── main.cpp
 ```

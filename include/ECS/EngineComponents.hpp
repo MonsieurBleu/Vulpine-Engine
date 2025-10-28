@@ -1,6 +1,5 @@
 #include <ECS/ModularEntityGroupping.hpp>
 #include <ECS/ComponentTypeUI.hpp>
-#include <ECS/ComponentTypeScripting.hpp>
 
 #ifndef CURRENT_MAX_COMP_USAGE
 // #undef CURRENT_MAX_COMP_USAGE
@@ -12,37 +11,34 @@
 
 /***************** ECS BASE VULPINE COMPONENTS *****************/
 
-Aligned_Component(EntityGroupInfo)
+Component_Init(EntityGroupInfo)
 
 /***************** UI BASE VULPINE COMPONENTS *****************/
 
 static inline EntityRef cursorHelp;
 
 /* TODO : remove ?*/
-Ephemeral_Component(WidgetSprite)
+Component(WidgetSprite)
 template<> void Component<WidgetSprite>::ComponentElem::init();
 template<> void Component<WidgetSprite>::ComponentElem::clean();
 
-Adaptive_Component(WidgetBox)
+Component_Synch(WidgetBox)
 
-Adaptive_Component(WidgetState)
+Component_Synch(WidgetState)
 
-Ephemeral_Component(WidgetStyle)
+Component(WidgetStyle)
 
-Ephemeral_Component(WidgetText)
+Component(WidgetText)
 template<> void Component<WidgetText>::ComponentElem::init();
 template<> void Component<WidgetText>::ComponentElem::clean();
 
-Ephemeral_Component(WidgetBackground)
+Component(WidgetBackground)
 template<> void Component<WidgetBackground>::ComponentElem::init();
 template<> void Component<WidgetBackground>::ComponentElem::clean();
 
-Ephemeral_Component(WidgetButton)
+Component(WidgetButton)
 
-Ephemeral_Component(WidgetUI_Context)
-
-/***************** SCRIPTING COMPONENTS *****************/
-Coherent_Component(Script)
+Component(WidgetUI_Context)
 
 /***************** UI BASE VULPINE SYSTEMS *****************/
 

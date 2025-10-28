@@ -1,16 +1,17 @@
-#include <assimp/config.h>
-#include <assimp/scene.h>
 #include <iostream>
 #include <fstream>
 #include <filesystem>
 #include <algorithm>
+#include <string>
 #include <vector>
 #include <cstring>
 
+#include "Graphics/Skeleton.hpp"
 #include "Utils.hpp"
 #include "VEAC/vulpineFormats.hpp"
 #include "VEAC/stencilTypes.hpp"
 #include "VEAC/utils.hpp"
+#include "VulpineParser.hpp"
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
@@ -26,12 +27,54 @@
 
 #include <VEAC/AssetConvertor.hpp>
 
+#include <AssetManagerUtils.hpp>
+#include <AssetManager.hpp>
+
+#include <Scripting/ScriptInstance.hpp>
+
+#include <Constants.hpp>
+
+#include <Globals.hpp>
+
+#include <assimp/anim.h>
+#include <assimp/config.h>
+#include <assimp/matrix4x4.h>
+#include <assimp/scene.h>
+
 #ifdef _WIN32
     #include <shlwapi.h>
     #define STR_CASE_STR(str1, str2) StrStrIA(str1, str2)
 #else
     #define STR_CASE_STR(str1, str2) strcasestr(str1, str2)
 #endif
+
+ModelState3D VEAC::toModelState(aiMatrix4x4 ai)
+{
+    return VEAC::toModelState(toGLM(ai));
+}
+
+ModelState3D VEAC::toModelState(mat4 m)
+{
+    ModelState3D s;
+    
+    s.setPosition(vec3(vec4(m*vec4(0, 0, 0, 1))));
+    
+    vec3 scale(
+        length(vec3(m[0][0], m[1][0], m[2][0])),
+        length(vec3(m[0][1], m[1][1], m[2][1])),
+        length(vec3(m[0][2], m[1][2], m[2][2]))
+    );
+
+    s.setScale(scale);
+
+    s.setQuaternion(quat(
+        mat3(
+            vec3(m[0])/scale, vec3(m[1])/scale, vec3(m[2])/scale
+        )
+    ));
+
+    return s;
+}
 
 glm::mat4 toGLM(const aiMatrix4x4& from)
 {
@@ -47,6 +90,11 @@ glm::mat4 toGLM(const aiMatrix4x4& from)
 glm::vec3 toGLM(const aiVector3D a)
 {
     return vec3(a.x, a.y, a.z);
+}
+
+glm::quat toGLM(const aiQuaternion a)
+{
+    return quat(a.w, a.x, a.y, a.z);
 }
 
 void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPORT_FORMAT format)
@@ -328,20 +376,7 @@ void traverseGraphRec(aiNode &node, void (*f)(aiNode &, int), int rec = 0)
         traverseGraphRec(*node.mChildren[i], f, rec + 1);
 }
 
-/**
- * @brief This function will delete all nodes inside the scene's graphe
- * that contain idendity matrix transformation. This greatly helps reducing
- * the number of bones in the skeleton.
- *
- * This method is made for scenes with only meshes-empty nodes that
- * represent bones. If you have lights or other non meshes or bones element
- * this can cause undefined behaviour when exporting to vulpine formats.
- *
- * @attention If somehow the format imported by assimp contains meshes
-    inside the hierarchy of the bones, you can be screwed when
-    exporting it.
-*/
-void optimizeSceneBones(const aiScene &scene, Stencil_BoneMap &bonesInfosMap)
+void VEAC::optimizeSceneBones(const aiScene &scene, Stencil_BoneMap &bonesInfosMap)
 {
     /* Optimizing the mesh's bones to never point to a useless identidy nodes */
     for (uint m = 0; m < scene.mNumMeshes; m++)
@@ -430,24 +465,40 @@ void optimizeSceneBones(const aiScene &scene, Stencil_BoneMap &bonesInfosMap)
     });
 
     /* Sorting by name to avoid biases with files using the same skeleton
-       should'nt be necessery for now, but it's cool.
+    should'nt be necessery for now, but it's cool.
     */
-    std::sort(sorted.begin(), sorted.end(), [](Stencil_BoneInfos &a, Stencil_BoneInfos &b)
-              { return strcmp(a.node->mName.C_Str(), b.node->mName.C_Str()) < 0; });
-
+       std::sort(sorted.begin(), sorted.end(), [](Stencil_BoneInfos &a, Stencil_BoneInfos &b)
+       { return strcmp(a.node->mName.C_Str(), b.node->mName.C_Str()) < 0; });
+       
     /* populating the bones info map with sorted results*/
     for (int i = 0; i < (int)sorted.size(); i++)
     {
         sorted[i].id = i;
 
-        /* cut the ugly assimp flags in names
-           + add compatibility with animations exports down the line
-        */
-        char *c = strstr(sorted[i].node->mName.data, "_$Assimp");
-        if (c)
-            *c = '\0';
+        std::string tmp = sorted[i].node->mName.C_Str();
+        char *bonename = tmp.data();
 
-        bonesInfosMap[sorted[i].node->mName.C_Str()] = sorted[i];
+        
+
+        // /* cut the ugly assimp flags in names
+        //    + add compatibility with animations exports down the line
+        // */
+        // {
+        //     char *c = strstr(bonename, "_$Assimp");
+        //     if (c) *c = '\0';
+        // }
+
+        // /* cut the ugly mixamo flags in names
+        //    + add compatibility with animations exports down the line
+        // */
+        // {
+        //     char *c = strstr(bonename, "mixamorig:");
+        //     if (c) bonename += sizeof("mixamorig");
+        // }
+
+        // sorted[i].node->mName.Set(bonename);
+            
+        bonesInfosMap[bonename] = sorted[i];
     }
 
     /* OPTIMISATION :
@@ -488,10 +539,16 @@ void VEAC::saveAsVulpineSkeleton(Stencil_BoneMap &bonesInfosMap, std::string fol
     std::vector<VulpineSkeleton_Bone> bones;
     bones.resize(bonesInfosMap.size() - 1);
 
+    std::vector<std::string> names(bones.size());
+
     for(auto &i : bonesInfosMap)
     {
         if (!i.second.id)
+        {
             continue;
+        }
+
+        // std::cout << i.second.id << "\n";
 
         VulpineSkeleton_Bone &b = bones[i.second.id - 1];
         aiNode &n = *i.second.node;
@@ -504,6 +561,39 @@ void VEAC::saveAsVulpineSkeleton(Stencil_BoneMap &bonesInfosMap, std::string fol
             b.children[c] = bonesInfosMap[n.mChildren[c]->mName.C_Str()].id - 1;
         
         // std::cout << i.second.id-1 << "\t" << i.first << "\n";
+
+
+        // names[i.second.id-1] = i.second.node->mName.C_Str();
+
+        std::string namecopy = i.first;
+        char * bonename = namecopy.data();
+        /* cut the ugly assimp flags in names
+           + add compatibility with animations exports down the line
+        */
+        {
+            char *c = strstr(bonename, "_$Assimp");
+            if (c) *c = '\0';
+        }
+
+        /* cut the ugly mixamo flags in names
+           + add compatibility with animations exports down the line
+        */
+        {
+            char *c = strstr(bonename, "mixamorig:");
+            if (c) bonename += sizeof("mixamorig");
+        }
+
+        names[i.second.id-1] = bonename;
+
+
+        auto state3D = VEAC::toModelState(n.mTransformation);
+        state3D.position = sign(state3D.position)*max(vec3(0.f), abs(state3D.position)-1e-4f);
+
+        // std::cout << i.second.node->mName.C_Str() << "\n";
+        // std::cout << "\t" << state3D.position << "\n";
+        // std::cout << "\t" << state3D.quaternion << "\n";
+        // std::cout << "\n";
+
     }
 
     for(auto i : bones)
@@ -513,22 +603,82 @@ void VEAC::saveAsVulpineSkeleton(Stencil_BoneMap &bonesInfosMap, std::string fol
     for(auto i : bones)
             i.t = inverse(i.t);
 
+        
+    VulpineTextOutputRef out(new VulpineTextOutput(1<<15));
+    
+    WRITE_NAME(~, out)
+    // out->Tabulate();
+
+    int cnt = 0;
+    for(auto i : bones)
+    {
+        auto state3D = VEAC::toModelState(i.t);
+        out->Entry();
+        
+        
+        out->write("\"", 1);
+        out->write(names[cnt].c_str(), names[cnt].size());
+        out->write("\"", 1);
+
+        out->write(" ", 1);
+        
+        out->write("*", 1);
+        FastTextParser::write<uint>(cnt, out->getReadHead());
+        out->write("*", 1);
+        
+
+        out->Tabulate();
+            FTXTP_WRITE_ELEMENT(state3D, position);
+            FTXTP_WRITE_ELEMENT(state3D, quaternion);
+            FTXTP_WRITE_ELEMENT(state3D, scale);
+            FTXTP_WRITE_ELEMENT(i, parent);
+
+            out->Entry();
+            WRITE_NAME(children, out)
+            out->Tabulate();
+            for(auto j : i.children)
+            {
+                if(j)
+                {
+                    out->Entry();
+                    FastTextParser::write<int>(j, out->getReadHead());
+                    out->write("\t*", 2);
+                    out->write(names[j].c_str(), names[j].size());
+                    out->write("*", 1);
+                }
+            }
+            out->Break();
+
+        out->Break();
+
+        cnt ++;
+        // state3D.position = sign(state3D.position)*max(vec3(0.f), abs(state3D.position)-1e-4f);
+
+        // std::cout << i.second.node->mName.C_Str() << "\n";
+        // std::cout << "\t" << state3D.position << "\n";
+        // std::cout << "\t" << state3D.quaternion << "\n";
+        // std::cout << "\n";
+    }   
+    out->Break();
+    // out->Break();
+    out->saveAs((folder + "2").c_str());
+
+
     /* Writing to file */
     aiString name(folder);
-    name.Append("Skeleton");
-    name.Append(".vulpineSkeleton");
 
-    VulpineSkeleton_Header h;
-    h.bonesCount = bones.size();
+    // VulpineSkeleton_Header h;
+    // h.bonesCount = bones.size();
 
-    std::ofstream file(name.C_Str(), std::ios::out | std::ios::binary);
-    file.write((char *)&h, sizeof(VulpineSkeleton_Header));
-    file.write((char *)bones.data(), sizeof(VulpineSkeleton_Bone) * h.bonesCount);
+    // std::ofstream file(name.C_Str(), std::ios::out | std::ios::binary);
+    // file.write((char *)&h, sizeof(VulpineSkeleton_Header));
+    // file.write((char *)bones.data(), sizeof(VulpineSkeleton_Bone) * h.bonesCount);
 
-    file.flush();
-    file.close();
+    // file.flush();
+    // file.close();
 
-    if (file.good())
+    // if (file.good())
+    if(true)
     {
         std::cout << TERMINAL_TIMER
                   << "Done saving skeleton (" << bones.size() << " bones) "
@@ -549,8 +699,429 @@ void VEAC::saveAsVulpineSkeleton(Stencil_BoneMap &bonesInfosMap, std::string fol
     }
 }
 
+int LCSubstr(const std::string &x, const std::string &y){
+    int m = x.length(), n=y.length();
+
+    int LCSuff[m][n];
+
+    for(int j=0; j<=n; j++)
+        LCSuff[0][j] = 0;
+    for(int i=0; i<=m; i++)
+        LCSuff[i][0] = 0;
+
+    for(int i=1; i<=m; i++){
+        for(int j=1; j<=n; j++){
+            if(x[i-1] == y[j-1])
+                LCSuff[i][j] = LCSuff[i-1][j-1] + 1;
+            else
+                LCSuff[i][j] = 0;
+        }
+    }
+
+    std::string longest = "";
+    for(int i=1; i<=m; i++){
+        for(int j=1; j<=n; j++){
+            if(LCSuff[i][j] > longest.length())
+                longest = x.substr((i-LCSuff[i][j]+1) -1, LCSuff[i][j]);
+        }
+    }
+
+    std::cout << "\t" << longest;
+
+    return longest.length();
+}
+
+std::string Longest_Common_Substring(const std::string & Str1, const std::string & Str2) {
+  std::string result_substring = "";
+  int m = Str1.length();
+  int n = Str2.length();
+  int DP_Matrix[m + 1][n + 1];
+  int len = 0;
+  int end = 0;
+
+  for (int i = 0; i <= m; i++) {
+    for (int j = 0; j <= n; j++) {
+      if (Str1[i] == Str2[j]) {
+        if ((i == 0) || (j == 0))
+          DP_Matrix[i][j] = 1;
+        else
+          DP_Matrix[i][j] = 1 + DP_Matrix[i - 1][j - 1];
+
+        if (DP_Matrix[i][j] > len) {
+          len = DP_Matrix[i][j];
+          int start = i - DP_Matrix[i][j] + 1;
+          if (end == start) {
+            result_substring.push_back(Str1[i]);
+          } else {
+            end = start;
+            result_substring.clear();
+            result_substring.append(Str1.substr(end, (i + 1) - end));
+          }
+        }
+      } else {
+        DP_Matrix[i][j] = 0;
+      }
+    }
+  }
+  return result_substring;
+}
+
+struct reboneMatch
+{
+    int originalId = -1;
+    int bestMatch = -1;
+    float score = 0.;
+
+    std::string originalName;
+    std::string originalNameProcessed;
+};
+
+reboneMatch findBestMatch(const std::string &name, const std::vector<std::string> & list)
+{
+    int maxScore = 3;
+    int bestMatch = -1;
+    std::string bestLCS;
+    int size = list.size();
+
+    for(int i = 0; i < size; i++)
+    {
+        int score = 0;
+
+        // score += LCSubstr(name, list[i]);
+        std::string LCS = Longest_Common_Substring(name, list[i]);
+        score += LCS.length();
+        
+        // std::cout << "\t" << score << "\t" << LCS << "\t" << list[i] << "\n";
+
+        if(score > maxScore)
+        {
+            maxScore = score;
+            bestMatch = i;
+            bestLCS = LCS;
+        }
+
+    }
+
+    float scoreQuality = 0.f;
+
+    // scoreQuality = ((float)bestLCS.length()) / ((float)list[bestMatch].length());
+
+    if(bestMatch < 0)
+    {
+        reboneMatch result;
+        result.bestMatch = -1;
+        result.score = 0.f;
+        return result;
+    }
+    
+    scoreQuality = ((float)bestLCS.length()) / ((float)max(name.length(), list[bestMatch].length()));
+
+    scoreQuality = min(scoreQuality, 1.f);
+
+    // if(scoreQuality >= 1.f)
+    //     std::cout << TERMINAL_OK;
+    // else
+    // if(scoreQuality > 0.5)
+    //     std::cout << TERMINAL_WARNING;
+    // else
+    //     std::cout << TERMINAL_ERROR;
+
+    // std::cout << "\t'" << list[bestMatch] << "'\n";
+    // std::cout << "\t'" << bestLCS << "'\t" << scoreQuality  << "\n";
+    // std::cout << TERMINAL_RESET;
+
+    reboneMatch result;
+    result.bestMatch = bestMatch;
+    result.score = scoreQuality;
+
+    return result;
+}
+
+void VEAC::retargetVulpineAnimation(
+    const aiAnimation &anim, 
+    Stencil_BoneMap &bonesInfosMap, 
+    std::string filename,  
+    std::string dirname, 
+    std::string skeletonName, 
+    std::string retargetMethodeName)
+{
+    float tps = anim.mTicksPerSecond > 0 ? anim.mTicksPerSecond : 30.0f;
+    float durationSeconds = anim.mDuration / tps;
+
+    SkeletonRef skeleton = Loader<SkeletonRef>::get(skeletonName);
+
+    assert(skeleton);
+
+    std::vector<std::string> targetBonesNames = skeleton->boneNames;
+    for(auto &s : targetBonesNames)
+    {
+        Loader<ScriptInstance>::get("(Retarget PreProcess) " + retargetMethodeName).run(s);
+        s = threadState["RETURN_string_1"];
+    }
+
+    std::vector<reboneMatch> rebones;
+
+    std::vector<std::vector<reboneMatch>> matches(skeleton->size());
+
+    int matchedBonesCounter = 0;
+    for (unsigned int i = 0; i < anim.mNumChannels; i++)
+    {
+        aiNodeAnim *nodea = anim.mChannels[i];
+
+        std::string boneName = nodea->mNodeName.C_Str();
+        Stencil_BoneInfos &bone = bonesInfosMap[boneName];
+
+        Loader<ScriptInstance>::get("(Retarget PreProcess) " + retargetMethodeName).run(boneName);
+        boneName = threadState["RETURN_string_1"];
+
+        auto match = findBestMatch(boneName, targetBonesNames);
+
+        match.originalId = i;
+        rebones.push_back(match);
+        match.originalName = nodea->mNodeName.C_Str();
+        match.originalNameProcessed = boneName;
+
+        if(match.bestMatch < 0)
+            match.bestMatch = 0;
+
+        if(match.bestMatch >= 0)
+            matches[match.bestMatch].push_back(match);
+    }
+
+    // skeleton->initRest();
+    for(auto &i : matches)
+    {
+        if(i.empty())
+        {
+            reboneMatch tmp;
+            tmp.score = 0;
+            tmp.bestMatch = 0;
+            tmp.originalId = 0;
+            i.push_back(tmp);
+        }
+
+        matchedBonesCounter ++;
+    }
+
+
+    /*
+        Actually Writing The File
+    */
+
+    for(char &c : filename)
+        switch (c)
+        {
+            case '|' :
+            case '@' :
+                c = '_';
+                break;
+            
+            default:break;
+        }
+
+    filename = dirname + "(" + skeletonName + ") " + filename + ".vAnimation";
+
+    FILE *file = fopen(filename.c_str(), "wb");
+    if (!file)
+    {
+        std::cerr << TERMINAL_ERROR
+                  << "Failed to open animation out file : "
+                  << TERMINAL_FILENAME
+                  << filename
+                  << TERMINAL_RESET
+                  << "\n";
+        return;
+    }
+
+    AnimationFileHeader head(anim.mName.C_Str(), durationSeconds, bonesInfosMap.size(), matchedBonesCounter);
+    head.magicNumber = 0x494e4156;
+    fwrite(&head, sizeof(AnimationFileHeader), 1, file);
+
+    int keyframeNumber = 0;
+    uint cnt = 0;
+    for(auto &i : matches)
+    {
+        // std::string boneName = skeleton->boneNames[cnt];
+        // std::cout << TERMINAL_TIMER << boneName << TERMINAL_RESET;
+        // std::cout << " aka " << targetBonesNames[cnt] << "\n";
+
+        /* Print loop */
+        // for(auto &j : i)
+        // {
+        //     if(j.score >= 1.f)
+        //         std::cout << TERMINAL_OK;
+        //     else if(j.score >= .5f)
+        //         std::cout << TERMINAL_WARNING;
+        //     else
+        //         std::cout << TERMINAL_ERROR;
+
+        //     std::cout << "\t" << j.originalName << " aka " << j.originalNameProcessed << "\t" << j.score << "\n";
+            
+        //     aiNodeAnim *nodea = anim.mChannels[j.originalId];
+
+        //     std::cout 
+        //     << "\t\t" << nodea->mNumPositionKeys 
+        //     << "\t" << (float)nodea->mPositionKeys[0].mTime / tps 
+        //     << "\t" << (float)nodea->mPositionKeys[nodea->mNumPositionKeys-1].mTime / tps;
+
+        //     std::cout << TERMINAL_RESET << "\n\n";
+        // }
+
+
+        if(i.empty())
+        {
+            cnt++; continue;
+        }
+
+        std::reverse(i.begin(), i.end());
+
+        /* find max length loop */
+        uint size = 4;
+        bool noGoodCandidate = true;
+        for(auto &j : i) if(j.score >= 1.f)
+        {
+            noGoodCandidate = false;
+            aiNodeAnim *nodea = anim.mChannels[j.originalId];
+            assert((nodea->mNumPositionKeys == nodea->mNumRotationKeys) && (nodea->mNumPositionKeys == nodea->mNumScalingKeys) && "Number of keys must be the same for position, rotation and scaling");
+            size = max(size, nodea->mNumPositionKeys);
+        }
+
+        std::vector<AnimationKeyframeData> combinedAnimations(size);
+
+        /* Combine Animations */
+        aiNodeAnim *nodea_tmp = anim.mChannels[i.front().originalId];
+        for(auto &j : i) if(j.score >= 1.f){nodea_tmp = anim.mChannels[j.originalId]; continue;}
+
+        AnimationBoneData data{cnt, (AnimationBehaviour)nodea_tmp->mPreState, (AnimationBehaviour)nodea_tmp->mPostState, size};
+        fwrite(&data, sizeof(AnimationBoneData), 1, file);
+
+        std::vector<mat4> combinedTransforms(size);
+        for(auto &j : combinedTransforms) j = mat4(1);
+
+        for(auto &j : i) if(j.score >= 1.f)
+        {
+            aiNodeAnim *nodea = anim.mChannels[j.originalId];
+            uint curSize = nodea->mNumPositionKeys;
+
+            for(uint k = 0; k < size; k++)
+            {
+                float a = float(k) / float(size);
+                float maxTime = (float)nodea->mPositionKeys[curSize-1].mTime;
+                // int closestID = round(float(curSize) * a);
+                int closestID = 0;
+
+                for(uint l = 0; l < curSize; l++)
+                {
+                    float time = (float)nodea->mPositionKeys[l].mTime / maxTime;
+                    if(time > a)
+                    {
+                        closestID = l-1;
+                        break;
+                    }
+                }
+
+                vec3 pos, scale;
+                quat q;
+
+                float lTime = (float)nodea->mPositionKeys[(closestID)%curSize].mTime / maxTime;
+                float uTime = (float)nodea->mPositionKeys[(closestID+1)%curSize].mTime / maxTime;
+                float interpA = (a-lTime)/(uTime-lTime);
+
+                ModelState3D tmpState;
+                tmpState
+                    .setPosition(mix(
+                        toGLM(nodea->mPositionKeys[closestID].mValue),
+                        toGLM(nodea->mPositionKeys[closestID+1].mValue),
+                        interpA
+                        )
+                    )
+                    .setScale(mix(
+                        toGLM(nodea->mScalingKeys[closestID].mValue),
+                        toGLM(nodea->mScalingKeys[closestID+1].mValue),
+                        interpA
+                        )
+                    )
+                    .setQuaternion(slerp(
+                        toGLM(nodea->mRotationKeys[closestID].mValue),
+                        toGLM(nodea->mRotationKeys[closestID+1].mValue),
+                        interpA
+                        )
+                    )
+                    .update();
+                
+                combinedTransforms[k] *= tmpState.modelMatrix;
+            }
+        }
+
+        for(int j = 0; j < size; j++)
+        {
+            mat4 matrix = combinedTransforms[j];
+            mat4 skeletonMatrix;
+
+            auto &b = skeleton->at(cnt);
+            skeletonMatrix = inverse(b.t);
+            if(b.parent >= 0)
+                skeletonMatrix = skeleton->at(b.parent).t * inverse(b.t);
+
+            if(noGoodCandidate) matrix = skeletonMatrix;
+
+            ModelState3D tmpState = toModelState(matrix);
+
+            combinedAnimations[j].translation = tmpState.position;
+            combinedAnimations[j].rotation = tmpState.quaternion;
+            combinedAnimations[j].scale = tmpState.scale;
+            combinedAnimations[j].time = (float)durationSeconds * (float)j / (float)(size-1);
+            
+            if(noGoodCandidate)
+            {
+                combinedAnimations[j].time = (float)j / (float)(size-1);
+            }
+            
+            ModelState3D sourceBone = toModelState(bonesInfosMap[nodea_tmp->mNodeName.C_Str()].node->mTransformation);
+            ModelState3D destBone = toModelState(skeletonMatrix);
+
+            Loader<ScriptInstance>::get("(Retarget) " + retargetMethodeName).run(
+                std::string(nodea_tmp->mNodeName.C_Str()),
+                sourceBone.quaternion,
+                sourceBone.position,
+                i.front().originalId,
+                combinedAnimations[j].rotation,
+                combinedAnimations[j].translation,
+                cnt,
+                skeleton->boneNames[cnt],
+                destBone.rotation,
+                destBone.position,
+                skeleton->at(cnt).parent,
+                globals.appTime
+            );
+
+            combinedAnimations[j].rotation    = threadState["RETURN_quat_1"];
+            combinedAnimations[j].translation = threadState["RETURN_vec3_1"];
+            
+            keyframeNumber++;
+        }
+
+        fwrite(combinedAnimations.data(), sizeof(AnimationKeyframeData), size, file);
+
+        cnt++;
+    }
+
+    fclose(file);
+    std::cout << TERMINAL_TIMER
+              << "Done saving animation"
+              << " (" << head.animatedBoneNumber << " animated bones, " << keyframeNumber << " keyframes total) "
+              << TERMINAL_FILENAME
+              << filename
+              << TERMINAL_TIMER
+              << TERMINAL_RESET
+              << "\n";
+
+    return;
+}
+
 void VEAC::saveAsVulpineAnimation(const aiAnimation &anim, Stencil_BoneMap &bonesInfosMap, std::string filename)
 {
+
     for(char &c : filename)
         switch (c)
         {
@@ -574,12 +1145,22 @@ void VEAC::saveAsVulpineAnimation(const aiAnimation &anim, Stencil_BoneMap &bone
         return;
     }
 
+
+
     float tps = anim.mTicksPerSecond > 0 ? anim.mTicksPerSecond : 30.0f;
     float durationSeconds = anim.mDuration / tps;
-    // std::cout << "Duration (ticks) : " << anim.mDuration << "\n";
-    // std::cout << "Ticks per second : " << anim.mTicksPerSecond << "\n";
-    // std::cout << "Duration (seconds) : " << durationSeconds << "\n";
     AnimationFileHeader head(anim.mName.C_Str(), durationSeconds, bonesInfosMap.size(), anim.mNumChannels);
+    head.magicNumber = 0x494e4156;
+
+    /* Removing armature */
+    for (unsigned int i = 0; i < anim.mNumChannels; i++)
+    {
+        aiNodeAnim *nodea = anim.mChannels[i];
+        Stencil_BoneInfos &bone = bonesInfosMap[nodea->mNodeName.C_Str()];
+        if(bone.id <= 0)
+            head.animatedBoneNumber --;
+    }
+
     fwrite(&head, sizeof(AnimationFileHeader), 1, file);
 
     int keyframeNumber = 0;
@@ -587,7 +1168,12 @@ void VEAC::saveAsVulpineAnimation(const aiAnimation &anim, Stencil_BoneMap &bone
     {
         aiNodeAnim *nodea = anim.mChannels[i];
         Stencil_BoneInfos &bone = bonesInfosMap[nodea->mNodeName.C_Str()];
+
+        /* Removing armature */
+        if(bone.id <= 0) continue;
+
         // std::cout << bone.id-1 << " " << nodea->mNodeName.C_Str() << "\n";
+
         assert((nodea->mNumPositionKeys == nodea->mNumRotationKeys) && (nodea->mNumPositionKeys == nodea->mNumScalingKeys) && "Number of keys must be the same for position, rotation and scaling");
         AnimationBoneData data{(unsigned int)bone.id-1, (AnimationBehaviour)nodea->mPreState, (AnimationBehaviour)nodea->mPostState, nodea->mNumPositionKeys};
         fwrite(&data, sizeof(AnimationBoneData), 1, file);
@@ -599,7 +1185,13 @@ void VEAC::saveAsVulpineAnimation(const aiAnimation &anim, Stencil_BoneMap &bone
 
             vec3 scale = vec3(nodea->mScalingKeys[j].mValue.x, nodea->mScalingKeys[j].mValue.y, nodea->mScalingKeys[j].mValue.z);
 
-            AnimationKeyframeData keyframe{(float)nodea->mPositionKeys[j].mTime / tps, translation, q, scale};
+            AnimationKeyframeData keyframe{
+                durationSeconds * ((float)nodea->mPositionKeys[j].mTime / ((float)nodea->mPositionKeys[nodea->mNumPositionKeys-1].mTime))
+                , 
+                translation, q, scale};
+
+            // std::cout <<  keyframe.time << "\n";
+
             fwrite(&keyframe, sizeof(AnimationKeyframeData), 1, file);
 
             keyframeNumber++;
@@ -616,6 +1208,8 @@ void VEAC::saveAsVulpineAnimation(const aiAnimation &anim, Stencil_BoneMap &bone
               << TERMINAL_RESET
               << "\n";
 }
+
+
 
 
 int assetConvertor(int argc, char **argv)
@@ -698,7 +1292,7 @@ int assetConvertor(int argc, char **argv)
     std::filesystem::create_directory(dirName);
 
     static Stencil_BoneMap bonesInfosMap;
-    optimizeSceneBones(*scene, bonesInfosMap);
+    VEAC::optimizeSceneBones(*scene, bonesInfosMap);
 
     if (bonesInfosMap.size() > 1)
         VEAC::saveAsVulpineSkeleton(bonesInfosMap, dirName + "/" + filename);
@@ -706,7 +1300,7 @@ int assetConvertor(int argc, char **argv)
     for (unsigned int i = 0; i < scene->mNumAnimations; i++)
     {
         aiAnimation &anim = *scene->mAnimations[i];
-        VEAC::saveAsVulpineAnimation(anim, bonesInfosMap, dirName + "/" + filename + "_" + anim.mName.C_Str() + ".vulpineAnimation");
+        VEAC::saveAsVulpineAnimation(anim, bonesInfosMap, dirName + "/" + filename + "_" + anim.mName.C_Str() + ".vAnimation");
     }
 
     if (scene->mNumMeshes)
@@ -746,6 +1340,7 @@ int assetConvertor(int argc, char **argv)
 VEAC::FileConvertStatus VEAC::ConvertSceneFile(
     const std::string &path,
     const std::string &folder,
+    const std::string &skeletonTarget,
     VEAC_EXPORT_FORMAT format,
     unsigned int aiImportFlags,
     unsigned int vulpineImportFlags,

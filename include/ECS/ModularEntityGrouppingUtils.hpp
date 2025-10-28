@@ -36,80 +36,80 @@
 #define COMPONENT_DEFINE_MERGE(type) __COMPONENT_DEFINE_ATTRIBUTE_FUNCTION(void, type, MergeFunc, (Entity& parent, EntityRef child))
 
 
-#define Ephemeral_Component(type)                               \
+#define Component(type)                                         \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
 
-#define Adaptive_Component(type)                                \
+#define Component_Synch(type)                                   \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_SYNCH(type)                                   \
 
-#define Aligned_Component(type)                                 \
+#define Component_Init(type)                                    \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_REPARENT(type)                                \
 
-#define Attached_Component(type)                                \
+#define Component_Init_Synch(type)                              \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
-    COMPONENT_ADD_REPARENT(type)                                \
-    COMPONENT_ADD_SYNCH(type)                                   \
-
-#define Coherent_Component(type)                                \
-    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
-    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
-
-#define Contextual_Component(type)                              \
-    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
-    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
-    COMPONENT_ADD_REPARENT(type)                                \
-
-#define Consonant_Component(type)                               \
-    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
-    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
-    COMPONENT_ADD_SYNCH(type)                                   \
-
-#define Convergent_Component(type)                              \
-    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
-    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
     COMPONENT_ADD_REPARENT(type)                                \
     COMPONENT_ADD_SYNCH(type)                                   \
 
-#define Intrinsic_Component(type)                               \
+#define Component_Compatible(type)                              \
+    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
+    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
+
+#define Component_Init_Compatible(type)                         \
+    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
+    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
+    COMPONENT_ADD_REPARENT(type)                                \
+
+#define Component_Synch_Compatible(type)                        \
+    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
+    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
+    COMPONENT_ADD_SYNCH(type)                                   \
+
+#define Component_Init_Synch_Compatible(type)                   \
+    COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
+    COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
+    COMPONENT_ADD_REPARENT(type)                                \
+    COMPONENT_ADD_SYNCH(type)                                   \
+
+#define Component_Merge(type)                                   \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
 
-#define Intricate_Component(type)                               \
+#define Component_Merge_Compatible(type)                        \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
     COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
 
-#define Aligned_Intrinsic_Component(type)                       \
+#define Component_Init_Merge(type)                              \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
     COMPONENT_ADD_REPARENT(type)                                \
 
-#define Aligned_Intricate_Component(type)                       \
+#define Component_Init_Merge_Compatible(type)                    \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
     COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
     COMPONENT_ADD_REPARENT(type)                                \
 
-#define Seamless_Resonant_Component(type)                       \
+#define Component_Synch_Merge(type)                             \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
     COMPONENT_ADD_SYNCH(type)                                   \
 
-#define Coherent_Resonant_Component(type)                       \
+#define Component_Synch_Merge_Compatible(type)                   \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
     COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \
     COMPONENT_ADD_SYNCH(type)                                   \
 
-#define Aligned_Resonant_Component(type)                        \
+#define Component_Init_Synch_Merge(type)                        \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
     COMPONENT_ADD_REPARENT(type)                                \
     COMPONENT_ADD_SYNCH(type)                                   \
 
-#define Contextual_Resonant_Component(type)                     \
+#define Component_Init_Synch_Merge_Compatible(type)              \
     COMPONENT(type, CURRENT_CATEGORY, CURRENT_MAX_COMP_USAGE)   \
     COMPONENT_ADD_MERGE(type)                                   \
     COMPONENT_ADD_COMPATIBILITY_CHECK(type)                     \

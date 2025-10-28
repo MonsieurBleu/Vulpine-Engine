@@ -105,13 +105,13 @@ void Camera::updateFrustum()
         const float halfHSide = halfVSide * width / height;
         const vec3 fvec = f * front;
 
-        frustum.near.position = p + (n * front);
-        frustum.near.distance = length(frustum.near.position);
-        frustum.near.normal = front;
+        frustum.near_.position = p + (n * front);
+        frustum.near_.distance = length(frustum.near_.position);
+        frustum.near_.normal = front;
 
-        frustum.far.position = p + fvec;
-        frustum.far.distance = length(frustum.far.position);
-        frustum.far.normal = -front;
+        frustum.far_.position = p + fvec;
+        frustum.far_.distance = length(frustum.far_.position);
+        frustum.far_.normal = -front;
 
         frustum.right.distance = d;
         frustum.right.position = p;
@@ -142,11 +142,11 @@ void Camera::updateFrustum()
         const float w = dimentionFactor*width/2;
         const float h = dimentionFactor*height/2;
  
-        frustum.near.position = p + (n * front);
-        frustum.near.normal = front;
+        frustum.near_.position = p + (n * front);
+        frustum.near_.normal = front;
 
-        frustum.far.position = p + (f * front);
-        frustum.far.normal = -front;
+        frustum.far_.position = p + (f * front);
+        frustum.far_.normal = -front;
 
         frustum.right.position = p + (w * right);
         frustum.right.normal = -right;

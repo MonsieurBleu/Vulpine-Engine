@@ -7,7 +7,7 @@
 #include <Timer.hpp>
 #include <Helpers.hpp>
 
-#define UI_BASE_COMP VulpineBlueprintUI::UIcontext, WidgetState()
+#define UI_BASE_COMP VulpineBlueprintUI::UIcontext, WidgetState(), WidgetBox()
 
 namespace VulpineColorUI
 {
@@ -60,13 +60,17 @@ namespace VulpineBlueprintUI
         std::function<void(float f)> setValue, 
         std::function<float()> getValue,
         float minV, float maxV,
-        float smallIncrement, float bigIncrement
+        float smallIncrement = 0.f, float bigIncrement = 0.f
         );
 
     EntityRef TextInput(
         const std::string &name,
         std::function<void(std::u32string &)> fromText, 
         std::function<std::u32string()> toText
+        );
+
+    EntityRef TextInput(
+        const std::string &name
         );
 
     EntityRef ValueInputSlider(

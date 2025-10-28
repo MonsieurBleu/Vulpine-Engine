@@ -27,8 +27,11 @@ public:
 
     std::string name;
 
+    std::vector<std::string> boneNames;
+
     const SkeletonBone &operator[](int i);
     void load(const char *filename);
+    void initRest();
     int getSize() { return size(); };
 
     void applyGraph(SkeletonAnimationState &state);

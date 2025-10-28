@@ -113,7 +113,10 @@ void Skeleton::load(const char* filename)
         FILE_ERROR_MESSAGE(filename, "The file is probably corrupted or don't follow vulpineSkeleton specifications. The loader will return an empty object.")
         return;
     }
+}
 
+void Skeleton::initRest()
+{
     const size_t s = size();
     for (size_t i = 0; i < s; i++)
     {
@@ -125,6 +128,4 @@ void Skeleton::load(const char* filename)
     for (size_t i = 0; i < s; i++)
         at(i).t = inverse(at(i).t);
 }
-
-
 

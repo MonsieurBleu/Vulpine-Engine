@@ -15,11 +15,11 @@ int launchGame(GameType **game, std::string name, Params... initParams)
 
     atexit(checkHeap);
 
-#ifdef _WIN32
-    system("cls");
-#else
-    system("clear");
-#endif
+// #ifdef _WIN32
+//     system("cls");
+// #else
+//     system("clear");
+// #endif
 
     openALDevice = alcOpenDevice(nullptr);
     if (!openALDevice)

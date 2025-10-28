@@ -1,3 +1,5 @@
+#include "Matrix.hpp"
+#include "Utils.hpp"
 #include <Graphics/Skeleton.hpp>
 
 #include <GL/glew.h>
@@ -9,6 +11,11 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
+
+#include <AssetManager.hpp>
+#include <VEAC/AssetConvertor.hpp>
+#include <Scripting/ScriptInstance.hpp>
+#include <Globals.hpp>
 
 const SkeletonBone &Skeleton::operator[](int i)
 {
@@ -22,19 +29,96 @@ void Skeleton::applyGraph(SkeletonAnimationState &state)
     const size_t s = size();
 
     if (state.size() != s)
+    {
+        ERROR_MESSAGE("Bones number between animation state and skeleton don't match :" << state.name);
+
         return;
+    }
+
+
+    for (size_t i = 0; i < s; i++)
+    {
+        quat parent = quat();
+        SkeletonBone &b = at(i);
+        if (b.parent >= 0)
+            parent = VEAC::toModelState(state[b.parent]).quaternion;
+
+        ModelState3D s = VEAC::toModelState(state[i]);
+        Loader<ScriptInstance>::get("__TMP__AnimationFix").run(&s.quaternion, i, globals.appTime, parent);
+        s.quaternion = threadState["q2"];
+
+        s.forceUpdate();
+        state[i] = s.modelMatrix;
+    }
+    
+    /* TODO: refaire au propre plus tard avec les transformations de carrures 
+    for (size_t i = 0; i < s; i++)
+    {
+        // if(i > 0) continue;
+        // if(i%4) continue;
+        // std::string bonename = state.skeleton->boneNames[i];
+        // if(!STR_CASE_STR(bonename.c_str(), "shoulder")) continue;
+        
+        ModelState3D s;
+        
+        s.scaleScalar(1.);
+        
+        float tmpscale = 1.25;
+        
+        if(i == 14 || i == 12)
+        {
+            s.scaleScalar(tmpscale);
+            
+            // s.setRotation(vec3(-1, 0, 0));
+            
+            // s.setScale(vec3(1, tmpscale, 1));
+            
+        }
+        
+        
+        if(i == 17 || i == 19)
+        {
+            // s.setPosition(vec3(0, 1, 0));
+            
+            // s.scaleScalar(1./tmpscale);
+            
+            // s.setScale(vec3(1, 1./tmpscale, 1));
+        }
+        
+        
+        // s.setPosition(vec3(0, 0.25, 0));
+        
+        
+        
+        // s.setScale(vec3(1, 2, 1));
+        
+        s.update();
+        
+        // state[i] = s.modelMatrix * state[i];
+        state[i] = state[i] * s.modelMatrix;
+    }
+    */
+
 
     for (size_t i = 0; i < s; i++)
     {
         SkeletonBone &b = at(i);
         if (b.parent >= 0)
-            state[i] = state[b.parent] * state[i];
+        state[i] = state[b.parent] * state[i];
     }
+    
+
+
 
     for (size_t i = 0; i < s; i++)
     {
         state[i] = state[i] * at(i).t;
     }
+
+
+
+
+
 }
 
 void SkeletonAnimationState::applyAnimations(float time, std::vector<std::pair<AnimationRef, float>> animations)

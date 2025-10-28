@@ -6,6 +6,14 @@
 
 #include <glm/gtc/quaternion.hpp>
 
+void replace(std::string &str, const std::string &substr, const std::string &newsubstr)
+{
+    auto pos = str.find(substr);
+
+    if(pos != std::string::npos)
+        str.replace(pos, substr.length(), newsubstr);
+}
+
 std::string readFile(const std::string &filePath) // Mights just use a C approach instead
 {
     std::string content;

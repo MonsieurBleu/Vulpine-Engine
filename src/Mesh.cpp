@@ -157,8 +157,8 @@ bool MeshModel3D::cull()
     return culled =
                dot(f.left.normal, center - f.left.position) > -radius &&
                dot(f.right.normal, center - f.right.position) > -radius &&
-               dot(f.far.normal, center - f.far.position) > -radius &&
-               dot(f.near.normal, center - f.near.position) > -radius &&
+               dot(f.far_.normal, center - f.far_.position) > -radius &&
+               dot(f.near_.normal, center - f.near_.position) > -radius &&
                dot(f.top.normal, center - f.top.position) > -radius &&
                dot(f.bottom.normal, center - f.bottom.position) > -radius;
 }

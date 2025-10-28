@@ -144,8 +144,7 @@ game_base_echo :
 
 
 game : vulpine
-game : LIBFLAGSG = $(LIBFLAGS) /usr/lib/libreactphysics3d.a
-#game : LINKFLAGS += -L../$(BUILD_DIR) -Wl,-rpath,'$$ORIGIN'
+game : LIBFLAGSG = $(LIBFLAGS) -lreactphysics3d
 game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@
 	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGSG) -o $(GEXECP)

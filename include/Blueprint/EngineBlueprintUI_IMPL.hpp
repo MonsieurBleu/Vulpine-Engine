@@ -125,6 +125,40 @@ EntityRef VulpineBlueprintUI::TextInput(
     return t;
 }
 
+EntityRef VulpineBlueprintUI::TextInput(
+    const std::string &name
+    )
+{
+    auto t = newEntity(name
+        , UI_BASE_COMP
+        , WidgetBox()
+        , WidgetBackground()
+        , WidgetStyle()
+            .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+            .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1)
+            .setbackgroundColor2(VulpineColorUI::DarkBackgroundColor2)
+            .settextColor1(VulpineColorUI::LightBackgroundColor1)
+            .settextColor2(VulpineColorUI::HightlightColor1)
+        , WidgetText(U" ")
+    );
+
+    auto &text = t->comp<WidgetText>().text;
+
+    t->set<WidgetButton>(WidgetButton(
+        WidgetButton::Type::TEXT_INPUT,
+        [&](Entity *e, float v)
+        {
+        },
+        [&](Entity *e)
+        {
+            return 0.f;
+        }
+    ));
+
+    return t;
+}
+
+
 EntityRef VulpineBlueprintUI::ValueInput(
     const std::string &name,
     std::function<void(float f)> setValue, 
@@ -145,6 +179,20 @@ EntityRef VulpineBlueprintUI::ValueInput(
             return ftou32str(getValue());
         }
     );
+
+    if(smallIncrement == 0.f || bigIncrement == 0.f)
+    {
+        return newEntity(name + " - value input"
+            , UI_BASE_COMP
+            , WidgetBox()
+            , WidgetStyle()
+                .setautomaticTabbing(1)
+                .setuseInternalSpacing(false)
+            , EntityGroupInfo({
+                textInput
+            })
+        );
+    }
 
     auto incr = Toggable("(+)", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() + smallIncrement, minV, maxV));},
@@ -183,8 +231,6 @@ EntityRef VulpineBlueprintUI::ValueInput(
 
     #undef PASS_ARG_COPY
 }
-
-
 
 EntityRef VulpineBlueprintUI::ValueInputSlider(
     const std::string &name,
@@ -317,6 +363,10 @@ EntityRef VulpineBlueprintUI::NamedEntry(
                     .setbackgroundColor1(color)
                     .settextColor1(VulpineColorUI::DarkBackgroundColor1)
                     .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+
+                    // .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor2)
+                    // .settextColor1(color)
+                    // .setbackGroundStyle(UiTileType::SQUARE)
             ),
             entry
         })
@@ -879,15 +929,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
 {
     auto searchInput = NamedEntry(U"Search"
         , TextInput(
-            name + " search bar", [](std::u32string &name)
-            {
-                if(!name.size())
-                    name = U"...";
-            },
-            []()
-            {
-                return U"";
-            }
+            name + " search bar"
         )
         , 0.333
         , false
@@ -993,30 +1035,43 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
                 // ->comp<EntityGroupInfo>().children[1]
             ->comp<WidgetText>().text);
 
-            for(auto &c : str)
-                c = std::tolower(c);
+            // for(auto &c : str)
+            //     c = std::tolower(c);
             
+            if(!str.empty() && str[0] == ' ')
+                str.erase(str.begin());
+
+            // replace(str, " ", "");
+
             // std::cout << st
 
             if(child->comp<WidgetState>().statusToPropagate != ModelStatus::HIDE)
             {
                 for(auto c : child->comp<EntityGroupInfo>().children)
                 {
+                    auto &str2 = c->comp<EntityInfos>().name;
 
-                    auto str2 = c->comp<EntityInfos>().name;
+                    // for(auto &c : str2)c = std::tolower(c);
 
-                    for(auto &c : str2)
-                        c = std::tolower(c);
+                    bool filtered = str.empty() || STR_CASE_STR(str2.c_str(), str.c_str());
 
-                    if(!str.size() || str2.find(str) != std::string::npos)
+                    if(!filtered && c->hasComp<EntityGroupInfo>())
+                    {
+                        for(auto c2 : c->comp<EntityGroupInfo>().children)
+                        if(c2->hasComp<WidgetText>())
+                        {
+                            auto str3 = UFTconvert.to_bytes(c2->comp<WidgetText>().text);
+                            filtered = STR_CASE_STR(str3.c_str(), str.c_str()) != nullptr;
+                            if(filtered)
+                                break;
+                        }
+                    }
+
+                    // if(!str.size() || str2.find(str) != std::string::npos)
+                    if(filtered)
                     {
                         c->comp<WidgetState>().status = ModelStatus::SHOW;
-
                         c->comp<WidgetState>().statusToPropagate = ModelStatus::SHOW;
-
-                        // c->comp<WidgetBox>().useClassicInterpolation = false;
-                        
-                        // std::cout << str2 << "\n";
                     }
                     else
                     {
@@ -1095,7 +1150,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
 
             if(box.isUnderCursor)
             {
-                box.scrollOffset.y += off.y*0.1;
+                box.scrollOffset.y += off.y*0.05;
 
                 box.scrollOffset.y = clamp(
                     box.scrollOffset.y,

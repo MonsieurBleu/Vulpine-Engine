@@ -8,6 +8,13 @@
 #include <chrono>
 #include <glm/glm.hpp>
 
+#ifdef _WIN32
+    #include <shlwapi.h>
+    #define STR_CASE_STR(str1, str2) StrStrIA(str1, str2)
+#else
+    #define STR_CASE_STR(str1, str2) strcasestr(str1, str2)
+#endif
+
 
 /// TERMINAL
 const std::string TERMINAL_UNDERLINE = "\033[4m";
@@ -131,6 +138,8 @@ void checkHeap();
 
 std::string getFileNameFromPath(const char *path);
 std::string getNameOnlyFromPath(const char *path);
+
+void replace(std::string &str, const std::string &substr, const std::string &newsubstr);
 
 inline constexpr double fromDayMonth(int day, int month)
 {
