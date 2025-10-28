@@ -255,7 +255,7 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                 // buff->read();
                 const char* valueStr = buff->read();
 
-                std::cout << "Flag: " << typeStr << " " << name << " = " << valueStr << std::endl;
+                // std::cout << "Flag: " << typeStr << " " << name << " = " << valueStr << std::endl;
 
                 switch (type) {
                     case Flag::INT:
@@ -266,7 +266,7 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                             WARNING_MESSAGE("Invalid integer value for flag '" + std::string(name) + "': " + std::string(valueStr));
                             intValue = 0;
                         }
-                        std::cout << "Parsed int flag value: " << intValue << std::endl;
+                        // std::cout << "Parsed int flag value: " << intValue << std::endl;
                         data.setFlag<int>(name, intValue);
                         break;
                     }
@@ -278,7 +278,7 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                             WARNING_MESSAGE("Invalid float value for flag '" + std::string(name) + "': " + std::string(valueStr));
                             floatValue = 0.0f;
                         }
-                        std::cout << "Parsed float flag value: " << floatValue << std::endl;
+                        // std::cout << "Parsed float flag value: " << floatValue << std::endl;
                         data.setFlag<float>(name, floatValue);
                         break;
                     }
