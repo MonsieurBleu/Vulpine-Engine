@@ -16,7 +16,7 @@ struct ScriptNameWrapper {
 };
 
 struct Flag : std::enable_shared_from_this<Flag> {
-    GENERATE_ENUM_INLINE(Type,
+    GENERATE_ENUM_FAST_REVERSE(Type,
         INT,
         FLOAT,
         STRING,
@@ -496,10 +496,12 @@ public:
     private:
         std::string name;
         std::vector<Flag::Type> expectedArgTypes;
-        std::function<FlagPtr(const std::vector<FlagPtr>&, Flags&)> func;
+        Flag::Type expectedReturnType;
+        typedef std::function<FlagPtr(const std::vector<FlagPtr>&, Flags&)> FlagFuncType;
+        FlagFuncType func;
 
     public:
-        Function(const std::string& name, std::function<FlagPtr(const std::vector<FlagPtr>&, Flags&)> func)
+        Function(const std::string& name, FlagFuncType func)
             : name(name)
             , func(func)
         {
@@ -507,9 +509,10 @@ public:
                 "Function " + name + " created without argument type checking. This may lead to runtime errors.");
         }
 
-        Function(const std::string& name, const std::vector<Flag::Type>& argTypes, std::function<FlagPtr(const std::vector<FlagPtr>&, Flags&)> func)
+        Function(const std::string& name, Flag::Type expectedReturnType, const std::vector<Flag::Type>& argTypes, FlagFuncType func)
             : name(name)
             , expectedArgTypes(argTypes)
+            , expectedReturnType(expectedReturnType)
             , func(func)
         {
         }
@@ -519,6 +522,20 @@ public:
         const std::string& getName() const
         {
             return name;
+        }
+
+        Flag::Type getReturnType() const
+        {
+            return expectedReturnType;
+        }
+
+        Flag::Type getArgType(size_t index) const
+        {
+            if (index >= expectedArgTypes.size()) {
+                WARNING_MESSAGE("Function " + name + " argument index out of range");
+                return Flag::Type::NONE;
+            }
+            return expectedArgTypes[index];
         }
 
         std::optional<FlagPtr> call(const std::vector<FlagPtr>& args, Flags& flags) const
@@ -534,11 +551,16 @@ public:
 
             for (size_t i = 0; i < expectedArgTypes.size(); i++) {
                 if (expectedArgTypes[i] != args[i]->type) {
+                    // check if cast is possible
+                    if ((expectedArgTypes[i] == Flag::INT && args[i]->type == Flag::FLOAT) ||
+                        (expectedArgTypes[i] == Flag::FLOAT && args[i]->type == Flag::INT)) {
+                        continue; // allow int<->float casting
+                    }
+
                     WARNING_MESSAGE("Function " + name + " called with incorrect argument type for argument " +
                                     std::to_string(i) + ". Expected " +
-                                    std::to_string(static_cast<int>(expectedArgTypes[i])) + ", got " +
-                                    std::to_string(static_cast<int>(args[i]->type)) + ".");
-                    // TODO: maybe try automatically casting?
+                                    Flag::TypeReverseMap[expectedArgTypes[i]] + ", got " +
+                                    Flag::TypeReverseMap[args[i]->type] + ".");
                     return std::nullopt;
                 }
             }
@@ -548,7 +570,7 @@ public:
     };
 
 private:
-    static std::unordered_map<std::string, Function> functions;
+    static inline std::unordered_map<std::string, Function> functions;
 
     struct OperationNode : std::enable_shared_from_this<OperationNode> {
         enum type {
@@ -596,7 +618,21 @@ private:
         }
     };
 
-    // TODO: make the function node
+    struct FunctionNode : OperationNode {
+        std::string functionName;
+
+        std::vector<std::string> argumentStrings;
+
+        FunctionNode(const std::string& fname, const std::vector<std::string>& argStrs)
+            : functionName(fname)
+            , argumentStrings(argStrs)
+        {
+            nodeType = VALUE;
+            expectedChildren = 0;
+        }
+
+        FlagPtr evaluate(Flags& flags) override;
+    };
 
     struct NotOperatorNode : OperationNode {
         NotOperatorNode()
@@ -698,6 +734,7 @@ private:
     public:
         GENERATE_ENUM_FAST_REVERSE(TokenType,
             FLAG,
+            FUNCTION,
             PARENS_OPEN,
             PARENS_CLOSE,
             LOGICAL_AND,

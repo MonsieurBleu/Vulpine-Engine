@@ -501,6 +501,53 @@ Flag::operator FlagWrapper()
     return FlagWrapper(shared_from_this());
 }
 
+FlagPtr LogicBlockParser::FunctionNode::evaluate(Flags& flags) 
+{
+    std::vector<FlagPtr> argValues;
+    Function func = functions[functionName];
+
+    if (func.getName() == "") {
+        WARNING_MESSAGE("Function '" + functionName + "' not found");
+        return Flag::MakeFlag(0);
+    }
+
+    for (int i = 0; i < argumentStrings.size(); i++) {
+        std::string argString = argumentStrings[i];
+        FlagPtr argValue = parse_substring(argString, 0, argString.length(), flags);
+        if (!argValue) {
+            WARNING_MESSAGE("Failed to evaluate argument: " + argString);
+            switch (func.getArgType(i))
+            {
+                case Flag::INT:
+                    argValue = Flag::MakeFlag(0);
+                    break;
+                case Flag::FLOAT:
+                    argValue = Flag::MakeFlag(0.0f);
+                    break;
+                case Flag::STRING:
+                    argValue = Flag::MakeFlag("");
+                    break;
+                case Flag::BOOL:
+                    argValue = Flag::MakeFlag(false);
+                    break;
+                default:
+                    WARNING_MESSAGE("Unsupported argument type for function: " + func.getName());
+                    argValue = Flag::MakeFlag(0);
+                    break;
+            }
+        }
+        argValues.push_back(argValue);
+    }
+
+    std::optional<FlagPtr> result = func.call(argValues, flags);
+    if (!result.has_value()) {
+        WARNING_MESSAGE("Function '" + functionName + "' call failed");
+        return Flag::MakeFlag(0);
+    }
+    
+    return result.value();
+}
+
 FlagPtr LogicBlockParser::NotOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 1) {
@@ -735,24 +782,69 @@ std::vector<LogicBlockParser::Token> LogicBlockParser::tokenize(const std::strin
                     i++;
                 }
                 i++; // consume closing quote
+                std::string tokenStr = str.substr(start, i - start);
+                tokens.emplace_back(Token::TokenType::FLAG, tokenStr);
             } else {
+                // check if it's a function call (basically any word followed by any whitespace and then an opening parenthesis)
+                size_t funcCheckPos = i;
                 while (
-                        i < str.length() && 
-                        !isspace(str[i]) && 
-                        str[i] != '(' && 
-                        str[i] != ')' && 
-                        str.substr(i, 2) != "&&" && 
-                        str.substr(i, 2) != "||" && 
-                        str.substr(i, 2) != "==" && 
-                        str.substr(i, 2) != "!=" && 
-                        str[i] != '<' && 
-                        str[i] != '>'
+                        funcCheckPos < str.length() && 
+                        !isspace(str[funcCheckPos]) && 
+                        str[funcCheckPos] != '(' && 
+                        str[funcCheckPos] != ')' && 
+                        str.substr(funcCheckPos, 2) != "&&" && 
+                        str.substr(funcCheckPos, 2) != "||" && 
+                        str.substr(funcCheckPos, 2) != "==" && 
+                        str.substr(funcCheckPos, 2) != "!=" && 
+                        str[funcCheckPos] != '<' && 
+                        str[funcCheckPos] != '>'
                     ) {
-                    i++;
+                    funcCheckPos++;
+                }
+                size_t tempPos = funcCheckPos;
+                while (tempPos < str.length() && isspace(str[tempPos])) {
+                    tempPos++;
+                }
+                if (tempPos < str.length() && str[tempPos] == '(') {
+                    // it's a function call, go to matching closing parenthesis
+                    i = tempPos + 1; // consume opening parenthesis
+                    int parenCount = 1;
+                    while (i < str.length() && parenCount > 0) {
+                        if (str[i] == '(') {
+                            parenCount++;
+                        } else if (str[i] == ')') {
+                            parenCount--; 
+                        }
+                        i++;
+                    }
+
+                    if (parenCount != 0) {
+                        WARNING_MESSAGE("Unmatched parentheses in function call: " + str.substr(start, i - start));
+                    }
+
+                    std::string tokenStr = str.substr(start, i - start);
+                    tokens.emplace_back(Token::TokenType::FUNCTION, tokenStr);
+                }
+                else {                
+                    // else just parse as a flag/immediate value
+                    while (
+                            i < str.length() && 
+                            !isspace(str[i]) && 
+                            str[i] != '(' && 
+                            str[i] != ')' && 
+                            str.substr(i, 2) != "&&" && 
+                            str.substr(i, 2) != "||" && 
+                            str.substr(i, 2) != "==" && 
+                            str.substr(i, 2) != "!=" && 
+                            str[i] != '<' && 
+                            str[i] != '>'
+                        ) {
+                        i++;
+                    }
+                    std::string tokenStr = str.substr(start, i - start);
+                    tokens.emplace_back(Token::TokenType::FLAG, tokenStr);
                 }
             }
-            std::string tokenStr = str.substr(start, i - start);
-            tokens.emplace_back(Token::TokenType::FLAG, tokenStr);
         }
     }
     return tokens;
@@ -801,6 +893,38 @@ LogicBlockParser::OperationNodePtr LogicBlockParser::Token::toOperationNode(Flag
             }
             WARNING_MESSAGE("Unrecognized flag or value: " + value + ", defaulting to false");
             return std::make_shared<FlagValueNode>(Flag::MakeFlag(false));
+        }
+        case FUNCTION:
+        {
+            // Parse function name and arguments
+            size_t parenOpenPos = value.find('(');
+            size_t parenClosePos = value.rfind(')');
+            if (parenOpenPos == std::string::npos || parenClosePos == std::string::npos || parenClosePos <= parenOpenPos) {
+                WARNING_MESSAGE("Invalid function token: " + value);
+                return nullptr;
+            }
+            std::string functionName = value.substr(0, parenOpenPos);
+            std::string argsStr = value.substr(parenOpenPos + 1, parenClosePos - parenOpenPos - 1);
+
+            // Split arguments by commas, taking care of nested parentheses
+            std::vector<std::string> argumentStrings;
+            size_t lastPos = 0;
+            int parenCount = 0;
+            for (size_t i = 0; i < argsStr.length(); i++) {
+                if (argsStr[i] == '(') {
+                    parenCount++;
+                } else if (argsStr[i] == ')') {
+                    parenCount--;
+                } else if (argsStr[i] == ',' && parenCount == 0) {
+                    argumentStrings.push_back(argsStr.substr(lastPos, i - lastPos));
+                    lastPos = i + 1;
+                }
+            }
+            if (lastPos < argsStr.length()) {
+                argumentStrings.push_back(argsStr.substr(lastPos));
+            }
+
+            return std::make_shared<FunctionNode>(functionName, argumentStrings);
         }
         case LOGICAL_AND: 
             return std::make_shared<LogicalAndOperatorNode>();
