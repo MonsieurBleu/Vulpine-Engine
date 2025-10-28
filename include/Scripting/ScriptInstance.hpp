@@ -1,7 +1,10 @@
+#pragma once
+
 #include <Scripting/LuaBindings.hpp>
 #include <Timer.hpp>
 #include <Utils.hpp>
 #include <Filewatcher.hpp>
+#include <utility>
 
 // typedef std::shared_ptr<sol::state> LuaStateRef;
 
@@ -69,8 +72,8 @@ class ScriptInstance : sol::load_result
 
         const std::string &getFileName() const;
         
-        template<typename ... Args>
-        void run(Args&& ... args)
+        template<typename Ret, typename ... Args>
+        std::optional<Ret> runAndReturn(Args&& ... args)
         {
             if(built && threadState != this->lua_state() )
             {
@@ -81,7 +84,7 @@ class ScriptInstance : sol::load_result
                     <<  threadStateName 
                     << "\', which is not the script's original creator. Execution won't proceed."
                 )
-                return;
+                return std::nullopt;
             }
 
             // NOTIF_MESSAGE(
@@ -92,13 +95,16 @@ class ScriptInstance : sol::load_result
             if(!built && (compileTimer.timeSinceLastTick() > 1.0 || firstCompileTry))
                 compile();
 
+            std::optional<Ret> result = std::nullopt;
             if(built)
             {
                 instanceTimer.start();
                 getGlobalTimer().start();
+                
 
                 try {
-                    (*this)(args...);
+                    Ret v = (*this)(args...);
+                    result = v;
                 }
                 catch (const sol::error &e) {
                     if (errorTimer.timeSinceLastTick() > 1.0) {
@@ -128,5 +134,70 @@ class ScriptInstance : sol::load_result
                 instanceTimer.hold();
                 getGlobalTimer().hold();
             }
+
+            return result;
         };
+
+    template<typename ... Args>
+    void run(Args&& ... args)
+    {
+        if(built && threadState != this->lua_state() )
+        {
+            ERROR_MESSAGE(
+                "Script \'" 
+                << file 
+                << "\' called from the thread \'" 
+                <<  threadStateName 
+                << "\', which is not the script's original creator. Execution won't proceed."
+            )
+            return;
+        }
+
+        // NOTIF_MESSAGE(
+        //     "compile timer last time" <<
+        //     compileTimer.timeSinceLastTickMS() << "ms " << 
+        //     compileTimer.lasTickTime.time_since_epoch().count()
+        // )
+        if(!built && (compileTimer.timeSinceLastTick() > 1.0 || firstCompileTry))
+            compile();
+
+        if(built)
+        {
+            instanceTimer.start();
+            getGlobalTimer().start();
+            
+
+            try {
+                (*this)(args...);
+            }
+            catch (const sol::error &e) {
+                if (errorTimer.timeSinceLastTick() > 1.0) {
+                    errorTimer.tick();
+                    ERROR_MESSAGE("Error while running script \'" << file << "\': " << e.what())
+                }
+            }
+            catch (const std::exception &e) {
+                if (errorTimer.timeSinceLastTick() > 1.0) {
+                    errorTimer.tick();
+                    ERROR_MESSAGE("Exception while running script \'" << file << "\': " << e.what())
+                }
+            }
+            catch (...) {
+                if (errorTimer.timeSinceLastTick() > 1.0) {
+                    errorTimer.tick();
+                    ERROR_MESSAGE("Unknown exception while running script \'" << file << "\'")
+                }
+            }
+
+            // sol::protected_function func = get<sol::protected_function>();
+            // func(args...);
+
+            
+
+    
+            instanceTimer.hold();
+            getGlobalTimer().hold();
+        }
+    }
+    
 };
