@@ -10,6 +10,13 @@
     };                                                  \
     static std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)}; \
 
+    #define GENERATE_ENUM_INLINE(name, ...)                        \
+    enum name                                           \
+    {                                                   \
+        __VA_ARGS__                                     \
+    };                                                  \
+    static inline std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)}; \
+
 #define GENERATE_ENUM_FAST_REVERSE(name, ...)      \
     enum name                                           \
     {                                                   \
