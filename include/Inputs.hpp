@@ -52,8 +52,24 @@ struct GenericInput
 {
     std::string inputName;
     int keyCode;
+    bool useLuaCallback = false;
     InputCallback callback;
+    std::string luaCallbackFilename;
     InputFilter filter;
+
+    GenericInput(std::string inputName, int keyCode, InputCallback callback, InputFilter filter)
+        : inputName{inputName}, keyCode{keyCode}, callback{callback}, filter{filter}
+    {
+    }
+
+    GenericInput(std::string inputName, int keyCode, std::string luaCallbackFilename, InputFilter filter)
+        : inputName{inputName}, keyCode{keyCode}, useLuaCallback(true), luaCallbackFilename{luaCallbackFilename}, filter{filter}
+    {
+    }
+
+    GenericInput() = default;
+
+    void operator()() const;
 };
 
 struct EventInput : public GenericInput
@@ -70,6 +86,12 @@ struct EventInput : public GenericInput
     {
     }
 
+    EventInput(std::string inputName, int keyCode, std::string luaCallbackFilename, InputFilter filter, int mods, int action,
+            bool isScanCode = true)
+    : GenericInput{inputName, keyCode, luaCallbackFilename, filter}, mods{mods}, action{action}, isScanCode{isScanCode}
+    {
+    }
+
     EventInput() = default;
 };
 
@@ -77,6 +99,11 @@ struct ContinuousInput : public GenericInput
 {
     ContinuousInput(std::string inputName, int keyCode, InputCallback callback, InputFilter filter)
         : GenericInput{inputName, keyCode, callback, filter}
+    {
+    }
+
+    ContinuousInput(std::string inputName, int keyCode, std::string luaCallbackFilename, InputFilter filter)
+        : GenericInput{inputName, keyCode, luaCallbackFilename, filter}
     {
     }
 };
@@ -94,8 +121,12 @@ namespace InputManager
 
     EventInput &addEventInput(std::string inputName, int keyCode, int mods, int action, InputCallback callback,
                             InputFilter filter = Filters::always, bool isScanCode = true);
+    EventInput &addEventInput(std::string inputName, int keyCode, int mods, int action, std::string luaCallbackFilename,
+                            InputFilter filter = Filters::always, bool isScanCode = true);
     
     ContinuousInput &addContinuousInput(std::string inputName, int keyCode, InputCallback callback,
+                                        InputFilter filter = Filters::always);
+    ContinuousInput &addContinuousInput(std::string inputName, int keyCode, std::string luaCallbackFilename,
                                         InputFilter filter = Filters::always);
 
     void processEventInput(const GLFWKeyInfo &event);
