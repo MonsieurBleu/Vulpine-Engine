@@ -501,9 +501,11 @@ Flag::operator FlagWrapper()
     return FlagWrapper(shared_from_this());
 }
 
-FlagPtr LogicBlockParser::FunctionNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::FunctionNode::evaluate(Flags& flags) 
 {
-    std::vector<FlagPtr> argValues;
+    static std::vector<FlagPtr> argValues(16);
+    argValues.resize(0);
+    
     Function func = functions[functionName];
 
     if (func.getName() == "") {
@@ -548,7 +550,7 @@ FlagPtr LogicBlockParser::FunctionNode::evaluate(Flags& flags)
     return result.value();
 }
 
-FlagPtr LogicBlockParser::NotOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::NotOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 1) {
         WARNING_MESSAGE("NotOperatorNode must have exactly one child");
@@ -560,7 +562,7 @@ FlagPtr LogicBlockParser::NotOperatorNode::evaluate(Flags& flags)
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlockParser::AdditionOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::AdditionOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("AdditionOperatorNode must have exactly two children");
@@ -581,7 +583,7 @@ FlagPtr LogicBlockParser::AdditionOperatorNode::evaluate(Flags& flags)
     }
 }
 
-FlagPtr LogicBlockParser::MultiplicationOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::MultiplicationOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("MultiplicationOperatorNode must have exactly two children");
@@ -603,7 +605,7 @@ FlagPtr LogicBlockParser::MultiplicationOperatorNode::evaluate(Flags& flags)
 }
 
 
-FlagPtr LogicBlockParser::ComparisonOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::ComparisonOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("ComparisonOperatorNode must have exactly two children");
@@ -635,7 +637,7 @@ FlagPtr LogicBlockParser::ComparisonOperatorNode::evaluate(Flags& flags)
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlockParser::EqualityOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::EqualityOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("EqualityOperatorNode must have exactly two children");
@@ -660,7 +662,7 @@ FlagPtr LogicBlockParser::EqualityOperatorNode::evaluate(Flags& flags)
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlockParser::LogicalAndOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::LogicalAndOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("LogicalAndOperatorNode must have exactly two children");
@@ -674,7 +676,7 @@ FlagPtr LogicBlockParser::LogicalAndOperatorNode::evaluate(Flags& flags)
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlockParser::LogicalOrOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::LogicalOrOperatorNode::evaluate(Flags& flags) 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("LogicalOrOperatorNode must have exactly two children");
@@ -688,7 +690,7 @@ FlagPtr LogicBlockParser::LogicalOrOperatorNode::evaluate(Flags& flags)
     return Flag::MakeFlag(result);
 }
 
-std::vector<LogicBlockParser::Token> LogicBlockParser::tokenize(const std::string& str)
+std::vector<LogicBlock::Token> LogicBlock::tokenize(const std::string& str)
 {
     std::vector<Token> tokens;
     size_t i = 0;
@@ -850,7 +852,7 @@ std::vector<LogicBlockParser::Token> LogicBlockParser::tokenize(const std::strin
     return tokens;
 }
 
-LogicBlockParser::OperationNodePtr LogicBlockParser::Token::toOperationNode(Flags& flags) const
+LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode(Flags& flags) const
 {
     switch (type) {
         case FLAG: {
@@ -908,6 +910,7 @@ LogicBlockParser::OperationNodePtr LogicBlockParser::Token::toOperationNode(Flag
 
             // Split arguments by commas, taking care of nested parentheses
             std::vector<std::string> argumentStrings;
+            argumentStrings.reserve(4);
             size_t lastPos = 0;
             int parenCount = 0;
             for (size_t i = 0; i < argsStr.length(); i++) {
@@ -958,7 +961,7 @@ LogicBlockParser::OperationNodePtr LogicBlockParser::Token::toOperationNode(Flag
     }
 }
 
-LogicBlockParser::OperationNodePtr LogicBlockParser::buildOperationTree(std::vector<Token> tokens, Flags& flags)
+LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> tokens, Flags& flags)
 {
     if (tokens.empty()) {
         WARNING_MESSAGE("No tokens to build operation tree");
@@ -1057,7 +1060,7 @@ LogicBlockParser::OperationNodePtr LogicBlockParser::buildOperationTree(std::vec
     return currentNode;
 }
 
-FlagPtr LogicBlockParser::parse_substring(const std::string& str, size_t idx_start, size_t idx_end, Flags& flags)
+FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, size_t idx_end, Flags& flags)
 {
     std::string substring = str.substr(idx_start, idx_end - idx_start);
 
@@ -1224,7 +1227,7 @@ FlagPtr LogicBlockParser::parse_substring(const std::string& str, size_t idx_sta
     }
 }
 
-void LogicBlockParser::parse_string(std::string& str, Flags& flags)
+void LogicBlock::parse_string(std::string& str, Flags& flags)
 {
     std::string logicBlockStart = "$(";
     std::string logicBlockEnd = ")";

@@ -490,7 +490,7 @@ public:
 
 static inline Flags flags;
 
-class LogicBlockParser {
+class LogicBlock {
 public:
     class Function {
     private:
