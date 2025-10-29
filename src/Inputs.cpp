@@ -1,3 +1,5 @@
+#include "AssetManager.hpp"
+#include "Scripting/ScriptInstance.hpp"
 #include <Globals.hpp>
 #include <Inputs.hpp>
 #include <Utils.hpp>
@@ -41,10 +43,26 @@ EventInput &InputManager::addEventInput(std::string inputName, int keyCode, int 
     return eventInputs.back();
 };
 
+EventInput &InputManager::addEventInput(std::string inputName, int keyCode, int mods, int action,
+                                        std::string luaCallbackFilename, InputFilter filter, bool isScanCode)
+{
+    EventInput input(inputName, keyCode, luaCallbackFilename, filter, mods, action, isScanCode);
+    eventInputs.push_back(input);
+    return eventInputs.back();
+};
+
 ContinuousInput &InputManager::addContinuousInput(std::string inputName, int keyCode, InputCallback callback,
                                                   InputFilter filter)
 {
     ContinuousInput input(inputName, keyCode, callback, filter);
+    continuousInputs.push_back(input);
+    return continuousInputs.back();
+};
+
+ContinuousInput &InputManager::addContinuousInput(std::string inputName, int keyCode,
+                                                  std::string luaCallbackFilename, InputFilter filter)
+{
+    ContinuousInput input(inputName, keyCode, luaCallbackFilename, filter);
     continuousInputs.push_back(input);
     return continuousInputs.back();
 };
@@ -77,7 +95,7 @@ void InputManager::processEventInput(const GLFWKeyInfo &event)
         {
             if (handler.filter())
             {
-                handler.callback();
+                handler();
             }
         }
     }
@@ -91,7 +109,7 @@ void InputManager::processContinuousInputs()
         {
             if (handler.filter())
             {
-                handler.callback();
+                handler();
             }
         }
     }
@@ -261,4 +279,18 @@ vec2 InputManager::getMousePosition()
     double x, y;
     glfwGetCursorPos(globals.getWindow(), &x, &y);
     return vec2(x, y);
+}
+
+void GenericInput::operator()() const
+{
+    if (useLuaCallback)
+    {
+        if (Loader<ScriptInstance>::loadingInfos.find(luaCallbackFilename) != Loader<ScriptInstance>::loadingInfos.end()) {
+            Loader<ScriptInstance>::get(luaCallbackFilename).run();
+        }
+    }
+    else
+    {
+        callback();
+    }
 }

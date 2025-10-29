@@ -229,4 +229,30 @@ std::ostream& operator<<(std::ostream& os, const glm::mat4& u);
 
 std::ostream& operator<<(std::ostream& os, const glm::quat& u);
 
+inline void str2lower(char* s) {
+    for (; *s; ++s) *s = tolower(*s);
+}
+
+inline void str2upper(char* s) {
+    for (; *s; ++s) *s = toupper(*s);
+}
+
+inline bool isInteger(const std::string& s, int& value) {
+    if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false;
+
+    char* p;
+    value = strtol(s.c_str(), &p, 10);
+
+    return (*p == 0);
+}
+
+inline bool isFloat(const std::string& s, float& value) {
+    if (s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+') && (s[0] != '.'))) return false;
+
+    char* p;
+    value = strtof(s.c_str(), &p);
+
+    return (*p == 0);
+}
+
 #endif
