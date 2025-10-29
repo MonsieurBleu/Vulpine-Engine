@@ -128,6 +128,8 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
         vec3 *normals = (vec3 *)mesh.mNormals;
         infos.packedinfos.resize(infos.verticesCount);
 
+        std::cout << "Color Channels : " << mesh.GetNumColorChannels()  << "\n";
+
         for(uint i = 0; i < infos.verticesCount; i++)
         {
             uvec4 &o = infos.packedinfos[i];
@@ -219,26 +221,62 @@ void VEAC::getElementMeshSkinned(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, S
     infos.weightsID = vWid;
 };
 
-/*
-    TODO : adapt to new bone ids with the Stencil_BoneMap
-*/
-std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder, VEAC_EXPORT_FORMAT format)
+void VEAC::getElementMeshSkinned(aiMesh &mesh, SkeletonRef target, STENCIL_MeshInfos &infos)
 {
-    VulpineMesh_Header h;
-    STENCIL_MeshInfos infos;
+    vec4 *vW = new vec4[mesh.mNumVertices];
+    ivec4 *vWid = new ivec4[mesh.mNumVertices];
 
-    if (mesh.HasBones())
+    for (unsigned int i = 0; i < mesh.mNumVertices; i++)
     {
-        h.type = VulpineMesh_Type::ELEMENTS_SKINNED;
-        getElementMesh(mesh, infos, format);
-        getElementMeshSkinned(mesh, bonesInfosMap, infos);
-    }
-    else
-    {
-        h.type = VulpineMesh_Type::ELEMENTS;
-        getElementMesh(mesh, infos, format);
+        vWid[i] = ivec4(-1);
+        vW[i] = vec4(0);
     }
 
+    for (unsigned int i = 0; i < mesh.mNumBones; i++)
+    {
+        aiBone &bone = *mesh.mBones[i];
+
+        for (unsigned int j = 0; j < bone.mNumWeights; j++)
+        {
+            unsigned int vid = bone.mWeights[j].mVertexId;
+            float w = bone.mWeights[j].mWeight;
+
+            int off = 0;
+            while (vWid[vid][off] != -1 && off <= 3) off++;
+
+            std::string boneName = bone.mName.C_Str();
+            replace(boneName, "mixamorig:", "");
+
+            auto elem = target->boneNamesMap.find(boneName);
+
+            if(elem == target->boneNamesMap.end())
+            {
+                continue;
+                // ERROR_MESSAGE(
+                //     "Can't extract skinning information in mesh '" << mesh.mName.C_Str() << 
+                //     "'. Because bone '" << boneName << "' doens't correspond to any bone in the target skeleton. This mesh will have broken skinning informations."
+                // )
+                // infos.weights = vW;
+                // infos.weightsID = vWid;
+                // return;
+            }
+
+            vWid[vid][off] = elem->second;
+
+            vW[vid][off] = w;
+        }
+    }
+
+    /*
+        TODO : add a check to see if all meshses have at least one bone
+    */
+
+    infos.weights = vW;
+    infos.weightsID = vWid;
+}
+
+std::string saveAsVulpineMesh__BASE(aiMesh &mesh, std::string folder, VEAC_EXPORT_FORMAT format, VulpineMesh_Header &h, STENCIL_MeshInfos &infos)
+{
     h.facesCount = infos.facesCount;
     h.VerticesCount = infos.verticesCount;
 
@@ -308,6 +346,46 @@ std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap
         
         return "";
     }
+}
+
+std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, SkeletonRef target, std::string folder, VEAC_EXPORT_FORMAT format)
+{
+    VulpineMesh_Header h;
+    STENCIL_MeshInfos infos;
+
+    if (mesh.HasBones())
+    {
+        h.type = VulpineMesh_Type::ELEMENTS_SKINNED;
+        getElementMesh(mesh, infos, format);
+        getElementMeshSkinned(mesh, target, infos);
+    }
+    else
+    {
+        h.type = VulpineMesh_Type::ELEMENTS;
+        getElementMesh(mesh, infos, format);
+    }
+
+    return saveAsVulpineMesh__BASE(mesh, folder, format, h, infos);
+}
+
+std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder, VEAC_EXPORT_FORMAT format)
+{
+    VulpineMesh_Header h;
+    STENCIL_MeshInfos infos;
+
+    if (mesh.HasBones())
+    {
+        h.type = VulpineMesh_Type::ELEMENTS_SKINNED;
+        getElementMesh(mesh, infos, format);
+        getElementMeshSkinned(mesh, bonesInfosMap, infos);
+    }
+    else
+    {
+        h.type = VulpineMesh_Type::ELEMENTS;
+        getElementMesh(mesh, infos, format);
+    }
+
+    return saveAsVulpineMesh__BASE(mesh, folder, format, h, infos);
 }
 
 
@@ -726,7 +804,7 @@ int LCSubstr(const std::string &x, const std::string &y){
         }
     }
 
-    std::cout << "\t" << longest;
+    // std::cout << "\t" << longest;
 
     return longest.length();
 }
@@ -976,7 +1054,7 @@ void VEAC::retargetVulpineAnimation(
         std::reverse(i.begin(), i.end());
 
         /* find max length loop */
-        uint size = 4;
+        uint size = 0;
         bool noGoodCandidate = true;
         for(auto &j : i) if(j.score >= 1.f)
         {
@@ -987,6 +1065,8 @@ void VEAC::retargetVulpineAnimation(
         }
 
         std::vector<AnimationKeyframeData> combinedAnimations(size);
+
+        // std::cout << size << "\t" << noGoodCandidate << "\n";
 
         /* Combine Animations */
         aiNodeAnim *nodea_tmp = anim.mChannels[i.front().originalId];
@@ -1002,6 +1082,24 @@ void VEAC::retargetVulpineAnimation(
         {
             aiNodeAnim *nodea = anim.mChannels[j.originalId];
             uint curSize = nodea->mNumPositionKeys;
+
+            if(size == 1)
+            {
+                ModelState3D tmpState;
+
+                tmpState
+                    .setPosition(toGLM(nodea->mPositionKeys[0].mValue))
+                    .setQuaternion(toGLM(nodea->mRotationKeys[0].mValue))
+                    .setScale(toGLM(nodea->mScalingKeys[0].mValue))
+                    .update()
+                ;
+
+                combinedTransforms[0] *= tmpState.modelMatrix;
+
+                combinedAnimations[0].rotation = tmpState.quaternion;
+                combinedAnimations[0].translation = tmpState.position;
+                combinedAnimations[0].scale = tmpState.scale;
+            }
 
             for(uint k = 0; k < size; k++)
             {
@@ -1067,10 +1165,13 @@ void VEAC::retargetVulpineAnimation(
 
             ModelState3D tmpState = toModelState(matrix);
 
-            combinedAnimations[j].translation = tmpState.position;
-            combinedAnimations[j].rotation = tmpState.quaternion;
-            combinedAnimations[j].scale = tmpState.scale;
-            combinedAnimations[j].time = (float)durationSeconds * (float)j / (float)(size-1);
+            if(size != 1 && !noGoodCandidate)
+            {
+                combinedAnimations[j].translation = tmpState.position;
+                combinedAnimations[j].rotation = tmpState.quaternion;
+                combinedAnimations[j].scale = tmpState.scale;
+                combinedAnimations[j].time = (float)durationSeconds * (float)j / (float)(size-1);
+            }
             
             if(noGoodCandidate)
             {
@@ -1089,7 +1190,7 @@ void VEAC::retargetVulpineAnimation(
                 combinedAnimations[j].translation,
                 cnt,
                 skeleton->boneNames[cnt],
-                destBone.rotation,
+                destBone.quaternion,
                 destBone.position,
                 skeleton->at(cnt).parent,
                 globals.appTime

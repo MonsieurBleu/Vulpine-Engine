@@ -220,7 +220,7 @@ GLuint MeshModel3D::drawVAO(bool depthOnly)
         // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *vao.eboHandle);
         glDrawElements(defaultMode, vao.nbFaces,  GL_UNSIGNED_INT, 0);
     }
-    else
+    else if(vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount())
         glDrawArrays(defaultMode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
     resetDrawMode();

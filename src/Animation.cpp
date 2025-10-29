@@ -60,7 +60,8 @@ AnimationRef Animation::load(const std::string &filename)
     // AnimationRef anim = std::make_shared<Animation>(name, header.duration, keyframes, skeleton);
     // anim->currentKeyframeIndex.resize(keyframes.size(), 0);
     anim->length = header.duration;
-    anim->name = name;
+    // anim->name = name;
+    anim->name = getNameOnlyFromPath(filename.c_str());
     anim->keyframes = keyframes;
     return anim;
 }
