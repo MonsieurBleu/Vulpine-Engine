@@ -18,6 +18,8 @@
 
 #include <MappedEnum.hpp>
 
+#include <Graphics/Skeleton.hpp>
+
 namespace VulpineAssetConvertor
 {
     /**
@@ -31,10 +33,21 @@ namespace VulpineAssetConvertor
     void getElementMeshSkinned(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, STENCIL_MeshInfos &infos);
 
     /**
+     * @brief Translate an assimp mesh's bones into a stencil bonemap for further conversions
+     */
+    void getElementMeshSkinned(aiMesh &mesh, SkeletonRef target, STENCIL_MeshInfos &infos);
+
+    /**
      * @brief Convert an assimp mesh to vulpine mesh and saves it inside the given folder
      * @return Saved file name
      */
     std::string saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder = "", VEAC_EXPORT_FORMAT format = FORMAT_DEFAULT);
+
+    /**
+     * @brief Convert an assimp mesh to vulpine mesh and saves it inside the given folder
+     * @return Saved file name
+     */
+    std::string saveAsVulpineMesh(aiMesh &mesh, SkeletonRef target, std::string folder = "", VEAC_EXPORT_FORMAT format  = FORMAT_DEFAULT);
 
 
     /**
@@ -91,9 +104,9 @@ namespace VulpineAssetConvertor
     GENERATE_ENUM_FAST_REVERSE(SceneConvertOption,
         OBJECT_AS_ENTITY,
         SCENE_AS_ENTITY,
-        // IGNORE_MESH,
+        IGNORE_MESH,
         EXPORT_ANIMATIONS,
-        RETARGET_ANIMATIONS,
+        RETARGET_SKELETON,
         // CREATE_TOP_PRIORITY_MOD
     )
 

@@ -412,6 +412,7 @@ SkeletonRef& Loader<SkeletonRef>::loadFromInfos()
             tmp.update();
             b.t = tmp.modelMatrix;
             r->boneNames.push_back(member);
+            r->boneNamesMap[member] = r->boneNames.size()-1;
             r->push_back(b);
         }
     }

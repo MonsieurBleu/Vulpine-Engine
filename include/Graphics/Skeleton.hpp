@@ -28,6 +28,7 @@ public:
     std::string name;
 
     std::vector<std::string> boneNames;
+    std::unordered_map<std::string, int> boneNamesMap;
 
     const SkeletonBone &operator[](int i);
     void load(const char *filename);
