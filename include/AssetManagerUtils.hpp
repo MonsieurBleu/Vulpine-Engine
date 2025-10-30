@@ -50,7 +50,8 @@ constexpr auto type_name() {
             return check->second;} \
         auto &r = loadedAssets[name]; \
         PRINT_LOADER_DEBUG_CREATE \
-        buff->setHead(values); 
+        buff->setHead(values);  \
+        buff->parseFlagsScripting();
 
     #define EXIT_ROUTINE_AND_RETURN end = buff->data + buff->getReadHead(); return r;
 
@@ -139,7 +140,7 @@ constexpr auto type_name() {
     #define DATA_READ_FUNC_ENTITY(T) template<> \
         T DataLoader<T>::read(VulpineTextBuffRef buff, Entity *e) 
 
-    #define DATA_READ_INIT(T) T data;
+    #define DATA_READ_INIT(T) T data; buff->parseFlagsScripting();
 
     #define DATA_READ_END return data;
 

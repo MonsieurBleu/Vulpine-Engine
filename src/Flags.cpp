@@ -1,6 +1,8 @@
 #include "Flags.hpp"
+#include "AssetManager.hpp"
 #include "AssetManagerUtils.hpp"
 #include "Utils.hpp"
+
 
 
 FlagPtr Flag::MakeFlag(int value) {
@@ -44,13 +46,15 @@ FlagPtr Flag::MakeFlagFromScript<bool>(const std::string& scriptName) {
 }
 
 FlagWrapper& Flags::getFlag(const std::string& name) {
-    auto it = flags.find(name);
-    if (it != flags.end()) {
-        return it->second;
-    }
+    // auto it = .find(name);
+    // if (it != .end()) {
+    //     return it->second;
+    // }
 
-    flags[name] = FlagWrapper();
-    return flags[name];
+    // [name] = FlagWrapper();
+    // return [name];
+
+    return Loader<FlagWrapper>::get(name);
 }
 
 Flag& Flag::operator=(int v)
@@ -196,32 +200,45 @@ std::string Flag::typeToString() {
     }
 }
 
-DATA_WRITE_FUNC_INIT(Flags)
+// DATA_WRITE_FUNC_INIT(Flags)
+template <>
+VulpineTextOutputRef DataLoader<Flags>::write(const Flags &data, VulpineTextOutputRef out) 
 {
-    std::vector<std::pair<std::string, FlagWrapper>> valueFlags = data.getAllByValueFlags();
+    out->write("~ ", 2);
     out->Entry();
-    out->write("ValueFlags", sizeof("ValueFlags") - 1);
+    out->write("Flags",sizeof("Flags") -1);
     out->Tabulate();
-    for (const auto& pair : valueFlags) {
+
+        std::vector<std::pair<std::string, FlagWrapper>> valueFlags = data.getAllByValueFlags();
         out->Entry();
-        std::string s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"" + pair.second->as_string() + "\"";
-        out->write(CONST_STRING_SIZED(s));
-    }
-    out->Break();
-    std::vector<std::pair<std::string, FlagWrapper>> scriptFlags = data.getAllFlags();
-    out->Entry();
-    out->write("ScriptFlags", sizeof("ScriptFlags") - 1);
-    out->Tabulate();
-    for (const auto& pair : scriptFlags) {
-        if (pair.second->isScripted) {
+        out->write("ValueFlags", sizeof("ValueFlags") - 1);
+        out->Tabulate();
+            for (const auto& pair : valueFlags) {
+                out->Entry();
+                std::string s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"" + pair.second->as_string() + "\"";
+                out->write(CONST_STRING_SIZED(s));
+            }    
+        out->Break();
+        
+        if(!data.writeAsSaveFileMode)
+        {
+            std::vector<std::pair<std::string, FlagWrapper>> scriptFlags = data.getAllFlags();
             out->Entry();
-            std::string s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"" + ((ScriptFlagBase*)(pair.second.flag.get()))->luaScriptName + "\"";
-            out->write(CONST_STRING_SIZED(s));
+            out->write("ScriptFlags", sizeof("ScriptFlags") - 1);
+            out->Tabulate();
+                for (const auto& pair : scriptFlags) {
+                    if (pair.second->isScripted) {
+                        out->Entry();
+                        std::string s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"" + ((ScriptFlagBase*)(pair.second.flag.get()))->luaScriptName + "\"";
+                        out->write(CONST_STRING_SIZED(s));
+                    }
+                }
+            out->Break();
         }
-    }
+
     out->Break();
+    return out;
 }
-DATA_WRITE_END_FUNC
 
 template <> 
 Flags DataLoader<Flags>::read(VulpineTextBuffRef buff) 
@@ -501,7 +518,7 @@ Flag::operator FlagWrapper()
     return FlagWrapper(shared_from_this());
 }
 
-FlagPtr LogicBlock::FunctionNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::FunctionNode::evaluate() 
 {
     static std::vector<FlagPtr> argValues(16);
     argValues.resize(0);
@@ -515,7 +532,7 @@ FlagPtr LogicBlock::FunctionNode::evaluate(Flags& flags)
 
     for (int i = 0; i < argumentStrings.size(); i++) {
         std::string argString = argumentStrings[i];
-        FlagPtr argValue = parse_substring(argString, 0, argString.length(), flags);
+        FlagPtr argValue = parse_substring(argString, 0, argString.length());
         if (!argValue) {
             WARNING_MESSAGE("Failed to evaluate argument: " + argString);
             switch (func.getArgType(i))
@@ -541,7 +558,7 @@ FlagPtr LogicBlock::FunctionNode::evaluate(Flags& flags)
         argValues.push_back(argValue);
     }
 
-    std::optional<FlagPtr> result = func.call(argValues, flags);
+    std::optional<FlagPtr> result = func.call(argValues);
     if (!result.has_value()) {
         WARNING_MESSAGE("Function '" + functionName + "' call failed");
         return Flag::MakeFlag(0);
@@ -550,27 +567,27 @@ FlagPtr LogicBlock::FunctionNode::evaluate(Flags& flags)
     return result.value();
 }
 
-FlagPtr LogicBlock::NotOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::NotOperatorNode::evaluate() 
 {
     if (children.size() != 1) {
         WARNING_MESSAGE("NotOperatorNode must have exactly one child");
         return Flag::MakeFlag(false);
     }
 
-    FlagPtr operandValue = children[0]->evaluate(flags);
+    FlagPtr operandValue = children[0]->evaluate();
     bool result = Flag::logicalNot(operandValue);
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::AdditionOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::AdditionOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("AdditionOperatorNode must have exactly two children");
         return Flag::MakeFlag(0);
     }
 
-    FlagPtr leftValue = children[0]->evaluate(flags);
-    FlagPtr rightValue = children[1]->evaluate(flags);
+    FlagPtr leftValue = children[0]->evaluate();
+    FlagPtr rightValue = children[1]->evaluate();
 
     switch (additionType) {
         case ADD:
@@ -583,15 +600,15 @@ FlagPtr LogicBlock::AdditionOperatorNode::evaluate(Flags& flags)
     }
 }
 
-FlagPtr LogicBlock::MultiplicationOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::MultiplicationOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("MultiplicationOperatorNode must have exactly two children");
         return Flag::MakeFlag(0);
     }
 
-    FlagPtr leftValue = children[0]->evaluate(flags);
-    FlagPtr rightValue = children[1]->evaluate(flags);
+    FlagPtr leftValue = children[0]->evaluate();
+    FlagPtr rightValue = children[1]->evaluate();
 
     switch (multiplicationType) {
         case MULTIPLY:
@@ -605,15 +622,15 @@ FlagPtr LogicBlock::MultiplicationOperatorNode::evaluate(Flags& flags)
 }
 
 
-FlagPtr LogicBlock::ComparisonOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::ComparisonOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("ComparisonOperatorNode must have exactly two children");
         return Flag::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate(flags);
-    FlagPtr rightValue = children[1]->evaluate(flags);
+    FlagPtr leftValue = children[0]->evaluate();
+    FlagPtr rightValue = children[1]->evaluate();
 
     bool result = false;
     switch (comparisonType) {
@@ -637,15 +654,15 @@ FlagPtr LogicBlock::ComparisonOperatorNode::evaluate(Flags& flags)
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::EqualityOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::EqualityOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("EqualityOperatorNode must have exactly two children");
         return Flag::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate(flags);
-    FlagPtr rightValue = children[1]->evaluate(flags);
+    FlagPtr leftValue = children[0]->evaluate();
+    FlagPtr rightValue = children[1]->evaluate();
 
     bool result = false;
     switch (equalityType) {
@@ -662,37 +679,36 @@ FlagPtr LogicBlock::EqualityOperatorNode::evaluate(Flags& flags)
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::LogicalAndOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::LogicalAndOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("LogicalAndOperatorNode must have exactly two children");
         return Flag::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate(flags);
-    FlagPtr rightValue = children[1]->evaluate(flags);
+    FlagPtr leftValue = children[0]->evaluate();
+    FlagPtr rightValue = children[1]->evaluate();
 
     bool result = Flag::logicalAnd(leftValue, rightValue);
     return Flag::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::LogicalOrOperatorNode::evaluate(Flags& flags) 
+FlagPtr LogicBlock::LogicalOrOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
         WARNING_MESSAGE("LogicalOrOperatorNode must have exactly two children");
         return Flag::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate(flags);
-    FlagPtr rightValue = children[1]->evaluate(flags);
+    FlagPtr leftValue = children[0]->evaluate();
+    FlagPtr rightValue = children[1]->evaluate();
 
     bool result = Flag::logicalOr(leftValue, rightValue);
     return Flag::MakeFlag(result);
 }
 
-std::vector<LogicBlock::Token> LogicBlock::tokenize(const std::string& str)
+void LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens)
 {
-    std::vector<Token> tokens;
     size_t i = 0;
     while (i < str.length()) {
         if (isspace(str[i])) {
@@ -709,12 +725,12 @@ std::vector<LogicBlock::Token> LogicBlock::tokenize(const std::string& str)
             i++;
             continue;
         }
-        else if (str.substr(i, 2) == "&&") {
+        else if (str[i] == '&' && str[i+1] == '&') {
             tokens.emplace_back(Token::TokenType::LOGICAL_AND, "&&");
             i += 2;
             continue;
         }
-        else if (str.substr(i, 2) == "||") {
+        else if (str[i] == '|' && str[i+1] == '|') {
             tokens.emplace_back(Token::TokenType::LOGICAL_OR, "||");
             i += 2;
             continue;
@@ -724,12 +740,12 @@ std::vector<LogicBlock::Token> LogicBlock::tokenize(const std::string& str)
             i += 1;
             continue;
         }
-        else if (str.substr(i, 2) == "==") {
+        else if (str[i] == '=' && str[i+1] == '=') {
             tokens.emplace_back(Token::TokenType::EQUALS, "==");
             i += 2;
             continue;
         }
-        else if (str.substr(i, 2) == "!=") {
+        else if (str[i] == '!' && str[i+1] == '=') {
             tokens.emplace_back(Token::TokenType::NOT_EQUALS, "!=");
             i += 2;
             continue;
@@ -794,10 +810,10 @@ std::vector<LogicBlock::Token> LogicBlock::tokenize(const std::string& str)
                         !isspace(str[funcCheckPos]) && 
                         str[funcCheckPos] != '(' && 
                         str[funcCheckPos] != ')' && 
-                        str.substr(funcCheckPos, 2) != "&&" && 
-                        str.substr(funcCheckPos, 2) != "||" && 
-                        str.substr(funcCheckPos, 2) != "==" && 
-                        str.substr(funcCheckPos, 2) != "!=" && 
+                        !(str[i] == '&' && str[i+1] == '&')&&
+                        !(str[i] == '|' && str[i+1] == '|')&&
+                        !(str[i] == '=' && str[i+1] == '=')&&
+                        !(str[i] == '!' && str[i+1] == '=')&&
                         str[funcCheckPos] != '<' && 
                         str[funcCheckPos] != '>'
                     ) {
@@ -834,10 +850,10 @@ std::vector<LogicBlock::Token> LogicBlock::tokenize(const std::string& str)
                             !isspace(str[i]) && 
                             str[i] != '(' && 
                             str[i] != ')' && 
-                            str.substr(i, 2) != "&&" && 
-                            str.substr(i, 2) != "||" && 
-                            str.substr(i, 2) != "==" && 
-                            str.substr(i, 2) != "!=" && 
+                            !(str[i] == '&' && str[i+1] == '&')&&
+                            !(str[i] == '|' && str[i+1] == '|')&&
+                            !(str[i] == '=' && str[i+1] == '=')&&
+                            !(str[i] == '!' && str[i+1] == '=')&&
                             str[i] != '<' && 
                             str[i] != '>'
                         ) {
@@ -849,10 +865,9 @@ std::vector<LogicBlock::Token> LogicBlock::tokenize(const std::string& str)
             }
         }
     }
-    return tokens;
 }
 
-LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode(Flags& flags) const
+LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
 {
     switch (type) {
         case FLAG: {
@@ -877,9 +892,9 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode(Flags& flags) co
             }
             // Next check for function calls (not implemented yet)
             // Finally, if it's formated like a flag `${flag_name}`, extract the flag name
-            if (value.length() >= 4 && value.substr(0, 2) == "${" && value.back() == '}') {
+            if (value.length() >= 4 && (value[0] == '$' && value[1] == '{') && value.back() == '}') {
                 std::string flagName = value.substr(2, value.length() - 3);
-                FlagWrapper flag = flags.getFlag(flagName);
+                FlagWrapper flag = Flags::getFlag(flagName);
                 FlagWrapper flagClone;
                 if (flag.flag) 
                 {
@@ -961,7 +976,7 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode(Flags& flags) co
     }
 }
 
-LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> tokens, Flags& flags)
+LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> tokens)
 {
     if (tokens.empty()) {
         WARNING_MESSAGE("No tokens to build operation tree");
@@ -992,8 +1007,8 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
                 return nullptr;
             }
             OperationNodePtr subTree = buildOperationTree(
-                std::vector<Token>(tokens.begin() + i + 1, tokens.begin() + j), 
-                flags);
+                std::vector<Token>(tokens.begin() + i + 1, tokens.begin() + j)
+            );
             if (!subTree) {
                 WARNING_MESSAGE("Failed to build subtree for parentheses");
                 return nullptr;
@@ -1011,7 +1026,7 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
             WARNING_MESSAGE("Mismatched parentheses in logic block");
             return nullptr;
         }
-        OperationNodePtr newNode = token.toOperationNode(flags);
+        OperationNodePtr newNode = token.toOperationNode();
         if (!newNode) {
             WARNING_MESSAGE("Failed to create operation node from token");
             return nullptr;
@@ -1060,7 +1075,7 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
     return currentNode;
 }
 
-FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, size_t idx_end, Flags& flags)
+FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, size_t idx_end)
 {
     std::string substring = str.substr(idx_start, idx_end - idx_start);
 
@@ -1097,7 +1112,7 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 return Flag::MakeFlag(false);
             }
             // parse the condition
-            FlagPtr conditionFlag = parse_substring(substring, j + 1, k, flags);
+            FlagPtr conditionFlag = parse_substring(substring, j + 1, k);
             bool condition = conditionFlag->as_bool();
             // find then
             size_t thenIdx = k + 1;
@@ -1172,10 +1187,10 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 elseContent = substring.substr(j + 1, k - j - 1);
             }
             if (condition) {
-                ifResult = parse_substring(thenContent, 0, thenContent.length(), flags);
+                ifResult = parse_substring(thenContent, 0, thenContent.length());
             } else if (!elseContent.empty()) {
                 // std::cout << "Parsing else content: " << elseContent << std::endl;
-                ifResult = parse_substring(elseContent, 0, elseContent.length(), flags);  
+                ifResult = parse_substring(elseContent, 0, elseContent.length());  
             } 
 
             if (ifResult)
@@ -1215,19 +1230,20 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
         return Flag::MakeFlag("");
     }
 
-    std::vector<Token> tokens = tokenize(substring);
+    std::vector<Token> tokens;
+    tokenize(substring, tokens);
     
-    OperationNodePtr root = buildOperationTree(tokens, flags);
+    OperationNodePtr root = buildOperationTree(tokens);
 
     if (root)
-        return root->evaluate(flags);
+        return root->evaluate();
     else {
         WARNING_MESSAGE("Failed to build operation tree for logic block");
         return Flag::MakeFlag("");
     }
 }
 
-void LogicBlock::parse_string(std::string& str, Flags& flags)
+void LogicBlock::parse_string(std::string& str)
 {
     std::string logicBlockStart = "$(";
     std::string logicBlockEnd = ")";
@@ -1249,10 +1265,377 @@ void LogicBlock::parse_string(std::string& str, Flags& flags)
             WARNING_MESSAGE("Mismatched parentheses in logic block");
             break;
         }
-        FlagPtr resultFlag = parse_substring(str, startIdx, endIdx - 1, flags);
+        FlagPtr resultFlag = parse_substring(str, startIdx, endIdx - 1);
         std::string resultStr = resultFlag->as_string();
         str.replace(pos, endIdx - pos, resultStr);
         pos += resultStr.length();
     }
 }
 
+void writeInBuffer(
+    char **buffer,
+    char **writeHead,
+    const char *readHead,
+    size_t size,
+    size_t & allocated
+)
+{
+    size_t wanted = ((*writeHead)-(*buffer)+size);
+    if(wanted > allocated)
+    {
+        while(wanted > allocated) allocated *= 2;
+
+        char *newBuffer = new char[allocated];
+        
+        size_t writeHeadPos = (*writeHead)-(*buffer);
+        memcpy(newBuffer, *buffer, writeHeadPos);
+
+        delete [] *buffer;
+        *writeHead = newBuffer+writeHeadPos;
+        *buffer = newBuffer;
+    }
+
+    memcpy(*writeHead, readHead, size);
+    *writeHead += size;
+};
+
+const LogicBlock::ErrorInfos& LogicBlock::parse_string_cstr(char ** input, size_t &len, size_t allocated)
+{
+    error.success = true;
+
+    static const char logicBlockStart[] = "$(";
+    static const char logicBlockEnd[] = ")";
+
+    static thread_local size_t blen = 4096;
+    static thread_local char * buffer = new char[blen];
+
+    char *readHead = *input;
+    char *writeHead = buffer;
+
+    char * pos = 0;
+
+    while((pos = strstr(readHead, logicBlockStart)))
+    {
+        size_t startIdx = (pos - readHead) + sizeof(logicBlockStart)-1;
+        size_t endIdx = startIdx;
+        int parenCount = 1;
+
+        while (readHead[endIdx] && parenCount > 0)
+        {
+            if (readHead[endIdx] == '(')
+                parenCount++;
+            else if (readHead[endIdx] == ')')
+                parenCount--;  
+
+            endIdx++;
+        }
+
+        if (parenCount != 0)
+        {
+            error.success = false;
+            error.message = "Mismatched parentheses in logic block";
+            return error;
+        }
+
+        /* TODO do the cstr version
+        std::string resultStr = "[Flag goes here]";
+        */
+
+        // FlagPtr resultFlag = parse_substring_cstr(*input, len, startIdx, endIdx-1);
+        FlagPtr resultFlag = parse_substring(*input, startIdx, endIdx - 1);
+
+        if(!error.success)
+        {
+            return error;
+        }
+
+        std::string resultStr = resultFlag->as_string();
+
+
+        writeInBuffer(&buffer, &writeHead, readHead, pos-readHead, blen);
+        writeInBuffer(&buffer, &writeHead, resultStr.c_str(), resultStr.size(), blen);
+
+        readHead += endIdx;
+    }
+
+    size_t remaining = ((*input)+len) - readHead + 1;
+    if(remaining)
+        writeInBuffer(&buffer, &writeHead, readHead, remaining, blen);
+
+    size_t finalSize = writeHead - buffer;
+
+    readHead = *input;
+    writeInBuffer(input, &readHead, buffer, finalSize, allocated);
+
+    len = finalSize-1;
+
+    error.message.clear();
+    error.success = true;
+    return error;
+}
+
+std::string getSubStringErrorHint(const char *input, const size_t idx_start, const size_t idx_end, int idx_Error)
+{
+    std::string substr;
+    substr.resize(idx_end-idx_start);
+    memcpy(substr.data(), input, idx_end-idx_start);
+    substr += '\0';
+
+    return "\n\t\t" + substr;
+}
+
+/*
+    TODO : fix
+    this doesn"t work for nested if
+*/
+FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end)
+{
+    // std::string input = str.substr(idx_start, idx_end - idx_start);
+
+
+    // std::cout << "Parsing logic block input: " << input << std::endl;
+
+    // search for ifs and parse them and tokenize the contents of the test, the then and the else if present
+
+    std::string ifProcessedTmp = "";
+
+    for (int i = idx_start; i < idx_end; i++)
+    {
+        // WARNING_MESSAGE(input[i])
+
+        // if(false)
+        if (input[i] == 'i' && input[i+1] == 'f')
+        {
+            
+            FlagPtr ifResult = nullptr;
+            // find parens and if there is anything but whitespace before them, it's not an if statement
+            size_t j = i + 2;
+            while (j < idx_end && isspace(input[j])) {
+                j++;
+            }
+            if (j >= idx_end || input[j] != '(') {
+                error.success = false;
+                error.message = "Malformed if statement in logic block " + getSubStringErrorHint(input, idx_end, idx_start, j);
+                return Flag::MakeFlag(false);
+            }
+            // find matching closing paren
+            int parenCount = 1;
+            size_t k = j + 1;
+            for (; k < idx_end; k++)
+            {
+                if (input[k] == '(')
+                {
+                    parenCount++;
+                } 
+                else 
+                if (input[k] == ')')
+                {
+                    parenCount--;
+                    if (parenCount == 0) {
+                        break;
+                    }
+                }
+            }
+            if (parenCount != 0)
+            {
+                error.success = false;
+                error.message = "Mismatched parentheses in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
+                return Flag::MakeFlag(false);
+            }
+
+            
+            // parse the condition
+            // FlagPtr conditionFlag = parse_substring(input, j + 1, k);
+            FlagPtr conditionFlag = parse_substring_cstr(input, len, j+1, k);
+            if(!error.success) return Flag::MakeFlag(false);
+
+            bool condition = conditionFlag->as_bool();
+            // find then
+            size_t thenIdx = k + 1;
+            while (thenIdx < idx_end && isspace(input[thenIdx]))
+            {
+                thenIdx++;
+            }
+            if(
+                input[thenIdx+0] != 't' ||
+                input[thenIdx+1] != 'h' ||
+                input[thenIdx+2] != 'e' ||
+                input[thenIdx+3] != 'n'
+            )
+            {
+                WARNING_MESSAGE("Malformed if statement, missing 'then'" << "\n\t\t '" << input+thenIdx << "'");
+                return Flag::MakeFlag(false);
+            }
+            thenIdx += 4;
+            // get the content of the then block (delimited by parentheses)
+            j = thenIdx;
+            while (j < idx_end && isspace(input[j])) j++;
+
+            if (j >= idx_end || input[j] != '(')
+            {
+                error.success = false;
+                error.message = "Malformed then block in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
+                return Flag::MakeFlag(false);
+            }
+
+            parenCount = 1;
+            k = j + 1;
+
+            for (; k < idx_end; k++)
+            {
+                if (input[k] == '(')
+                    parenCount++;
+                else if (input[k] == ')')
+                {
+                    parenCount--;
+                    if (parenCount == 0)
+                        break;
+                }
+            }
+
+            if (parenCount != 0)
+            {
+                error.success = false;
+                error.message = "Mismatched parentheses in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
+                return Flag::MakeFlag(false);
+            }
+
+            // std::string thenContent = input.substr(j + 1, k - j - 1);
+            size_t thenContent_idx_start = j+1;
+            size_t thenContent_idx_end = k;
+
+            // check for else
+            size_t elseIdx = k + 1;
+            while (elseIdx < idx_end && isspace(input[elseIdx])) 
+                elseIdx++;
+
+            size_t elseContent_idx_start = 0;
+            size_t elseContent_idx_end = 0;
+
+            if (
+                input[elseIdx+0] == 'e' &&
+                input[elseIdx+1] == 'l' &&
+                input[elseIdx+2] == 's' &&
+                input[elseIdx+3] == 'e'
+            )
+            {
+                elseIdx += 4;
+                // get the content of the else block (delimited by parentheses)
+                j = elseIdx;
+                while (j < idx_end && isspace(input[j])) j++;
+
+                if (j >= idx_end || input[j] != '(')
+                {
+                    error.success = false;
+                    error.message = "Malformed else block in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
+                    return Flag::MakeFlag(false);
+                }
+
+                parenCount = 1;
+                k = j + 1;
+                for (; k < idx_end; k++) 
+                {
+                    if (input[k] == '(')
+                        parenCount++;
+                    else
+                    if (input[k] == ')')
+                    {
+                        parenCount--;
+                        if (parenCount == 0)
+                            break;
+                    }
+                }
+                if (parenCount != 0)
+                {
+                    error.success = false;
+                    error.message = "Mismatched parentheses in else block" + getSubStringErrorHint(input, idx_end, idx_start, j);
+                    return Flag::MakeFlag(false);
+                }
+
+                // lseContent = substring.substr(j + 1, k - j - 1);
+                elseContent_idx_start = j+1;
+                elseContent_idx_end = k;
+            }
+            if (condition)
+            {
+                // ifResult = parse_substring(thenContent, 0, thenContent.length());
+                ifResult = parse_substring_cstr(input, len, thenContent_idx_start, thenContent_idx_end);
+            } 
+            else if (elseContent_idx_start && elseContent_idx_end)
+            {
+                // std::cout << "Parsing else content: " << elseContent << std::endl;
+                // ifResult = parse_substring(elseContent, 0, elseContent.length());  
+                ifResult = parse_substring_cstr(input, len, elseContent_idx_start, elseContent_idx_end);
+            } 
+
+            if(!error.success)
+                return Flag::MakeFlag(false);
+
+            if (ifResult)
+            {
+                // replace the entire if statement with the result
+                std::string ifResultStr;
+
+                switch (ifResult->type)
+                {
+                    case Flag::INT:
+                    case Flag::FLOAT:
+                    case Flag::BOOL:
+                        ifResultStr = ifResult->as_string();
+                        break;
+                    case Flag::STRING:
+                        ifResultStr = "\"" + ifResult->as_string() + "\"";
+                        break;
+                    default:
+                        WARNING_MESSAGE("Unsupported flag type in if result conversion to string");
+                        ifResultStr = "false";
+                        break;
+                }
+                
+                // input = input.substr(0, i) + ifResultStr + input.substr(k + 1);
+
+                ifProcessedTmp.resize(ifResultStr.size() + (idx_end-idx_start) - (k+1-i));
+
+                memcpy(ifProcessedTmp.data(), input+idx_start, i-idx_start);
+                memcpy(ifProcessedTmp.data()+i-idx_start, ifResultStr.data(), ifResultStr.size());
+                memcpy(ifProcessedTmp.data()+i-idx_start + ifResultStr.size(), input+k+1, idx_end-k-1);
+
+                i += ifResultStr.length() - 1;
+            }
+            else 
+            {
+                // replace the entire if statement with nothing
+                // input = input.substr(0, i) + input.substr(k + 1);
+
+                ifProcessedTmp.resize((idx_end-idx_start) - (k+1-i));
+                memcpy(ifProcessedTmp.data(), input+idx_start, i-idx_start);
+                memcpy(ifProcessedTmp.data()+i-idx_start, input+k+1, idx_end-k-1);
+
+                i--;
+            }
+        }
+    }
+
+    // ifProcessedTmp = "1 + 2 * 3";
+    // NOTIF_MESSAGE(ifProcessedTmp)
+
+    if (ifProcessedTmp.empty()) // TODO : adapt to the error checking that luna did
+    {
+        ifProcessedTmp.resize(idx_end-idx_start);
+        memcpy(ifProcessedTmp.data(), input+idx_start, idx_end-idx_start);
+    }
+
+
+    std::vector<Token> tokens;
+    tokenize(ifProcessedTmp, tokens);
+    
+    OperationNodePtr root = buildOperationTree(tokens);
+
+    if (root)
+        return root->evaluate();
+    else
+    {
+        WARNING_MESSAGE("Failed to build operation tree for logic block");
+        return Flag::MakeFlag("");
+    }
+}

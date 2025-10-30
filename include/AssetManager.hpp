@@ -40,7 +40,7 @@ class Loader
         {};
 
         VulpineTextBuffRef buff;
-        const char* name = nullptr;
+        std::string name;
         char* values = nullptr;
         char* end = nullptr;
 
@@ -96,7 +96,7 @@ class Loader
             Loader<T> e;
             e.buff = buff;
             e.values = buff->data + buff->getReadHead();
-            e.name = ptr;
+            e.name = std::string(ptr);
             return *(loadingInfos[e.name] = std::make_unique<Loader<T>> (e));
         };
 

@@ -156,6 +156,8 @@ std::string getNameOnlyFromPath(const char *path)
     int lastPoint = name.size()-1;
     for(; lastPoint && name[lastPoint] != '.' ; lastPoint--);
 
+    if(!lastPoint) return name;
+
     for(int i = 0; i < lastPoint; i++)
         res += name[i];
 

@@ -11,7 +11,9 @@
 #include <Graphics/ObjectGroup.hpp>
 #include <Scripting/ScriptInstance.hpp>
 
-template<typename T> void loadAllInfos(std::string type)
+#include <Flags.hpp>
+
+template<typename T> void loadAllInfos(std::string type, bool autoLoadData = false)
 {
     auto assetList = AssetLoadInfos::assetList[type];
 
@@ -26,6 +28,14 @@ template<typename T> void loadAllInfos(std::string type)
         else
             Loader<T>::addInfos(asset.file.c_str());
     }
+
+    if(autoLoadData)
+    {
+        for(auto &i : Loader<T>::loadingInfos)
+        {
+            Loader<T>::get(i.first);
+        }            
+    }
 } 
 
 void loadAllModdedAssetsInfos(const char *filename)
@@ -39,6 +49,7 @@ void loadAllModdedAssetsInfos(const char *filename)
     }
 
     #define LOAD_ALL(T) loadAllInfos<T>(#T);
+    #define LOAD_ALL_DATA(T) loadAllInfos<T>(#T, true);
 
     LOAD_ALL(ObjectGroup)
     LOAD_ALL(ObjectGroupRef)
@@ -59,6 +70,6 @@ void loadAllModdedAssetsInfos(const char *filename)
     LOAD_ALL(ShaderTesePath)
     LOAD_ALL(ShaderInclPath)
 
-
-
+    LOAD_ALL_DATA(Flags)
+    LOAD_ALL(FlagWrapper)
 }

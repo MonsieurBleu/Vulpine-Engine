@@ -4,6 +4,8 @@
 #include <VulpineParser.hpp>
 #include <Utils.hpp>
 
+#include <Flags.hpp>
+
 VulpineTextBuff::VulpineTextBuff(const char *filename)
 {
     loadFromFile(filename);
@@ -44,6 +46,17 @@ void VulpineTextBuff::loadFromFile(const char *filename)
     data[size] = '\0';
 
     memcpy(originalData, data, size);
+
+    // parseFlagsScripting();
+}
+
+void VulpineTextBuff::parseFlagsScripting()
+{
+    if(!logicParsed)
+    {
+        LogicBlock::parse_string_cstr(&data, size, size);
+        logicParsed = true;
+    }
 }
 
 void VulpineTextBuff::alloc(int size)
@@ -64,6 +77,8 @@ void VulpineTextBuff::resetData()
     commentsMode = false;
     clearHeadLoc = true;
     readhead = 0;
+    logicParsed = false;
+    parseFlagsScripting();
 }
 
 bool VulpineTextBuff::readBreakChar()

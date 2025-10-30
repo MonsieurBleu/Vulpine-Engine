@@ -205,7 +205,12 @@ void AssetLoadInfos::addToGlobalList(AssetVersion &asset)
         {{"pgm", "Texture2D"}, {true, "source"}},
         {{"exr", "Texture2D"}, {true, "source"}},
 
-        {{"lua", "ScriptInstance"}, {true, ""}}
+        {{"lua", "ScriptInstance"}, {true, ""}},
+
+
+        {{"vFlags", "Flags"}, {false, ""}},
+
+        // {{"FlagWrapper", "FlagWrapper"}, {false, ""}}
     };
 
     for(auto i : filetypes)

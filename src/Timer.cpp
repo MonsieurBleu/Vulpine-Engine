@@ -107,6 +107,7 @@ std::ostream& operator<<(std::ostream& os, BenchTimer e)
     os << TERMINAL_INFO <<"\tmax      : " << TERMINAL_NOTIF <<e.max.count() << "ms\n";
     os << TERMINAL_INFO <<"\tavgTotal : " << TERMINAL_NOTIF <<e.avgTotal.count() << "ms\n";
     os << TERMINAL_INFO <<"\tavg      : " << TERMINAL_NOTIF <<e.avgLast.count() << "ms\n";
+    os << TERMINAL_INFO <<"\telapsed  : " << TERMINAL_NOTIF <<e.getElapsedTime()*1e3 << "ms\n";
     os << TERMINAL_INFO <<"\tupdateCounter  : " << TERMINAL_NOTIF << e.updateCounter << "\n";
     os << TERMINAL_INFO <<"\tholdCounter : " << TERMINAL_NOTIF << e.holdCounter << "\n";
     os << TERMINAL_INFO <<"\tavgPerHold : " << TERMINAL_NOTIF << e.delta.count()/(float)e.holdCounter << "\n";

@@ -428,7 +428,10 @@ private:
     std::unordered_map<std::string, FlagWrapper> flags;
 
 public:
-    FlagWrapper& getFlag(const std::string& name);
+
+    bool writeAsSaveFileMode = false;
+
+    static FlagWrapper& getFlag(const std::string& name);
 
     template <typename T>
     void setFlag(const std::string& flag, T value)
@@ -462,6 +465,11 @@ public:
         return result;
     }
 
+    const std::unordered_map<std::string, FlagWrapper>& getAllFlagsMap() const
+    {
+        return flags;
+    }
+
     std::vector<std::pair<std::string, FlagWrapper>> getAllByValueFlags() const
     {
         std::vector<std::pair<std::string, FlagWrapper>> result;
@@ -484,11 +492,12 @@ public:
 
     FlagWrapper& operator[](const std::string& name)
     {
-        return getFlag(name);
+        // return getFlag(name);
+        return this->flags[name];
     }
 };
 
-static inline Flags flags;
+// static inline Flags flags;
 
 class LogicBlock {
 public:
@@ -497,7 +506,7 @@ public:
         std::string name;
         std::vector<Flag::Type> expectedArgTypes;
         Flag::Type expectedReturnType;
-        typedef std::function<FlagPtr(const std::vector<FlagPtr>&, Flags&)> FlagFuncType;
+        typedef std::function<FlagPtr(const std::vector<FlagPtr>&)> FlagFuncType;
         FlagFuncType func;
 
     public:
@@ -538,10 +547,10 @@ public:
             return expectedArgTypes[index];
         }
 
-        std::optional<FlagPtr> call(const std::vector<FlagPtr>& args, Flags& flags) const
+        std::optional<FlagPtr> call(const std::vector<FlagPtr>& args) const
         {
             if (expectedArgTypes.size() == 0) // No type checking
-                return func(args, flags);
+                return func(args);
 
             if (expectedArgTypes.size() != args.size()) {
                 WARNING_MESSAGE("Function " + name + " called with incorrect number of arguments. Expected " +
@@ -565,7 +574,7 @@ public:
                 }
             }
 
-            return func(args, flags);
+            return func(args);
         }
     };
 
@@ -587,7 +596,7 @@ private:
         std::vector<std::shared_ptr<OperationNode>> children;
         int expectedChildren = 0;
         std::shared_ptr<OperationNode> parent;
-        virtual FlagPtr evaluate(Flags& flags) = 0;
+        virtual FlagPtr evaluate() = 0;
 
         void addChild(std::shared_ptr<OperationNode> child)
         {
@@ -612,7 +621,7 @@ private:
             expectedChildren = 0;
         }
 
-        FlagPtr evaluate(Flags& flags) override
+        FlagPtr evaluate() override
         {
             return value;
         }
@@ -631,7 +640,7 @@ private:
             expectedChildren = 0;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     struct NotOperatorNode : OperationNode {
@@ -641,7 +650,7 @@ private:
             expectedChildren = 1;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     struct AdditionOperatorNode : OperationNode {
@@ -657,7 +666,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     struct MultiplicationOperatorNode : OperationNode {
@@ -673,7 +682,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     struct ComparisonOperatorNode : OperationNode {
@@ -691,7 +700,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     struct EqualityOperatorNode : OperationNode {
@@ -707,7 +716,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     struct LogicalAndOperatorNode : OperationNode {
@@ -717,7 +726,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     struct LogicalOrOperatorNode : OperationNode {
@@ -727,7 +736,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate(Flags& flags) override;
+        FlagPtr evaluate() override;
     };
 
     class Token {
@@ -755,13 +764,21 @@ private:
         TokenType type;
 
         std::string value;
+        
         Token(TokenType t, const std::string& v)
             : type(t)
             , value(v)
         { }
 
-        OperationNodePtr toOperationNode(Flags& flags) const;
+        OperationNodePtr toOperationNode() const;
     };
+
+
+    thread_local static inline struct ErrorInfos
+    {
+        bool success;
+        std::string message;
+    } error;
 
 public:
     static void registerFunction(const Function& function)
@@ -769,11 +786,15 @@ public:
         functions[function.getName()] = function;
     }
 
-    static void parse_string(std::string& str, Flags& flags);
-    static FlagPtr parse_substring(const std::string& str, size_t idx_start, size_t idx_end, Flags& flags);
+    static void parse_string(std::string& str);
+    static FlagPtr parse_substring(const std::string& str, size_t idx_start, size_t idx_end);
     
+
+    static const ErrorInfos& parse_string_cstr(char ** input, size_t &len, size_t Allocated);
+    static FlagPtr parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end);
+
     
 private:
-    static OperationNodePtr buildOperationTree(std::vector<Token> tokens, Flags& flags);
-    static std::vector<Token> tokenize(const std::string& str); 
+    static OperationNodePtr buildOperationTree(std::vector<Token> tokens);
+    static void tokenize(const std::string& str, std::vector<Token> &tokens); 
 };

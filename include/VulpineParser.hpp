@@ -26,6 +26,8 @@ class VulpineTextBuff
 
         bool readBreakChar();
 
+        bool logicParsed = false;
+
         std::string source;
 
     public :
@@ -55,6 +57,8 @@ class VulpineTextBuff
         void alloc(int size);
 
         void resetData();
+
+        void parseFlagsScripting();
 
         uft8* read();
 };

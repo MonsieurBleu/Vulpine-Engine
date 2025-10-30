@@ -454,3 +454,57 @@ GEN_SHADER_PATH_LOADER(ShaderGeomPath);
 GEN_SHADER_PATH_LOADER(ShaderTescPath);
 GEN_SHADER_PATH_LOADER(ShaderTesePath);
 GEN_SHADER_PATH_LOADER(ShaderInclPath);
+
+
+#include "Flags.hpp"
+#include "ModManager.hpp"
+
+template<>
+Flags& Loader<Flags>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+    LOADER_ASSERT(NEW_VALUE)
+    
+    buff->resetData();
+    buff->read();
+    r = DataLoader<Flags>::read(buff);
+
+    for(auto &i : r.getAllFlagsMap())
+    {
+        AssetVersion flagver(buff->getSource() + "/{virtual}/" + i.first + ".vFlagWrapper");
+
+        // flagver.file = i.first;
+        flagver.textless = true;
+        flagver.textlessPrefix = name;
+
+        // AssetLoadInfos::addToGlobalList(flagver);
+
+        AssetLoadInfos::assetList["FlagWrapper"][i.first].push_back(flagver);
+    }
+
+    EXIT_ROUTINE_AND_RETURN
+}
+
+/*
+    flag : maxhp
+    flags : stats
+
+    maxhp : stats maxhp
+
+
+    file
+
+*/
+
+template<>
+FlagWrapper& Loader<FlagWrapper>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+    LOADER_ASSERT(NEW_VALUE)
+    
+    std::string flagListName = buff->read();
+
+    r = Loader<Flags>::get(flagListName)[name];
+
+    EXIT_ROUTINE_AND_RETURN
+}
