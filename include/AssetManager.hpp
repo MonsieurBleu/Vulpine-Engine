@@ -47,7 +47,7 @@ class Loader
         static inline std::unordered_map<std::string, T> loadedAssets;
         static inline std::unordered_map<std::string, std::unique_ptr<Loader<T>>> loadingInfos;
 
-        static T& get(const std::string &elem)
+        static T& get(const std::string &elem, bool silentFail = false)
         {
             auto res = Loader<T>::loadedAssets.find(elem);
 
@@ -57,6 +57,11 @@ class Loader
 
                 if(infos == Loader<T>::loadingInfos.end())
                 {
+                    if(silentFail) // return a dummy, default initialized value without printing an error (used for flags that have their own error management)
+                    {
+                        static T dummy;
+                        return dummy;
+                    }
                     FILE_ERROR_MESSAGE(elem, "No loader information was loaded for the element " << elem << ".")
                     return Loader<T>::loadedAssets.begin()->second;
                 }

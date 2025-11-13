@@ -228,3 +228,36 @@ std::ostream& operator<<(std::ostream& os, const glm::quat& u)
     os << "quat(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
     return os;
 };
+
+std::string getLineFromString(const char* str, size_t line)
+{
+    size_t currentLine = 0;
+    size_t startIdx = 0;
+    
+    size_t i = 0;
+
+    while (str[i] != '\0') {
+        if (currentLine == line) {
+            startIdx = i;
+            break;
+        }
+        if (str[i] == '\n') {
+            currentLine++;
+        }
+        i++;
+    }
+
+    if (currentLine < line) {
+        return ""; // line does not exist
+    }
+
+    size_t endIdx = i;
+    while (str[endIdx] != '\0') {
+        if (str[endIdx] == '\n') {
+            break;
+        }
+        endIdx++;
+    }
+
+    return std::string(str + startIdx, endIdx - startIdx);
+}
