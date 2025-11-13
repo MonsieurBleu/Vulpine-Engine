@@ -5,6 +5,8 @@
 #include <Utils.hpp>
 
 #include <glm/gtc/quaternion.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
 
 void replace(std::string &str, const std::string &substr, const std::string &newsubstr)
 {
@@ -228,3 +230,15 @@ std::ostream& operator<<(std::ostream& os, const glm::quat& u)
     os << "quat(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
     return os;
 };
+
+void angleVectors(const glm::vec3& angles, glm::vec3& forward, glm::vec3& right, glm::vec3& up)
+{
+    // glm::quat q = glm::quat(angles);
+    // forward = q * glm::vec3(0, 0, 1);
+    // right   = q * glm::vec3(1, 0, 0);
+    // up      = q * glm::vec3(0, 1, 0);
+
+    forward = angles;
+    right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), forward));
+    up = glm::cross(right, forward);
+}

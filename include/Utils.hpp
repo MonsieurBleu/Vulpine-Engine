@@ -7,6 +7,9 @@
 #include <string>
 #include <chrono>
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/quaternion.hpp>
+
 
 #ifdef _WIN32
     #include <shlwapi.h>
@@ -254,5 +257,7 @@ inline bool isFloat(const std::string& s, float& value) {
 
     return (*p == 0);
 }
+
+void angleVectors(const glm::vec3& angles, glm::vec3& forward, glm::vec3& right, glm::vec3& up);
 
 #endif
