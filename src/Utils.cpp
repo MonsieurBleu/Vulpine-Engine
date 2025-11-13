@@ -242,3 +242,36 @@ void angleVectors(const glm::vec3& angles, glm::vec3& forward, glm::vec3& right,
     right = glm::normalize(glm::cross(glm::vec3(0, 1, 0), forward));
     up = glm::cross(right, forward);
 }
+
+std::string getLineFromString(const char* str, size_t line)
+{
+    size_t currentLine = 0;
+    size_t startIdx = 0;
+    
+    size_t i = 0;
+
+    while (str[i] != '\0') {
+        if (currentLine == line) {
+            startIdx = i;
+            break;
+        }
+        if (str[i] == '\n') {
+            currentLine++;
+        }
+        i++;
+    }
+
+    if (currentLine < line) {
+        return ""; // line does not exist
+    }
+
+    size_t endIdx = i;
+    while (str[endIdx] != '\0') {
+        if (str[endIdx] == '\n') {
+            break;
+        }
+        endIdx++;
+    }
+
+    return std::string(str + startIdx, endIdx - startIdx);
+}

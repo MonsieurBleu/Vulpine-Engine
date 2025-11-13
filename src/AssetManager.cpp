@@ -471,7 +471,7 @@ Flags& Loader<Flags>::loadFromInfos()
 
     for(auto &i : r.getAllFlagsMap())
     {
-        AssetVersion flagver(buff->getSource() + "/{virtual}/" + i.first + ".vFlagWrapper");
+        AssetVersion flagver(buff->getSource() + "/{virtual}/" + i.first + ".vFlag");
 
         // flagver.file = i.first;
         flagver.textless = true;
@@ -479,7 +479,7 @@ Flags& Loader<Flags>::loadFromInfos()
 
         // AssetLoadInfos::addToGlobalList(flagver);
 
-        AssetLoadInfos::assetList["FlagWrapper"][i.first].push_back(flagver);
+        AssetLoadInfos::assetList["Flag"][i.first].push_back(flagver);
     }
 
     EXIT_ROUTINE_AND_RETURN
@@ -497,7 +497,7 @@ Flags& Loader<Flags>::loadFromInfos()
 */
 
 template<>
-FlagWrapper& Loader<FlagWrapper>::loadFromInfos()
+Flag& Loader<Flag>::loadFromInfos()
 {
     EARLY_RETURN_IF_LOADED
     LOADER_ASSERT(NEW_VALUE)

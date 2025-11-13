@@ -54,7 +54,7 @@ void VulpineTextBuff::parseFlagsScripting()
 {
     if(!logicParsed)
     {
-        LogicBlock::parse_string_cstr(&data, size, size);
+        LogicBlock::parse_string_cstr(&data, size, size, &source);
         logicParsed = true;
     }
 }

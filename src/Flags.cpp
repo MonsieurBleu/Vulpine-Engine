@@ -5,59 +5,59 @@
 
 
 
-FlagPtr Flag::MakeFlag(int value) {
+FlagDataPtr FlagData::MakeFlag(int value) {
     return std::make_shared<IntFlag>(value);
 }
 
-FlagPtr Flag::MakeFlag(float value) {
+FlagDataPtr FlagData::MakeFlag(float value) {
     return std::make_shared<FloatFlag>(value);
 }
 
-FlagPtr Flag::MakeFlag(const std::string& value) {
+FlagDataPtr FlagData::MakeFlag(const std::string& value) {
     return std::make_shared<StrFlag>(value);
 }
 
-FlagPtr Flag::MakeFlag(const char* value) {
+FlagDataPtr FlagData::MakeFlag(const char* value) {
     return std::make_shared<StrFlag>(std::string(value));
 }
 
-FlagPtr Flag::MakeFlag(bool value) {
+FlagDataPtr FlagData::MakeFlag(bool value) {
     return std::make_shared<BoolFlag>(value);
 }
 
 template <>
-FlagPtr Flag::MakeFlagFromScript<int>(const std::string& scriptName) {
+FlagDataPtr FlagData::MakeFlagFromScript<int>(const std::string& scriptName) {
     return std::make_shared<IntScriptFlag>(scriptName);
 }
 
 template <>
-FlagPtr Flag::MakeFlagFromScript<float>(const std::string& scriptName) {
+FlagDataPtr FlagData::MakeFlagFromScript<float>(const std::string& scriptName) {
     return std::make_shared<FloatScriptFlag>(scriptName);
 }
 
 template <>
-FlagPtr Flag::MakeFlagFromScript<std::string>(const std::string& scriptName) {
+FlagDataPtr FlagData::MakeFlagFromScript<std::string>(const std::string& scriptName) {
     return std::make_shared<StrScriptFlag>(scriptName);
 }
 
 template <>
-FlagPtr Flag::MakeFlagFromScript<bool>(const std::string& scriptName) {
+FlagDataPtr FlagData::MakeFlagFromScript<bool>(const std::string& scriptName) {
     return std::make_shared<BoolScriptFlag>(scriptName);
 }
 
-FlagWrapper& Flags::getFlag(const std::string& name) {
+Flag& Flags::getFlag(const std::string& name) {
     // auto it = .find(name);
     // if (it != .end()) {
     //     return it->second;
     // }
 
-    // [name] = FlagWrapper();
+    // [name] = Flag();
     // return [name];
 
-    return Loader<FlagWrapper>::get(name);
+    return Loader<Flag>::get(name, true);
 }
 
-Flag& Flag::operator=(int v)
+FlagData& FlagData::operator=(int v)
 {
     if(type != INT) {
         WARNING_MESSAGE("Trying to assign int to non-int Flag");
@@ -73,7 +73,7 @@ Flag& Flag::operator=(int v)
     return *this;
 }
 
-Flag& Flag::operator=(float v)
+FlagData& FlagData::operator=(float v)
 {
     if(type != FLOAT) {
         WARNING_MESSAGE("Trying to assign float to non-float Flag");
@@ -89,7 +89,7 @@ Flag& Flag::operator=(float v)
     return *this;
 }
 
-Flag& Flag::operator=(const std::string& v)
+FlagData& FlagData::operator=(const std::string& v)
 {
     if(type != STRING) {
         WARNING_MESSAGE("Trying to assign string to non-string Flag");
@@ -105,7 +105,7 @@ Flag& Flag::operator=(const std::string& v)
     return *this;
 }
 
-Flag& Flag::operator=(bool v)
+FlagData& FlagData::operator=(bool v)
 {
     if(type != BOOL) {
         WARNING_MESSAGE("Trying to assign bool to non-bool Flag");
@@ -122,7 +122,7 @@ Flag& Flag::operator=(bool v)
 }
 
 template <>
-Flag& Flag::operator=<int>(const ScriptNameWrapper& v)
+FlagData& FlagData::operator=<int>(const ScriptNameWrapper& v)
 {
     if(type != INT) {
         WARNING_MESSAGE("Trying to assign scripted int to non-int Flag");
@@ -139,7 +139,7 @@ Flag& Flag::operator=<int>(const ScriptNameWrapper& v)
 }
 
 template <>
-Flag& Flag::operator=<float>(const ScriptNameWrapper& v)
+FlagData& FlagData::operator=<float>(const ScriptNameWrapper& v)
 {
     if(type != FLOAT) {
         WARNING_MESSAGE("Trying to assign scripted float to non-float Flag");
@@ -156,7 +156,7 @@ Flag& Flag::operator=<float>(const ScriptNameWrapper& v)
 }
 
 template <>
-Flag& Flag::operator=<std::string>(const ScriptNameWrapper& v)
+FlagData& FlagData::operator=<std::string>(const ScriptNameWrapper& v)
 {
     if(type != STRING) {
         WARNING_MESSAGE("Trying to assign scripted string to non-string Flag");
@@ -173,7 +173,7 @@ Flag& Flag::operator=<std::string>(const ScriptNameWrapper& v)
 }
 
 template <>
-Flag& Flag::operator=<bool>(const ScriptNameWrapper& v)
+FlagData& FlagData::operator=<bool>(const ScriptNameWrapper& v)
 {
     if(type != BOOL) {
         WARNING_MESSAGE("Trying to assign scripted bool to non-bool Flag");
@@ -189,7 +189,7 @@ Flag& Flag::operator=<bool>(const ScriptNameWrapper& v)
     return *this;
 }
 
-std::string Flag::typeToString() {
+std::string FlagData::typeToString() {
     switch (type) {
         case INT: return "int";
         case FLOAT: return "float";
@@ -209,7 +209,7 @@ VulpineTextOutputRef DataLoader<Flags>::write(const Flags &data, VulpineTextOutp
     out->write("Flags",sizeof("Flags") -1);
     out->Tabulate();
 
-        std::vector<std::pair<std::string, FlagWrapper>> valueFlags = data.getAllByValueFlags();
+        std::vector<std::pair<std::string, Flag>> valueFlags = data.getAllByValueFlags();
         out->Entry();
         out->write("ValueFlags", sizeof("ValueFlags") - 1);
         out->Tabulate();
@@ -222,7 +222,7 @@ VulpineTextOutputRef DataLoader<Flags>::write(const Flags &data, VulpineTextOutp
         
         if(!data.writeAsSaveFileMode)
         {
-            std::vector<std::pair<std::string, FlagWrapper>> scriptFlags = data.getAllFlags();
+            std::vector<std::pair<std::string, Flag>> scriptFlags = data.getAllFlags();
             out->Entry();
             out->write("ScriptFlags", sizeof("ScriptFlags") - 1);
             out->Tabulate();
@@ -261,9 +261,9 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
             while (NEW_VALUE) {
                 const char* typeStr = buff->read();
                 str2upper((char*)typeStr);
-                Flag::Type type = Flag::NONE;
-                MAP_SAFE_READ(Flag::TypeMap, buff, type, typeStr);
-                if (type == Flag::NONE) {
+                FlagData::Type type = FlagData::NONE;
+                MAP_SAFE_READ(FlagData::TypeMap, buff, type, typeStr);
+                if (type == FlagData::NONE) {
                     WARNING_MESSAGE("Unknown flag type: " + std::string(typeStr));
                     continue;
                 }
@@ -275,7 +275,7 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                 // std::cout << "Flag: " << typeStr << " " << name << " = " << valueStr << std::endl;
 
                 switch (type) {
-                    case Flag::INT:
+                    case FlagData::INT:
                     {
                         int intValue;
                         if (!isInteger(std::string(valueStr), intValue))
@@ -287,7 +287,7 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                         data.setFlag<int>(name, intValue);
                         break;
                     }
-                    case Flag::FLOAT:
+                    case FlagData::FLOAT:
                     {
                         float floatValue;
                         if (!isFloat(std::string(valueStr), floatValue))
@@ -299,10 +299,10 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                         data.setFlag<float>(name, floatValue);
                         break;
                     }
-                    case Flag::STRING:
+                    case FlagData::STRING:
                         data.setFlag<std::string>(name, std::string(valueStr));
                         break;
-                    case Flag::BOOL:
+                    case FlagData::BOOL:
                         data.setFlag<bool>(name, FastTextParser::read<bool>(valueStr));
                         break;
                     default:
@@ -314,9 +314,9 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
             while (NEW_VALUE) {
                 const char* typeStr = buff->read();
                 str2upper((char*)typeStr);
-                Flag::Type type = Flag::NONE;
-                MAP_SAFE_READ(Flag::TypeMap, buff, type, typeStr);
-                if (type == Flag::NONE) {
+                FlagData::Type type = FlagData::NONE;
+                MAP_SAFE_READ(FlagData::TypeMap, buff, type, typeStr);
+                if (type == FlagData::NONE) {
                     WARNING_MESSAGE("Unknown flag type: " + std::string(typeStr));
                     continue;
                 }
@@ -324,16 +324,16 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                 const char* scriptName = buff->read();
 
                 switch (type) {
-                    case Flag::INT:
+                    case FlagData::INT:
                         data.setFlagFromScript<int>(name, std::string(scriptName));
                         break;
-                    case Flag::FLOAT:
+                    case FlagData::FLOAT:
                         data.setFlagFromScript<float>(name, std::string(scriptName));
                         break;
-                    case Flag::STRING:
+                    case FlagData::STRING:
                         data.setFlagFromScript<std::string>(name, std::string(scriptName));
                         break;
-                    case Flag::BOOL:
+                    case FlagData::BOOL:
                         data.setFlagFromScript<bool>(name, std::string(scriptName));
                         break;
                     default:
@@ -347,15 +347,15 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
     return data;
 }
 
-bool Flag::equals(const FlagPtr a, const FlagPtr b) {
+bool FlagData::equals(const FlagDataPtr a, const FlagDataPtr b) {
     switch(a->type) {
-        case Flag::INT:
+        case FlagData::INT:
             return a->as_int() == b->as_int();
-        case Flag::FLOAT:
+        case FlagData::FLOAT:
             return a->as_float() == b->as_float();
-        case Flag::STRING:
+        case FlagData::STRING:
             return a->as_string() == b->as_string();
-        case Flag::BOOL:
+        case FlagData::BOOL:
             return a->as_bool() == b->as_bool();
         default:
             WARNING_MESSAGE("Unsupported flag type for equality operation");
@@ -363,15 +363,15 @@ bool Flag::equals(const FlagPtr a, const FlagPtr b) {
     }
 }
 
-bool Flag::notEquals(const FlagPtr a, const FlagPtr b) {
+bool FlagData::notEquals(const FlagDataPtr a, const FlagDataPtr b) {
     return !equals(a, b);
 }
 
-bool Flag::lessThan(const FlagPtr a, const FlagPtr b) {
+bool FlagData::lessThan(const FlagDataPtr a, const FlagDataPtr b) {
     switch(a->type) {
-        case Flag::INT:
+        case FlagData::INT:
             return a->as_int() < b->as_int();
-        case Flag::FLOAT:
+        case FlagData::FLOAT:
             return a->as_float() < b->as_float();
         default:
             WARNING_MESSAGE("Unsupported flag type for less than operation");
@@ -379,11 +379,11 @@ bool Flag::lessThan(const FlagPtr a, const FlagPtr b) {
     }
 }
 
-bool Flag::greaterThan(const FlagPtr a, const FlagPtr b) {
+bool FlagData::greaterThan(const FlagDataPtr a, const FlagDataPtr b) {
     switch(a->type) {
-        case Flag::INT:
+        case FlagData::INT:
             return a->as_int() > b->as_int();
-        case Flag::FLOAT:
+        case FlagData::FLOAT:
             return a->as_float() > b->as_float();
         default:
             WARNING_MESSAGE("Unsupported flag type for greater than operation");
@@ -391,106 +391,106 @@ bool Flag::greaterThan(const FlagPtr a, const FlagPtr b) {
     }
 }
 
-bool Flag::lessThanOrEqual(const FlagPtr a, const FlagPtr b) {
+bool FlagData::lessThanOrEqual(const FlagDataPtr a, const FlagDataPtr b) {
     return !greaterThan(a, b);
 }
 
-bool Flag::greaterThanOrEqual(const FlagPtr a, const FlagPtr b) {
+bool FlagData::greaterThanOrEqual(const FlagDataPtr a, const FlagDataPtr b) {
     return !lessThan(a, b);
 }
 
-bool Flag::logicalAnd(const FlagPtr a, const FlagPtr b) {
+bool FlagData::logicalAnd(const FlagDataPtr a, const FlagDataPtr b) {
     return a->as_bool() && b->as_bool();
 }
 
-bool Flag::logicalOr(const FlagPtr a, const FlagPtr b) {
+bool FlagData::logicalOr(const FlagDataPtr a, const FlagDataPtr b) {
     return a->as_bool() || b->as_bool();
 }
 
-bool Flag::logicalNot(const FlagPtr a) {
+bool FlagData::logicalNot(const FlagDataPtr a) {
     return !a->as_bool();
 }
 
-FlagPtr Flag::add(const FlagPtr a, const FlagPtr b)
+FlagDataPtr FlagData::add(const FlagDataPtr a, const FlagDataPtr b)
 {
     if (b->type == STRING)
     {
-        return Flag::MakeFlag(a->as_string() + b->as_string());
+        return FlagData::MakeFlag(a->as_string() + b->as_string());
     }
 
     switch(a->type) {
-        case Flag::INT:
-            return Flag::MakeFlag(a->as_int() + b->as_int());
-        case Flag::FLOAT:
-            return Flag::MakeFlag(a->as_float() + b->as_float());
-        case Flag::STRING:
-            return Flag::MakeFlag(a->as_string() + b->as_string());
+        case FlagData::INT:
+            return FlagData::MakeFlag(a->as_int() + b->as_int());
+        case FlagData::FLOAT:
+            return FlagData::MakeFlag(a->as_float() + b->as_float());
+        case FlagData::STRING:
+            return FlagData::MakeFlag(a->as_string() + b->as_string());
         default:
             WARNING_MESSAGE("Unsupported flag type for addition operation, returning 0");
-            return Flag::MakeFlag(0);
+            return FlagData::MakeFlag(0);
     }
 }
 
-FlagPtr Flag::subtract(const FlagPtr a, const FlagPtr b)
+FlagDataPtr FlagData::subtract(const FlagDataPtr a, const FlagDataPtr b)
 {
     switch(a->type) {
-        case Flag::INT:
-            return Flag::MakeFlag(a->as_int() - b->as_int());
-        case Flag::FLOAT:
-            return Flag::MakeFlag(a->as_float() - b->as_float());
+        case FlagData::INT:
+            return FlagData::MakeFlag(a->as_int() - b->as_int());
+        case FlagData::FLOAT:
+            return FlagData::MakeFlag(a->as_float() - b->as_float());
         default:
             WARNING_MESSAGE("Unsupported flag type for subtraction operation, returning 0");
-            return Flag::MakeFlag(0);
+            return FlagData::MakeFlag(0);
     }
 }
 
-FlagPtr Flag::multiply(const FlagPtr a, const FlagPtr b)
+FlagDataPtr FlagData::multiply(const FlagDataPtr a, const FlagDataPtr b)
 {
     switch(a->type) {
-        case Flag::INT:
-            return Flag::MakeFlag(a->as_int() * b->as_int());
-        case Flag::FLOAT:
-            return Flag::MakeFlag(a->as_float() * b->as_float());
+        case FlagData::INT:
+            return FlagData::MakeFlag(a->as_int() * b->as_int());
+        case FlagData::FLOAT:
+            return FlagData::MakeFlag(a->as_float() * b->as_float());
         default:
             WARNING_MESSAGE("Unsupported flag type for multiplication operation, returning 0");
-            return Flag::MakeFlag(0);
+            return FlagData::MakeFlag(0);
     }
 }
 
-FlagPtr Flag::divide(const FlagPtr a, const FlagPtr b)
+FlagDataPtr FlagData::divide(const FlagDataPtr a, const FlagDataPtr b)
 {
     switch(a->type) {
-        case Flag::INT:
+        case FlagData::INT:
             if (b->as_int() == 0) {
                 WARNING_MESSAGE("Division by zero in int division, returning 0");
-                return Flag::MakeFlag(0);
+                return FlagData::MakeFlag(0);
             }
-            return Flag::MakeFlag(a->as_int() / b->as_int());
-        case Flag::FLOAT:
+            return FlagData::MakeFlag(a->as_int() / b->as_int());
+        case FlagData::FLOAT:
             if (b->as_float() == 0.0f) {
                 WARNING_MESSAGE("Division by zero in float division, returning 0.0f");
-                return Flag::MakeFlag(0.0f);
+                return FlagData::MakeFlag(0.0f);
             }
-            return Flag::MakeFlag(a->as_float() / b->as_float());
+            return FlagData::MakeFlag(a->as_float() / b->as_float());
         default:
             WARNING_MESSAGE("Unsupported flag type for division operation, returning 0");
-            return Flag::MakeFlag(0);
+            return FlagData::MakeFlag(0);
     }
 }
 
-FlagPtr Flag::clone()
+FlagDataPtr FlagData::clone()
 {
     if (isScripted)
     {
         switch (type) {
             case INT:
-                return Flag::MakeFlagFromScript<int>(((ScriptFlagBase*)this)->luaScriptName);
+                return FlagData::MakeFlagFromScript<int>(((ScriptFlagBase*)this)->luaScriptName);
             case FLOAT:
-                return Flag::MakeFlagFromScript<float>(((ScriptFlagBase*)this)->luaScriptName);
+                return FlagData::MakeFlagFromScript<float>(((ScriptFlagBase*)this)->luaScriptName);
             case STRING:
-                return Flag::MakeFlagFromScript<std::string>(((ScriptFlagBase*)this)->luaScriptName);
+                return FlagData::MakeFlagFromScript<std::string>(((ScriptFlagBase*)this)->luaScriptName);
             case BOOL:
-                return Flag::MakeFlagFromScript<bool>(((ScriptFlagBase*)this)->luaScriptName);
+                return FlagData::MakeFlagFromScript<bool>(((ScriptFlagBase*)this)->luaScriptName);
             default:
                 WARNING_MESSAGE("Unsupported flag type for cloning");
                 return nullptr;
@@ -499,13 +499,13 @@ FlagPtr Flag::clone()
     else {
         switch (type) {
             case INT:
-                return Flag::MakeFlag(as_int());
+                return FlagData::MakeFlag(as_int());
             case FLOAT:
-                return Flag::MakeFlag(as_float());
+                return FlagData::MakeFlag(as_float());
             case STRING:
-                return Flag::MakeFlag(as_string());
+                return FlagData::MakeFlag(as_string());
             case BOOL:
-                return Flag::MakeFlag(as_bool());
+                return FlagData::MakeFlag(as_bool());
             default:
                 WARNING_MESSAGE("Unsupported flag type for cloning");
                 return nullptr;
@@ -513,201 +513,241 @@ FlagPtr Flag::clone()
     }
 }
 
-Flag::operator FlagWrapper()
+FlagData::operator Flag()
 {
-    return FlagWrapper(shared_from_this());
+    return Flag(shared_from_this());
 }
 
-FlagPtr LogicBlock::FunctionNode::evaluate() 
+FlagDataPtr LogicBlock::FunctionNode::evaluate() 
 {
-    static std::vector<FlagPtr> argValues(16);
+    static std::vector<FlagDataPtr> argValues(16);
     argValues.resize(0);
     
     Function func = functions[functionName];
 
     if (func.getName() == "") {
-        WARNING_MESSAGE("Function '" + functionName + "' not found");
-        return Flag::MakeFlag(0);
+        // WARNING_MESSAGE("Function '" + functionName + "' not found");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::UNKNOWN_FUNCTION;
+        error.messageExtra = &functionName;
+        error.printError();
+        return FlagData::MakeFlag(0);
     }
 
+    int errorIndexStart = error.column_start;
     for (int i = 0; i < argumentStrings.size(); i++) {
         std::string argString = argumentStrings[i];
-        FlagPtr argValue = parse_substring(argString, 0, argString.length());
+        FlagDataPtr argValue = parse_substring(argString, 0, argString.length());
         if (!argValue) {
-            WARNING_MESSAGE("Failed to evaluate argument: " + argString);
+            // WARNING_MESSAGE("Failed to evaluate argument: " + argString);
+            error.success = false;
+            error.errorType = ErrorInfos::ErrorType::INVALID_ARGUMENTS;
+            error.messageExtra = &argString;
+            error.column_start = errorIndexStart + argumentStringOffsets[i].first;
+            error.column_end = errorIndexStart + argumentStringOffsets[i].second;
+            error.printError();
             switch (func.getArgType(i))
             {
-                case Flag::INT:
-                    argValue = Flag::MakeFlag(0);
+                case FlagData::INT:
+                    argValue = FlagData::MakeFlag(0);
                     break;
-                case Flag::FLOAT:
-                    argValue = Flag::MakeFlag(0.0f);
+                case FlagData::FLOAT:
+                    argValue = FlagData::MakeFlag(0.0f);
                     break;
-                case Flag::STRING:
-                    argValue = Flag::MakeFlag("");
+                case FlagData::STRING:
+                    argValue = FlagData::MakeFlag("");
                     break;
-                case Flag::BOOL:
-                    argValue = Flag::MakeFlag(false);
+                case FlagData::BOOL:
+                    argValue = FlagData::MakeFlag(false);
                     break;
                 default:
                     WARNING_MESSAGE("Unsupported argument type for function: " + func.getName());
-                    argValue = Flag::MakeFlag(0);
+                    argValue = FlagData::MakeFlag(0);
                     break;
             }
         }
         argValues.push_back(argValue);
     }
 
-    std::optional<FlagPtr> result = func.call(argValues);
-    if (!result.has_value()) {
-        WARNING_MESSAGE("Function '" + functionName + "' call failed");
-        return Flag::MakeFlag(0);
+    std::optional<FlagDataPtr> result = func.call(argValues, argumentStringOffsets);
+    if (error.success == false) 
+    {
+        return FlagData::MakeFlag(0);
+    }
+
+    if (!result.has_value()) { // shouldn't be reached if error.success is properly set in func.call
+        // WARNING_MESSAGE("Function '" + functionName + "' call failed");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_FAILED;
+        error.printError();
+        return FlagData::MakeFlag(0);
     }
     
     return result.value();
 }
 
-FlagPtr LogicBlock::NotOperatorNode::evaluate() 
+FlagDataPtr LogicBlock::NotOperatorNode::evaluate() 
 {
     if (children.size() != 1) {
-        WARNING_MESSAGE("NotOperatorNode must have exactly one child");
-        return Flag::MakeFlag(false);
+        // WARNING_MESSAGE("NotOperatorNode must have exactly one child");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        error.printError();
+        return FlagData::MakeFlag(false);
     }
 
-    FlagPtr operandValue = children[0]->evaluate();
-    bool result = Flag::logicalNot(operandValue);
-    return Flag::MakeFlag(result);
+    FlagDataPtr operandValue = children[0]->evaluate();
+    bool result = FlagData::logicalNot(operandValue);
+    return FlagData::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::AdditionOperatorNode::evaluate() 
+FlagDataPtr LogicBlock::AdditionOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
-        WARNING_MESSAGE("AdditionOperatorNode must have exactly two children");
-        return Flag::MakeFlag(0);
+        // WARNING_MESSAGE("AdditionOperatorNode must have exactly two children");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        error.printError();
+        return FlagData::MakeFlag(0);
     }
 
-    FlagPtr leftValue = children[0]->evaluate();
-    FlagPtr rightValue = children[1]->evaluate();
+    FlagDataPtr leftValue = children[0]->evaluate();
+    FlagDataPtr rightValue = children[1]->evaluate();
 
     switch (additionType) {
         case ADD:
-            return Flag::add(leftValue, rightValue);
+            return FlagData::add(leftValue, rightValue);
         case SUBTRACT:
-            return Flag::subtract(leftValue, rightValue);
+            return FlagData::subtract(leftValue, rightValue);
         default:
             WARNING_MESSAGE("Unsupported addition operator type");
-            return Flag::MakeFlag(0);
+            return FlagData::MakeFlag(0);
     }
 }
 
-FlagPtr LogicBlock::MultiplicationOperatorNode::evaluate() 
+FlagDataPtr LogicBlock::MultiplicationOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
-        WARNING_MESSAGE("MultiplicationOperatorNode must have exactly two children");
-        return Flag::MakeFlag(0);
+        // WARNING_MESSAGE("MultiplicationOperatorNode must have exactly two children");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        error.printError();
+        return FlagData::MakeFlag(0);
     }
 
-    FlagPtr leftValue = children[0]->evaluate();
-    FlagPtr rightValue = children[1]->evaluate();
+    FlagDataPtr leftValue = children[0]->evaluate();
+    FlagDataPtr rightValue = children[1]->evaluate();
 
     switch (multiplicationType) {
         case MULTIPLY:
-            return Flag::multiply(leftValue, rightValue);
+            return FlagData::multiply(leftValue, rightValue);
         case DIVIDE:
-            return Flag::divide(leftValue, rightValue);
+            return FlagData::divide(leftValue, rightValue);
         default:
             WARNING_MESSAGE("Unsupported multiplication operator type");
-            return Flag::MakeFlag(0);
+            return FlagData::MakeFlag(0);
     }
 }
 
 
-FlagPtr LogicBlock::ComparisonOperatorNode::evaluate() 
+FlagDataPtr LogicBlock::ComparisonOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
-        WARNING_MESSAGE("ComparisonOperatorNode must have exactly two children");
-        return Flag::MakeFlag(false);
+        // WARNING_MESSAGE("ComparisonOperatorNode must have exactly two children");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        error.printError();
+        return FlagData::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate();
-    FlagPtr rightValue = children[1]->evaluate();
+    FlagDataPtr leftValue = children[0]->evaluate();
+    FlagDataPtr rightValue = children[1]->evaluate();
 
     bool result = false;
     switch (comparisonType) {
         case ComparisonType::LESS_THAN:
-            result = Flag::lessThan(leftValue, rightValue);
+            result = FlagData::lessThan(leftValue, rightValue);
             break;
         case ComparisonType::GREATER_THAN:
             // std::cout << "Comparing " << leftValue->as_string() << " > " << rightValue->as_string() << std::endl;
-            result = Flag::greaterThan(leftValue, rightValue);
+            result = FlagData::greaterThan(leftValue, rightValue);
             break;
         case ComparisonType::LESS_THAN_OR_EQUAL:
-            result = Flag::lessThanOrEqual(leftValue, rightValue);
+            result = FlagData::lessThanOrEqual(leftValue, rightValue);
             break;
         case ComparisonType::GREATER_THAN_OR_EQUAL:
-            result = Flag::greaterThanOrEqual(leftValue, rightValue);
+            result = FlagData::greaterThanOrEqual(leftValue, rightValue);
             break;
         default:
             WARNING_MESSAGE("Unsupported comparison operator type");
             break;
     }
-    return Flag::MakeFlag(result);
+    return FlagData::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::EqualityOperatorNode::evaluate() 
+FlagDataPtr LogicBlock::EqualityOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
-        WARNING_MESSAGE("EqualityOperatorNode must have exactly two children");
-        return Flag::MakeFlag(false);
+        // WARNING_MESSAGE("EqualityOperatorNode must have exactly two children");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        error.printError();
+        return FlagData::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate();
-    FlagPtr rightValue = children[1]->evaluate();
+    FlagDataPtr leftValue = children[0]->evaluate();
+    FlagDataPtr rightValue = children[1]->evaluate();
 
     bool result = false;
     switch (equalityType) {
         case EqualityType::EQUALS:
-            result = Flag::equals(leftValue, rightValue);
+            result = FlagData::equals(leftValue, rightValue);
             break;
         case EqualityType::NOT_EQUALS:
-            result = Flag::notEquals(leftValue, rightValue);
+            result = FlagData::notEquals(leftValue, rightValue);
             break;
         default:
             WARNING_MESSAGE("Unsupported equality operator type");
             break;
     }
-    return Flag::MakeFlag(result);
+    return FlagData::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::LogicalAndOperatorNode::evaluate() 
+FlagDataPtr LogicBlock::LogicalAndOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
-        WARNING_MESSAGE("LogicalAndOperatorNode must have exactly two children");
-        return Flag::MakeFlag(false);
+        // WARNING_MESSAGE("LogicalAndOperatorNode must have exactly two children");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        error.printError();
+        return FlagData::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate();
-    FlagPtr rightValue = children[1]->evaluate();
+    FlagDataPtr leftValue = children[0]->evaluate();
+    FlagDataPtr rightValue = children[1]->evaluate();
 
-    bool result = Flag::logicalAnd(leftValue, rightValue);
-    return Flag::MakeFlag(result);
+    bool result = FlagData::logicalAnd(leftValue, rightValue);
+    return FlagData::MakeFlag(result);
 }
 
-FlagPtr LogicBlock::LogicalOrOperatorNode::evaluate() 
+FlagDataPtr LogicBlock::LogicalOrOperatorNode::evaluate() 
 {
     if (children.size() != 2) {
-        WARNING_MESSAGE("LogicalOrOperatorNode must have exactly two children");
-        return Flag::MakeFlag(false);
+        // WARNING_MESSAGE("LogicalOrOperatorNode must have exactly two children");
+        error.success = false;
+        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        error.printError();
+        return FlagData::MakeFlag(false);
     }
 
-    FlagPtr leftValue = children[0]->evaluate();
-    FlagPtr rightValue = children[1]->evaluate();
+    FlagDataPtr leftValue = children[0]->evaluate();
+    FlagDataPtr rightValue = children[1]->evaluate();
 
-    bool result = Flag::logicalOr(leftValue, rightValue);
-    return Flag::MakeFlag(result);
+    bool result = FlagData::logicalOr(leftValue, rightValue);
+    return FlagData::MakeFlag(result);
 }
 
-void LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens)
+bool LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens, std::vector<std::pair<int, int>> &tokenPositions)
 {
     size_t i = 0;
     while (i < str.length()) {
@@ -717,45 +757,54 @@ void LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens)
         }
         else if (str[i] == '(') {
             tokens.emplace_back(Token::TokenType::PARENS_OPEN, "(");
+            tokenPositions.push_back(std::make_pair(i, i));
             i++;
             continue;
         }
         else if (str[i] == ')') {
             tokens.emplace_back(Token::TokenType::PARENS_CLOSE, ")");
+            tokenPositions.push_back(std::make_pair(i, i));
             i++;
             continue;
         }
         else if (str[i] == '&' && str[i+1] == '&') {
             tokens.emplace_back(Token::TokenType::LOGICAL_AND, "&&");
+            tokenPositions.push_back(std::make_pair(i, i+1));
             i += 2;
             continue;
         }
         else if (str[i] == '|' && str[i+1] == '|') {
             tokens.emplace_back(Token::TokenType::LOGICAL_OR, "||");
+            tokenPositions.push_back(std::make_pair(i, i+1));
             i += 2;
             continue;
         }
         else if (str[i] == '!') {
             tokens.emplace_back(Token::TokenType::NOT, "!");
+            tokenPositions.push_back(std::make_pair(i, i));
             i += 1;
             continue;
         }
         else if (str[i] == '=' && str[i+1] == '=') {
             tokens.emplace_back(Token::TokenType::EQUALS, "==");
+            tokenPositions.push_back(std::make_pair(i, i+1));
             i += 2;
             continue;
         }
         else if (str[i] == '!' && str[i+1] == '=') {
             tokens.emplace_back(Token::TokenType::NOT_EQUALS, "!=");
+            tokenPositions.push_back(std::make_pair(i, i+1));
             i += 2;
             continue;
         }
         else if (str[i] == '<') {
             if (i + 1 < str.length() && str[i + 1] == '=') {
                 tokens.emplace_back(Token::TokenType::LESS_THAN_OR_EQUAL, "<=");
+                tokenPositions.push_back(std::make_pair(i, i+1));
                 i += 2;
             } else {
                 tokens.emplace_back(Token::TokenType::LESS_THAN, "<");
+                tokenPositions.push_back(std::make_pair(i, i));
                 i += 1;
             }
             continue;
@@ -763,36 +812,43 @@ void LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens)
         else if (str[i] == '>') {
             if (i + 1 < str.length() && str[i + 1] == '=') {
                 tokens.emplace_back(Token::TokenType::GREATER_THAN_OR_EQUAL, ">=");
+                tokenPositions.push_back(std::make_pair(i, i+1));
                 i += 2;
             } else {
                 tokens.emplace_back(Token::TokenType::GREATER_THAN, ">");
+                tokenPositions.push_back(std::make_pair(i, i));
                 i += 1;
             }
             continue;
         }
         else if (str[i] == '+') {
             tokens.emplace_back(Token::TokenType::ADD, "+");
+            tokenPositions.push_back(std::make_pair(i, i));
             i += 1;
             continue;
         }
         else if (str[i] == '-') {
             tokens.emplace_back(Token::TokenType::SUBTRACT, "-");
+            tokenPositions.push_back(std::make_pair(i, i));
             i += 1;
             continue;
         }
         else if (str[i] == '*') {
             tokens.emplace_back(Token::TokenType::MULTIPLY, "*");
+            tokenPositions.push_back(std::make_pair(i, i));
             i += 1;
             continue;
         }
         else if (str[i] == '/') {
             tokens.emplace_back(Token::TokenType::DIVIDE, "/");
+            tokenPositions.push_back(std::make_pair(i, i));
             i += 1;
             continue;
         }
         else {
             // it's either a flag, a function or an immediate value
             size_t start = i;
+            // tokenPositions.push_back(i);
             if ((str[i] == '\"') || (str[i] == '\'')) {
                 char quoteChar = str[i];
                 i++;
@@ -802,6 +858,7 @@ void LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens)
                 i++; // consume closing quote
                 std::string tokenStr = str.substr(start, i - start);
                 tokens.emplace_back(Token::TokenType::FLAG, tokenStr);
+                tokenPositions.push_back(std::make_pair(start, i));
             } else {
                 // check if it's a function call (basically any word followed by any whitespace and then an opening parenthesis)
                 size_t funcCheckPos = i;
@@ -837,11 +894,18 @@ void LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens)
                     }
 
                     if (parenCount != 0) {
-                        WARNING_MESSAGE("Unmatched parentheses in function call: " + str.substr(start, i - start));
+                        // WARNING_MESSAGE("Unmatched parentheses in function call: " + str.substr(start, i - start));
+                        error.success = false;
+                        error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                        error.column_start = tempPos;
+                        error.column_end = tempPos;
+                        error.printError();
+                        return false;
                     }
 
                     std::string tokenStr = str.substr(start, i - start);
                     tokens.emplace_back(Token::TokenType::FUNCTION, tokenStr);
+                    tokenPositions.push_back(std::make_pair(start, i));
                 }
                 else {                
                     // else just parse as a flag/immediate value
@@ -861,10 +925,12 @@ void LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens)
                     }
                     std::string tokenStr = str.substr(start, i - start);
                     tokens.emplace_back(Token::TokenType::FLAG, tokenStr);
+                    tokenPositions.push_back(std::make_pair(start, i));
                 }
             }
         }
     }
+    return true;
 }
 
 LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
@@ -874,42 +940,49 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
             // Determine if it's a flag, an immediate value, or a function call
             // First check for immediate values
             if (value == "true" || value == "false") {
-                return std::make_shared<FlagValueNode>(Flag::MakeFlag(value == "true"));
+                return std::make_shared<FlagValueNode>(FlagData::MakeFlag(value == "true"));
             }
             int intValue;
             if (isInteger(value, intValue)) {
-                return std::make_shared<FlagValueNode>(Flag::MakeFlag(intValue));
+                return std::make_shared<FlagValueNode>(FlagData::MakeFlag(intValue));
             }
             float floatValue;
             if (isFloat(value, floatValue)) {
-                return std::make_shared<FlagValueNode>(Flag::MakeFlag(floatValue));
+                return std::make_shared<FlagValueNode>(FlagData::MakeFlag(floatValue));
             }
             if (
                 ((value.front() == '\"' && value.back() == '\"') || (value.front() == '\'' && value.back() == '\'')) && value.length() >= 2
             ) {
                 std::string strValue = value.substr(1, value.length() - 2);
-                return std::make_shared<FlagValueNode>(Flag::MakeFlag(strValue));
+                return std::make_shared<FlagValueNode>(FlagData::MakeFlag(strValue));
             }
             // Next check for function calls (not implemented yet)
             // Finally, if it's formated like a flag `${flag_name}`, extract the flag name
             if (value.length() >= 4 && (value[0] == '$' && value[1] == '{') && value.back() == '}') {
                 std::string flagName = value.substr(2, value.length() - 3);
-                FlagWrapper flag = Flags::getFlag(flagName);
-                FlagWrapper flagClone;
+                Flag flag = Flags::getFlag(flagName);
+                Flag flagClone;
                 if (flag.flag) 
                 {
                     flagClone = flag->clone();
                 }
                 else 
                 {
-                    WARNING_MESSAGE("Flag '" + flagName + "' not found, defaulting to false");
-                    flagClone = Flag::MakeFlag(false);
+                    // WARNING_MESSAGE("Flag '" + flagName + "' not found, defaulting to false");
+                    error.success = false;
+                    error.errorType = ErrorInfos::ErrorType::UNKNOWN_FLAG;
+                    error.messageExtra = &flagName;
+                    error.printError();
+                    flagClone = FlagData::MakeFlag(false);
                 }
                 
                 return std::make_shared<FlagValueNode>(flagClone.flag);
             }
-            WARNING_MESSAGE("Unrecognized flag or value: " + value + ", defaulting to false");
-            return std::make_shared<FlagValueNode>(Flag::MakeFlag(false));
+            // WARNING_MESSAGE("Unrecognized flag or value: " + value + ", defaulting to false");
+            error.success = false;
+            error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+            error.printError();
+            return std::make_shared<FlagValueNode>(FlagData::MakeFlag(false));
         }
         case FUNCTION:
         {
@@ -917,7 +990,10 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
             size_t parenOpenPos = value.find('(');
             size_t parenClosePos = value.rfind(')');
             if (parenOpenPos == std::string::npos || parenClosePos == std::string::npos || parenClosePos <= parenOpenPos) {
-                WARNING_MESSAGE("Invalid function token: " + value);
+                // WARNING_MESSAGE("Invalid function token: " + value);
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR; // shouldn't be happening due to prior checks (hopefully)
+                error.printError();
                 return nullptr;
             }
             std::string functionName = value.substr(0, parenOpenPos);
@@ -925,6 +1001,7 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
 
             // Split arguments by commas, taking care of nested parentheses
             std::vector<std::string> argumentStrings;
+            std::vector<std::pair<int, int>> argumentStringOffsets;
             argumentStrings.reserve(4);
             size_t lastPos = 0;
             int parenCount = 0;
@@ -935,14 +1012,17 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
                     parenCount--;
                 } else if (argsStr[i] == ',' && parenCount == 0) {
                     argumentStrings.push_back(argsStr.substr(lastPos, i - lastPos));
+                    argumentStringOffsets.push_back(std::make_pair(parenOpenPos + lastPos, i - 1));
                     lastPos = i + 1;
                 }
             }
             if (lastPos < argsStr.length()) {
                 argumentStrings.push_back(argsStr.substr(lastPos));
+                // + 1 cause there's probably a space after the comma but this is a bad solution
+                argumentStringOffsets.push_back(std::make_pair(parenOpenPos + lastPos + 1, parenClosePos - 1));
             }
 
-            return std::make_shared<FunctionNode>(functionName, argumentStrings);
+            return std::make_shared<FunctionNode>(functionName, argumentStrings, argumentStringOffsets);
         }
         case LOGICAL_AND: 
             return std::make_shared<LogicalAndOperatorNode>();
@@ -976,16 +1056,19 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
     }
 }
 
-LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> tokens)
+LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> tokens, const std::vector<std::pair<int, int>> &tokenPositions)
 {
-    if (tokens.empty()) {
+    if (tokens.empty()) { // should never happen
         WARNING_MESSAGE("No tokens to build operation tree");
         return nullptr;
     }
 
     OperationNodePtr currentNode = nullptr;
 
+    int errorColumnOffsetStart = error.column_start;
     for (int i = 0; i < tokens.size(); i++) {
+        error.column_start = errorColumnOffsetStart + tokenPositions[i].first;
+        error.column_end = errorColumnOffsetStart + tokenPositions[i].second;
         const Token& token = tokens[i];
         if (token.type == Token::TokenType::PARENS_OPEN)
         {
@@ -1003,32 +1086,48 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
                 }
             }
             if (parenCount != 0) {
-                WARNING_MESSAGE("Mismatched parentheses in logic block");
+                // WARNING_MESSAGE("Mismatched parentheses in logic block");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                error.printError();
                 return nullptr;
             }
-            OperationNodePtr subTree = buildOperationTree(
-                std::vector<Token>(tokens.begin() + i + 1, tokens.begin() + j)
-            );
-            if (!subTree) {
-                WARNING_MESSAGE("Failed to build subtree for parentheses");
-                return nullptr;
-            }
-            if (currentNode) {
-                currentNode->addChild(subTree);
-            } else {
-                currentNode = subTree;
+            std::vector<Token> paren_tokens = std::vector<Token>(tokens.begin() + i + 1, tokens.begin() + j);
+            std::vector<std::pair<int, int>> paren_token_positions = std::vector<std::pair<int, int>>(tokenPositions.begin() + i + 1, tokenPositions.begin() + j);
+            if (!paren_tokens.empty()) 
+            {
+
+                OperationNodePtr subTree = buildOperationTree(
+                    paren_tokens,
+                    paren_token_positions
+                );
+
+                if (!subTree) {
+                    // WARNING_MESSAGE("Failed to build subtree for parentheses");
+                    return nullptr;
+                }
+                if (currentNode) {
+                    currentNode->addChild(subTree);
+                } else {
+                    currentNode = subTree;
+                }
             }
             i = j; // Move index to closing parenthesis
             continue;
         }
         else if (token.type == Token::TokenType::PARENS_CLOSE)
         {
-            WARNING_MESSAGE("Mismatched parentheses in logic block");
+            // WARNING_MESSAGE("Mismatched parentheses in logic block");
+            error.success = false;
+            error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+            error.column_start = i;
+            error.column_end = i;
+            error.printError();
             return nullptr;
         }
         OperationNodePtr newNode = token.toOperationNode();
         if (!newNode) {
-            WARNING_MESSAGE("Failed to create operation node from token");
+            // WARNING_MESSAGE("Failed to create operation node from token");
             return nullptr;
         }
         
@@ -1059,7 +1158,10 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
                     newNode->addChild(currentNode);
                     currentNode = newNode;
                 } else {
-                    WARNING_MESSAGE("Operator node without left operand");
+                    // WARNING_MESSAGE("Operator node without left operand");
+                    error.success = false;
+                    error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+                    error.printError();
                     return nullptr;
                 }
                 break;
@@ -1069,13 +1171,13 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
         }
     }
 
-    while (currentNode->parent) {
+    while (currentNode && currentNode->parent) {
         currentNode = currentNode->parent;
     }
     return currentNode;
 }
 
-FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, size_t idx_end)
+FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, size_t idx_end)
 {
     std::string substring = str.substr(idx_start, idx_end - idx_start);
 
@@ -1084,15 +1186,22 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
     // search for ifs and parse them and tokenize the contents of the test, the then and the else if present
     for (int i = 0; i < substring.length(); i++) {
         if (substring.substr(i, 2) == "if") {
-            FlagPtr ifResult = nullptr;
+            FlagDataPtr ifResult = nullptr;
             // find parens and if there is anything but whitespace before them, it's not an if statement
             size_t j = i + 2;
             while (j < substring.length() && isspace(substring[j])) {
                 j++;
             }
             if (j >= substring.length() || substring[j] != '(') {
-                WARNING_MESSAGE("Malformed if statement in logic block");
-                return Flag::MakeFlag(false);
+                // WARNING_MESSAGE("Malformed if statement in logic block");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                error.column_start = i;
+                error.column_end = i;
+                static std::string info = " missing opening parenthesis for condition";
+                error.messageExtra = &info;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
             // find matching closing paren
             int parenCount = 1;
@@ -1108,11 +1217,20 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 }
             }
             if (parenCount != 0) {
-                WARNING_MESSAGE("Mismatched parentheses in if statement");
-                return Flag::MakeFlag(false);
+                // WARNING_MESSAGE("Mismatched parentheses in if statement");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                error.column_start = j;
+                error.column_end = j;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
             // parse the condition
-            FlagPtr conditionFlag = parse_substring(substring, j + 1, k);
+            size_t col_start_old = error.column_start;
+            size_t col_end_old = error.column_end;
+            error.column_start = idx_start + j + 1;
+            error.column_end = idx_start + k;
+            FlagDataPtr conditionFlag = parse_substring(substring, j + 1, k);
             bool condition = conditionFlag->as_bool();
             // find then
             size_t thenIdx = k + 1;
@@ -1120,8 +1238,15 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 thenIdx++;
             }
             if (substring.substr(thenIdx, 4) != "then") {
-                WARNING_MESSAGE("Malformed if statement, missing 'then'");
-                return Flag::MakeFlag(false);
+                // WARNING_MESSAGE("Malformed if statement, missing 'then'");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                error.column_start = thenIdx;
+                error.column_end = thenIdx;
+                static std::string info = " missing 'then' keyword";
+                error.messageExtra = &info;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
             thenIdx += 4;
             // get the content of the then block (delimited by parentheses)
@@ -1130,8 +1255,15 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 j++;
             }
             if (j >= substring.length() || substring[j] != '(') {
-                WARNING_MESSAGE("Malformed then block in if statement");
-                return Flag::MakeFlag(false);
+                // WARNING_MESSAGE("Malformed then block in if statement");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                error.column_start = j;
+                error.column_end = j;
+                static std::string info = " missing opening parenthesis for then block";
+                error.messageExtra = &info;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
             parenCount = 1;
             k = j + 1;
@@ -1146,9 +1278,16 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 }
             }
             if (parenCount != 0) {
-                WARNING_MESSAGE("Mismatched parentheses in then block");
-                return Flag::MakeFlag(false);
+                // WARNING_MESSAGE("Mismatched parentheses in then block");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                error.column_start = j;
+                error.column_end = j;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
+            size_t thenContentStart = j + 1;
+            size_t thenContentEnd = k;
             std::string thenContent = substring.substr(j + 1, k - j - 1);
 
             // check for else
@@ -1157,6 +1296,8 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 elseIdx++;
             
             std::string elseContent = "";
+            size_t elseContentStart = 0;
+            size_t elseContentEnd = 0;
             if (substring.substr(elseIdx, 4) == "else") {
                 elseIdx += 4;
                 // get the content of the else block (delimited by parentheses)
@@ -1165,8 +1306,15 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                     j++;
                 }
                 if (j >= substring.length() || substring[j] != '(') {
-                    WARNING_MESSAGE("Malformed else block in if statement");
-                    return Flag::MakeFlag(false);
+                    // WARNING_MESSAGE("Malformed else block in if statement");
+                    error.success = false;
+                    error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                    error.column_start = j;
+                    error.column_end = j;
+                    static std::string info = " missing opening parenthesis for else block";
+                    error.messageExtra = &info;
+                    error.printError();
+                    return FlagData::MakeFlag(false);
                 }
                 parenCount = 1;
                 k = j + 1;
@@ -1181,17 +1329,31 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                     }
                 }
                 if (parenCount != 0) {
-                    WARNING_MESSAGE("Mismatched parentheses in else block");
-                    return Flag::MakeFlag(false);
+                    // WARNING_MESSAGE("Mismatched parentheses in else block");
+                    error.success = false;
+                    error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                    error.column_start = j;
+                    error.column_end = j;
+                    error.printError();
+                    return FlagData::MakeFlag(false);
                 }
+                elseContentStart = j + 1;
+                elseContentEnd = k;
                 elseContent = substring.substr(j + 1, k - j - 1);
             }
             if (condition) {
+                error.column_start = idx_start + thenContentStart;
+                error.column_end = idx_start + thenContentEnd;
                 ifResult = parse_substring(thenContent, 0, thenContent.length());
             } else if (!elseContent.empty()) {
+                error.column_start = idx_start + elseContentStart;
+                error.column_end = idx_start + elseContentEnd;
                 // std::cout << "Parsing else content: " << elseContent << std::endl;
                 ifResult = parse_substring(elseContent, 0, elseContent.length());  
             } 
+
+            error.column_start = col_start_old;
+            error.column_end = col_end_old;
 
             if (ifResult)
             {
@@ -1199,12 +1361,12 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 std::string ifResultStr;
 
                 switch (ifResult->type) {
-                    case Flag::INT:
-                    case Flag::FLOAT:
-                    case Flag::BOOL:
+                    case FlagData::INT:
+                    case FlagData::FLOAT:
+                    case FlagData::BOOL:
                         ifResultStr = ifResult->as_string();
                         break;
-                    case Flag::STRING:
+                    case FlagData::STRING:
                         ifResultStr = "\"" + ifResult->as_string() + "\"";
                         break;
                     default:
@@ -1214,6 +1376,12 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
                 }
 
                 substring = substring.substr(0, i) + ifResultStr + substring.substr(k + 1);
+                // advance error.column_start by the length of the old if statement minus the length of the new result
+                // std::cout << "i: " << i << ", k: " << k << ", ifResultStr.length: " << ifResultStr.length() << std::endl;
+                // std::cout << "Old error.column_start: " << error.column_start << std::endl;
+                error.column_start += (k + 1 - i) - ifResultStr.length();
+                // std::cout << "Updated error.column_start to: " << error.column_start << std::endl;
+                error.column_end = error.column_start;
                 i += ifResultStr.length() - 1;
             }
             else 
@@ -1227,29 +1395,57 @@ FlagPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start, si
 
     if (substring.empty())
     {
-        return Flag::MakeFlag("");
+        return FlagData::MakeFlag("");
     }
 
     std::vector<Token> tokens;
-    tokenize(substring, tokens);
-    
-    OperationNodePtr root = buildOperationTree(tokens);
+    std::vector<std::pair<int, int>> tokenPositions;
+    bool success = tokenize(substring, tokens, tokenPositions);
+    if (success && !tokens.empty()) 
+    {   
+        OperationNodePtr root = buildOperationTree(tokens, tokenPositions);
 
-    if (root)
-        return root->evaluate();
+        if (root)
+            return root->evaluate();
+        else {
+            // WARNING_MESSAGE("Failed to build operation tree for logic block");
+            return FlagData::MakeFlag("");
+        }
+    }
     else {
-        WARNING_MESSAGE("Failed to build operation tree for logic block");
-        return Flag::MakeFlag("");
+        return FlagData::MakeFlag("");
     }
 }
 
-void LogicBlock::parse_string(std::string& str)
+void LogicBlock::parse_string(std::string& str, std::string* filename)
 {
+    error.clear();
+    error.fileName = filename;
+    error.lineNumber = 0;
+    std::string lineContentStr = str; // copy the content cause it's modified in place
+    error.LineContent = lineContentStr.c_str();
+    error.column_start = 0;
+    error.column_end = 0;
+
+
     std::string logicBlockStart = "$(";
     std::string logicBlockEnd = ")";
     
     size_t pos = 0;
+    size_t oldPos = 0;
+    size_t startGlobalIdx = 1;
     while ((pos = str.find(logicBlockStart, pos)) != std::string::npos) {
+        // poorly optimized but we need the count of newlines before pos
+        size_t newlineCount = 0;
+        size_t lineStart = 0;
+        for (size_t i = 0; i < pos; i++) {
+            if (str[i] == '\n')
+            {
+                newlineCount++;
+                lineStart = i + 1;
+            }
+        }
+        error.lineNumber = newlineCount;
         size_t startIdx = pos + logicBlockStart.length();
         size_t endIdx = startIdx;
         int parenCount = 1;
@@ -1262,13 +1458,28 @@ void LogicBlock::parse_string(std::string& str)
             endIdx++;
         }
         if (parenCount != 0) {
-            WARNING_MESSAGE("Mismatched parentheses in logic block");
-            break;
+            // WARNING_MESSAGE("Mismatched parentheses in logic block");
+            error.success = false;
+            error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+            error.column_start = startGlobalIdx + (pos - oldPos) + 1;
+            error.column_end = lineContentStr.length() + 1;
+            
+            error.printError();
+            error.clear();
         }
-        FlagPtr resultFlag = parse_substring(str, startIdx, endIdx - 1);
+        startGlobalIdx += pos - oldPos + logicBlockStart.length();
+        error.column_start = startGlobalIdx - lineStart;
+        error.column_end = startGlobalIdx - lineStart;
+        FlagDataPtr resultFlag = parse_substring(str, startIdx, endIdx - 1);
+
+
         std::string resultStr = resultFlag->as_string();
         str.replace(pos, endIdx - pos, resultStr);
         pos += resultStr.length();
+
+        startGlobalIdx += endIdx - startIdx;
+
+        oldPos = pos;
     }
 }
 
@@ -1299,12 +1510,16 @@ void writeInBuffer(
     *writeHead += size;
 };
 
-const LogicBlock::ErrorInfos& LogicBlock::parse_string_cstr(char ** input, size_t &len, size_t allocated)
+void LogicBlock::parse_string_cstr(char ** input, size_t &len, size_t allocated, std::string* filename) 
 {
-    error.success = true;
+    error.clear();
+    error.fileName = filename;
+    error.lineNumber = 0;
+    std::string lineContentStr(*input, len); // copy the content cause it's modified in place
+    error.LineContent = lineContentStr.c_str();
 
     static const char logicBlockStart[] = "$(";
-    static const char logicBlockEnd[] = ")";
+    // static const char logicBlockEnd[] = ")";
 
     static thread_local size_t blen = 4096;
     static thread_local char * buffer = new char[blen];
@@ -1313,9 +1528,24 @@ const LogicBlock::ErrorInfos& LogicBlock::parse_string_cstr(char ** input, size_
     char *writeHead = buffer;
 
     char * pos = 0;
-
+    size_t oldPos = 0;
+    size_t startGlobalIdx = 1;
     while((pos = strstr(readHead, logicBlockStart)))
     {
+        size_t globalPos = pos - *input;
+        // poorly optimized (cause we recomputeit from scratch for each logic block) but we need the count of newlines before pos
+        size_t newlineCount = 0;
+        size_t lineStart = 0;
+        for(size_t i = 0; i < (size_t)(pos - *input); i++)
+        {
+            if((*input)[i] == '\n')
+            {
+                newlineCount++;
+                lineStart = i+1;
+            }
+        }
+        error.lineNumber = newlineCount;
+
         size_t startIdx = (pos - readHead) + sizeof(logicBlockStart)-1;
         size_t endIdx = startIdx;
         int parenCount = 1;
@@ -1333,29 +1563,34 @@ const LogicBlock::ErrorInfos& LogicBlock::parse_string_cstr(char ** input, size_
         if (parenCount != 0)
         {
             error.success = false;
-            error.message = "Mismatched parentheses in logic block";
-            return error;
+            error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+            static std::string info = " unmatched parentheses in logic block";
+            error.messageExtra = &info;
+            
+            error.column_start = startGlobalIdx + (globalPos - oldPos) + 1;
+            error.column_end = lineContentStr.length() + 1;
+
+            error.printError();
+            error.clear();
         }
 
-        /* TODO do the cstr version
-        std::string resultStr = "[Flag goes here]";
-        */
+        startGlobalIdx += globalPos - oldPos + sizeof(logicBlockStart) - 1;
 
-        // FlagPtr resultFlag = parse_substring_cstr(*input, len, startIdx, endIdx-1);
-        FlagPtr resultFlag = parse_substring(*input, startIdx, endIdx - 1);
+        // FlagDataPtr resultFlag = parse_substring_cstr(*input, len, startIdx, endIdx-1);
+        error.column_start = startGlobalIdx - lineStart;
+        error.column_end = startGlobalIdx - lineStart;
 
-        if(!error.success)
-        {
-            return error;
-        }
+        FlagDataPtr resultFlag = parse_substring(readHead, startIdx, endIdx - 1);
 
         std::string resultStr = resultFlag->as_string();
-
 
         writeInBuffer(&buffer, &writeHead, readHead, pos-readHead, blen);
         writeInBuffer(&buffer, &writeHead, resultStr.c_str(), resultStr.size(), blen);
 
         readHead += endIdx;
+
+        startGlobalIdx += endIdx - startIdx;
+        oldPos = readHead - *input;
     }
 
     size_t remaining = ((*input)+len) - readHead + 1;
@@ -1368,10 +1603,6 @@ const LogicBlock::ErrorInfos& LogicBlock::parse_string_cstr(char ** input, size_
     writeInBuffer(input, &readHead, buffer, finalSize, allocated);
 
     len = finalSize-1;
-
-    error.message.clear();
-    error.success = true;
-    return error;
 }
 
 std::string getSubStringErrorHint(const char *input, const size_t idx_start, const size_t idx_end, int idx_Error)
@@ -1388,7 +1619,7 @@ std::string getSubStringErrorHint(const char *input, const size_t idx_start, con
     TODO : fix
     this doesn"t work for nested if
 */
-FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end)
+FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end)
 {
     // std::string input = str.substr(idx_start, idx_end - idx_start);
 
@@ -1407,7 +1638,7 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
         if (input[i] == 'i' && input[i+1] == 'f')
         {
             
-            FlagPtr ifResult = nullptr;
+            FlagDataPtr ifResult = nullptr;
             // find parens and if there is anything but whitespace before them, it's not an if statement
             size_t j = i + 2;
             while (j < idx_end && isspace(input[j])) {
@@ -1415,8 +1646,13 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
             }
             if (j >= idx_end || input[j] != '(') {
                 error.success = false;
-                error.message = "Malformed if statement in logic block " + getSubStringErrorHint(input, idx_end, idx_start, j);
-                return Flag::MakeFlag(false);
+                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                static std::string info = " missing opening parenthesis for condition";
+                error.messageExtra = &info;
+                error.column_start = j;
+                error.column_end = j;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
             // find matching closing paren
             int parenCount = 1;
@@ -1439,15 +1675,18 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
             if (parenCount != 0)
             {
                 error.success = false;
-                error.message = "Mismatched parentheses in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
-                return Flag::MakeFlag(false);
+                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                error.column_start = j;
+                error.column_end = j;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
 
             
             // parse the condition
-            // FlagPtr conditionFlag = parse_substring(input, j + 1, k);
-            FlagPtr conditionFlag = parse_substring_cstr(input, len, j+1, k);
-            if(!error.success) return Flag::MakeFlag(false);
+            // FlagDataPtr conditionFlag = parse_substring(input, j + 1, k);
+            FlagDataPtr conditionFlag = parse_substring_cstr(input, len, j+1, k);
+            if(!error.success) return FlagData::MakeFlag(false);
 
             bool condition = conditionFlag->as_bool();
             // find then
@@ -1463,8 +1702,14 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
                 input[thenIdx+3] != 'n'
             )
             {
-                WARNING_MESSAGE("Malformed if statement, missing 'then'" << "\n\t\t '" << input+thenIdx << "'");
-                return Flag::MakeFlag(false);
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                static std::string info = " missing 'then' keyword";
+                error.messageExtra = &info;
+                error.column_start = k + 1;
+                error.column_end = k + 1;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
             thenIdx += 4;
             // get the content of the then block (delimited by parentheses)
@@ -1474,8 +1719,13 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
             if (j >= idx_end || input[j] != '(')
             {
                 error.success = false;
-                error.message = "Malformed then block in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
-                return Flag::MakeFlag(false);
+                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                static std::string info = " missing opening parenthesis for then block";
+                error.messageExtra = &info;
+                error.column_start = j;
+                error.column_end = j;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
 
             parenCount = 1;
@@ -1496,8 +1746,11 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
             if (parenCount != 0)
             {
                 error.success = false;
-                error.message = "Mismatched parentheses in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
-                return Flag::MakeFlag(false);
+                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                error.column_start = j;
+                error.column_end = j;
+                error.printError();
+                return FlagData::MakeFlag(false);
             }
 
             // std::string thenContent = input.substr(j + 1, k - j - 1);
@@ -1527,8 +1780,13 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
                 if (j >= idx_end || input[j] != '(')
                 {
                     error.success = false;
-                    error.message = "Malformed else block in if statement" + getSubStringErrorHint(input, idx_end, idx_start, j);
-                    return Flag::MakeFlag(false);
+                    error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                    static std::string info = " missing opening parenthesis for else block";
+                    error.messageExtra = &info;
+                    error.column_start = j;
+                    error.column_end = j;
+                    error.printError();
+                    return FlagData::MakeFlag(false);
                 }
 
                 parenCount = 1;
@@ -1548,8 +1806,11 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
                 if (parenCount != 0)
                 {
                     error.success = false;
-                    error.message = "Mismatched parentheses in else block" + getSubStringErrorHint(input, idx_end, idx_start, j);
-                    return Flag::MakeFlag(false);
+                    error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                    error.column_start = j;
+                    error.column_end = j;
+                    error.printError();
+                    return FlagData::MakeFlag(false);
                 }
 
                 // lseContent = substring.substr(j + 1, k - j - 1);
@@ -1569,7 +1830,7 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
             } 
 
             if(!error.success)
-                return Flag::MakeFlag(false);
+                return FlagData::MakeFlag(false);
 
             if (ifResult)
             {
@@ -1578,16 +1839,16 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
 
                 switch (ifResult->type)
                 {
-                    case Flag::INT:
-                    case Flag::FLOAT:
-                    case Flag::BOOL:
+                    case FlagData::INT:
+                    case FlagData::FLOAT:
+                    case FlagData::BOOL:
                         ifResultStr = ifResult->as_string();
                         break;
-                    case Flag::STRING:
+                    case FlagData::STRING:
                         ifResultStr = "\"" + ifResult->as_string() + "\"";
                         break;
                     default:
-                        WARNING_MESSAGE("Unsupported flag type in if result conversion to string");
+                        WARNING_MESSAGE("Unsupported flag type in if result conversion to string"); // shouldn't ever be called since it can only happen if the flag type is NONE
                         ifResultStr = "false";
                         break;
                 }
@@ -1627,15 +1888,22 @@ FlagPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, const si
 
 
     std::vector<Token> tokens;
-    tokenize(ifProcessedTmp, tokens);
-    
-    OperationNodePtr root = buildOperationTree(tokens);
-
-    if (root)
-        return root->evaluate();
-    else
+    std::vector<std::pair<int, int>> tokenPositions;
+    bool success = tokenize(ifProcessedTmp, tokens, tokenPositions);
+    if (success && !tokens.empty()) 
     {
-        WARNING_MESSAGE("Failed to build operation tree for logic block");
-        return Flag::MakeFlag("");
+        OperationNodePtr root = buildOperationTree(tokens, tokenPositions);
+
+        if (root)
+            return root->evaluate();
+        else
+        {
+            // WARNING_MESSAGE("Failed to build operation tree for logic block");
+            return FlagData::MakeFlag("");
+        }
+    }
+    else 
+    {
+        return FlagData::MakeFlag("");
     }
 }

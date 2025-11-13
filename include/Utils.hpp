@@ -22,6 +22,7 @@
 /// TERMINAL
 const std::string TERMINAL_UNDERLINE = "\033[4m";
 const std::string TERMINAL_ERROR     = "\e[1;31m";
+const std::string TERMINAL_BOLD      = "\e[1m";
 const std::string TERMINAL_INFO      = "\033[94m";
 const std::string TERMINAL_OK        = "\033[92m";
 const std::string TERMINAL_RESET     = "\033[0m";
@@ -259,5 +260,11 @@ inline bool isFloat(const std::string& s, float& value) {
 }
 
 void angleVectors(const glm::vec3& angles, glm::vec3& forward, glm::vec3& right, glm::vec3& up);
+
+
+// get a specific line from a string, lines are 0-indexed and separated by '\n'. 
+// assumes a null-terminated string.
+// returns empty string if line not found
+std::string getLineFromString(const char* str, size_t line);
 
 #endif

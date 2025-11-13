@@ -210,7 +210,7 @@ void AssetLoadInfos::addToGlobalList(AssetVersion &asset)
 
         {{"vFlags", "Flags"}, {false, ""}},
 
-        // {{"FlagWrapper", "FlagWrapper"}, {false, ""}}
+        // {{"Flag", "Flag"}, {false, ""}}
     };
 
     for(auto i : filetypes)
