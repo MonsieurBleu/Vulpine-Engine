@@ -15,7 +15,7 @@ struct ScriptNameWrapper {
     std::string scriptName;
 };
 
-struct Flag : std::enable_shared_from_this<Flag> {
+struct FlagData : std::enable_shared_from_this<FlagData> {
     GENERATE_ENUM_FAST_REVERSE(Type,
         INT,
         FLOAT,
@@ -25,47 +25,47 @@ struct Flag : std::enable_shared_from_this<Flag> {
     Type type;
     bool isScripted = false;
 
-    Flag(Type t, bool scripted = false)
+    FlagData(Type t, bool scripted = false)
         : type(t)
         , isScripted(scripted)
     {
     }
-    Flag()
+    FlagData()
         : type(NONE)
         , isScripted(false) { };
 
-    static std::shared_ptr<Flag> MakeFlag(int value);
-    static std::shared_ptr<Flag> MakeFlag(float value);
-    static std::shared_ptr<Flag> MakeFlag(const std::string& value);
-    static std::shared_ptr<Flag> MakeFlag(const char* value);
-    static std::shared_ptr<Flag> MakeFlag(bool value);
+    static std::shared_ptr<FlagData> MakeFlag(int value);
+    static std::shared_ptr<FlagData> MakeFlag(float value);
+    static std::shared_ptr<FlagData> MakeFlag(const std::string& value);
+    static std::shared_ptr<FlagData> MakeFlag(const char* value);
+    static std::shared_ptr<FlagData> MakeFlag(bool value);
     template <typename T>
-    static std::shared_ptr<Flag> MakeFlagFromScript(const std::string& scriptName);
+    static std::shared_ptr<FlagData> MakeFlagFromScript(const std::string& scriptName);
 
     template <>
-    std::shared_ptr<Flag> MakeFlagFromScript<int>(const std::string& scriptName);
+    std::shared_ptr<FlagData> MakeFlagFromScript<int>(const std::string& scriptName);
     template <>
-    std::shared_ptr<Flag> MakeFlagFromScript<float>(const std::string& scriptName);
+    std::shared_ptr<FlagData> MakeFlagFromScript<float>(const std::string& scriptName);
     template <>
-    std::shared_ptr<Flag> MakeFlagFromScript<std::string>(const std::string& scriptName);
+    std::shared_ptr<FlagData> MakeFlagFromScript<std::string>(const std::string& scriptName);
     template <>
-    std::shared_ptr<Flag> MakeFlagFromScript<bool>(const std::string& scriptName);
+    std::shared_ptr<FlagData> MakeFlagFromScript<bool>(const std::string& scriptName);
 
-    Flag& operator=(int v);
-    Flag& operator=(float v);
-    Flag& operator=(const std::string& v);
-    Flag& operator=(bool v);
+    FlagData& operator=(int v);
+    FlagData& operator=(float v);
+    FlagData& operator=(const std::string& v);
+    FlagData& operator=(bool v);
     template <typename T>
-    Flag& operator=(const ScriptNameWrapper& v);
+    FlagData& operator=(const ScriptNameWrapper& v);
 
     template <>
-    Flag& operator= <int>(const ScriptNameWrapper& v);
+    FlagData& operator= <int>(const ScriptNameWrapper& v);
     template <>
-    Flag& operator= <float>(const ScriptNameWrapper& v);
+    FlagData& operator= <float>(const ScriptNameWrapper& v);
     template <>
-    Flag& operator= <std::string>(const ScriptNameWrapper& v);
+    FlagData& operator= <std::string>(const ScriptNameWrapper& v);
     template <>
-    Flag& operator= <bool>(const ScriptNameWrapper& v);
+    FlagData& operator= <bool>(const ScriptNameWrapper& v);
 
     virtual int as_int() = 0;
     virtual float as_float() = 0;
@@ -73,33 +73,33 @@ struct Flag : std::enable_shared_from_this<Flag> {
     virtual bool as_bool() = 0;
 
     std::string typeToString();
-    typedef std::shared_ptr<Flag> FlagPtr;
+    typedef std::shared_ptr<FlagData> FlagDataPtr;
 
-    static bool equals(const FlagPtr a, const FlagPtr b);
-    static bool notEquals(const FlagPtr a, const FlagPtr b);
-    static bool lessThan(const FlagPtr a, const FlagPtr b);
-    static bool greaterThan(const FlagPtr a, const FlagPtr b);
-    static bool lessThanOrEqual(const FlagPtr a, const FlagPtr b);
-    static bool greaterThanOrEqual(const FlagPtr a, const FlagPtr b);
-    static bool logicalAnd(const FlagPtr a, const FlagPtr b);
-    static bool logicalOr(const FlagPtr a, const FlagPtr b);
-    static bool logicalNot(const FlagPtr a);
-    static FlagPtr add(const FlagPtr a, const FlagPtr b);
-    static FlagPtr subtract(const FlagPtr a, const FlagPtr b);
-    static FlagPtr multiply(const FlagPtr a, const FlagPtr b);
-    static FlagPtr divide(const FlagPtr a, const FlagPtr b);
+    static bool equals(const FlagDataPtr a, const FlagDataPtr b);
+    static bool notEquals(const FlagDataPtr a, const FlagDataPtr b);
+    static bool lessThan(const FlagDataPtr a, const FlagDataPtr b);
+    static bool greaterThan(const FlagDataPtr a, const FlagDataPtr b);
+    static bool lessThanOrEqual(const FlagDataPtr a, const FlagDataPtr b);
+    static bool greaterThanOrEqual(const FlagDataPtr a, const FlagDataPtr b);
+    static bool logicalAnd(const FlagDataPtr a, const FlagDataPtr b);
+    static bool logicalOr(const FlagDataPtr a, const FlagDataPtr b);
+    static bool logicalNot(const FlagDataPtr a);
+    static FlagDataPtr add(const FlagDataPtr a, const FlagDataPtr b);
+    static FlagDataPtr subtract(const FlagDataPtr a, const FlagDataPtr b);
+    static FlagDataPtr multiply(const FlagDataPtr a, const FlagDataPtr b);
+    static FlagDataPtr divide(const FlagDataPtr a, const FlagDataPtr b);
 
-    FlagPtr clone();
+    FlagDataPtr clone();
 
-    operator struct FlagWrapper();
+    operator struct Flag();
 };
-typedef std::shared_ptr<Flag> FlagPtr;
+typedef std::shared_ptr<FlagData> FlagDataPtr;
 
-struct ScriptFlagBase : Flag {
+struct ScriptFlagBase : FlagData {
     std::string luaScriptName;
     uint64_t lastUpdate = (uint64_t)(-1); // Force update on first get
     ScriptFlagBase(Type t, const std::string& scriptName)
-        : Flag(t, true)
+        : FlagData(t, true)
         , luaScriptName(scriptName)
     {
     }
@@ -132,11 +132,11 @@ struct ScriptFlag : ScriptFlagBase {
     }
 };
 
-struct IntFlag : Flag {
+struct IntFlag : FlagData {
     int value;
 
     IntFlag(int v)
-        : Flag(INT)
+        : FlagData(INT)
         , value(v)
     {
     }
@@ -162,11 +162,11 @@ struct IntScriptFlag : ScriptFlag<int> {
     bool as_bool() override { return as_int() != 0; }
 };
 
-struct FloatFlag : Flag {
+struct FloatFlag : FlagData {
     float value;
 
     FloatFlag(float v)
-        : Flag(FLOAT)
+        : FlagData(FLOAT)
         , value(v)
     {
     }
@@ -189,11 +189,11 @@ struct FloatScriptFlag : ScriptFlag<float> {
     bool as_bool() override { return as_float() != 0.0f; }
 };
 
-struct StrFlag : Flag {
+struct StrFlag : FlagData {
     std::string value;
 
     StrFlag(const std::string& v)
-        : Flag(STRING)
+        : FlagData(STRING)
         , value(v)
     {
     }
@@ -258,11 +258,11 @@ struct StrScriptFlag : ScriptFlag<std::string> {
     bool as_bool() override { return !as_string().empty(); }
 };
 
-struct BoolFlag : Flag {
+struct BoolFlag : FlagData {
     bool value;
 
     BoolFlag(bool v)
-        : Flag(BOOL)
+        : FlagData(BOOL)
         , value(v)
     {
     }
@@ -289,114 +289,114 @@ struct BoolScriptFlag : ScriptFlag<bool> {
 
 
 
-struct FlagWrapper {
-    FlagPtr flag;
-    FlagWrapper()
+struct Flag {
+    FlagDataPtr flag;
+    Flag()
         : flag(nullptr)
     {
     }
-    FlagWrapper(FlagPtr f)
+    Flag(FlagDataPtr f)
         : flag(f)
     {
     }
 
-    FlagWrapper& operator=(int v)
+    Flag& operator=(int v)
     {
         if (flag) {
-            if (flag->type == Flag::Type::INT) {
+            if (flag->type == FlagData::Type::INT) {
                 *flag = v;
                 return *this;
             }
         }
-        flag = Flag::MakeFlag(v);
+        flag = FlagData::MakeFlag(v);
         return *this;
     }
 
-    FlagWrapper& operator=(float v)
+    Flag& operator=(float v)
     {
         if (flag) {
-            if (flag->type == Flag::Type::FLOAT) {
+            if (flag->type == FlagData::Type::FLOAT) {
                 *flag = v;
                 return *this;
             }
         }
-        flag = Flag::MakeFlag(v);
+        flag = FlagData::MakeFlag(v);
         return *this;
     }
 
-    FlagWrapper& operator=(const std::string& v)
+    Flag& operator=(const std::string& v)
     {
         if (flag) {
-            if (flag->type == Flag::Type::STRING) {
+            if (flag->type == FlagData::Type::STRING) {
                 *flag = v;
                 return *this;
             }
         }
-        flag = Flag::MakeFlag(v);
+        flag = FlagData::MakeFlag(v);
         return *this;
     }
 
-    FlagWrapper& operator=(const char* v)
+    Flag& operator=(const char* v)
     {
         if (flag) {
-            if (flag->type == Flag::Type::STRING) {
+            if (flag->type == FlagData::Type::STRING) {
                 *flag = std::string(v);
             }
         }
-        flag = Flag::MakeFlag(std::string(v));
+        flag = FlagData::MakeFlag(std::string(v));
         return *this;
     }
 
-    FlagWrapper& operator=(bool v)
+    Flag& operator=(bool v)
     {
         if (flag) {
-            if (flag->type == Flag::Type::BOOL) {
+            if (flag->type == FlagData::Type::BOOL) {
                 *flag = v;
                 return *this;
             }
         }
-        flag = Flag::MakeFlag(v);
+        flag = FlagData::MakeFlag(v);
         return *this;
     }
 
     template <typename T>
-    FlagWrapper& operator=(const ScriptNameWrapper& v);
+    Flag& operator=(const ScriptNameWrapper& v);
 
     template <>
-    FlagWrapper& operator= <int>(const ScriptNameWrapper& v)
+    Flag& operator= <int>(const ScriptNameWrapper& v)
     {
-        flag = Flag::MakeFlagFromScript<int>(v.scriptName);
+        flag = FlagData::MakeFlagFromScript<int>(v.scriptName);
 
         return *this;
     }
 
     template <>
-    FlagWrapper& operator= <float>(const ScriptNameWrapper& v)
+    Flag& operator= <float>(const ScriptNameWrapper& v)
     {
-        flag = Flag::MakeFlagFromScript<float>(v.scriptName);
+        flag = FlagData::MakeFlagFromScript<float>(v.scriptName);
         return *this;
     }
 
     template <>
-    FlagWrapper& operator= <std::string>(const ScriptNameWrapper& v)
+    Flag& operator= <std::string>(const ScriptNameWrapper& v)
     {
-        flag = Flag::MakeFlagFromScript<std::string>(v.scriptName);
+        flag = FlagData::MakeFlagFromScript<std::string>(v.scriptName);
         return *this;
     }
 
     template <>
-    FlagWrapper& operator= <bool>(const ScriptNameWrapper& v)
+    Flag& operator= <bool>(const ScriptNameWrapper& v)
     {
-        flag = Flag::MakeFlagFromScript<bool>(v.scriptName);
+        flag = FlagData::MakeFlagFromScript<bool>(v.scriptName);
         return *this;
     }
 
-    Flag& operator*() const
+    FlagData& operator*() const
     {
         return *flag;
     }
 
-    Flag* operator->() const
+    FlagData* operator->() const
     {
         return flag.get();
     }
@@ -425,54 +425,54 @@ struct FlagWrapper {
 
 class Flags {
 private:
-    std::unordered_map<std::string, FlagWrapper> flags;
+    std::unordered_map<std::string, Flag> flags;
 
 public:
 
     bool writeAsSaveFileMode = false;
 
-    static FlagWrapper& getFlag(const std::string& name);
+    static Flag& getFlag(const std::string& name);
 
     template <typename T>
     void setFlag(const std::string& flag, T value)
     {
-        flags[flag] = Flag::MakeFlag(value);
+        flags[flag] = FlagData::MakeFlag(value);
     }
 
     template <typename T>
     void setFlagFromScript(const std::string& flag, const std::string& scriptName)
     {
-        flags[flag] = Flag::MakeFlagFromScript<T>(scriptName);
+        flags[flag] = FlagData::MakeFlagFromScript<T>(scriptName);
     }
 
     template <typename T>
     void setFlag(const std::string& flag, const ScriptNameWrapper& value)
     {
-        flags[flag] = Flag::MakeFlagFromScript<T>(value.scriptName);
+        flags[flag] = FlagData::MakeFlagFromScript<T>(value.scriptName);
     }
 
-    void setFlag(const std::string& flag, FlagPtr value)
+    void setFlag(const std::string& flag, FlagDataPtr value)
     {
         flags[flag] = value;
     }
 
-    std::vector<std::pair<std::string, FlagWrapper>> getAllFlags() const
+    std::vector<std::pair<std::string, Flag>> getAllFlags() const
     {
-        std::vector<std::pair<std::string, FlagWrapper>> result;
+        std::vector<std::pair<std::string, Flag>> result;
         for (const auto& pair : flags) {
             result.push_back(pair);
         }
         return result;
     }
 
-    const std::unordered_map<std::string, FlagWrapper>& getAllFlagsMap() const
+    const std::unordered_map<std::string, Flag>& getAllFlagsMap() const
     {
         return flags;
     }
 
-    std::vector<std::pair<std::string, FlagWrapper>> getAllByValueFlags() const
+    std::vector<std::pair<std::string, Flag>> getAllByValueFlags() const
     {
-        std::vector<std::pair<std::string, FlagWrapper>> result;
+        std::vector<std::pair<std::string, Flag>> result;
         for (const auto& pair : flags) {
             if (!pair.second->isScripted)
                 result.push_back(pair);
@@ -480,9 +480,9 @@ public:
         return result;
     }
 
-    std::vector<std::pair<std::string, FlagWrapper>> getAllScriptedFlags() const
+    std::vector<std::pair<std::string, Flag>> getAllScriptedFlags() const
     {
-        std::vector<std::pair<std::string, FlagWrapper>> result;
+        std::vector<std::pair<std::string, Flag>> result;
         for (const auto& pair : flags) {
             if (pair.second->isScripted)
                 result.push_back(pair);
@@ -490,7 +490,7 @@ public:
         return result;
     }
 
-    FlagWrapper& operator[](const std::string& name)
+    Flag& operator[](const std::string& name)
     {
         // return getFlag(name);
         return this->flags[name];
@@ -504,9 +504,9 @@ public:
     class Function {
     private:
         std::string name;
-        std::vector<Flag::Type> expectedArgTypes;
-        Flag::Type expectedReturnType;
-        typedef std::function<FlagPtr(const std::vector<FlagPtr>&)> FlagFuncType;
+        std::vector<FlagData::Type> expectedArgTypes;
+        FlagData::Type expectedReturnType;
+        typedef std::function<FlagDataPtr(const std::vector<FlagDataPtr>&)> FlagFuncType;
         FlagFuncType func;
 
     public:
@@ -518,7 +518,7 @@ public:
                 "Function " + name + " created without argument type checking. This may lead to runtime errors.");
         }
 
-        Function(const std::string& name, Flag::Type expectedReturnType, const std::vector<Flag::Type>& argTypes, FlagFuncType func)
+        Function(const std::string& name, FlagData::Type expectedReturnType, const std::vector<FlagData::Type>& argTypes, FlagFuncType func)
             : name(name)
             , expectedArgTypes(argTypes)
             , expectedReturnType(expectedReturnType)
@@ -533,43 +533,60 @@ public:
             return name;
         }
 
-        Flag::Type getReturnType() const
+        FlagData::Type getReturnType() const
         {
             return expectedReturnType;
         }
 
-        Flag::Type getArgType(size_t index) const
+        FlagData::Type getArgType(size_t index) const
         {
             if (index >= expectedArgTypes.size()) {
                 WARNING_MESSAGE("Function " + name + " argument index out of range");
-                return Flag::Type::NONE;
+                return FlagData::Type::NONE;
             }
             return expectedArgTypes[index];
         }
 
-        std::optional<FlagPtr> call(const std::vector<FlagPtr>& args) const
+        std::optional<FlagDataPtr> call(const std::vector<FlagDataPtr>& args, std::vector<std::pair<int, int>> argumentStringOffsets) const
         {
             if (expectedArgTypes.size() == 0) // No type checking
                 return func(args);
 
             if (expectedArgTypes.size() != args.size()) {
-                WARNING_MESSAGE("Function " + name + " called with incorrect number of arguments. Expected " +
-                                std::to_string(expectedArgTypes.size()) + ", got " + std::to_string(args.size()) + ".");
+                // WARNING_MESSAGE("Function " + name + " called with incorrect number of arguments. Expected " +
+                //                 std::to_string(expectedArgTypes.size()) + ", got " + std::to_string(args.size()) + ".");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_ERROR_COUNT;
+                static std::string errorMsg = "In function " + name + ", Expected " +
+                    std::to_string(expectedArgTypes.size()) + ", got " + std::to_string(args.size()) + ".";
+                error.messageExtra = &errorMsg;
+                error.printError();
                 return std::nullopt;
             }
 
             for (size_t i = 0; i < expectedArgTypes.size(); i++) {
                 if (expectedArgTypes[i] != args[i]->type) {
                     // check if cast is possible
-                    if ((expectedArgTypes[i] == Flag::INT && args[i]->type == Flag::FLOAT) ||
-                        (expectedArgTypes[i] == Flag::FLOAT && args[i]->type == Flag::INT)) {
+                    if ((expectedArgTypes[i] == FlagData::INT && args[i]->type == FlagData::FLOAT) ||
+                        (expectedArgTypes[i] == FlagData::FLOAT && args[i]->type == FlagData::INT)) {
                         continue; // allow int<->float casting
                     }
 
-                    WARNING_MESSAGE("Function " + name + " called with incorrect argument type for argument " +
-                                    std::to_string(i) + ". Expected " +
-                                    Flag::TypeReverseMap[expectedArgTypes[i]] + ", got " +
-                                    Flag::TypeReverseMap[args[i]->type] + ".");
+                    // WARNING_MESSAGE("Function " + name + " called with incorrect argument type for argument " +
+                    //                 std::to_string(i) + ". Expected " +
+                    //                 FlagData::TypeReverseMap[expectedArgTypes[i]] + ", got " +
+                    //                 FlagData::TypeReverseMap[args[i]->type] + ".");
+                    error.success = false;
+                    error.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_ERROR_TYPE;
+                    static std::string errorMsg = "In function " + name + ", argument " +
+                        std::to_string(i) + ": Expected " +
+                        FlagData::TypeReverseMap[expectedArgTypes[i]] + ", got " +
+                        FlagData::TypeReverseMap[args[i]->type] + ".";
+                    error.messageExtra = &errorMsg;
+                    std::cout << "Offsets: " << argumentStringOffsets[i].first << ", " << argumentStringOffsets[i].second << std::endl;
+                    error.column_end = error.column_start + argumentStringOffsets[i].second;
+                    error.column_start += argumentStringOffsets[i].first;
+                    error.printError();
                     return std::nullopt;
                 }
             }
@@ -596,12 +613,15 @@ private:
         std::vector<std::shared_ptr<OperationNode>> children;
         int expectedChildren = 0;
         std::shared_ptr<OperationNode> parent;
-        virtual FlagPtr evaluate() = 0;
+        virtual FlagDataPtr evaluate() = 0;
 
         void addChild(std::shared_ptr<OperationNode> child)
         {
             if (children.size() + 1 > expectedChildren) {
-                WARNING_MESSAGE("Trying to add too many children to OperationNode");
+                // WARNING_MESSAGE("Trying to add too many children to OperationNode");
+                error.success = false;
+                error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+                error.printError();
                 return;
             }
             child->parent = shared_from_this();
@@ -612,16 +632,16 @@ private:
     typedef std::shared_ptr<OperationNode> OperationNodePtr;
 
     struct FlagValueNode : OperationNode {
-        FlagPtr value;
+        FlagDataPtr value;
 
-        FlagValueNode(FlagPtr v)
+        FlagValueNode(FlagDataPtr v)
             : value(v)
         {
             nodeType = VALUE;
             expectedChildren = 0;
         }
 
-        FlagPtr evaluate() override
+        FlagDataPtr evaluate() override
         {
             return value;
         }
@@ -631,16 +651,18 @@ private:
         std::string functionName;
 
         std::vector<std::string> argumentStrings;
+        std::vector<std::pair<int, int>> argumentStringOffsets;
 
-        FunctionNode(const std::string& fname, const std::vector<std::string>& argStrs)
+        FunctionNode(const std::string& fname, const std::vector<std::string>& argStrs, const std::vector<std::pair<int, int>>& argOffsets)
             : functionName(fname)
             , argumentStrings(argStrs)
+            , argumentStringOffsets(argOffsets)
         {
             nodeType = VALUE;
             expectedChildren = 0;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     struct NotOperatorNode : OperationNode {
@@ -650,7 +672,7 @@ private:
             expectedChildren = 1;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     struct AdditionOperatorNode : OperationNode {
@@ -666,7 +688,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     struct MultiplicationOperatorNode : OperationNode {
@@ -682,7 +704,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     struct ComparisonOperatorNode : OperationNode {
@@ -700,7 +722,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     struct EqualityOperatorNode : OperationNode {
@@ -716,7 +738,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     struct LogicalAndOperatorNode : OperationNode {
@@ -726,7 +748,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     struct LogicalOrOperatorNode : OperationNode {
@@ -736,7 +758,7 @@ private:
             expectedChildren = 2;
         }
 
-        FlagPtr evaluate() override;
+        FlagDataPtr evaluate() override;
     };
 
     class Token {
@@ -777,8 +799,142 @@ private:
     thread_local static inline struct ErrorInfos
     {
         bool success;
-        std::string message;
+        enum class ErrorType {
+            NONE,
+            UNKNOWN_FLAG,
+            UNSUPPORTED_OPERATION,
+            SYNTAX_ERROR,
+            UNMATCHED_PARENS,
+            UNKNOWN_FUNCTION,
+            FUNCTION_CALL_FAILED,
+            INVALID_ARGUMENTS,
+            MALFORMED_IF_STATEMENT,
+            FUNCTION_CALL_ERROR_COUNT,
+            FUNCTION_CALL_ERROR_TYPE
+        } errorType;
+
+        std::string* fileName;
+        const char* LineContent;
+        int lineNumber;
+        size_t column_start;
+        size_t column_end;
+        std::string* messageExtra;
+
+        ErrorInfos() : success(true), errorType(ErrorType::NONE), lineNumber(-1), column_start(0), column_end(0) {clear();}
+
+        void clear()
+        {
+            success = true;
+            errorType = ErrorType::NONE;
+            fileName = nullptr;
+            LineContent = nullptr;
+            messageExtra = nullptr;
+            lineNumber = -1;
+            column_start = 0;
+            column_end = 0;
+        }
+        void printError() const 
+        {
+            if (success)
+                return;
+
+            std::string errorMsg = "Error: ";
+            switch (errorType) {
+                case ErrorType::UNKNOWN_FLAG:
+                    errorMsg += "Unknown flag: " + *messageExtra;
+                    break;
+                case ErrorType::UNSUPPORTED_OPERATION:
+                    errorMsg += "Unsupported operation";
+                    break;
+                case ErrorType::SYNTAX_ERROR:
+                    errorMsg += "Syntax error";
+                    break;
+                case ErrorType::UNMATCHED_PARENS:
+                    errorMsg += "Unmatched parentheses";
+                    if (messageExtra && !(*messageExtra).empty()) {
+                        errorMsg += ": " + *messageExtra;
+                    }
+                    break;
+                case ErrorType::UNKNOWN_FUNCTION:
+                    errorMsg += "Unknown function: " + *messageExtra;
+                    break;
+                case ErrorType::FUNCTION_CALL_FAILED:
+                    errorMsg += "Function call failed";
+                    break;
+                case ErrorType::INVALID_ARGUMENTS:
+                    errorMsg += "Invalid argument: " + *messageExtra;
+                    break;
+                case ErrorType::MALFORMED_IF_STATEMENT:
+                    errorMsg += "Malformed if statement:" + *messageExtra;
+                    break;
+                case ErrorType::FUNCTION_CALL_ERROR_COUNT:
+                    errorMsg += "Wrong number of arguments in function call. ";
+                    errorMsg += *messageExtra;
+                    break;
+                case ErrorType::FUNCTION_CALL_ERROR_TYPE:
+                    errorMsg += "Wrong argument type in function call. ";
+                    errorMsg += *messageExtra;
+                    break;
+                default:
+                    errorMsg += "Unknown error";
+                    break;
+            }
+
+            if (error.column_start > 0 && LineContent != nullptr)
+            {   
+                std::string line = getLineFromString(LineContent, lineNumber);
+                // count the number of \t before column_start to adjust the column position
+                size_t tabCount = 0;
+                for (size_t i = 0; i < error.column_start - 1 && i < line.length(); i++) {
+                    if (line[i] == '\t') {
+                        tabCount++;
+                    }
+                }
+                // replace tabs with 4 spaces for error display
+                std::string adjustedLine;
+                for (char c : line) {
+                    if (c == '\t') {
+                        adjustedLine += "    ";
+                    } else {
+                        adjustedLine += c;
+                    }
+                }
+                line = adjustedLine;
+                size_t adjustedColumnStart = error.column_start + tabCount * 3; // each tab is replaced by 4 spaces, so we add 3 extra spaces
+                error.column_start = adjustedColumnStart;
+                size_t adjustedColumnEnd = error.column_end + tabCount * 3;
+                error.column_end = adjustedColumnEnd;
+
+                std::cerr << TERMINAL_ERROR << "ERROR   |" << TERMINAL_RESET << " While Parsing Logic Block: " << TERMINAL_INFO << TERMINAL_BOLD << "\"" << line << "\"";
+                if (fileName != nullptr) {
+                    std::cerr << TERMINAL_RESET << " in file " << TERMINAL_FILENAME << *fileName;
+                    if (lineNumber > 0) {
+                        std::cerr << ":" << lineNumber;
+                    }
+                }
+                std::cerr << "\n";
+                std::cerr << TERMINAL_ERROR << "        |> " << errorMsg << "\n";
+                std::cerr << "           \"" << line << "\"\n            ";
+                for (size_t i = 0; i < error.column_start - 1; i++) {
+                    std::cerr << " ";
+                }
+                std::cerr << "^";
+
+                if (error.column_end > error.column_start)
+                {
+                    for (size_t i = error.column_start + 1; i < error.column_end; i++) {
+                        std::cerr << "~";
+                    }
+                }
+                std::cerr << "\n\n";
+
+                std::cerr << TERMINAL_RESET;
+            }
+        }
     } error;
+
+    static OperationNodePtr buildOperationTree(std::vector<Token> tokens, const std::vector<std::pair<int, int>> &tokenPositions);
+    static bool tokenize(const std::string& str, std::vector<Token> &tokens, std::vector<std::pair<int, int>> &tokenPositions); 
 
 public:
     static void registerFunction(const Function& function)
@@ -786,15 +942,10 @@ public:
         functions[function.getName()] = function;
     }
 
-    static void parse_string(std::string& str);
-    static FlagPtr parse_substring(const std::string& str, size_t idx_start, size_t idx_end);
     
-
-    static const ErrorInfos& parse_string_cstr(char ** input, size_t &len, size_t Allocated);
-    static FlagPtr parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end);
-
+    static void parse_string(std::string& str, std::string* filename = nullptr);
+    static FlagDataPtr parse_substring(const std::string& str, size_t idx_start, size_t idx_end);
     
-private:
-    static OperationNodePtr buildOperationTree(std::vector<Token> tokens);
-    static void tokenize(const std::string& str, std::vector<Token> &tokens); 
+    static void parse_string_cstr(char ** input, size_t &len, size_t Allocated, std::string* filename = nullptr);
+    static FlagDataPtr parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end);
 };

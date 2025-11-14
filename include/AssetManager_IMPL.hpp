@@ -71,5 +71,5 @@ void loadAllModdedAssetsInfos(const char *filename)
     LOAD_ALL(ShaderInclPath)
 
     LOAD_ALL_DATA(Flags)
-    LOAD_ALL(FlagWrapper)
+    LOAD_ALL(Flag)
 }
