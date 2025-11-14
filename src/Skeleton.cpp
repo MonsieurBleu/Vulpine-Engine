@@ -36,20 +36,20 @@ void Skeleton::applyGraph(SkeletonAnimationState &state)
     }
 
 
-    for (size_t i = 0; i < s; i++)
-    {
-        quat parent = quat();
-        SkeletonBone &b = at(i);
-        if (b.parent >= 0)
-            parent = VEAC::toModelState(state[b.parent]).quaternion;
+    // for (size_t i = 0; i < s; i++)
+    // {
+    //     quat parent = quat();
+    //     SkeletonBone &b = at(i);
+    //     if (b.parent >= 0)
+    //         parent = VEAC::toModelState(state[b.parent]).quaternion;
 
-        ModelState3D s = VEAC::toModelState(state[i]);
-        Loader<ScriptInstance>::get("__TMP__AnimationFix").run(&s.quaternion, i, globals.appTime, parent);
-        s.quaternion = threadState["q2"];
+    //     ModelState3D s = VEAC::toModelState(state[i]);
+    //     Loader<ScriptInstance>::get("__TMP__AnimationFix").run(&s.quaternion, i, globals.appTime, parent);
+    //     s.quaternion = threadState["q2"];
 
-        s.forceUpdate();
-        state[i] = s.modelMatrix;
-    }
+    //     s.forceUpdate();
+    //     state[i] = s.modelMatrix;
+    // }
     
     /* TODO: refaire au propre plus tard avec les transformations de carrures 
     for (size_t i = 0; i < s; i++)

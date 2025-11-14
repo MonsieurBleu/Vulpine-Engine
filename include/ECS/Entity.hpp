@@ -252,6 +252,17 @@ class Entity
         }
         #endif
         ;  
+
+        bool is(const Entity &other) const{return *this == other;};
+
+        bool operator==(const Entity &other) const
+        {
+            for(int i = 0; i < ComponentCategory::END; i++)
+                if(ids[i] != other.ids[i])
+                    return false;
+            
+            return true;
+        }
 };
 
 #include <memory>

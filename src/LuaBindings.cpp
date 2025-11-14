@@ -63,7 +63,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         sol::meta_function::multiplication, type##_mul, \
         sol::meta_function::division,       type##_div, \
         sol::meta_function::addition,       type##_add, \
-        sol::meta_function::subtraction,    type##_sub,  \
+        sol::meta_function::subtraction,    type##_sub, \
         sol::meta_function::index, [](type & m, const int i){return m[i];}
 // MARK: GLM Types
     /*** Setting up glm vector type with operator bindings ***/
@@ -175,6 +175,15 @@ void VulpineLuaBindings::glm(sol::state &lua)
         )
     );
 
+    lua.set_function("distance", 
+        sol::overload(
+            LAMBDA_BIND_2(distance, const float, const float),
+            LAMBDA_BIND_2(distance, const vec2,  const vec2),
+            LAMBDA_BIND_2(distance, const vec3,  const vec3),
+            LAMBDA_BIND_2(distance, const vec4,  const vec4)
+        )
+    );
+
 // MARK: Vulpine Math
     /*** Setting up vulpine math utils functions bindings ***/
     lua.set_function("hsv2rgb",LAMBDA_BIND_1(hsv2rgb, vec3));
@@ -223,7 +232,8 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
             getUpdateCounter,
             getLastAvg,
             getMax,
-            reset
+            reset,
+            speed
         )
     }
     // MARK: ModelState3D
