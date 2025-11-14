@@ -61,7 +61,7 @@ ShaderError Shader::refresh(std::vector<std::string> &dependencies)
         GLchar ShaderError[logLength];
         glGetShaderInfoLog(shader, logLength, NULL, ShaderError);
         std::cerr
-            << TERMINAL_ERROR
+            << (result ? TERMINAL_WARNING : TERMINAL_ERROR)
             << "Error compiling shader "
             << TERMINAL_FILENAME
             << TERMINAL_UNDERLINE
@@ -108,7 +108,8 @@ ShaderError Shader::refresh(std::vector<std::string> &dependencies)
         }
         std::cerr << "\n" << TERMINAL_RESET;
 
-        return ShaderCompileError;
+        if(!result)
+            return ShaderCompileError;
     }
 
     // std::cout << "==================================================\n\n";
