@@ -45,6 +45,26 @@ FlagDataPtr FlagData::MakeFlagFromScript<bool>(const std::string& scriptName) {
     return std::make_shared<BoolScriptFlag>(scriptName);
 }
 
+template <>
+FlagDataPtr FlagData::MakeFlagFromLogicBlock<int>(const std::string& logicBlock) {
+    return std::make_shared<IntLogicFlag>(logicBlock);
+}
+
+template <>
+FlagDataPtr FlagData::MakeFlagFromLogicBlock<float>(const std::string& logicBlock) {
+    return std::make_shared<FloatLogicFlag>(logicBlock);
+}
+
+template <>
+FlagDataPtr FlagData::MakeFlagFromLogicBlock<std::string>(const std::string& logicBlock) {
+    return std::make_shared<StrLogicFlag>(logicBlock);
+}
+
+template <>
+FlagDataPtr FlagData::MakeFlagFromLogicBlock<bool>(const std::string& logicBlock) {
+    return std::make_shared<BoolLogicFlag>(logicBlock);
+}
+
 Flag& Flags::getFlag(const std::string& name) {
     // auto it = .find(name);
     // if (it != .end()) {
@@ -69,6 +89,11 @@ FlagData& FlagData::operator=(int v)
         return *this;
     }
 
+    if(isLogicBlock) {
+        WARNING_MESSAGE("Trying to assign int to logic block Flag");
+        return *this;
+    }
+
     static_cast<IntFlag*>(this)->value = v;
     return *this;
 }
@@ -82,6 +107,11 @@ FlagData& FlagData::operator=(float v)
 
     if(isScripted) {
         WARNING_MESSAGE("Trying to assign float to scripted Flag");
+        return *this;
+    }
+
+    if(isLogicBlock) {
+        WARNING_MESSAGE("Trying to assign float to logic block Flag");
         return *this;
     }
 
@@ -101,6 +131,11 @@ FlagData& FlagData::operator=(const std::string& v)
         return *this;
     }
 
+    if(isLogicBlock) {
+        WARNING_MESSAGE("Trying to assign string to logic block Flag");
+        return *this;
+    }
+
     static_cast<StrFlag*>(this)->value = v;
     return *this;
 }
@@ -114,6 +149,11 @@ FlagData& FlagData::operator=(bool v)
 
     if(isScripted) {
         WARNING_MESSAGE("Trying to assign bool to scripted Flag");
+        return *this;
+    }
+
+    if(isLogicBlock) {
+        WARNING_MESSAGE("Trying to assign bool to logic block Flag");
         return *this;
     }
 
@@ -215,7 +255,14 @@ VulpineTextOutputRef DataLoader<Flags>::write(const Flags &data, VulpineTextOutp
         out->Tabulate();
             for (const auto& pair : valueFlags) {
                 out->Entry();
-                std::string s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"" + pair.second->as_string() + "\"";
+                std::string s;
+                if (pair.second->isLogicBlock) 
+                {
+                    s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"$(" + ((LogicFlag*)(pair.second.flag.get()))->logicBlock + ")\"";
+                }
+                else {
+                    s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"" + pair.second->as_string() + "\"";
+                }
                 out->write(CONST_STRING_SIZED(s));
             }    
         out->Break();
@@ -271,12 +318,48 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                 const char* name = buff->read();
                 // buff->read();
                 const char* valueStr = buff->read();
+                bool isLogicBlock = false;
+                std::string logicBlockStr;
+                if (valueStr[0] == '$' && valueStr[1] == '(')
+                {
+                    int paren_count = 1;
+                    isLogicBlock = true;
+                    logicBlockStr = std::string(valueStr);
+
+                    // read until )
+                    
+                    // while (paren_count > 0)
+                    // {
+                    //     valueStr = buff->read();
+                    //     for (int i = 0; i < strlen(valueStr); i++)
+                    //     {
+                    //         if (valueStr[i] == '(')
+                    //             paren_count++;
+                    //         else if (valueStr[i] == ')')
+                    //             paren_count--;
+                    //     }
+                    //     logicBlockStr += " ";
+                    //     logicBlockStr += valueStr;
+                    // }
+
+                    // remove $() from logicBlockStr
+                    logicBlockStr = logicBlockStr.substr(2, logicBlockStr.length() - 3);
+
+                    // std::cout << "Logic Block for flag " << name << ": " << logicBlockStr << std::endl;
+                }
+                
 
                 // std::cout << "Flag: " << typeStr << " " << name << " = " << valueStr << std::endl;
 
                 switch (type) {
                     case FlagData::INT:
                     {
+                        if (isLogicBlock)
+                        {
+                            data.setFlagFromLogicBlock<int>(name, logicBlockStr);
+                            break;
+                        }
+
                         int intValue;
                         if (!isInteger(std::string(valueStr), intValue))
                         {
@@ -289,6 +372,12 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                     }
                     case FlagData::FLOAT:
                     {
+                        if (isLogicBlock)
+                        {
+                            data.setFlagFromLogicBlock<float>(name, logicBlockStr);
+                            break;
+                        }
+
                         float floatValue;
                         if (!isFloat(std::string(valueStr), floatValue))
                         {
@@ -300,9 +389,20 @@ Flags DataLoader<Flags>::read(VulpineTextBuffRef buff)
                         break;
                     }
                     case FlagData::STRING:
+                        if (isLogicBlock)
+                        {
+                            data.setFlagFromLogicBlock<std::string>(name, logicBlockStr);
+                            break;
+                        }
+
                         data.setFlag<std::string>(name, std::string(valueStr));
                         break;
                     case FlagData::BOOL:
+                        if (isLogicBlock)
+                        {
+                            data.setFlagFromLogicBlock<bool>(name, logicBlockStr);
+                            break;
+                        }
                         data.setFlag<bool>(name, FastTextParser::read<bool>(valueStr));
                         break;
                     default:
@@ -491,6 +591,22 @@ FlagDataPtr FlagData::clone()
                 return FlagData::MakeFlagFromScript<std::string>(((ScriptFlagBase*)this)->luaScriptName);
             case BOOL:
                 return FlagData::MakeFlagFromScript<bool>(((ScriptFlagBase*)this)->luaScriptName);
+            default:
+                WARNING_MESSAGE("Unsupported flag type for cloning");
+                return nullptr;
+        }
+    }
+    else if (isLogicBlock)
+    {
+        switch (type) {
+            case INT:
+                return FlagData::MakeFlagFromLogicBlock<int>(((LogicFlag*)this)->logicBlock);
+            case FLOAT:
+                return FlagData::MakeFlagFromLogicBlock<float>(((LogicFlag*)this)->logicBlock);
+            case STRING:
+                return FlagData::MakeFlagFromLogicBlock<std::string>(((LogicFlag*)this)->logicBlock);
+            case BOOL:
+                return FlagData::MakeFlagFromLogicBlock<bool>(((LogicFlag*)this)->logicBlock);
             default:
                 WARNING_MESSAGE("Unsupported flag type for cloning");
                 return nullptr;
@@ -1906,4 +2022,39 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
     {
         return FlagData::MakeFlag("");
     }
+}
+
+void LogicBlock::registerAllFunctions()
+{
+    LogicBlock::registerFunction(
+        LogicBlock::Function(
+            "pow",
+            FlagData::Type::FLOAT,
+            {
+                FlagData::Type::FLOAT,
+                FlagData::Type::FLOAT
+            },
+            [](const std::vector<FlagDataPtr>& args) -> FlagDataPtr
+            {
+                double base = args[0]->as_float();
+                double exponent = args[1]->as_float();
+                return FlagData::MakeFlag((float)std::pow(base, exponent));
+            }
+        )
+    );
+
+    LogicBlock::registerFunction(
+        LogicBlock::Function(
+            "print",
+            FlagData::Type::STRING,
+            {
+                FlagData::Type::STRING
+            },
+            [](const std::vector<FlagDataPtr>& args) -> FlagDataPtr
+            {
+                std::cout << args[0]->as_string() << std::endl;
+                return FlagData::MakeFlag("");
+            }
+        )
+    );
 }

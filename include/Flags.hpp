@@ -24,24 +24,27 @@ struct FlagData : std::enable_shared_from_this<FlagData> {
         NONE);
     Type type;
     bool isScripted = false;
+    bool isLogicBlock = false;
 
-    FlagData(Type t, bool scripted = false)
+    FlagData(Type t, bool scripted = false, bool logicBlock = false)
         : type(t)
         , isScripted(scripted)
+        , isLogicBlock(logicBlock)
     {
     }
     FlagData()
         : type(NONE)
-        , isScripted(false) { };
+        , isScripted(false) 
+        , isLogicBlock(false) { };
 
     static std::shared_ptr<FlagData> MakeFlag(int value);
     static std::shared_ptr<FlagData> MakeFlag(float value);
     static std::shared_ptr<FlagData> MakeFlag(const std::string& value);
     static std::shared_ptr<FlagData> MakeFlag(const char* value);
     static std::shared_ptr<FlagData> MakeFlag(bool value);
+
     template <typename T>
     static std::shared_ptr<FlagData> MakeFlagFromScript(const std::string& scriptName);
-
     template <>
     std::shared_ptr<FlagData> MakeFlagFromScript<int>(const std::string& scriptName);
     template <>
@@ -50,6 +53,17 @@ struct FlagData : std::enable_shared_from_this<FlagData> {
     std::shared_ptr<FlagData> MakeFlagFromScript<std::string>(const std::string& scriptName);
     template <>
     std::shared_ptr<FlagData> MakeFlagFromScript<bool>(const std::string& scriptName);
+
+    template <typename T>
+    static std::shared_ptr<FlagData> MakeFlagFromLogicBlock(const std::string& logicBlock);
+    template <>
+    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<int>(const std::string& logicBlock);
+    template <>
+    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<float>(const std::string& logicBlock);
+    template <>
+    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<std::string>(const std::string& logicBlock);
+    template <>
+    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<bool>(const std::string& logicBlock);
 
     FlagData& operator=(int v);
     FlagData& operator=(float v);
@@ -95,11 +109,12 @@ struct FlagData : std::enable_shared_from_this<FlagData> {
 };
 typedef std::shared_ptr<FlagData> FlagDataPtr;
 
+
 struct ScriptFlagBase : FlagData {
     std::string luaScriptName;
-    uint64_t lastUpdate = (uint64_t)(-1); // Force update on first get
+    // uint64_t lastUpdate = (uint64_t)(-1); // Force update on first get
     ScriptFlagBase(Type t, const std::string& scriptName)
-        : FlagData(t, true)
+        : FlagData(t, true, false)
         , luaScriptName(scriptName)
     {
     }
@@ -107,28 +122,31 @@ struct ScriptFlagBase : FlagData {
 
 template <typename T>
 struct ScriptFlag : ScriptFlagBase {
-    T lastValue;
+    // T lastValue;
 
     ScriptFlag(Type t, const std::string& scriptName)
         : ScriptFlagBase(t, scriptName)
     {
     }
-    T get(T defaultValue)
+    // T get(T defaultValue)
+    T get()
     {
-        if (lastUpdate == globals.appTime.getUpdateCounter())
-            return lastValue;
+        // if (lastUpdate == globals.appTime.getUpdateCounter())
+        //     return lastValue;
 
-        lastUpdate = globals.appTime.getUpdateCounter();
+        // lastUpdate = globals.appTime.getUpdateCounter();
 
         if (Loader<ScriptInstance>::loadingInfos.find(luaScriptName) != Loader<ScriptInstance>::loadingInfos.end()) {
             std::optional<T> r = Loader<ScriptInstance>::get(luaScriptName).template runAndReturn<T>();
             if (r.has_value()) {
-                lastValue = r.value();
-                return lastValue;
+                // lastValue = r.value();
+                // return lastValue;
+                return r.value();
             }
         }
-        lastValue = defaultValue;
-        return lastValue;
+        // lastValue = defaultValue;
+        // return lastValue;
+        return T();
     }
 };
 
@@ -156,7 +174,7 @@ struct IntScriptFlag : ScriptFlag<int> {
     {
     }
 
-    int as_int() override { return get(0); }
+    int as_int() override { return get(); }
     float as_float() override { return static_cast<float>(as_int()); }
     std::string as_string() override { return std::to_string(as_int()); }
     bool as_bool() override { return as_int() != 0; }
@@ -183,7 +201,7 @@ struct FloatScriptFlag : ScriptFlag<float> {
     {
     }
 
-    float as_float() override { return get(0.0f); }
+    float as_float() override { return get(); }
     int as_int() override { return static_cast<int>(as_float()); }
     std::string as_string() override { return std::to_string(as_float()); }
     bool as_bool() override { return as_float() != 0.0f; }
@@ -233,7 +251,7 @@ struct StrScriptFlag : ScriptFlag<std::string> {
     {
     }
 
-    std::string as_string() override { return get(""); }
+    std::string as_string() override { return get(); }
 
     int as_int() override
     {
@@ -281,7 +299,7 @@ struct BoolScriptFlag : ScriptFlag<bool> {
     {
     }
 
-    bool as_bool() override { return get(false); }
+    bool as_bool() override { return get(); }
     int as_int() override { return as_bool() ? 1 : 0; }
     float as_float() override { return as_bool() ? 1.0f : 0.0f; }
     std::string as_string() override { return as_bool() ? "true" : "false"; }
@@ -438,6 +456,13 @@ public:
     {
         flags[flag] = FlagData::MakeFlag(value);
     }
+
+    template<typename T>
+    void setFlagFromLogicBlock(const std::string& flag, const std::string& logicBlock)
+    {
+        flags[flag] = FlagData::MakeFlagFromLogicBlock<T>(logicBlock);
+    }
+    
 
     template <typename T>
     void setFlagFromScript(const std::string& flag, const std::string& scriptName)
@@ -942,10 +967,96 @@ public:
         functions[function.getName()] = function;
     }
 
+    static void registerAllFunctions();
+
     
     static void parse_string(std::string& str, std::string* filename = nullptr);
     static FlagDataPtr parse_substring(const std::string& str, size_t idx_start, size_t idx_end);
     
     static void parse_string_cstr(char ** input, size_t &len, size_t Allocated, std::string* filename = nullptr);
     static FlagDataPtr parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end);
+};
+
+struct LogicFlag : FlagData {
+    std::string logicBlock;
+    LogicFlag(Type t, const std::string& logic)
+        : FlagData(t, false, true)
+        , logicBlock(logic)
+    {
+    } 
+};
+
+struct IntLogicFlag : LogicFlag 
+{
+    IntLogicFlag(const std::string& logic)
+        : LogicFlag(INT, logic)
+    {
+    }
+
+    int as_int() override { 
+        return LogicBlock::parse_substring(logicBlock, 0, logicBlock.size())->as_int();
+    }
+    float as_float() override { return static_cast<float>(as_int()); }
+    std::string as_string() override { return std::to_string(as_int()); }
+    bool as_bool() override { return as_int() != 0; }
+};
+
+struct FloatLogicFlag : LogicFlag 
+{
+    FloatLogicFlag(const std::string& logic)
+        : LogicFlag(FLOAT, logic)
+    {
+    }
+
+    float as_float() override { 
+        return LogicBlock::parse_substring(logicBlock, 0, logicBlock.size())->as_float();
+    }
+    int as_int() override { return static_cast<int>(as_float()); }
+    std::string as_string() override { return std::to_string(as_float()); }
+    bool as_bool() override { return as_float() != 0.0f; }
+};
+
+struct StrLogicFlag : LogicFlag 
+{
+    StrLogicFlag(const std::string& logic)
+        : LogicFlag(STRING, logic)
+    {
+    }
+
+    std::string as_string() override {
+        // std::cout << "Parsing: " << logicBlock << std::endl;
+        return LogicBlock::parse_substring(logicBlock, 0, logicBlock.size())->as_string();
+    }
+    int as_int() override { 
+        try {
+            return std::stoi(as_string());
+        } catch (...) {
+            WARNING_MESSAGE("Failed to convert string to int: " + as_string());
+            return 0;
+        }
+    }
+    float as_float() override { 
+        try {
+            return std::stof(as_string());
+        } catch (...) {
+            WARNING_MESSAGE("Failed to convert string to float: " + as_string());
+            return 0.0f;
+        }
+    }
+    bool as_bool() override { return !as_string().empty(); }
+};
+
+struct BoolLogicFlag : LogicFlag 
+{
+    BoolLogicFlag(const std::string& logic)
+        : LogicFlag(BOOL, logic)
+    {
+    }
+
+    bool as_bool() override { 
+        return LogicBlock::parse_substring(logicBlock, 0, logicBlock.size())->as_bool();
+    }
+    int as_int() override { return as_bool() ? 1 : 0; }
+    float as_float() override { return as_bool() ? 1.0f : 0.0f; }
+    std::string as_string() override { return as_bool() ? "true" : "false"; }
 };

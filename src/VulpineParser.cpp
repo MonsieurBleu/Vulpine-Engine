@@ -52,6 +52,12 @@ void VulpineTextBuff::loadFromFile(const char *filename)
 
 void VulpineTextBuff::parseFlagsScripting()
 {
+    std::string ext = getFileExtension(source);
+    
+    if (ext == "vFlags") {
+        return;
+    }
+
     if(!logicParsed)
     {
         LogicBlock::parse_string_cstr(&data, size, size, &source);
