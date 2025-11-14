@@ -31,6 +31,11 @@ vec3 screenPosToModel(vec2 screenPos);
 
     float angle(const vec2 &v1, const vec2& v2);
 
+    /*
+        NOTE : this used vec3(0, 1, 0) as default up
+        can be bad if your direction is close to the up
+        just use quat look at instead
+    */
     quat directionToQuat(vec3 dir);
     
     vec3 directionToEuler(vec3 dir);

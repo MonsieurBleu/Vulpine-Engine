@@ -44,7 +44,7 @@ inline thread_local std::string threadStateName;
 // inline thread_local sol::state threadState(sol::c_call<decltype(&my_panic), &my_panic>);
 inline thread_local sol::state threadState;
 
-class ScriptInstance : sol::load_result 
+class ScriptInstance : public sol::load_result 
 {
     private : 
 

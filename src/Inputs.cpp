@@ -36,33 +36,33 @@ bool InputBuffer::pull(GLFWKeyInfo &input)
 };
 
 EventInput &InputManager::addEventInput(std::string inputName, int keyCode, int mods, int action,
-                                        InputCallback callback, InputFilter filter, bool isScanCode)
+                                        InputCallback callback, InputFilter filter, bool isScanCode, InputCallback falseCondCallback)
 {
-    EventInput input(inputName, keyCode, callback, filter, mods, action, isScanCode);
+    EventInput input(inputName, keyCode, callback, filter, mods, action, isScanCode, falseCondCallback);
     eventInputs.push_back(input);
     return eventInputs.back();
 };
 
 EventInput &InputManager::addEventInput(std::string inputName, int keyCode, int mods, int action,
-                                        std::string luaCallbackFilename, InputFilter filter, bool isScanCode)
+                                        std::string luaCallbackFilename, InputFilter filter, bool isScanCode, InputCallback falseCondCallback)
 {
-    EventInput input(inputName, keyCode, luaCallbackFilename, filter, mods, action, isScanCode);
+    EventInput input(inputName, keyCode, luaCallbackFilename, filter, mods, action, isScanCode, falseCondCallback);
     eventInputs.push_back(input);
     return eventInputs.back();
 };
 
 ContinuousInput &InputManager::addContinuousInput(std::string inputName, int keyCode, InputCallback callback,
-                                                  InputFilter filter)
+                                                  InputFilter filter, InputCallback falseCondCallback)
 {
-    ContinuousInput input(inputName, keyCode, callback, filter);
+    ContinuousInput input(inputName, keyCode, callback, filter, falseCondCallback);
     continuousInputs.push_back(input);
     return continuousInputs.back();
 };
 
 ContinuousInput &InputManager::addContinuousInput(std::string inputName, int keyCode,
-                                                  std::string luaCallbackFilename, InputFilter filter)
+                                                  std::string luaCallbackFilename, InputFilter filter, InputCallback falseCondCallback)
 {
-    ContinuousInput input(inputName, keyCode, luaCallbackFilename, filter);
+    ContinuousInput input(inputName, keyCode, luaCallbackFilename, filter, falseCondCallback);
     continuousInputs.push_back(input);
     return continuousInputs.back();
 };
@@ -105,12 +105,36 @@ void InputManager::processContinuousInputs()
 {
     for (auto handler : continuousInputs)
     {
-        if (glfwGetKey(globals.getWindow(), handler.keyCode) == GLFW_PRESS)
-        {
-            if (handler.filter())
-            {
-                handler();
-            }
+        if(!handler.activated)
+            continue;
+
+        switch (handler.keyCode) {
+            case GLFW_MOUSE_BUTTON_1 :
+            case GLFW_MOUSE_BUTTON_2 :
+            case GLFW_MOUSE_BUTTON_3 :
+            case GLFW_MOUSE_BUTTON_4 :
+            case GLFW_MOUSE_BUTTON_5 :
+            case GLFW_MOUSE_BUTTON_6 :
+            case GLFW_MOUSE_BUTTON_7 :
+            case GLFW_MOUSE_BUTTON_8 :
+                if(handler.filter)
+                {
+                    if(glfwGetMouseButton(globals.getWindow(), handler.keyCode) == GLFW_PRESS)
+                        handler();
+                    else if(handler.falseCondCallback)
+                        handler.falseCondCallback();
+                }
+            break;
+
+            default : 
+                if(handler.filter)
+                {
+                    if(glfwGetKey(globals.getWindow(), handler.keyCode) == GLFW_PRESS)
+                        handler();
+                    else if(handler.falseCondCallback)
+                        handler.falseCondCallback();
+                }
+            break;
         }
     }
 }
@@ -223,39 +247,24 @@ std::vector<std::pair<std::string, int>> nonPrintableKeysNames =
     {"MENU",348}
 };
 
-std::string InputManager::getInputKeyString(const EventInput& input)
+void getInputKeySimple(const GenericInput& input, std::string& keyString)
 {
-    std::string keyString;
-
-    if (input.mods & GLFW_MOD_SHIFT)
-        keyString += "Shift + ";
-
-    if (input.mods & GLFW_MOD_CONTROL)
-        keyString += "Ctrl + ";
-
-    if (input.mods & GLFW_MOD_ALT)
-        keyString += "Alt + ";
-
-    if (input.mods & GLFW_MOD_SUPER)
-        keyString += "Super + ";
-
-    // keyString = glfwGetKeyName(input.keyCode, 0);
-
-    
-
     if(input.keyCode >= GLFW_MOUSE_BUTTON_1 && input.keyCode <= GLFW_MOUSE_BUTTON_8)
     {
-        return keyString + "MOUSE " + std::to_string(input.keyCode - GLFW_MOUSE_BUTTON_1 + 1);
+        keyString += "MOUSE " + std::to_string(input.keyCode - GLFW_MOUSE_BUTTON_1 + 1);
+        return;
     }
     else
     {
         for(auto &i : nonPrintableKeysNames)
         {
             if(i.second == input.keyCode)
-                return keyString + i.first;
+            {
+                keyString += i.first;
+                return;
+            }
         }
     }
-    
 
     const char *name = glfwGetKeyName(input.keyCode, GLFW_KEY_UNKNOWN);
     if(!name)
@@ -270,6 +279,34 @@ std::string InputManager::getInputKeyString(const EventInput& input)
         WARNING_MESSAGE("Can't retreive key name " << input.keyCode);
         keyString += "UNKNOWN KEY";
     }
+}
+
+std::string InputManager::getInputKeyString(const EventInput& input)
+{
+    std::string keyString = "";
+
+    if (input.mods & GLFW_MOD_SHIFT)
+        keyString += "Shift + ";
+
+    if (input.mods & GLFW_MOD_CONTROL)
+        keyString += "Ctrl + ";
+
+    if (input.mods & GLFW_MOD_ALT)
+        keyString += "Alt + ";
+
+    if (input.mods & GLFW_MOD_SUPER)
+        keyString += "Super + ";
+
+    getInputKeySimple((GenericInput)input, keyString);
+
+    return keyString;
+}
+
+std::string InputManager::getInputKeyString(const ContinuousInput& input)
+{
+    std::string keyString = "";
+
+    getInputKeySimple((GenericInput)input, keyString);
 
     return keyString;
 }

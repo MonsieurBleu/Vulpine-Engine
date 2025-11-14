@@ -43,7 +43,7 @@ vec3 setTheta(vec3 v, float t)
 quat directionToQuat(vec3 dir)
 {
     // return quat_cast(lookAt(dir, vec3(0), vec3(0, 1, 0)));
-    return quatLookAt(dir * vec3(-1, 1, -1), vec3(0, 1, 0));
+    return quatLookAt(dir * vec3(1, 1, 1), vec3(0, 1, 0));
 }
 
 vec3 directionToEuler(vec3 dir)
