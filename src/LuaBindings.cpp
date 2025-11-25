@@ -1,16 +1,9 @@
-#include <Scripting/LuaBindings.hpp>
+#include <Scripting/LuaBindingUtils.hpp>
 #include <lua.h>
 // #include <sol/variadic_args.hpp>
-#include <sol/sol.hpp>
+// #include <sol/sol.hpp>
 
-// MARK: Bind all
-void VulpineLuaBindings::bindAll(sol::state& lua)
-{
-    glm(lua);
-    VulpineTypes(lua);
-    Entities(lua);
-    Utils(lua);
-}
+#include <fstream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -19,205 +12,443 @@ void VulpineLuaBindings::bindAll(sol::state& lua)
 using namespace glm;
 #include <MathsUtils.hpp>
 
+#include <AssetManagerUtils.hpp>
+
 #include <Utils.hpp>
+
+#include <Timer.hpp>
+
+// MARK: Bind all
+void VulpineLuaBindings::bindAll(sol::state& lua)
+{
+    #undef CURRENT_CLASS_BINDING
+    luaHeader.clear();
+    VBIND_INIT_HEADER
+
+    VBIND_CLASS_DECLARE_ALIAS(void, nil)
+    VBIND_CLASS_DECLARE_ALIAS(bool, boolean)
+
+    VBIND_CLASS_DECLARE_ALIAS(int, integer)
+    VBIND_CLASS_DECLARE_ALIAS(short, integer)
+    VBIND_CLASS_DECLARE_ALIAS(long, integer)
+    VBIND_CLASS_DECLARE_ALIAS(unsigned int, integer)
+    VBIND_CLASS_DECLARE_ALIAS(unsigned short, integer)
+    VBIND_CLASS_DECLARE_ALIAS(unsigned long, integer)
+
+    VBIND_CLASS_DECLARE_ALIAS(float, number)
+    VBIND_CLASS_DECLARE_ALIAS(double, number)
+
+    VBIND_CLASS_DECLARE_ALIAS(std::string, string)
+
+    glm(lua);
+    VulpineTypes(lua);
+    Entities(lua);
+    Utils(lua);
+}
+
+int foo(int i, float e, const std::string &test){return 0;}
+float foo(int i){return 0.f;}
+
+int foo2(float j, ivec2 b){return 0;};
 
 // MARK: GLM Bindings
 void VulpineLuaBindings::glm(sol::state &lua)
-{
+{    
+    VBIND_INIT_HEADER_CATEGORY("GLM")
 
-    #define GENERATE_MUL_OPERATOR_OVERLOAD_OP(ov) \
-        auto vec2_##ov = sol::overload(OVERLOAD_OP(vec2, vec2), OVERLOAD_OP_ALL(vec2, float), OVERLOAD_OP_ALL(vec2, mat2)); \
-        auto vec3_##ov = sol::overload(OVERLOAD_OP(vec3, vec3), OVERLOAD_OP_ALL(vec3, float), OVERLOAD_OP_ALL(vec3, mat3)); \
-        auto vec4_##ov = sol::overload(OVERLOAD_OP(vec4, vec4), OVERLOAD_OP_ALL(vec4, float), OVERLOAD_OP_ALL(vec4, mat3),  OVERLOAD_OP_ALL(vec4, mat4)); \
-        auto mat2_##ov = sol::overload(OVERLOAD_OP(mat2, mat2), OVERLOAD_OP_ALL(mat2, float), OVERLOAD_OP_ALL(vec2, mat2)); \
-        auto mat3_##ov = sol::overload(OVERLOAD_OP(mat3, mat3), OVERLOAD_OP_ALL(mat3, float), OVERLOAD_OP_ALL(vec3, mat3)); \
-        auto mat4_##ov = sol::overload(OVERLOAD_OP(mat4, mat4), OVERLOAD_OP_ALL(mat4, float), OVERLOAD_OP_ALL(vec4, mat4)); 
+    VBIND_CLASS_DECLARE(vec2)
+    VBIND_CLASS_DECLARE(vec3)
+    VBIND_CLASS_DECLARE(vec4)
 
-    #define GENERATE_ADD_OPERATOR_OVERLOAD_OP(ov) \
-        auto vec2_##ov = sol::overload(OVERLOAD_OP(vec2, vec2)); \
-        auto vec3_##ov = sol::overload(OVERLOAD_OP(vec3, vec3)); \
-        auto vec4_##ov = sol::overload(OVERLOAD_OP(vec4, vec4)); \
-        auto mat2_##ov = sol::overload(OVERLOAD_OP(mat2, mat2)); \
-        auto mat3_##ov = sol::overload(OVERLOAD_OP(mat3, mat3)); \
-        auto mat4_##ov = sol::overload(OVERLOAD_OP(mat4, mat4)); \
-        auto quat_##ov = sol::overload(OVERLOAD_OP(quat, quat));
+    VBIND_CLASS_DECLARE(ivec2)
+    VBIND_CLASS_DECLARE(ivec3)
+    VBIND_CLASS_DECLARE(ivec4)
 
-    #undef VLB_GLM_CUR_OPERATOR
-    #define VLB_GLM_CUR_OPERATOR *
-    GENERATE_MUL_OPERATOR_OVERLOAD_OP(mul)
+    
+    VBIND_CLASS_DECLARE(mat2)
+    VBIND_CLASS_DECLARE(mat3)
+    VBIND_CLASS_DECLARE(mat4)
+    
+    VBIND_CLASS_DECLARE(imat2x2)
+    VBIND_CLASS_DECLARE(imat3x3)
+    VBIND_CLASS_DECLARE(imat4x4)
 
-    #undef VLB_GLM_CUR_OPERATOR
-    #define VLB_GLM_CUR_OPERATOR /
-    GENERATE_MUL_OPERATOR_OVERLOAD_OP(div)
+    VBIND_CLASS_DECLARE(quat)
 
-    #undef VLB_GLM_CUR_OPERATOR
-    #define VLB_GLM_CUR_OPERATOR +
-    GENERATE_ADD_OPERATOR_OVERLOAD_OP(add)
+    luaHeader << luaHeaderAppendBuffer.str() << "\n";
 
-    #undef VLB_GLM_CUR_OPERATOR
-    #define VLB_GLM_CUR_OPERATOR -
-    GENERATE_ADD_OPERATOR_OVERLOAD_OP(sub)
+    #define CURRENT_CLASS_BINDING ivec2
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((int), (int, int), (ivec2), (vec2), (ivec3), (vec3), (ivec4), (vec4)),
+            (("x"), ("x", "y"))
+        )
+        VBIND_ADD_MEMBERS(x, y, r, g)
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, imat2x2)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    #define CURRENT_CLASS_BINDING ivec3
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((int), (int, int, int), (ivec3), (vec3), (ivec4), (vec4)),
+            (("x"), ("x", "y", "z"))
+        )
+        VBIND_ADD_MEMBERS(x, y, z, r, g, b)
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, imat3x3)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    #define CURRENT_CLASS_BINDING ivec4
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((int), (int, int, int, int), (ivec4), (vec4)),
+            (("x"), ("x", "y", "z", "w"))
+        )
+        VBIND_ADD_MEMBERS(x, y, z, w, r, g, b, a)
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, imat4x4)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
 
 
-    #define SET_OVERLOAD_OPS(type) \
-        sol::meta_function::multiplication, type##_mul, \
-        sol::meta_function::division,       type##_div, \
-        sol::meta_function::addition,       type##_add, \
-        sol::meta_function::subtraction,    type##_sub, \
-        sol::meta_function::index, [](type & m, const int i){return m[i];}
-// MARK: GLM Types
-    /*** Setting up glm vector type with operator bindings ***/
-    lua.new_usertype<vec2>("vec2", 
-        sol::call_constructor, sol::constructors<vec2(), vec2(float), vec2(float, float)>(),
-        "x", &vec2::x, "r", &vec2::r,
-        "y", &vec2::y, "g", &vec2::g,
-        SET_OVERLOAD_OPS(vec2)
+
+    #define CURRENT_CLASS_BINDING vec2
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((float), (float, float), (ivec2), (vec2), (ivec3), (vec3), (ivec4), (vec4)),
+            (("x"), ("x", "y"))
+        )
+        VBIND_ADD_MEMBERS(x, y, r, g)
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, mat2)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, float, mat2)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    #define CURRENT_CLASS_BINDING vec3
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((float), (float, float, float), (ivec3), (vec3), (ivec4), (vec4)),
+            (("x"), ("x", "y", "z"))
+        )
+        VBIND_ADD_MEMBERS(x, y, z, r, g, b)
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, mat3, quat)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, float, mat3)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    #define CURRENT_CLASS_BINDING vec4
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((float), (float, float, float, float), (ivec4), (vec4)),
+            (("x"), ("x", "y", "z", "w"))
+        )
+        VBIND_ADD_MEMBERS(x, y, z, w, r, g, b, a)
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, mat4)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, float, mat4)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+
+
+    #define CURRENT_CLASS_BINDING imat2x2
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((int), (int, int, int, int), (imat2x2), (mat2), (imat3x3), (mat3), (imat4x4), (mat4)),
+            ()
+        )
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, ivec2)
+        VBIND_ADD_OPERATOR_DIV(int)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    #define CURRENT_CLASS_BINDING imat3x3
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((int), (int, int, int, int, int, int, int, int, int), (imat3x3), (mat3), (imat4x4), (mat4)),
+            ()
+        )
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, ivec3)
+        VBIND_ADD_OPERATOR_DIV(int)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+
+    #define CURRENT_CLASS_BINDING imat4x4
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((int), (int, int, int, int, int, int, int, int, int, int, int, int, int, int, int, int), (imat4x4), (mat4)),
+            ()
+        )
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, ivec4)
+        VBIND_ADD_OPERATOR_DIV(int)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+
+    #define CURRENT_CLASS_BINDING mat2
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((float), (float, float, float, float), (imat2x2), (mat2), (imat3x3), (mat3), (imat4x4), (mat4)),
+            ()
+        )
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, vec2)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, float, vec2)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    #define CURRENT_CLASS_BINDING mat3
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((float), (float, float, float, float, float, float, float, float, float), (imat3x3), (mat3), (imat4x4), (mat4)),
+            ()
+        )
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, vec3)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, float, vec3)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    #define CURRENT_CLASS_BINDING mat4
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((float), (float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float), (imat4x4), (mat4)),
+            ()
+        )
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, float)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, vec4)
+        VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, float, vec4)
+        VBIND_ADD_OPERATOR_INDEX(int)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+
+
+
+    #define CURRENT_CLASS_BINDING quat
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(
+            ((float, float, float, float), (mat3),  (vec3)),
+            (("w"  , "x"  , "y"  , "z") ,  ("rot"), ("euler"))
+        )
+        VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING)
+        VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, vec3)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    VBIND_ADD_FUNCTION_OVERLOAD(mix, 
+        (
+            ((float), const float, const float, const float), 
+            ((vec2), const vec2 &, const vec2 &, const float),
+            ((vec3), const vec3 &, const vec3 &, const float),
+            ((vec4), const vec4 &, const vec4 &, const float),
+            ((vec2), const vec2 &, const vec2 &, const vec2 &),
+            ((vec3), const vec3 &, const vec3 &, const vec3 &),
+            ((vec4), const vec4 &, const vec4 &, const vec4 &)
+        ), 
+        ()
     );
 
-    lua.new_usertype<vec3>("vec3", 
-        sol::call_constructor, sol::constructors<vec3(), vec3(float), vec3(float, float, float)>(),
-        "x", &vec3::x, "r", &vec3::r,
-        "y", &vec3::y, "g", &vec3::g,
-        "z", &vec3::z, "b", &vec3::b,
-        SET_OVERLOAD_OPS(vec3)
-    );
-
-    lua.new_usertype<vec4>("vec4", 
-        sol::call_constructor, sol::constructors<vec4(), vec4(float), vec4(float, float, float, float)>(),
-        "x", &vec4::x, "r", &vec4::r,
-        "y", &vec4::y, "g", &vec4::g,
-        "z", &vec4::z, "b", &vec4::b,
-        "w", &vec4::w, "a", &vec4::a,
-        SET_OVERLOAD_OPS(vec4)
-    );
-
-    /*** Setting up glm matrices type with operator bindings ***/
-        lua.new_usertype<mat2>("mat2",
-            sol::call_constructor, sol::constructors<mat2(), mat2(float), mat2(float, float, float, float)>(),
-            SET_OVERLOAD_OPS(mat2)
-        );
-
-        lua.new_usertype<mat3>("mat3",
-            sol::call_constructor, sol::constructors<mat3(), mat3(quat), mat3(float), mat3(float, float, float, float, float, float, float, float, float)>(),
-            SET_OVERLOAD_OPS(mat3)
-        );
-
-        lua.new_usertype<mat4>("mat4",
-            sol::call_constructor, sol::constructors<mat4(), mat4(quat), mat4(float), mat4(float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float)>(),
-            SET_OVERLOAD_OPS(mat4)
-        );
-
-        lua.new_usertype<quat>("quat",
-            sol::call_constructor, sol::constructors<quat(), quat(float, float, float, float), quat(vec3), quat(mat3), quat(mat4), quat(quat), quat(vec3, vec3), quat(float, vec3)>(),
-            sol::meta_function::multiplication, sol::overload(
-                [](const quat &v1, const quat &v2){return v1*v2;},
-                [](const quat &v1, const vec3 &v2){return v1*v2;}
-            ),
-            sol::meta_function::addition, quat_add,
-            sol::meta_function::subtraction, quat_sub,
-            "x", &quat::x,
-            "y", &quat::y,
-            "z", &quat::z,
-            "w", &quat::w
-        );
-
-// MARK: GLM Funcs
-    /*** Setting up glm functions bindings ***/
-    lua.set_function("mix",
-        sol::overload(
-            LAMBDA_BIND_3(mix, const float, const float, const float),
-            LAMBDA_BIND_3(mix, const vec2,  const vec2,  const float),
-            LAMBDA_BIND_3(mix, const vec3,  const vec3,  const float),
-            LAMBDA_BIND_3(mix, const vec4,  const vec4,  const float),
-            LAMBDA_BIND_3(mix, const vec2,  const vec2,  const vec2),
-            LAMBDA_BIND_3(mix, const vec3,  const vec3,  const vec3),
-            LAMBDA_BIND_3(mix, const vec4,  const vec4,  const vec4)
+    VBIND_ADD_FUNCTION_OVERLOAD(smoothstep,
+        (
+            ((float), const float, const float, const float), 
+            ((vec2), const vec2 &, const vec2 &, const vec2 &),
+            ((vec3), const vec3 &, const vec3 &, const vec3 &),
+            ((vec4), const vec4 &, const vec4 &, const vec4 &)
+        ),
+        (
+            ("lowerBound", "higherBound", "x"),
+            ("lowerBound", "higherBound", "x"),
+            ("lowerBound", "higherBound", "x"),
+            ("lowerBound", "higherBound", "x")
         )
     );
 
-    lua.set_function("smoothstep",
-        sol::overload(
-            LAMBDA_BIND_3(smoothstep, const float, const float, const float),
-            LAMBDA_BIND_3(smoothstep, const vec2,  const vec2,  const vec2),
-            LAMBDA_BIND_3(smoothstep, const vec3,  const vec3,  const vec3),
-            LAMBDA_BIND_3(smoothstep, const vec4,  const vec4,  const vec4)
-        )
+    VBIND_ADD_FUNCTION_OVERLOAD(dot, (
+        ((float), const vec2 &, const vec2 &),
+        ((float), const vec3 &, const vec3 &),
+        ((float), const vec4 &, const vec4 &)
+    ), ());
+
+
+    VBIND_ADD_FUNCTION_OVERLOAD(cross, (
+        ((vec3), const vec3 &, const vec3 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(normalize, (
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &),
+        ((quat), const quat &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(inverse, (
+        ((mat2), const mat2 &),
+        ((mat3), const mat3 &),
+        ((mat4), const mat4 &),
+        ((quat), const quat &)
+    ), ());
+
+
+    VBIND_ADD_FUNCTION_OVERLOAD(distance, (
+        ((float), const float &, const float &),
+        ((float), const vec2 &, const vec2 &),
+        ((float), const vec3 &, const vec3 &),
+        ((float), const vec4 &, const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(pow, (
+        ((vec2), const vec2 &, const vec2 &),
+        ((vec3), const vec3 &, const vec3 &),
+        ((vec4), const vec4 &, const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(angle, (((float), const quat &), ((float), const vec2 &, const vec2 &)), ());
+    VBIND_ADD_FUNCTION_OVERLOAD(axis, (((vec3), const quat &)), ());
+    VBIND_ADD_FUNCTION_OVERLOAD(slerp, (((quat), const quat &, const quat &, const float)), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(radians, (
+        ((float), const float),
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &)
+    ), ());
+
+    VBIND_INIT_HEADER_CATEGORY("VULPINE MATH HELPER FUNCTIONS")
+
+    VBIND_ADD_FUNCTIONS(
+        (rgb2hsv, ("rgb")),
+        (hsv2rgb, ("hsv")),
+        (getSaturation, ("rgb")),
+        (ColorHexToV, ("hex")),
+
+        (slerpDirClamp, ("dir1", "dir2", "a", "wfront")),
+        (PhiThetaToDir, ("phi", "theta")),
+        (getPhiTheta, ("dir")),
+        (directionToQuat, ()),
+        (directionToEuler, ()),
+        (projectPointOntoPlane, ()),
+        (rayAlignedPlaneIntersect, ()),
+        (viewToWorld, ("pos", "inverseProjectionView"))
     );
-
-    lua.set_function("dot", 
-        sol::overload(
-            LAMBDA_BIND_2(dot, vec2, vec2),
-            LAMBDA_BIND_2(dot, vec3, vec3),
-            LAMBDA_BIND_2(dot, vec4, vec4)
-        )
-    );
-
-    lua.set_function("cross", 
-        sol::overload(
-            LAMBDA_BIND_2(cross, vec3, vec3)
-        )
-    );
-
-    lua.set_function("normalize", 
-        sol::overload(
-            LAMBDA_BIND_1(normalize, vec2),
-            LAMBDA_BIND_1(normalize, vec3),
-            LAMBDA_BIND_1(normalize, vec4)
-        )
-    );
-
-    lua.set_function("inverse", 
-        sol::overload(
-            LAMBDA_BIND_1(inverse, quat),
-            LAMBDA_BIND_1(inverse, mat2),
-            LAMBDA_BIND_1(inverse, mat3),
-            LAMBDA_BIND_1(inverse, mat4)
-        )
-    );
-
-    lua.set_function("distance", 
-        sol::overload(
-            LAMBDA_BIND_2(distance, const float, const float),
-            LAMBDA_BIND_2(distance, const vec2,  const vec2),
-            LAMBDA_BIND_2(distance, const vec3,  const vec3),
-            LAMBDA_BIND_2(distance, const vec4,  const vec4)
-        )
-    );
-
-// MARK: Vulpine Math
-    /*** Setting up vulpine math utils functions bindings ***/
-    lua.set_function("hsv2rgb",LAMBDA_BIND_1(hsv2rgb, vec3));
-    lua.set_function("rgb2hsv", LAMBDA_BIND_1(rgb2hsv, vec3));
-    lua.set_function("ColorHexToV",LAMBDA_BIND_1_CPY(ColorHexToV, uint));
-
-    lua.set_function("slerpDirClamp", LAMBDA_BIND_4_CPY(slerpDirClamp, vec3, vec3, float, vec3));
-    lua.set_function("PhiThetaToDir", LAMBDA_BIND_1_CPY(PhiThetaToDir, vec2));
-    lua.set_function("getPhiTheta", LAMBDA_BIND_1_CPY(getPhiTheta, vec3));
-    lua.set_function("angle", LAMBDA_BIND_2_CPY(angle, vec2, vec2));
-    lua.set_function("directionToQuat", LAMBDA_BIND_1_CPY(directionToQuat, vec3));
-    lua.set_function("directionToEuler", LAMBDA_BIND_1_CPY(directionToEuler, vec3));
-
-    lua.set_function("projectPointOntoPlane", LAMBDA_BIND_3_CPY(projectPointOntoPlane, vec3, vec3, vec3));
-    lua.set_function("rayAlignedPlaneIntersect", LAMBDA_BIND_4_CPY(rayAlignedPlaneIntersect, vec3, vec3, float, float));
- 
-    lua.set_function("angle", LAMBDA_BIND_1(angle, quat));
-    lua.set_function("axis", LAMBDA_BIND_1(axis, quat));
-    lua.set_function("angleAxis", LAMBDA_BIND_2(angleAxis, const float, const vec3));
-    lua.set_function("radians", LAMBDA_BIND_1(radians, const float));
 }
 
 #include <Timer.hpp>
 #include <Matrix.hpp>
 #include <Utils.hpp>
+
+bool lua__STR_CASE_STR (const std::string &a, const std::string &b){return STR_CASE_STR(a.c_str(), b.c_str()) != nullptr;};
+
+std::string lua__replace (std::string a, const std::string &b, const std::string &c)
+{
+    replace(a, b, c);
+    return a;
+}
+
 void VulpineLuaBindings::VulpineTypes(sol::state &lua)
 {
-    // MARK: Bench Timer
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING BenchTimer
+    VBIND_INIT_HEADER_CATEGORY("VULPINE COMMONS")
 
-        CREATE_CLASS_USERTYPE(BenchTimer, (), (std::string))
-        ADD_MEMBER_BINDINGS(
+    VBIND_CLASS_DECLARE(duration)
+
+    #define CURRENT_CLASS_BINDING duration
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS((), ())
+        VBIND_ADD_METHODS(
+            count,
+        )
+        VBIND_ADD_OPERATOR_ADD(duration)
+        VBIND_ADD_OPERATOR_SUB(duration)
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    // MARK: Bench Timer
+    #define CURRENT_CLASS_BINDING BenchTimer
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(((std::string)), (("name")))
+        VBIND_ADD_MEMBERS(
+            speed
+        );
+        VBIND_ADD_METHODS(
             stop, 
             hold, 
             start, 
@@ -233,16 +464,41 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
             getLastAvg,
             getMax,
             reset,
-            speed
         )
     }
-    // MARK: ModelState3D
-    {
-        #undef CURRENT_CLASS_BINDING
-        #define CURRENT_CLASS_BINDING ModelState3D
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
 
-        CREATE_CLASS_USERTYPE(ModelState3D, (), ())
-        ADD_MEMBER_BINDINGS(
+    #define CURRENT_CLASS_BINDING LimitTimer
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS(((float)), (("maxFPS")))
+        VBIND_ADD_MEMBERS(
+            freq
+        );
+        VBIND_ADD_METHODS(
+            start, waitForEnd, activate, deactivate, toggle, isActivated
+        )
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    VBIND_CLASS_DECLARE(ModelStatus)
+    VBIND_ADD_ENUM(
+        "ModelStatus",
+        ("HIDE", ModelStatus::HIDE),
+        ("SHOW", ModelStatus::SHOW),
+        ("UNDEFINED", ModelStatus::UNDEFINED)
+    )
+    
+    // MARK: ModelState3D
+    #define CURRENT_CLASS_BINDING ModelState3D
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS((), ())
+        VBIND_ADD_MEMBERS(
             position,
             scale,
             rotation,
@@ -253,6 +509,8 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
             hide,
             quaternion,
             useQuaternion,
+        )
+        VBIND_ADD_METHODS(
             setHideStatus,
             scaleScalar,
             setScale,
@@ -266,32 +524,20 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
             forceUpdate,
             needUpdate
         );
-
-        lua.new_enum(
-            "ModelStatus",
-            "HIDE", ModelStatus::HIDE,
-            "SHOW", ModelStatus::SHOW,
-            "UNDEFINED", ModelStatus::UNDEFINED
-        );
     }
-
-    // MARK: Utils
-    lua.set_function("STR_CASE_STR", [](const std::string &a, const std::string &b){return STR_CASE_STR(a.c_str(), b.c_str()) != nullptr;});
-        
-    lua.set_function("replace", 
-        [](std::string a, const std::string &b, const std::string &c)
-        {
-            replace(a, b, c);
-            return a;
-        }
-    );
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
 }
 
-
+#include <Globals.hpp>
 
 // MARK: Utils
 void VulpineLuaBindings::Utils(sol::state &lua)
 {
+    VBIND_INIT_HEADER_CATEGORY("VULPINE UTILS")
+    VBIND_ADD_FUNCTION_ALIAS(STR_CASE_STR, lua__STR_CASE_STR, ());
+    VBIND_ADD_FUNCTION_ALIAS(replace, lua__replace, ());
+
     {
         lua.set_function(
             "print",
@@ -303,7 +549,7 @@ void VulpineLuaBindings::Utils(sol::state &lua)
                 std::string file = ar.short_src;
                 int line = ar.currentline;
                 // TODO: either add a define or remove the `Sanctia-Release/` for release builds
-                std::cout << "[" << "Sanctia-Release/" << file << ":" << line << "] ";
+                std::cout << TERMINAL_NOTIF << TERMINAL_UNDERLINE << "[" << "Sanctia-Release/" << file << ":" << line << "]\n" << TERMINAL_RESET;
                 for(auto arg : args)
                 {
                     std::cout << lua["tostring"](arg.get<sol::object>()).get<std::string>() << " ";
@@ -312,4 +558,51 @@ void VulpineLuaBindings::Utils(sol::state &lua)
             }
         );
     }
+
+    VBIND_INIT_HEADER_CATEGORY("VULPINE GLOBALS")
+
+    #define CURRENT_CLASS_BINDING Globals
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        // VBIND_ADD_CONSTRUCTORS((), ())
+        VBIND_ADD_MEMBERS(
+            appTime,
+            mainThreadTime,
+            simulationTime,
+            cpuTime,
+            gpuTime,
+            fpsLimiter,
+            enablePhysics,
+            sceneChromaticAbbColor1,
+            sceneChromaticAbbColor2,
+            sceneChromaticAbbAngleAmplitude,
+            sceneHsvShift,
+            sceneVignette
+        )
+        VBIND_ADD_METHODS(
+            screenResolution,
+            mousePosition,
+            windowWidth,
+            windowHeight,
+            windowHasFocus,
+            windowSize,
+            mouseLeftClick,
+            mouseLeftClickDown,
+            mouseRightClick,
+            mouseRightClickDown,
+            mouse4Click,
+            mouse4ClickDown,
+            mouse5Click,
+            mouse5ClickDown,
+            mouseScrollOffset,
+            clearMouseScroll,
+            renderScale,
+            renderSize
+        );
+    }
+    luaHeader << "globals = {}\n";
+    lua["globals"] = &globals;
+    // VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
 }

@@ -19,6 +19,7 @@
 #endif
 
 
+
 /// TERMINAL
 const std::string TERMINAL_UNDERLINE = "\033[4m";
 const std::string TERMINAL_ERROR     = "\e[1;31m";

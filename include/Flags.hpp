@@ -45,25 +45,11 @@ struct FlagData : std::enable_shared_from_this<FlagData> {
 
     template <typename T>
     static std::shared_ptr<FlagData> MakeFlagFromScript(const std::string& scriptName);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromScript<int>(const std::string& scriptName);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromScript<float>(const std::string& scriptName);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromScript<std::string>(const std::string& scriptName);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromScript<bool>(const std::string& scriptName);
+
 
     template <typename T>
     static std::shared_ptr<FlagData> MakeFlagFromLogicBlock(const std::string& logicBlock);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<int>(const std::string& logicBlock);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<float>(const std::string& logicBlock);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<std::string>(const std::string& logicBlock);
-    template <>
-    std::shared_ptr<FlagData> MakeFlagFromLogicBlock<bool>(const std::string& logicBlock);
+
 
     FlagData& operator=(int v);
     FlagData& operator=(float v);
@@ -72,14 +58,7 @@ struct FlagData : std::enable_shared_from_this<FlagData> {
     template <typename T>
     FlagData& operator=(const ScriptNameWrapper& v);
 
-    template <>
-    FlagData& operator= <int>(const ScriptNameWrapper& v);
-    template <>
-    FlagData& operator= <float>(const ScriptNameWrapper& v);
-    template <>
-    FlagData& operator= <std::string>(const ScriptNameWrapper& v);
-    template <>
-    FlagData& operator= <bool>(const ScriptNameWrapper& v);
+
 
     virtual int as_int() = 0;
     virtual float as_float() = 0;
@@ -379,35 +358,6 @@ struct Flag {
 
     template <typename T>
     Flag& operator=(const ScriptNameWrapper& v);
-
-    template <>
-    Flag& operator= <int>(const ScriptNameWrapper& v)
-    {
-        flag = FlagData::MakeFlagFromScript<int>(v.scriptName);
-
-        return *this;
-    }
-
-    template <>
-    Flag& operator= <float>(const ScriptNameWrapper& v)
-    {
-        flag = FlagData::MakeFlagFromScript<float>(v.scriptName);
-        return *this;
-    }
-
-    template <>
-    Flag& operator= <std::string>(const ScriptNameWrapper& v)
-    {
-        flag = FlagData::MakeFlagFromScript<std::string>(v.scriptName);
-        return *this;
-    }
-
-    template <>
-    Flag& operator= <bool>(const ScriptNameWrapper& v)
-    {
-        flag = FlagData::MakeFlagFromScript<bool>(v.scriptName);
-        return *this;
-    }
 
     FlagData& operator*() const
     {

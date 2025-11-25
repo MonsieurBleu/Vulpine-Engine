@@ -135,6 +135,15 @@ namespace VulpineLuaBindings
     void Utils(sol::state& lua);
 }
 
+
+/* 
+* DEPRECATED !!!
+* DO NOT USE
+*/
+
+#define BIND_FUNCTION(f) lua[#f] = f;
+#define BIND_FUNCTIONS(...) MAPGEN_FOR_EACH(BIND_FUNCTION, __VA_ARGS__)
+
 #define OVERLOAD_OP(type1, type2)[](const type1 &v1, const type2 &v2){return v1 VLB_GLM_CUR_OPERATOR v2;}
 #define OVERLOAD_OP_ALL(type1, type2) OVERLOAD_OP(type1, type2), OVERLOAD_OP(type2, type1)
 
@@ -152,7 +161,7 @@ namespace VulpineLuaBindings
 
 #include "MappedEnum.hpp"
 
-#define CURRENT_CLASS_BINDING
+#define CURRENT_CLASS_BINDING void
 #define METHOD_BINDING(method) class_binding[#method] = & CURRENT_CLASS_BINDING::method;
 #define METHOD_BINDING_TEMPLATED_SINGLE(method, classType) class_binding[#method"_"#classType] = & CURRENT_CLASS_BINDING::method<classType>;
 #define METHOD_BINDING_TEMPLATED(method, ...) MAPGEN_FOR_EACH_ONE_ARG(METHOD_BINDING_TEMPLATED_SINGLE, method, __VA_ARGS__)
@@ -164,3 +173,4 @@ namespace VulpineLuaBindings
 #define TO_STR(macro) #macro
 #define CLASS_CONSTRUCTOR(args) , CURRENT_CLASS_BINDING args
 #define CREATE_CLASS_USERTYPE(class, default, ...) sol::usertype<CURRENT_CLASS_BINDING> class_binding = lua.new_usertype<CURRENT_CLASS_BINDING>(#class, sol::call_constructor, sol::constructors<CURRENT_CLASS_BINDING default MAPGEN_FOR_EACH(CLASS_CONSTRUCTOR, __VA_ARGS__)>());
+#define CREATE_CLASS_USERTYPE_ALIAS(class, alias, default, ...) sol::usertype<CURRENT_CLASS_BINDING> class_binding = lua.new_usertype<CURRENT_CLASS_BINDING>(alias, sol::call_constructor, sol::constructors<CURRENT_CLASS_BINDING default MAPGEN_FOR_EACH(CLASS_CONSTRUCTOR, __VA_ARGS__)>());
