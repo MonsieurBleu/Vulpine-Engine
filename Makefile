@@ -62,7 +62,7 @@ ifeq ($(OS),Windows_NT)
 	ECHO_N = echo  
 else 
 	STRDEC = "
-	ECHO_N = echo -n
+	ECHO_N = echo -n -e
 endif
 
 ESC=
