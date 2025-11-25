@@ -119,6 +119,8 @@ class Component
             int entityListID = -1;
             void init(){};
             void clean(){};
+
+            bool isGood(){return entity and !markedForDeletion and entityListID != -1;};
         };
 
         template<typename ... Args>

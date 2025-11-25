@@ -118,7 +118,6 @@ void App::init()
     glfwSetKeyCallback(window, [](GLFWwindow *window, int key, int scancode, int action, int mods) {
         giveCallbackToApp(GLFWKeyInfo{window, key, scancode, action, mods});
     });
-
     glfwSetMouseButtonCallback(window, [](GLFWwindow *window, int button, int action, int mods) {
         giveCallbackToApp(GLFWKeyInfo{window, button, button, action, mods});
     });

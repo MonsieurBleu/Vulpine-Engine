@@ -3,7 +3,61 @@
 #include "AssetManagerUtils.hpp"
 #include "Utils.hpp"
 
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromScript<int>(const std::string& scriptName);
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromScript<float>(const std::string& scriptName);
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromScript<std::string>(const std::string& scriptName);
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromScript<bool>(const std::string& scriptName);
 
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromLogicBlock<int>(const std::string& logicBlock);
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromLogicBlock<float>(const std::string& logicBlock);
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromLogicBlock<std::string>(const std::string& logicBlock);
+template <>
+std::shared_ptr<FlagData> FlagData::MakeFlagFromLogicBlock<bool>(const std::string& logicBlock);
+
+template <>
+FlagData& FlagData::operator= <int>(const ScriptNameWrapper& v);
+template <>
+FlagData& FlagData::operator= <float>(const ScriptNameWrapper& v);
+template <>
+FlagData& FlagData::operator= <std::string>(const ScriptNameWrapper& v);
+template <>
+FlagData& FlagData::operator= <bool>(const ScriptNameWrapper& v);
+
+template <>
+Flag& Flag::operator= <int>(const ScriptNameWrapper& v)
+{
+    flag = FlagData::MakeFlagFromScript<int>(v.scriptName);
+
+    return *this;
+}
+
+template <>
+Flag& Flag::operator= <float>(const ScriptNameWrapper& v)
+{
+    flag = FlagData::MakeFlagFromScript<float>(v.scriptName);
+    return *this;
+}
+
+template <>
+Flag& Flag::operator= <std::string>(const ScriptNameWrapper& v)
+{
+    flag = FlagData::MakeFlagFromScript<std::string>(v.scriptName);
+    return *this;
+}
+
+template <>
+Flag& Flag::operator= <bool>(const ScriptNameWrapper& v)
+{
+    flag = FlagData::MakeFlagFromScript<bool>(v.scriptName);
+    return *this;
+}
 
 FlagDataPtr FlagData::MakeFlag(int value) {
     return std::make_shared<IntFlag>(value);

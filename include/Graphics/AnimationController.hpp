@@ -54,9 +54,12 @@ class AnimationController
     AnimationRef currentAnimation;
     std::chrono::time_point<std::chrono::high_resolution_clock> animationStart;
     std::chrono::time_point<std::chrono::high_resolution_clock> transitionStart;
-    float animationTime = 0;
-    float transitionTime = 0;
+    float animationTime = 0;    // animation time of the current animation
+    // float animationTimeB = 0;   // animation time of the "from" animation when transitionning
     float animationLTime = 0;
+    
+    float transitionTimeSinceStart = 0;
+    float transitionTime = 0;
     float transitionLTime = 0;
 
     void* usr = nullptr;
@@ -68,142 +71,18 @@ class AnimationController
     std::vector<int16> currentKeyframeIndexA;
     std::vector<int16> currentKeyframeIndexB;
 
-    void getTransitionsFromCurrentState()
-    {
-        transitionsFromCurrentState.clear();
-        for (auto &t : transitions)
-        {
-            if (t.from == currentAnimation)
-            {
-                transitionsFromCurrentState.push_back(&t);
-            }
-        }
-
-        // if (transitionsFromCurrentState.size() == 0)
-        // {
-        //     // failsafe if no transition is found, loop back to the same animation
-        //     transitions.push_back(AnimationControllerTransition(currentAnimation, currentAnimation,
-        //                                                         COND_ANIMATION_FINISHED, epsilon<float>()));
-        // }
-    }
-
+    void getTransitionsFromCurrentState();
 public:
     AnimationController(){};
 
      AnimationController(
         const std::vector<AnimationControllerTransition> &_transitions, 
         AnimationRef &initialState, 
-        void *usr = nullptr) : usr(usr)
-    {
-        transitions = _transitions;
+        void *usr = nullptr);
 
-        currentAnimation = initialState;
+    void update(float dt);
 
-        currentKeyframeIndexA.resize(currentAnimation->getKeyframeNumber());
-        currentKeyframeIndexB.resize(currentAnimation->getKeyframeNumber());
-
-        std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
-        std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
-
-        animationStart = std::chrono::high_resolution_clock::now();
-        currentAnimation->onEnterAnimation(usr);
-        getTransitionsFromCurrentState();
-    }
-
-    void update(float dt)
-    {
-        float prct = 100.f * animationTime / currentAnimation->getLength();
-        float prctTransition = 100.f * transitionTime / currentAnimation->getLength();
-
-        animationTime += dt * currentAnimation->speedCallback(prct, usr);
-
-        if (!transitioning)
-        {
-            currentAnimation->getCurrentFrames(animationTime, animationLTime, currentKeyframeIndexA, currentKeyframes);
-
-            for (auto &t : transitionsFromCurrentState)
-            {
-                switch (t->condition)
-                {
-                case COND_ANIMATION_FINISHED:
-                    if (currentAnimation->isFinished(animationTime + t->transitionLength))
-                    {
-                        currentTransition = t;
-                        transitioning = true;
-                        transitionStart = std::chrono::high_resolution_clock::now();
-                        t->to->onEnterAnimation(usr);
-                        transitionTime = 0;
-                        transitionLTime = 0;
-
-                        // std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
-                        std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
-
-                        return;
-                    }
-                    break;
-                case COND_CUSTOM:
-                    if (t->conditionFunction(usr))
-                    {
-                        currentTransition = t;
-                        transitioning = true;
-                        transitionStart = std::chrono::high_resolution_clock::now();
-                        t->to->onEnterAnimation(usr);
-                        transitionTime = 0;
-                        transitionLTime = 0;
-
-                        // std::fill(currentKeyframeIndexA.begin(), currentKeyframeIndexA.end(), 0);
-                        std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
-
-                        return;
-                    }
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // std::cout << "transitionning omg " << usr << " " << transitionTime << "\t" << currentTransition->transitionLength << "\n";
-            transitionTime += dt * currentTransition->to->speedCallback(prctTransition, usr);
-            float a = 0;
-            switch (currentTransition->type)
-            {
-                case TRANSITION_LINEAR:
-                    a = transitionTime / (currentTransition->transitionLength);
-                    break;
-                case TRANSITION_SMOOTH:
-                    a = smoothstep(0.0f, 1.0f, transitionTime / (currentTransition->transitionLength));
-                    break;
-            }
-
-            interpolateKeyframes(currentTransition->from, currentTransition->to,
-                                fmod(animationTime, currentAnimation->getLength()), transitionTime, 
-                                animationLTime, transitionLTime , 
-                                a, currentKeyframeIndexA, currentKeyframeIndexB, currentKeyframes);
-
-            if (transitionTime >= currentTransition->transitionLength)
-            {
-                // std::cout << "a: " << a << "\n";
-                // std::cout << "time: " << time << "\n";
-                // std::cout << "transitionTime: " << transitionTime << "\n";
-
-                currentAnimation->onExitAnimation(usr);
-                
-                currentAnimation = currentTransition->to;
-                animationStart = transitionStart;
-                animationTime = transitionTime;
-                animationLTime = transitionLTime;
-                transitioning = false;
-                getTransitionsFromCurrentState();
-                currentKeyframeIndexA = currentKeyframeIndexB;
-                std::fill(currentKeyframeIndexB.begin(), currentKeyframeIndexB.end(), 0);
-            }
-        }
-    }
-
-    void applyKeyframes(SkeletonAnimationState &skeleton)
-    {
-        skeleton.applyKeyframes(currentKeyframes);
-    }
+    void applyKeyframes(SkeletonAnimationState &skeleton);
 };
 
 typedef std::shared_ptr<AnimationController> AnimationControllerRef;

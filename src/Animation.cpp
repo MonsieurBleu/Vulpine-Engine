@@ -73,6 +73,8 @@ void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16
     // std::vector<keyframeData> data(keyframes.size());
     if(data.empty()) data.resize(keyframes.size());
 
+    // if(!repeat) time = clamp(time, 0.f, length);
+
     if(!repeat && time >= length)
     {
         // time = length;
