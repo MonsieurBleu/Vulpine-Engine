@@ -35,6 +35,9 @@ void VulpineLuaBindings::bindAll(sol::state& lua)
     VBIND_CLASS_DECLARE_ALIAS(unsigned short, integer)
     VBIND_CLASS_DECLARE_ALIAS(unsigned long, integer)
 
+    VBIND_CLASS_DECLARE_ALIAS(long long, integer)
+    VBIND_CLASS_DECLARE_ALIAS(unsigned long long, integer)
+
     VBIND_CLASS_DECLARE_ALIAS(float, number)
     VBIND_CLASS_DECLARE_ALIAS(double, number)
 
@@ -88,7 +91,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         VBIND_ADD_MEMBERS(x, y, r, g)
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
-        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, imat2x2)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_INDEX(int)
     }
@@ -106,7 +109,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         VBIND_ADD_MEMBERS(x, y, z, r, g, b)
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
-        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, imat3x3)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_INDEX(int)
     }
@@ -124,7 +127,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         VBIND_ADD_MEMBERS(x, y, z, w, r, g, b, a)
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
-        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, imat4x4)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_DIV(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_INDEX(int)
     }
@@ -199,7 +202,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         )
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
-        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, ivec2)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_DIV(int)
         VBIND_ADD_OPERATOR_INDEX(int)
     }
@@ -216,7 +219,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         )
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
-        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, ivec3)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_DIV(int)
         VBIND_ADD_OPERATOR_INDEX(int)
     }
@@ -234,7 +237,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
         )
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING, int)
-        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int, ivec4)
+        VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, int)
         VBIND_ADD_OPERATOR_DIV(int)
         VBIND_ADD_OPERATOR_INDEX(int)
     }
@@ -315,10 +318,10 @@ void VulpineLuaBindings::glm(sol::state &lua)
             ((float), const float, const float, const float), 
             ((vec2), const vec2 &, const vec2 &, const float),
             ((vec3), const vec3 &, const vec3 &, const float),
-            ((vec4), const vec4 &, const vec4 &, const float),
-            ((vec2), const vec2 &, const vec2 &, const vec2 &),
-            ((vec3), const vec3 &, const vec3 &, const vec3 &),
-            ((vec4), const vec4 &, const vec4 &, const vec4 &)
+            ((vec4), const vec4 &, const vec4 &, const float)
+            // ((vec2), const vec2 &, const vec2 &, const vec2 &),
+            // ((vec3), const vec3 &, const vec3 &, const vec3 &),
+            // ((vec4), const vec4 &, const vec4 &, const vec4 &)
         ), 
         ()
     );
