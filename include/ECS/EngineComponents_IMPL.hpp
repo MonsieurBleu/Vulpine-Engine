@@ -14,7 +14,7 @@
 
 COMPONENT_DEFINE_REPARENT(EntityGroupInfo)
 {
-    // if(!child->hasComp<EntityGroupInfo>())
+    // if(!child->has<EntityGroupInfo>())
     // {
     //     child->set<EntityGroupInfo>(EntityGroupInfo());
     // }
@@ -123,12 +123,12 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     auto &box = child->comp<WidgetBox>();
     box.synchCounter ++;
 
-    bool hidden = child->hasComp<WidgetState>() && child->comp<WidgetState>().status == ModelStatus::HIDE;
+    bool hidden = child->has<WidgetState>() && child->comp<WidgetState>().status == ModelStatus::HIDE;
 
     vec2 tmpMin = box.min;
     vec2 tmpMax = box.max;
 
-    vec2 off = child.get() != &parent && parent.hasComp<WidgetBox>() ? parent.comp<WidgetBox>().scrollOffset : vec2(0);
+    vec2 off = child.get() != &parent && parent.has<WidgetBox>() ? parent.comp<WidgetBox>().scrollOffset : vec2(0);
 
     /********** MODYFING BOX VALUES **********/
     if(&parent != child.get())
@@ -141,7 +141,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         if(box.specialFittingScript)
             box.specialFittingScript(&parent, child.get());
 
-        if(parent.hasComp<WidgetStyle>() && parent.comp<WidgetStyle>().automaticTabbing != 0)
+        if(parent.has<WidgetStyle>() && parent.comp<WidgetStyle>().automaticTabbing != 0)
         {
             int id = 0;
             auto &parentGroup = parent.comp<EntityGroupInfo>();
@@ -177,7 +177,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
             vec2 space = 1.25f*0.0075f*scale*WidgetBox::tabbingSpacingScale;
 
-            if(parent.hasComp<WidgetStyle>() && !parent.comp<WidgetStyle>().useInternalSpacing)
+            if(parent.has<WidgetStyle>() && !parent.comp<WidgetStyle>().useInternalSpacing)
                 space = vec2(0);
 
             box.initMin = tabCoord + space;
@@ -392,12 +392,12 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     scale = max(scale, vec2(0));
 
 
-    if(child->hasComp<WidgetBackground>())
+    if(child->has<WidgetBackground>())
     {
         child->comp<WidgetBackground>().tile->setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth);
     }
 
-    // if(child->hasComp<WidgetSprite>())
+    // if(child->has<WidgetSprite>())
     // {
     //     child->comp<WidgetSprite>().sprite->state.setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth+0.000025);
     // }
@@ -407,7 +407,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     float res = sqrt((float)(globals.windowWidth())*(float)(globals.windowHeight()));
     res = (float)globals.windowWidth();
 
-    if(child->hasComp<WidgetText>())
+    if(child->has<WidgetText>())
     {
         auto &text = child->comp<WidgetText>();
         text.mesh->text = text.text;
@@ -462,7 +462,7 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 
     up.updateCounter ++;
 
-    bool isIndirectHST = child->hasComp<WidgetButton>() && child->comp<WidgetButton>().type == WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT;
+    bool isIndirectHST = child->has<WidgetButton>() && child->comp<WidgetButton>().type == WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT;
 
     if(&parent != child.get())
     {
@@ -483,7 +483,7 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
             
             // case ModelStatus::UNDEFINED :
             case ModelStatus::SHOW :
-                if(child->hasComp<WidgetBox>() && up.status == ModelStatus::HIDE)
+                if(child->has<WidgetBox>() && up.status == ModelStatus::HIDE)
                 {
                     auto &b = child->comp<WidgetBox>();
                     // b.displayMin = b.displayMax = vec2(UNINITIALIZED_FLOAT);
@@ -500,7 +500,7 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
                     up.status = ModelStatus::SHOW;
 
                 if(
-                    !child->hasComp<WidgetButton>() || 
+                    !child->has<WidgetButton>() || 
                     (
                         child->comp<WidgetButton>().type != WidgetButton::Type::HIDE_SHOW_TRIGGER
                         // &&
@@ -577,13 +577,13 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 
     auto status = up.updateCounter > 2 ? up.status : ModelStatus::HIDE;
 
-    if(child->hasComp<WidgetBackground>() && child->comp<WidgetBackground>().tile.get())
+    if(child->has<WidgetBackground>() && child->comp<WidgetBackground>().tile.get())
         child->comp<WidgetBackground>().tile->setHideStatus(status);
 
-    if(child->hasComp<WidgetText>() && child->comp<WidgetText>().mesh.get())
+    if(child->has<WidgetText>() && child->comp<WidgetText>().mesh.get())
         child->comp<WidgetText>().mesh->state.setHideStatus(status);
 
-    if(child->hasComp<WidgetSprite>() && child->comp<WidgetSprite>().sprite.get())
+    if(child->has<WidgetSprite>() && child->comp<WidgetSprite>().sprite.get())
         child->comp<WidgetSprite>().sprite->state.setHideStatus(status);
 }
 
@@ -593,7 +593,7 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 
 //     auto &style = child->comp<WidgetStyle>();
 
-//     if(child->hasComp<WidgetBackground>() && child->comp<WidgetBackground>().tile.get())
+//     if(child->has<WidgetBackground>() && child->comp<WidgetBackground>().tile.get())
 //     {
 //         // child->comp<WidgetBackground>().tile->setHideStatus(up.status);
 
@@ -602,7 +602,7 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 //         b.tile->color 
 //     }
     
-//     if(child->hasComp<WidgetText>() && child->comp<WidgetText>().mesh.get())
+//     if(child->has<WidgetText>() && child->comp<WidgetText>().mesh.get())
 //         child->comp<WidgetText>().mesh->state.setHideStatus(up.status);
 // }
 
@@ -611,7 +611,7 @@ void updateWidgetsStyle()
 {
     System<WidgetStyle, WidgetBackground>([](Entity &entity)
     {
-        if(entity.hasComp<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
+        if(entity.has<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
             return;
 
         auto &s = entity.comp<WidgetStyle>();
@@ -623,7 +623,7 @@ void updateWidgetsStyle()
 
     System<WidgetStyle, WidgetText>([](Entity &entity)
     {
-        if(entity.hasComp<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
+        if(entity.has<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
             return;
 
         auto &s = entity.comp<WidgetStyle>();
@@ -634,11 +634,11 @@ void updateWidgetsStyle()
 
     System<WidgetSprite, WidgetBox>([](Entity &entity)
     {
-        if(entity.hasComp<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
+        if(entity.has<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
             return;
 
         // auto &style = entity.comp<WidgetStyle>();
-        vec2 position = entity.hasComp<WidgetStyle>() ? entity.comp<WidgetStyle>().spritePosition : vec2(0);
+        vec2 position = entity.has<WidgetStyle>() ? entity.comp<WidgetStyle>().spritePosition : vec2(0);
 
         auto &sprite = entity.comp<WidgetSprite>();
         auto &box = entity.comp<WidgetBox>();
@@ -646,7 +646,7 @@ void updateWidgetsStyle()
 
         vec2 spriteScale = scale;
 
-        if(entity.hasComp<WidgetStyle>())
+        if(entity.has<WidgetStyle>())
             spriteScale *= entity.comp<WidgetStyle>().spriteScale;
 
 // child->comp<WidgetSprite>().sprite->state.setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth+0.000025);
@@ -702,7 +702,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 
         vec2 cursor = ((screenPos-box.displayMin)/(box.displayMax - box.displayMin));
 
-        if(entity.hasComp<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
+        if(entity.has<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
             box.isUnderCursor = false;
         else
             box.isUnderCursor = cursor.x >= 0 && cursor.y >= 0 && cursor.x <= 1 && cursor.y <= 1;
@@ -736,17 +736,17 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
         switch (button.type)
         {
             case WidgetButton::Type::HIDE_SHOW_TRIGGER : 
-                if(entity.hasComp<WidgetStyle>())
+                if(entity.has<WidgetStyle>())
                     style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE && group.children.size();
                 break;
 
             case WidgetButton::Type::HIDE_SHOW_TRIGGER_INDIRECT : 
-                if(entity.hasComp<WidgetStyle>())
+                if(entity.has<WidgetStyle>())
                     style.useAltTextColor = style.useAltBackgroundColor = state.statusToPropagate == ModelStatus::HIDE;
                 break;
 
             case WidgetButton::Type::CHECKBOX :
-                if(entity.hasComp<WidgetStyle>())
+                if(entity.has<WidgetStyle>())
                     style.useAltBackgroundColor = style.useAltTextColor = button.cur > 0.f;
                 break;
             
@@ -760,7 +760,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                     button.valueChanged(&entity, button.cur);
 
                 }
-                if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
+                if(entity.has<WidgetSprite>() && entity.has<WidgetStyle>())
                 {
                     float v = button.cur/(button.max-button.min) - button.min;
                     auto &style = entity.comp<WidgetStyle>();
@@ -780,7 +780,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                     
                     button.valueChanged2D(&entity, vec2(button.cur, button.cur2));
                 }
-                if(entity.hasComp<WidgetSprite>() && entity.hasComp<WidgetStyle>())
+                if(entity.has<WidgetSprite>() && entity.has<WidgetStyle>())
                 {
                     vec2 v = vec2(button.cur, button.cur2)/(button.max-button.min) - button.min;
                     auto &style = entity.comp<WidgetStyle>();
@@ -790,7 +790,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 
             case WidgetButton::Type::TEXT_INPUT :
                 // if(globals.canUseTextInputs(&entity))
-                if(entity.hasComp<WidgetText>() && globals.canUseTextInputs(&entity))
+                if(entity.has<WidgetText>() && globals.canUseTextInputs(&entity))
                 {
                     auto &text = entity.comp<WidgetText>().text;
 
@@ -812,7 +812,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                     }
                 }
 
-                if(entity.hasComp<WidgetStyle>())
+                if(entity.has<WidgetStyle>())
                 {
                     style.useAltBackgroundColor = style.useAltTextColor = globals.canUseTextInputs(&entity);
                 }
@@ -878,7 +878,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
                 break;
 
             case WidgetButton::Type::TEXT_INPUT :
-                if(entity.hasComp<WidgetText>() && click)
+                if(entity.has<WidgetText>() && click)
                 {
                     globals.useTextInputs(&entity, entity.comp<WidgetText>().text);
                 }

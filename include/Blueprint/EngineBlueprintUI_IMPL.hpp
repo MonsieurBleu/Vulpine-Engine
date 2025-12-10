@@ -1055,10 +1055,10 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
 
                     bool filtered = str.empty() || STR_CASE_STR(str2.c_str(), str.c_str());
 
-                    if(!filtered && c->hasComp<EntityGroupInfo>())
+                    if(!filtered && c->has<EntityGroupInfo>())
                     {
                         for(auto c2 : c->comp<EntityGroupInfo>().children)
-                        if(c2->hasComp<WidgetText>())
+                        if(c2->has<WidgetText>())
                         {
                             auto str3 = UFTconvert.to_bytes(c2->comp<WidgetText>().text);
                             filtered = STR_CASE_STR(str3.c_str(), str.c_str()) != nullptr;

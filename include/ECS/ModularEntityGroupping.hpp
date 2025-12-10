@@ -48,7 +48,7 @@ struct EntityGroupInfo
         
         for(auto c : _children)
         {
-            // if(!c->hasComp<EntityGroupInfo>())
+            // if(!c->has<EntityGroupInfo>())
             // {
             //     c->set<EntityGroupInfo>(EntityGroupInfo());
             // }
@@ -66,12 +66,12 @@ struct EntityGroupInfo
 #ifdef VULPINE_COMPONENT_IMPL
 void Entity::setChildrenInfos()
 {
-    if(hasComp<EntityGroupInfo>())
+    if(has<EntityGroupInfo>())
     for(auto child : comp<EntityGroupInfo>().children)
     {
         if(!child) continue;
 
-        if(!child->hasComp<EntityGroupInfo>())
+        if(!child->has<EntityGroupInfo>())
         {
             child->set<EntityGroupInfo>(EntityGroupInfo());
         }

@@ -21,7 +21,7 @@ class App
 
         Camera camera;
 
-        RenderBuffer renderBuffer;
+        RenderBuffer* renderBuffer;
         FrameBuffer screenBuffer2D;
         SSAOPass SSAO;
         BloomPass Bloom;
@@ -61,7 +61,7 @@ class App
 
         void resizeCallback(GLFWwindow* window, int width, int height);
 
-        App(GLFWwindow* window);
+        App(GLFWwindow* window, RenderBuffer *renderBuffer);
         ~App();
 
         void init();

@@ -26,7 +26,7 @@ Entity::~Entity()
             ComponentGlobals::status[i][ids[i]].enabled = false;
         }
     
-    if(hasComp<EntityGroupInfo>())
+    if(has<EntityGroupInfo>())
         comp<EntityGroupInfo>().children.clear();
 }
 
@@ -34,10 +34,10 @@ Entity::~Entity()
 
 void ComponentModularity::addChild(Entity &parent, EntityRef child)
 {
-    if(!parent.hasComp<EntityGroupInfo>())
+    if(!parent.has<EntityGroupInfo>())
         parent.set<EntityGroupInfo>(EntityGroupInfo());
 
-    if(!child->hasComp<EntityGroupInfo>())
+    if(!child->has<EntityGroupInfo>())
         child->set<EntityGroupInfo>(EntityGroupInfo());
 
     child->comp<EntityGroupInfo>().parent = &parent;
@@ -68,7 +68,7 @@ void ComponentModularity::synchronizeChildren(EntityRef parent)
         if(parent->state[i.ComponentID])
             i.element(*parent, parent);
 
-    if(parent->hasComp<EntityGroupInfo>())
+    if(parent->has<EntityGroupInfo>())
         for(auto &c : parent->comp<EntityGroupInfo>().children)
         {
             synchronizeChildren(c);
@@ -93,7 +93,7 @@ void ComponentModularity::Reparent(Entity& parent, EntityRef child, Entity& newP
         )
             i.element(parent, child, newParent);
     
-    if(!newParent.hasComp<EntityGroupInfo>())
+    if(!newParent.has<EntityGroupInfo>())
         newParent.set<EntityGroupInfo>(EntityGroupInfo());
 
     newParent.comp<EntityGroupInfo>().children.push_back(child);
@@ -155,7 +155,7 @@ void ComponentModularity::mergeChild(Entity& parent, EntityRef child)
 
 void ComponentModularity::mergeChildren(Entity& parent)
 {
-    if(!parent.hasComp<EntityGroupInfo>()) return;
+    if(!parent.has<EntityGroupInfo>()) return;
 
     auto &children = parent.comp<EntityGroupInfo>().children;
     std::vector<EntityRef> newChildren;

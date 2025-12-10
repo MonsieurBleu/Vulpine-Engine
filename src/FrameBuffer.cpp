@@ -3,6 +3,7 @@
 #include <CompilingOptions.hpp>
 #include <Utils.hpp>
 
+
 Texture2D& FrameBuffer::getTexture(int id)
 {
     return textures[id%textures.size()];
@@ -31,7 +32,8 @@ FrameBuffer& FrameBuffer::generateHandle()
 FrameBuffer& FrameBuffer::resizeAll(ivec2 newres)
 {
     for(auto &t : textures)
-        t.setResolution(newres).generate(true);
+        if(t.getResolution() != newres)
+            t.setResolution(newres).generate(true);
 
     return *this;
 }
@@ -52,8 +54,8 @@ FrameBuffer& FrameBuffer::bindTextures()
         }
     }
 
-    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-    glDrawBuffers(3, buffers);
+    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5};
+    glDrawBuffers(6, buffers);
 
     return *this;
 }
@@ -142,7 +144,7 @@ void RenderBuffer::generate()
                 .setWrapMode(GL_CLAMP_TO_EDGE)
                 .setAttachement(GL_COLOR_ATTACHMENT2))
         .addTexture(
-            Texture2D() // SRGB8 BUFFER
+            Texture2D() // SRGB BUFFER
                 .setResolution(*resolution)
                 .setInternalFormat(GL_RGB)
                 .setFormat(GL_RGB)

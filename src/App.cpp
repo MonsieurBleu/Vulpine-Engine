@@ -96,7 +96,7 @@ void App::resizeCallback(GLFWwindow *window, int width, int height)
 
     ivec2 newres = vec2(width, height) * globals._renderScale;
 
-    renderBuffer.resizeAll(newres);
+    renderBuffer->resizeAll(newres);
     screenBuffer2D.resizeAll(vec2(width, height) * globals._UI_res_scale);
 
     Bloom.getFBO().resizeAll(newres);
@@ -178,7 +178,7 @@ void App::init()
                          0, 6, 2, GL_FLOAT, false)})));
 
     globals._fullscreenQuad.getVao()->generate();
-    renderBuffer.generate();
+    renderBuffer->generate();
     SSAO.setup();
     Bloom.setup();
 
@@ -380,8 +380,8 @@ void App::setController(Controller *c)
     }
 }
 
-App::App(GLFWwindow *window)
-    : window(window), renderBuffer(globals.renderSizeAddr()), SSAO(renderBuffer), Bloom(renderBuffer)
+App::App(GLFWwindow *window, RenderBuffer *renderBuffer)
+    : window(window), renderBuffer(renderBuffer), SSAO(*renderBuffer), Bloom(*renderBuffer)
 {
     globals._window = window;
 }

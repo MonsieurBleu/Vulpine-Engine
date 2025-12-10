@@ -46,15 +46,15 @@ class FrameBuffer
 
 class RenderBuffer : public FrameBuffer
 {    
-    private : 
+    protected : 
         const ivec2 *resolution;
         
     public : 
         RenderBuffer(const ivec2 *resolution);
-        void bindTextures();
-        void activate();
-        void deactivate();
-        void generate();
+        virtual void bindTextures();
+        virtual void activate();
+        virtual void deactivate();
+        virtual void generate();
 
         
 };

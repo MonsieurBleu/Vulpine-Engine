@@ -156,9 +156,9 @@ class Component
 #ifdef VULPINE_COMPONENT_IMPL
 #define COMPONENT_IMPL(_type_) \
     template _type_ & Entity::comp<_type_>(); \
-    template bool Entity::hasComp<_type_>(); \
+    template bool Entity::has<_type_>(); \
     template void Entity::set<_type_>(const _type_ & data); \
-    template void Entity::removeComp<_type_>(); \
+    template void Entity::remove<_type_>(); \
     
 
 #define COMPONENT(_type_, _category_, _size_) COMPONENT_BASE(_type_, _category_, _size_) COMPONENT_IMPL(_type_)
@@ -226,7 +226,7 @@ class Entity
         ;
 
         template<typename T>
-        bool hasComp()
+        bool has()
         #ifdef VULPINE_COMPONENT_IMPL
         {
             return state[ComponentInfos<T>::id];
@@ -245,10 +245,10 @@ class Entity
         ;
 
         template<typename T>
-        void removeComp()
+        void remove()
         #ifdef VULPINE_COMPONENT_IMPL
         {
-            if(!hasComp<T>()) return;
+            if(!has<T>()) return;
             Component<T>::elements[ids[Component<T>::category]].markedForDeletion = true;
             state.setFalse(ComponentInfos<T>::id);
         }
@@ -355,14 +355,14 @@ struct GlobalComponentToggler
         if(activated)
         {
             for(EntityRef &e : entityList)
-                if(!e->hasComp<T>())
+                if(!e->has<T>())
                     e->set<T>({});
         }
         else
         {
             for(EntityRef &e : entityList)
-                if(e->hasComp<T>())
-                    e->removeComp<T>();
+                if(e->has<T>())
+                    e->remove<T>();
             
             ManageGarbage<T>();
         }
@@ -373,15 +373,15 @@ struct GlobalComponentToggler
         if(activated)
         {
             System<EntityInfos>([](Entity &entity){
-                if(!entity.hasComp<T>())
+                if(!entity.has<T>())
                     entity.set<T>({});
             });
         }
         else
         {
             System<EntityInfos>([](Entity &entity){
-                if(entity.hasComp<T>())
-                    entity.removeComp<T>();
+                if(entity.has<T>())
+                    entity.remove<T>();
             });
 
             ManageGarbage<T>();
@@ -395,7 +395,7 @@ struct GlobalComponentToggler
             bool uptodate = true;
 
             System<EntityInfos>([& uptodate](Entity &entity){
-                uptodate &= entity.hasComp<T>();
+                uptodate &= entity.has<T>();
             });
 
             return !uptodate;
@@ -405,7 +405,7 @@ struct GlobalComponentToggler
             bool uptodate = true;
 
             System<EntityInfos>([& uptodate](Entity &entity){
-                uptodate &= !entity.hasComp<T>();
+                uptodate &= !entity.has<T>();
             });
 
             return !uptodate;
