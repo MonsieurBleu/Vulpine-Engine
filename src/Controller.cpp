@@ -46,7 +46,7 @@ void SpectatorController::updateDirectionStateWASD()
     if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         rightFactor --;
 
-    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+    if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || InputManager::getGamepadButtonValue(VULPINE_GAMEPAD_BUTTON_A))
         upFactor ++;
 
     if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
