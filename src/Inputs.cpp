@@ -415,7 +415,7 @@ void InputManager::updateGamepadState()
 
     if (glfwGetGamepadState(currentJoystick, &gamepadState) != GLFW_TRUE)
     {
-        // WARNING_MESSAGE("No gamepad connected");
+        WARNING_MESSAGE("Unrecognized gamepad mapping, can't get gamepad input");
         return;
     }
 }

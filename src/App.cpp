@@ -131,6 +131,7 @@ void App::init()
         }
     });
 
+    InputManager::updateGamepadMappings();
     InputManager::initJoystick();
     glfwSetJoystickCallback(InputManager::joystickCallback);
 

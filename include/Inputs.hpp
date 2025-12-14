@@ -172,6 +172,8 @@ namespace InputManager
     void clearEventInputs();
     void clearContinuousInputs();
 
+    void updateGamepadMappings();
+
     glm::vec2 getMousePosition();
 
     std::string getInputKeyString(std::string inputName);
