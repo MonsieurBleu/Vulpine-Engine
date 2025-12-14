@@ -162,6 +162,7 @@ namespace InputManager
 
     float getGamepadAxisValue(int axisCode);
     bool getGamepadButtonValue(int buttonCode);
+    bool isGamePadConnected();
     std::vector<GLFWKeyInfo> pollGamepad();
 
     void processEventInput(const GLFWKeyInfo &event);

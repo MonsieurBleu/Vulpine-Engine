@@ -402,7 +402,7 @@ float InputManager::getGamepadAxisValue(int axisCode)
     if (InputManager::currentJoystick == -1)
     {
         // WARNING_MESSAGE("No gamepad connected");
-        return -1.0f;
+        return 0.0f;
     }
 
     return InputManager::gamepadState.axes[axisCode];
@@ -457,4 +457,9 @@ bool InputManager::getGamepadButtonValue(int buttonCode)
     }
 
     return InputManager::gamepadState.buttons[buttonCode] == GLFW_PRESS;
+}
+
+bool InputManager::isGamePadConnected()
+{
+    return InputManager::currentJoystick != -1;
 }
