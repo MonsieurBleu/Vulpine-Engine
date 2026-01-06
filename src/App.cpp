@@ -131,6 +131,10 @@ void App::init()
         }
     });
 
+    InputManager::updateGamepadMappings();
+    InputManager::initJoystick();
+    glfwSetJoystickCallback(InputManager::joystickCallback);
+
     globals._gameScene = &scene;
     globals._gameScene2D = &scene2D;
 

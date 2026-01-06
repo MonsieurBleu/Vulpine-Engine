@@ -88,9 +88,18 @@ void InputManager::processEventInput(const GLFWKeyInfo &event)
     for (auto handler : eventInputs)
     {
         if(!handler.activated) continue;
-
-        int handlerCode = handler.isScanCode ? glfwGetKeyScancode(handler.keyCode) : handler.keyCode;
-        int eventCode = handler.isScanCode ? event.scanCode : event.key;
+        
+        int handlerCode;
+        int eventCode;
+        if ((handler.keyCode & VULPINE_GAMEPAD_BIT) == 0)
+        {   
+            handlerCode = handler.isScanCode ? glfwGetKeyScancode(handler.keyCode) : handler.keyCode;
+            eventCode = handler.isScanCode ? event.scanCode : event.key;
+        }
+        else {
+            handlerCode = handler.keyCode;
+            eventCode = event.key;
+        }
 
         bool modsGood = !handler.mods || handler.mods == event.mods;
 
@@ -132,10 +141,20 @@ void InputManager::processContinuousInputs()
             default : 
                 if(handler.filter)
                 {
-                    if(glfwGetKey(globals.getWindow(), handler.keyCode) == GLFW_PRESS)
-                        handler();
-                    else if(handler.falseCondCallback)
-                        handler.falseCondCallback();
+                    if (handler.keyCode & VULPINE_GAMEPAD_BIT)
+                    {
+                        int gamepadButton = handler.keyCode & (~VULPINE_GAMEPAD_BIT);
+                        if (InputManager::gamepadState.buttons[gamepadButton] == GLFW_PRESS)
+                            handler();
+                        else if (handler.falseCondCallback)
+                            handler.falseCondCallback();
+                    }
+                    else {
+                        if(glfwGetKey(globals.getWindow(), handler.keyCode) == GLFW_PRESS)
+                            handler();
+                        else if(handler.falseCondCallback)
+                            handler.falseCondCallback();
+                    }
                 }
             break;
         }
@@ -247,7 +266,23 @@ std::vector<std::pair<std::string, int>> nonPrintableKeysNames =
     {"RIGHT CONTROL",345},
     {"RIGHT ALT",346},
     {"RIGHT SUPER",347},
-    {"MENU",348}
+    {"MENU",348},
+    // TODO: Fix name when not using xbox style controller (cross square circle triangle)
+    {"GAMEPAD BUTTON A", VULPINE_GAMEPAD_BUTTON_A},
+    {"GAMEPAD BUTTON B", VULPINE_GAMEPAD_BUTTON_B},
+    {"GAMEPAD BUTTON X", VULPINE_GAMEPAD_BUTTON_X},
+    {"GAMEPAD BUTTON Y", VULPINE_GAMEPAD_BUTTON_Y},
+    {"GAMEPAD BUTTON LEFT BUMPER", VULPINE_GAMEPAD_BUTTON_LEFT_BUMPER},
+    {"GAMEPAD BUTTON RIGHT BUMPER", VULPINE_GAMEPAD_BUTTON_RIGHT_BUMPER},
+    {"GAMEPAD BUTTON BACK", VULPINE_GAMEPAD_BUTTON_BACK},
+    {"GAMEPAD BUTTON START", VULPINE_GAMEPAD_BUTTON_START},
+    {"GAMEPAD BUTTON GUIDE", VULPINE_GAMEPAD_BUTTON_GUIDE},
+    {"GAMEPAD BUTTON LEFT THUMB", VULPINE_GAMEPAD_BUTTON_LEFT_THUMB},
+    {"GAMEPAD BUTTON RIGHT THUMB", VULPINE_GAMEPAD_BUTTON_RIGHT_THUMB},
+    {"GAMEPAD BUTTON DPAD UP", VULPINE_GAMEPAD_BUTTON_DPAD_UP},
+    {"GAMEPAD BUTTON DPAD RIGHT", VULPINE_GAMEPAD_BUTTON_DPAD_RIGHT},
+    {"GAMEPAD BUTTON DPAD DOWN", VULPINE_GAMEPAD_BUTTON_DPAD_DOWN},
+    {"GAMEPAD BUTTON DPAD LEFT", VULPINE_GAMEPAD_BUTTON_DPAD_LEFT}
 };
 
 void getInputKeySimple(const GenericInput& input, std::string& keyString)
@@ -333,4 +368,98 @@ void GenericInput::operator()() const
     {
         callback();
     }
+}
+
+void InputManager::initJoystick()
+{
+    for (int i = 0; i < GLFW_JOYSTICK_LAST; i++)
+    {
+        if (glfwJoystickPresent(i) == GLFW_TRUE)
+        {
+            currentJoystick = i;
+            NOTIF_MESSAGE("Joystick " << i << " connected");
+            return;
+        }
+    }
+}
+
+void InputManager::joystickCallback(int jid, int event)
+{
+    if (event == GLFW_CONNECTED)
+    {
+        currentJoystick = jid;
+        NOTIF_MESSAGE("Joystick " << jid << " connected");
+    }
+    else if (event == GLFW_DISCONNECTED)
+    {
+        currentJoystick = -1;
+        NOTIF_MESSAGE("Joystick " << jid << " disconnected");
+    }
+}
+
+float InputManager::getGamepadAxisValue(int axisCode)
+{
+    if (InputManager::currentJoystick == -1)
+    {
+        // WARNING_MESSAGE("No gamepad connected");
+        return 0.0f;
+    }
+
+    return InputManager::gamepadState.axes[axisCode];
+}
+
+void InputManager::updateGamepadState()
+{
+    if (currentJoystick == -1)
+        return;
+
+    if (glfwGetGamepadState(currentJoystick, &gamepadState) != GLFW_TRUE)
+    {
+        WARNING_MESSAGE("Unrecognized gamepad mapping, can't get gamepad input");
+        return;
+    }
+}
+
+std::vector<GLFWKeyInfo> InputManager::pollGamepad()
+{
+    GLFWgamepadstate prevState = InputManager::gamepadState;
+    updateGamepadState();
+    GLFWgamepadstate currState = InputManager::gamepadState;
+
+    std::vector<GLFWKeyInfo> inputs;
+
+    for (int i = 0; i < GLFW_GAMEPAD_BUTTON_LAST; i++)
+    {
+        if (prevState.buttons[i] != currState.buttons[i])
+        {
+            int keyCode = VULPINE_GAMEPAD_BIT + i;
+            // std::cout << "Gamepad button " << i << " changed: " << (currState.buttons[i] == GLFW_PRESS ? "PRESSED" : "RELEASED") << std::endl;
+            int action = currState.buttons[i];
+            inputs.push_back(GLFWKeyInfo{nullptr, keyCode, keyCode, action, 0});
+        }
+    }
+
+    return inputs;            
+}
+
+bool InputManager::getGamepadButtonValue(int buttonCode)
+{
+    if (InputManager::currentJoystick == -1)
+    {
+        // WARNING_MESSAGE("No gamepad connected");
+        return false;
+    }
+
+    // support vulpine gamepad button codes and standard glfw gamepad button codes
+    if (buttonCode & VULPINE_GAMEPAD_BIT)
+    {
+        buttonCode = buttonCode & (~VULPINE_GAMEPAD_BIT);
+    }
+
+    return InputManager::gamepadState.buttons[buttonCode] == GLFW_PRESS;
+}
+
+bool InputManager::isGamePadConnected()
+{
+    return InputManager::currentJoystick != -1;
 }
