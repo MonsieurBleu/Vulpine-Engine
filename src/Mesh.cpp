@@ -33,7 +33,7 @@ void MeshVao::generateEBO()
     glGenBuffers(1, eboHandle.get());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *eboHandle);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, nbFaces * sizeof(unsigned int), faces.get(), GL_STATIC_DRAW);
-
+    
     glBindVertexArray(0);
 }
 
@@ -46,7 +46,7 @@ MeshVao::~MeshVao()
 }
 
 
-MeshMaterial::MeshMaterial(ShaderProgram *material, ShaderProgram *depthOnlyMaterial)
+MeshMaterial::MeshMaterial(ShaderProgram *material, std::shared_ptr<ShaderProgram> depthOnlyMaterial)
     : std::shared_ptr<ShaderProgram>(material), depthOnly(depthOnlyMaterial)
 {
 }

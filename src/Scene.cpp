@@ -597,7 +597,11 @@ void Scene::generateShadowMaps()
     Camera *tmp = globals.currentCamera;
 
     for(auto i : lights)
-        if(i->getInfos()._color.a >= 1e-6 && i->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
+        if(
+            i->getInfos()._color.a >= 1e-6 
+            && i->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED
+            && i->shadowCameraSize != vec2(0)
+        )
         {
             i->shadowMap.activate();
             globals.currentCamera = tmp;

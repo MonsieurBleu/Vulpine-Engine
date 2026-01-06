@@ -5,7 +5,7 @@ const AppState Globals::state() const {return _state;};
 
 const GLFWvidmode* Globals::videoMode() const {return _videoMode;};
 
-const Controller * Globals::getController() const {return _currentController;};
+Controller * Globals::getController() {return _currentController;};
 
 glm::ivec2 Globals::screenResolution() const {return ivec2(_videoMode->width, _videoMode->height);};
 const int* Globals::screenResolutionAddr() const {return &(_videoMode->width);};

@@ -170,7 +170,7 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
             if(mesh.GetNumColorChannels() > 1){o.w |= uint(roundf(mesh.mColors[1][i].r   ))<<16;}
             if(mesh.GetNumColorChannels() > 2){o.w |= uint(roundf(mesh.mColors[2][i].r*15))<<17;}
             if(mesh.GetNumColorChannels() > 3){o.w |= uint(roundf(mesh.mColors[3][i].r*7 ))<<21;}
-            /* STREAKNESS - PAPERNESS - BLOODYNESS - DIRTYNESS */
+            /* SUB SURFACE - ABSORBANT - BLOODYNESS - DIRTYNESS */
             if(mesh.GetNumColorChannels() > 4){o.w |= uint(roundf(mesh.mColors[4][i].r*7))<<24;}
             if(mesh.GetNumColorChannels() > 5){o.w |= uint(roundf(mesh.mColors[5][i].r  ))<<27;}
             if(mesh.GetNumColorChannels() > 6){o.w |= uint(roundf(mesh.mColors[6][i].r*3))<<28;}

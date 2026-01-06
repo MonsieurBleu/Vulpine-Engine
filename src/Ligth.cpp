@@ -62,6 +62,11 @@ void Light::activateShadows()
 {
     if(shadowMap.getHandle() != 0) return;
 
+    // if(shadowMapBindId >= 0)
+    //     freeShadowMapBinds[shadowMapBindId] = false;
+
+    // shadowMap = FrameBuffer();
+
     for(int i = 0; i < maxShadowMap; i++)
     {
         if(freeShadowMapBinds[i])

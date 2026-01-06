@@ -90,7 +90,7 @@ public:
 
     FontRef baseFont;
     Camera *currentCamera = nullptr;
-    const Controller *getController() const;
+    Controller *getController();
 
     const AppState state() const;
 

@@ -24,6 +24,8 @@ enum UniformTypes
 {
     unknownUniformType,
 
+    // boolean,
+
     _1f,
     _2f,
     _3f,
@@ -71,6 +73,8 @@ enum UniformTypes
 const std::string UniformTypesNames[] = 
 {
     "unknownUniformType",
+
+    // "boolean",
 
     "_1f",
     "_2f",
@@ -171,6 +175,13 @@ class ShaderUniform
               location(UNIFORM_NO_LOCATION),
               type(unknownUniformType){};
 
+        // // ============| BOOLEAN
+        // ShaderUniform(const bool *data, int location = UNIFORM_NO_LOCATION) 
+        //     : data(data), 
+        //       dataState(reference),
+        //       location(location),
+        //       type(_1f) {};    
+
 
         // ============| FLOATS 1D
 
@@ -240,8 +251,9 @@ class ShaderUniform
         // ============| INTS 1D
 
         ShaderUniform(const int data, int location = UNIFORM_NO_LOCATION) 
-            : data(STATIC_CAST_VOIDPTR data), 
-              dataState(rawCopy),
+            // : data(STATIC_CAST_VOIDPTR data), 
+            //   dataState(rawCopy),
+            : dataState(copiedInAdditionalData),
               location(location),
               type(_1i) {};
 

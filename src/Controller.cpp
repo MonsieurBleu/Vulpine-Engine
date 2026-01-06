@@ -14,6 +14,7 @@ void SpectatorController::clean()
     upFactor = 0;
     frontFactor = 0;
     rightFactor = 0;
+    glfwSetInputMode(globals.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 
@@ -117,9 +118,11 @@ void Controller::mouseEvent(vec2 dir, GLFWwindow* window)
     static bool lastCameraFollow = !globals.currentCamera->getMouseFollow();
     bool cameraFollow = globals.currentCamera->getMouseFollow();
 
-    if(!lastCameraFollow && cameraFollow)
+    // if(!lastCameraFollow && cameraFollow)
+    if(cameraFollow)
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    else if(lastCameraFollow && !cameraFollow)
+    // else if(lastCameraFollow && !cameraFollow)
+    else
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 
     lastCameraFollow = cameraFollow;

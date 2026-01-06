@@ -6,6 +6,8 @@
 #include <Graphics/Mesh.hpp>
 #include <Graphics/Light.hpp>
 
+#include <functional>
+
 #define ObjectGroupRef std::shared_ptr<ObjectGroup>
 #define newObjectGroup std::make_shared<ObjectGroup>
 
@@ -78,6 +80,8 @@ public:
     std::deque<ObjectGroupRef>& getChildren(){return children;};
     std::deque<ModelStateRef>& getStates(){return states;};
     std::deque<SceneLight>& getLights(){return lights;};
+
+    void iterateOnAllMesh_Recursive(std::function<void(ModelRef)> f);
 
     /*
         Return a dupplicate of the group, 

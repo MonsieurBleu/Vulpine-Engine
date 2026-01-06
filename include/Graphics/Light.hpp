@@ -56,6 +56,7 @@ class Light
         Camera shadowCamera;
         FrameBuffer shadowMap; 
         ivec2 cameraResolution = vec2(1024);
+        vec2 shadowCameraSize;
         void activateShadows();
         void bindShadowMap();
         virtual void updateShadowCamera();
@@ -79,7 +80,6 @@ class DirectionLight : public Light
         void applyModifier(const ModelState3D& state) override;
 
         void updateShadowCamera() override;
-        vec2 shadowCameraSize;
 
         void setMenu(FastUI_valueMenu &menu, std::u32string name);
 };

@@ -386,8 +386,17 @@ App::App(GLFWwindow *window, RenderBuffer *renderBuffer)
     globals._window = window;
 }
 
+// GLuint query;
+// #include "FenceGPU.hpp"
 void App::mainloopStartRoutine()
 {
+    // glGenQueries(1, &query);
+
+    // glBeginQuery(GL_TIME_ELAPSED, query);
+
+    // globals.fpsLimiter.deactivate();
+
+
     globals.fpsLimiter.start();
     globals.mainThreadTime.start();
     globals.appTime.start();
@@ -425,20 +434,43 @@ void App::mainloopPreRenderRoutine()
 
 void App::mainloopEndRoutine()
 {
+    
+
     globals.cpuTime.stop();
 
     globals.gpuTime.start();
-    glfwSwapBuffers(window);
-    glfwPollEvents();
+    
+    // FenceGPU::printState();
     // glFlush();
-    globals.gpuTime.stop();
     // glFinish();
+    
+    glfwSwapBuffers(window);
+    
 
+    glfwPollEvents();
+    globals.gpuTime.stop();
+
+    
     globals.mainThreadTime.stop();
+
+
+
+    // glEndQuery(GL_TIME_ELAPSED);
+    // GLuint64 time;
+    // glGetQueryObjectui64v(query, GL_QUERY_RESULT, &time);
+
+    // NOTIF_MESSAGE(
+    //     "\n" <<
+    //     "\t\tCPU  : " << globals.cpuTime.getDeltaMS() << "\n" <<
+    //     "\t\tGPU  : " << ((long)time)/1e6 << "\n" <<
+    //     "\t\tTotal : " << globals.mainThreadTime.getDeltaMS() << "\n"
+    // );
+
+
     globals.fpsLimiter.waitForEnd();
     globals.appTime.stop();
     globals.simulationTime.stop();
-
+    
     scene.endTimers();
     scene2D.endTimers();
 

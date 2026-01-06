@@ -490,3 +490,9 @@ ObjectGroupRef ObjectGroup::optimizedBatchedCopy()
 
     return output;
 }   
+
+void ObjectGroup::iterateOnAllMesh_Recursive(std::function<void(ModelRef)> f)
+{
+    for(auto i : meshes) f(i);
+    for(auto c : children) c->iterateOnAllMesh_Recursive(f);
+}

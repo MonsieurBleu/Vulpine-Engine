@@ -136,10 +136,14 @@ VertexAttribute::~VertexAttribute()
     }
 }
 
+#include "Utils.hpp"
+
 void VertexAttribute::sendAllToGPU()
 {
     glBindBuffer(GL_ARRAY_BUFFER, handle);
-    glBufferData(GL_ARRAY_BUFFER, bufferSize, buffer.get(), GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, bufferSize, nullptr, GL_STREAM_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, buffer.get());
+
 }
 
 void VertexAttribute::setFormat()

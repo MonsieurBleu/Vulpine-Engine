@@ -27,7 +27,8 @@ class MeshMaterial : public std::shared_ptr<ShaderProgram>
         MeshMaterial(std::shared_ptr<ShaderProgram> mat) : std::shared_ptr<ShaderProgram>(mat)
         {};
 
-        MeshMaterial(ShaderProgram* material = NULL, ShaderProgram* depthOnlyMaterial = NULL);
+        MeshMaterial(ShaderProgram* material = NULL, std::shared_ptr<ShaderProgram> depthOnlyMaterial = NULL);
+        
         std::shared_ptr<ShaderProgram> depthOnly;
         
         ~MeshMaterial();

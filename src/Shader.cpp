@@ -292,6 +292,7 @@ ShaderError ShaderProgram::reset(bool hotReload)
     if(hotReload && !needRefresh()) return ShaderError::ShaderOk;
 
     glDeleteProgram(program);
+    
     auto error = compileAndLink();
 
     if(hotReload && error == ShaderError::ShaderOk)
