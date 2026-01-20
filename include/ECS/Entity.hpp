@@ -182,7 +182,7 @@ class Entity
     public :
 
         VulpineBitSet<MAX_COMP> state;
-        int ids[ComponentCategory::END] = {NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY};
+        std::array<int, ComponentCategory::END> ids = {NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY};
 
         Entity() : Entity("Unamed Entity"){};
         Entity(const std::string &name){set<EntityInfos>(EntityInfos{name});};

@@ -17,7 +17,7 @@ endif
 BUILD_DIR = 
 OPTFLAGS =
 
-CPPFLAGS = $(WFLAGS) --std=c++20 $(OPTFLAGS) -Wno-deprecated-declarations
+CPPFLAGS = $(WFLAGS) --std=c++23 $(OPTFLAGS) -Wno-deprecated-declarations
 INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
 
@@ -29,7 +29,7 @@ ifeq ($(OS),Windows_NT)
 	VULPINE_LIB_NAME = libvulpineEngine_WIN64.a
 else
 	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGLU -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp
-	LINKFLAGS = 
+	LINKFLAGS = -Wl,-rpath,'$$ORIGIN/lib'
 	VULPINE_LIB_NAME = libvulpineEngine_UNIX.a
 endif
 

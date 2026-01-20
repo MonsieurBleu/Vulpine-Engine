@@ -35,6 +35,9 @@ void SpectatorController::updateDirectionStateWASD()
 
     GLFWwindow *window = globals.getWindow();
 
+    if(!globals.currentCamera->getMouseFollow())
+        return;
+
     if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         frontFactor ++;
 

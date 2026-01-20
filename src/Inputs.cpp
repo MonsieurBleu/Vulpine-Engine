@@ -85,6 +85,12 @@ void InputManager::clearContinuousInputs()
 
 void InputManager::processEventInput(const GLFWKeyInfo &event)
 {
+
+    if(event.key&VULPINE_GAMEPAD_BIT)
+        InputManager::lastGamepadUseTime = globals.appTime.getElapsedTime();
+    else
+        InputManager::lastNonGamepadUseTime = globals.appTime.getElapsedTime();
+
     for (auto handler : eventInputs)
     {
         if(!handler.activated) continue;
@@ -95,10 +101,14 @@ void InputManager::processEventInput(const GLFWKeyInfo &event)
         {   
             handlerCode = handler.isScanCode ? glfwGetKeyScancode(handler.keyCode) : handler.keyCode;
             eventCode = handler.isScanCode ? event.scanCode : event.key;
+
+            // InputManager::lastNonGamepadUseTime = globals.appTime.getElapsedTime();
         }
         else {
             handlerCode = handler.keyCode;
             eventCode = event.key;
+
+            // InputManager::lastGamepadUseTime = globals.appTime.getElapsedTime();
         }
 
         bool modsGood = !handler.mods || handler.mods == event.mods;
@@ -135,6 +145,8 @@ void InputManager::processContinuousInputs()
                         handler();
                     else if(handler.falseCondCallback)
                         handler.falseCondCallback();
+
+                    // InputManager::lastNonGamepadUseTime = globals.appTime.getElapsedTime();
                 }
             break;
 
@@ -148,6 +160,8 @@ void InputManager::processContinuousInputs()
                             handler();
                         else if (handler.falseCondCallback)
                             handler.falseCondCallback();
+
+                        // InputManager::lastGamepadUseTime = globals.appTime.getElapsedTime();
                     }
                     else {
                         if(glfwGetKey(globals.getWindow(), handler.keyCode) == GLFW_PRESS)
@@ -155,6 +169,7 @@ void InputManager::processContinuousInputs()
                         else if(handler.falseCondCallback)
                             handler.falseCondCallback();
                     }
+
                 }
             break;
         }
@@ -459,7 +474,46 @@ bool InputManager::getGamepadButtonValue(int buttonCode)
     return InputManager::gamepadState.buttons[buttonCode] == GLFW_PRESS;
 }
 
-bool InputManager::isGamePadConnected()
+/*
+    Gamepad is used if at leas one gamepad is connected and : 
+        - any gamepad key was press after any keyboard key
+        OR
+        - any bomber or joystick is being used
+*/
+bool InputManager::isGamePadUsed()
 {
-    return InputManager::currentJoystick != -1;
+    // NOTIF_MESSAGE(
+    //     InputManager::lastGamepadUseTime
+    //     << "\n\t" << 
+    //     InputManager::lastNonGamepadUseTime
+
+    //     // InputManager::gamepadState.axes[4]
+        
+    // )
+
+    // NOTIF_MESSAGE(
+    //     InputManager::currentJoystick
+    // )
+
+    float minAxis = 0.05;
+
+    return 
+        InputManager::currentJoystick != -1
+        and
+        (
+            InputManager::lastGamepadUseTime + 0.1 > InputManager::lastNonGamepadUseTime
+            // or
+            // abs(InputManager::gamepadState.axes[0]) > minAxis
+            // or
+            // abs(InputManager::gamepadState.axes[1]) > minAxis
+            // or
+            // abs(InputManager::gamepadState.axes[2]) > minAxis
+            // or
+            // abs(InputManager::gamepadState.axes[3]) > minAxis
+            // or
+            // abs(InputManager::gamepadState.axes[4]) > minAxis
+            // or
+            // abs(InputManager::gamepadState.axes[5]) > -1+minAxis
+        )
+        ;
 }

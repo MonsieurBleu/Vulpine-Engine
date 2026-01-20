@@ -260,7 +260,9 @@ void DirectionLight::updateShadowCamera()
 
     vec3 cPos = globals.currentCamera->getPosition();
     // cPos.y = 0;
-    cPos = vec3(0);
+    // cPos = vec3(0);
+
+    // NOTIF_MESSAGE(cPos)
 
     cPos = ceil(cPos);
 
