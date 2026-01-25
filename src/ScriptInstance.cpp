@@ -16,24 +16,24 @@ void ScriptInstance::compile()
         }
         else {
             compileTimer.tick();
-            FILE_ERROR_MESSAGE(file, "Failed to compile script \'" << "\': " << this->get<sol::error>().what())
+            FILE_ERROR_MESSAGE(file, "Failed to compile script \'" ,  "\': " ,  this->get<sol::error>().what())
             
             built = false;
         }
     }
     catch (const sol::error &e) {
         compileTimer.tick();
-        FILE_ERROR_MESSAGE(file, "Error while compiling script \'" << "\': " << e.what())
+        FILE_ERROR_MESSAGE(file, "Error while compiling script \'" ,  "\': " ,  e.what())
         built = false;
     }
     catch (const std::exception &e) {
         compileTimer.tick();
-        FILE_ERROR_MESSAGE(file, "Exception while compiling script \'" << "\': " << e.what())
+        FILE_ERROR_MESSAGE(file, "Exception while compiling script \'" ,  "\': " ,  e.what())
         built = false;
     }
     catch (...) {
         compileTimer.tick();
-        FILE_ERROR_MESSAGE(file, "Unknown exception while compiling script \'" << "\'")
+        FILE_ERROR_MESSAGE(file, "Unknown exception while compiling script \'" ,  "\'")
         built = false;
     }
 }

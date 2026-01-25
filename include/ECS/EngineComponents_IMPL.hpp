@@ -695,8 +695,8 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
             box.isUnderCursor = false;
             WARNING_MESSAGE(
                 "Wrong WidgetBox logic for entity '" 
-                << entity.comp<EntityInfos>().name 
-                << "' display minimal range is greated than display maximal range")
+                ,  entity.comp<EntityInfos>().name 
+                ,  "' display minimal range is greated than display maximal range")
             return;
         }
 

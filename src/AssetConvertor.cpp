@@ -253,8 +253,8 @@ void VEAC::getElementMeshSkinned(aiMesh &mesh, SkeletonRef target, STENCIL_MeshI
             {
                 continue;
                 // ERROR_MESSAGE(
-                //     "Can't extract skinning information in mesh '" << mesh.mName.C_Str() << 
-                //     "'. Because bone '" << boneName << "' doens't correspond to any bone in the target skeleton. This mesh will have broken skinning informations."
+                //     "Can't extract skinning information in mesh '" ,  mesh.mName.C_Str() ,  
+                //     "'. Because bone '" ,  boneName ,  "' doens't correspond to any bone in the target skeleton. This mesh will have broken skinning informations."
                 // )
                 // infos.weights = vW;
                 // infos.weightsID = vWid;
@@ -1539,8 +1539,8 @@ VEAC::FileConvertStatus VEAC::ConvertSceneFile(
             {
                 FILE_ERROR_MESSAGE(
                     (path + ":" + collection->mName.C_Str()), 
-                    "Entity Collection '" << component->mName.C_Str() << "' not recognized. "
-                    << "Either something is wrong with the scene layout, or the VEAC entity export option was used by mistake."
+                    "Entity Collection '" ,  component->mName.C_Str() ,  "' not recognized. "
+                    ,  "Either something is wrong with the scene layout, or the VEAC entity export option was used by mistake."
                 )
             }
 

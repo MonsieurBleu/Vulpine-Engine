@@ -11,7 +11,7 @@ MeshVao readOBJ(const std::string filePath, bool useVertexColors)
 
     if (obj == nullptr || fsize == UINT64_MAX)
     {
-        FILE_ERROR_MESSAGE(filePath, strerror(errno) << "! The loader will return an empty object.");
+        FILE_ERROR_MESSAGE(filePath, strerror(errno) ,  "! The loader will return an empty object.");
         return MeshVao();
     }
 

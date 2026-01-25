@@ -54,7 +54,7 @@ void AnimationController::update(float dt)
 
     auto switchToTransition = [&](AnimationControllerTransition *t)
     {
-        // WARNING_MESSAGE(t->from->getName() << " to" << t->to->getName())
+        // WARNING_MESSAGE(t->from->getName() ,  " to" ,  t->to->getName())
 
         currentAnimation->onExitAnimation(usr);
         currentTransition = t;

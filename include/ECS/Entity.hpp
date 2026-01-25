@@ -289,7 +289,7 @@ void Component<T>::insert(Entity &entity, const T& data)
         while(ComponentGlobals::status[category][++lastFreeID].enabled  && lastFreeID < maxID && lastFreeID < MAX_ENTITY);
 
         if(lastFreeID >= MAX_ENTITY-1)
-            ERROR_MESSAGE("ECS has reached max Entity number of " << MAX_ENTITY << ". Things are goind to be bad!");
+            ERROR_MESSAGE("ECS has reached max Entity number of " ,  MAX_ENTITY ,  ". Things are goind to be bad!");
 
         ComponentGlobals::maxID[category] = std::max(ComponentGlobals::maxID[category], lastFreeID);
 

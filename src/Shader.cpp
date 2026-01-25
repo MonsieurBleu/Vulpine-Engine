@@ -297,7 +297,7 @@ ShaderError ShaderProgram::reset(bool hotReload)
 
     if(hotReload && error == ShaderError::ShaderOk)
     {
-        NOTIF_MESSAGE("Compiled successfully shader program with sources : " << frag.get_Path() << " " << vert.get_Path() << " " << geom.get_Path());
+        NOTIF_MESSAGE("Compiled successfully shader program with sources : " ,  frag.get_Path() ,  " " ,  vert.get_Path() ,  " " ,  geom.get_Path());
     }
 
     return error;

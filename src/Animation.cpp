@@ -16,7 +16,7 @@ AnimationRef Animation::load(const std::string &filename)
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file)
     {        
-        ERROR_MESSAGE("Can't open file '" << filename << "'")
+        ERROR_MESSAGE("Can't open file '" ,  filename ,  "'")
         assert(false);
         return nullptr;
     }

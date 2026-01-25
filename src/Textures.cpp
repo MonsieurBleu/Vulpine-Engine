@@ -357,7 +357,7 @@ Texture2D& Texture2D::loadFromFileEXR(const char* filename)
     _resolution.x = exr_image.width;
     _resolution.y = exr_image.height;
 
-    // NOTIF_MESSAGE(exr_image.num_channels << " " << exr_image.num_tiles)
+    // NOTIF_MESSAGE(exr_image.num_channels ,  " " ,  exr_image.num_tiles)
     
     // 3. Access image data
     // `exr_image.images` will be filled when EXR is scanline format.
@@ -397,7 +397,7 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
 
     if(result)
     {
-        FILE_ERROR_MESSAGE(filename, "KTX error code : " << result);
+        FILE_ERROR_MESSAGE(filename, "KTX error code : " ,  result);
         return *this;
     }
 
@@ -429,7 +429,7 @@ Texture2D& Texture2D::loadFromFileKTX(const char* filename)
     
     if(result)
     {
-        FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " << result);
+        FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " ,  result);
         return *this;
     }
 
@@ -459,7 +459,7 @@ Texture2D& Texture2D::loadFromFileKTX_IO(const char* filename)
 
     if(result)
     {
-        FILE_ERROR_MESSAGE(filename, "KTX error code : " << result);
+        FILE_ERROR_MESSAGE(filename, "KTX error code : " ,  result);
         return *this;
     }
 
@@ -492,7 +492,7 @@ Texture2D& Texture2D::loadFromFileKTX_IO(const char* filename)
     
     // if(result)
     // {
-    //     FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " << result);
+    //     FILE_ERROR_MESSAGE(filename, "Can't upload file to GPU. KTX error code : " ,  result);
     //     return *this;
     // }
 

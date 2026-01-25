@@ -464,10 +464,10 @@ void App::mainloopEndRoutine()
     // glGetQueryObjectui64v(query, GL_QUERY_RESULT, &time);
 
     // NOTIF_MESSAGE(
-    //     "\n" <<
-    //     "\t\tCPU  : " << globals.cpuTime.getDeltaMS() << "\n" <<
-    //     "\t\tGPU  : " << ((long)time)/1e6 << "\n" <<
-    //     "\t\tTotal : " << globals.mainThreadTime.getDeltaMS() << "\n"
+    //     "\n" , 
+    //     "\t\tCPU  : " ,  globals.cpuTime.getDeltaMS() ,  "\n" , 
+    //     "\t\tGPU  : " ,  ((long)time)/1e6 ,  "\n" , 
+    //     "\t\tTotal : " ,  globals.mainThreadTime.getDeltaMS() ,  "\n"
     // );
 
 

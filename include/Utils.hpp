@@ -19,68 +19,52 @@
 #endif
 
 
+// glm print overloads
+std::ostream& operator<<(std::ostream& os, const glm::vec2& u);
+std::ostream& operator<<(std::ostream& os, const glm::vec3& u);
+std::ostream& operator<<(std::ostream& os, const glm::vec4& u);
+
+std::ostream& operator<<(std::ostream& os, const glm::mat2& u);
+std::ostream& operator<<(std::ostream& os, const glm::mat3& u);
+std::ostream& operator<<(std::ostream& os, const glm::mat4& u);
+
+std::ostream& operator<<(std::ostream& os, const glm::quat& u);
+
+/// LOGGING
+
+#include "Logging.hpp"
+#define FILE_ERROR_MESSAGE(filename, ...) { \
+    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
+    Logger::fileError(filename, __VA_ARGS__); \
+}
+
+#define WARNING_MESSAGE(...) { \
+    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
+    Logger::warn(__VA_ARGS__); \
+}
+
+#define ERROR_MESSAGE(...) { \
+    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
+    Logger::error(__VA_ARGS__); \
+}
+
+#define NOTIF_MESSAGE(...) { \
+    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
+    Logger::info(__VA_ARGS__); \
+}
+
+// also adding a macro called info cause I never remember it's called notif in this engine :(
+#define INFO_MESSAGE(...) { \
+    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
+    Logger::info(__VA_ARGS__); \
+}
+
+#define DEBUG_MESSAGE(...) { \
+    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
+    Logger::debug(__VA_ARGS__); \
+}
 
 /// TERMINAL
-const std::string TERMINAL_UNDERLINE = "\033[4m";
-const std::string TERMINAL_ERROR     = "\e[1;31m";
-const std::string TERMINAL_BOLD      = "\e[1m";
-const std::string TERMINAL_INFO      = "\033[94m";
-const std::string TERMINAL_OK        = "\033[92m";
-const std::string TERMINAL_RESET     = "\033[0m";
-const std::string TERMINAL_TIMER     = "\033[93m";
-const std::string TERMINAL_FILENAME  = "\033[95m";
-const std::string TERMINAL_WARNING   = "\e[38;5;208m";
-const std::string TERMINAL_NOTIF     = "\e[36m";
-
-
-#define FILE_ERROR_MESSAGE(filename, message) std::cerr     \
-    << TERMINAL_ERROR     << "ERROR   |"                    \
-    << TERMINAL_RESET     << " while loading file "         \
-    << TERMINAL_FILENAME  << filename << "\n"               \
-    << TERMINAL_ERROR     << "        |"                    \
-    << TERMINAL_RESET     << " from "                       \
-    << TERMINAL_UNDERLINE                                   \
-    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
-    << TERMINAL_RESET                                       \
-    << TERMINAL_RESET     << " at file "                    \
-    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
-    << TERMINAL_ERROR     << "\n        |> " << message     \
-    << TERMINAL_RESET     << "\n\n";
-
-#define WARNING_MESSAGE(message) std::cerr                  \
-    << TERMINAL_WARNING   << "WARNING |"                    \
-    << TERMINAL_RESET     << " from "                       \
-    << TERMINAL_UNDERLINE                                   \
-    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
-    << TERMINAL_RESET                                       \
-    << TERMINAL_RESET     << " at file "                    \
-    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
-    << TERMINAL_WARNING   << "\n        |> " << message     \
-    << TERMINAL_RESET     << "\n\n";
-
-
-#define ERROR_MESSAGE(message) std::cerr                    \
-    << TERMINAL_ERROR     << "ERROR   |"                    \
-    << TERMINAL_RESET     << " from "                       \
-    << TERMINAL_UNDERLINE                                   \
-    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
-    << TERMINAL_RESET                                       \
-    << TERMINAL_RESET     << " at file "                    \
-    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
-    << TERMINAL_ERROR     << "\n        |> " << message     \
-    << TERMINAL_RESET     << "\n\n";
-
-#define NOTIF_MESSAGE(message) std::cerr                    \
-    << TERMINAL_NOTIF     << "NOTIF   |"                    \
-    << TERMINAL_RESET     << " from "                       \
-    << TERMINAL_UNDERLINE                                   \
-    << TERMINAL_INFO      << __PRETTY_FUNCTION__            \
-    << TERMINAL_RESET                                       \
-    << TERMINAL_RESET     << " at file "                    \
-    << TERMINAL_FILENAME  << __FILE__ << ":" << __LINE__    \
-    << TERMINAL_NOTIF     << "\n        |> " << message     \
-    << TERMINAL_RESET     << "\n\n";
-
 #ifdef _WIN32
     // #include <shlwapi.h>
     // #define strcasestr StrStrI
@@ -222,17 +206,6 @@ constexpr Colour inline operator""_rgba(const char *s, std::size_t)
 
 using namespace colours::literals;
 
-
-// glm print overloads
-std::ostream& operator<<(std::ostream& os, const glm::vec2& u);
-std::ostream& operator<<(std::ostream& os, const glm::vec3& u);
-std::ostream& operator<<(std::ostream& os, const glm::vec4& u);
-
-std::ostream& operator<<(std::ostream& os, const glm::mat2& u);
-std::ostream& operator<<(std::ostream& os, const glm::mat3& u);
-std::ostream& operator<<(std::ostream& os, const glm::mat4& u);
-
-std::ostream& operator<<(std::ostream& os, const glm::quat& u);
 
 inline void str2lower(char* s) {
     for (; *s; ++s) *s = tolower(*s);

@@ -55,10 +55,10 @@ const AssetVersion& ModList::getBestVersionFromList(
         TODO : test
     */
     WARNING_MESSAGE(
-        "The asset '" << name 
-        << "' of type '" << type << "' doens't have any version with explicit importance. "
-        << "Either the mod-list is broken, or you have installed a mod with incorrect folder structure. "
-        << "The version '" << versions.back().version->name << "' will be used by default." 
+        "The asset '" ,  name 
+        ,  "' of type '" ,  type ,  "' doens't have any version with explicit importance. "
+        ,  "Either the mod-list is broken, or you have installed a mod with incorrect folder structure. "
+        ,  "The version '" ,  versions.back().version->name ,  "' will be used by default." 
     )
 
     return versions.back();

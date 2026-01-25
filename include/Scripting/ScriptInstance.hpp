@@ -79,17 +79,17 @@ class ScriptInstance : public sol::load_result
             {
                 ERROR_MESSAGE(
                     "Script \'" 
-                    << file 
-                    << "\' called from the thread \'" 
-                    <<  threadStateName 
-                    << "\', which is not the script's original creator. Execution won't proceed."
+                    ,  file 
+                    ,  "\' called from the thread \'" 
+                    ,   threadStateName 
+                    ,  "\', which is not the script's original creator. Execution won't proceed."
                 )
                 return std::nullopt;
             }
 
             // NOTIF_MESSAGE(
-            //     "compile timer last time" <<
-            //     compileTimer.timeSinceLastTickMS() << "ms " << 
+            //     "compile timer last time" , 
+            //     compileTimer.timeSinceLastTickMS() ,  "ms " ,  
             //     compileTimer.lasTickTime.time_since_epoch().count()
             // )
             if(!built && (compileTimer.timeSinceLastTick() > 1.0 || firstCompileTry))
@@ -109,19 +109,19 @@ class ScriptInstance : public sol::load_result
                 catch (const sol::error &e) {
                     if (errorTimer.timeSinceLastTick() > 1.0) {
                         errorTimer.tick();
-                        ERROR_MESSAGE("Error while running script \'" << file << "\': " << e.what())
+                        ERROR_MESSAGE("Error while running script \'" ,  file ,  "\': " ,  e.what())
                     }
                 }
                 catch (const std::exception &e) {
                     if (errorTimer.timeSinceLastTick() > 1.0) {
                         errorTimer.tick();
-                        ERROR_MESSAGE("Exception while running script \'" << file << "\': " << e.what())
+                        ERROR_MESSAGE("Exception while running script \'" ,  file ,  "\': " ,  e.what())
                     }
                 }
                 catch (...) {
                     if (errorTimer.timeSinceLastTick() > 1.0) {
                         errorTimer.tick();
-                        ERROR_MESSAGE("Unknown exception while running script \'" << file << "\'")
+                        ERROR_MESSAGE("Unknown exception while running script \'" ,  file ,  "\'")
                     }
                 }
 
@@ -145,17 +145,17 @@ class ScriptInstance : public sol::load_result
         {
             ERROR_MESSAGE(
                 "Script \'" 
-                << file 
-                << "\' called from the thread \'" 
-                <<  threadStateName 
-                << "\', which is not the script's original creator. Execution won't proceed."
+                ,  file 
+                ,  "\' called from the thread \'" 
+                ,   threadStateName 
+                ,  "\', which is not the script's original creator. Execution won't proceed."
             )
             return;
         }
 
         // NOTIF_MESSAGE(
-        //     "compile timer last time" <<
-        //     compileTimer.timeSinceLastTickMS() << "ms " << 
+        //     "compile timer last time" , 
+        //     compileTimer.timeSinceLastTickMS() ,  "ms " ,  
         //     compileTimer.lasTickTime.time_since_epoch().count()
         // )
         if(!built && (compileTimer.timeSinceLastTick() > 1.0 || firstCompileTry))
@@ -173,19 +173,19 @@ class ScriptInstance : public sol::load_result
             catch (const sol::error &e) {
                 if (errorTimer.timeSinceLastTick() > 1.0) {
                     errorTimer.tick();
-                    ERROR_MESSAGE("Error while running script \'" << file << "\': " << e.what())
+                    ERROR_MESSAGE("Error while running script \'" ,  file ,  "\': " ,  e.what())
                 }
             }
             catch (const std::exception &e) {
                 if (errorTimer.timeSinceLastTick() > 1.0) {
                     errorTimer.tick();
-                    ERROR_MESSAGE("Exception while running script \'" << file << "\': " << e.what())
+                    ERROR_MESSAGE("Exception while running script \'" ,  file ,  "\': " ,  e.what())
                 }
             }
             catch (...) {
                 if (errorTimer.timeSinceLastTick() > 1.0) {
                     errorTimer.tick();
-                    ERROR_MESSAGE("Unknown exception while running script \'" << file << "\'")
+                    ERROR_MESSAGE("Unknown exception while running script \'" ,  file ,  "\'")
                 }
             }
 

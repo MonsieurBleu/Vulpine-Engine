@@ -171,7 +171,7 @@ std::string InputManager::getInputKeyString(std::string inputName)
         }
     }
 
-    WARNING_MESSAGE("Can't find input name " << inputName);
+    WARNING_MESSAGE("Can't find input name " ,  inputName);
 
     return "UNKNOWN KEY";
 }
@@ -314,7 +314,7 @@ void getInputKeySimple(const GenericInput& input, std::string& keyString)
     }
     else
     {
-        WARNING_MESSAGE("Can't retreive key name " << input.keyCode);
+        WARNING_MESSAGE("Can't retreive key name " ,  input.keyCode);
         keyString += "UNKNOWN KEY";
     }
 }
@@ -377,7 +377,7 @@ void InputManager::initJoystick()
         if (glfwJoystickPresent(i) == GLFW_TRUE)
         {
             currentJoystick = i;
-            NOTIF_MESSAGE("Joystick " << i << " connected");
+            NOTIF_MESSAGE("Joystick " ,  i ,  " connected");
             return;
         }
     }
@@ -388,12 +388,12 @@ void InputManager::joystickCallback(int jid, int event)
     if (event == GLFW_CONNECTED)
     {
         currentJoystick = jid;
-        NOTIF_MESSAGE("Joystick " << jid << " connected");
+        NOTIF_MESSAGE("Joystick " ,  jid ,  " connected");
     }
     else if (event == GLFW_DISCONNECTED)
     {
         currentJoystick = -1;
-        NOTIF_MESSAGE("Joystick " << jid << " disconnected");
+        NOTIF_MESSAGE("Joystick " ,  jid ,  " disconnected");
     }
 }
 

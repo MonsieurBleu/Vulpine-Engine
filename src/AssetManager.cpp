@@ -44,7 +44,7 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
             else
             if(!strcasecmp(unitype, "none"))
             {
-                FILE_ERROR_MESSAGE(name, "Uniform preset " << unitype << " not recognized. Expected 2D, 3D or none.")
+                FILE_ERROR_MESSAGE(name, "Uniform preset " ,  unitype ,  " not recognized. Expected 2D, 3D or none.")
             }
         }
         else
@@ -99,7 +99,7 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
         break;
 
     default:
-        FILE_ERROR_MESSAGE(name, "Wrong number of source files (" << elems.size() << ") expected 2, 3 or 4.")        
+        FILE_ERROR_MESSAGE(name, "Wrong number of source files (" ,  elems.size() ,  ") expected 2, 3 or 4.")        
         LOADER_ASSERT(elems.size() > 1 && elems.size() < 5)
         break;
     }
@@ -141,7 +141,7 @@ MeshVao& Loader<MeshVao>::loadFromInfos()
     if(!strcasecmp(ext, "obj"))
         r = readOBJ(file);
     else
-        FILE_ERROR_MESSAGE(name, "File extension '" << ext << "' not recognized. Expected .vMesh or .obj")
+        FILE_ERROR_MESSAGE(name, "File extension '" ,  ext ,  "' not recognized. Expected .vMesh or .obj")
 
     LOADER_ASSERT(END_VALUE)
     EXIT_ROUTINE_AND_RETURN
@@ -177,7 +177,7 @@ Texture2D& Loader<Texture2D>::loadFromInfos()
             if(!strcasecmp(ext, "exr"))
                 r.loadFromFileEXR(file);
             else
-                FILE_ERROR_MESSAGE(name, "Image extension '" << ext << "' not supported by Vulpine.");
+                FILE_ERROR_MESSAGE(name, "Image extension '" ,  ext ,  "' not supported by Vulpine.");
         }
         else
         if(!strcasecmp(member, "wrap"))
@@ -195,7 +195,7 @@ Texture2D& Loader<Texture2D>::loadFromInfos()
             if(!strcasecmp(mode, "CLAMP_TO_BORDER"))
                 r.setWrapMode(GL_CLAMP_TO_BORDER);
             else
-                FILE_ERROR_MESSAGE(name, "Image wrap mode '" << mode << "' not recognized. Expected REPEAT, MIRRORED, CLAMP_TO_EDGE or CLAMP_TO_BORDER.");
+                FILE_ERROR_MESSAGE(name, "Image wrap mode '" ,  mode ,  "' not recognized. Expected REPEAT, MIRRORED, CLAMP_TO_EDGE or CLAMP_TO_BORDER.");
         }
         else
         if(!strcasecmp(member, "filter"))
@@ -207,10 +207,10 @@ Texture2D& Loader<Texture2D>::loadFromInfos()
             if(!strcasecmp(mode, "NEAREST"))
                 r.setFilter(GL_NEAREST);
             else
-                FILE_ERROR_MESSAGE(name, "Image filter mode '" << mode << "' not recognized. Expected NEAREST or LINEAR.");            
+                FILE_ERROR_MESSAGE(name, "Image filter mode '" ,  mode ,  "' not recognized. Expected NEAREST or LINEAR.");            
         }
         else
-            FILE_ERROR_MESSAGE(name, "Image member '" << member << "' not recognized. Expected source, wrap or filter.");
+            FILE_ERROR_MESSAGE(name, "Image member '" ,  member ,  "' not recognized. Expected source, wrap or filter.");
     }
 
     r.generate();
@@ -244,7 +244,7 @@ MeshModel3D& Loader<MeshModel3D>::loadFromInfos()
         if(!strcasecmp(member, "state"))
             LOAD_MODEL_STATE_3D(r.state)
         else
-            FILE_ERROR_MESSAGE(name, "ModelRef member '" << member << "' not recognized.");
+            FILE_ERROR_MESSAGE(name, "ModelRef member '" ,  member ,  "' not recognized.");
     } 
 
     EXIT_ROUTINE_AND_RETURN 
@@ -287,7 +287,7 @@ ObjectGroup& Loader<ObjectGroup>::loadFromInfos()
                 r.add(l);
             }
         else
-            FILE_ERROR_MESSAGE(name, "ObjectGroupRef member '" << member << "' not recognized.");
+            FILE_ERROR_MESSAGE(name, "ObjectGroupRef member '" ,  member ,  "' not recognized.");
     }
 
     EXIT_ROUTINE_AND_RETURN 
@@ -330,7 +330,7 @@ ObjectGroupRef& Loader<ObjectGroupRef>::loadFromInfos()
                 r->add(l);
             }
         else
-            FILE_ERROR_MESSAGE(name, "ObjectGroupRef member '" << member << "' not recognized.");
+            FILE_ERROR_MESSAGE(name, "ObjectGroupRef member '" ,  member ,  "' not recognized.");
     }
 
     EXIT_ROUTINE_AND_RETURN 
@@ -402,7 +402,7 @@ SkeletonRef& Loader<SkeletonRef>::loadFromInfos()
                     }
                 }
                 else
-                    FILE_ERROR_MESSAGE(name, "SkeletonBone member '" << submember << "' not recognized.");
+                    FILE_ERROR_MESSAGE(name, "SkeletonBone member '" ,  submember ,  "' not recognized.");
 
                 if(value > buff->data + buff->getReadHead())
                     buff->setHead(value);

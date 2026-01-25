@@ -166,7 +166,7 @@ void ComponentModularity::mergeChildren(Entity& parent)
     {
         if(!c)
         {   
-            WARNING_MESSAGE("EMPTY CHILDREN WHEN MERGING ENTITY " << parent.comp<EntityInfos>().name << "\n");
+            WARNING_MESSAGE("EMPTY CHILDREN WHEN MERGING ENTITY " ,  parent.comp<EntityInfos>().name ,  "\n");
             continue;
         } 
         

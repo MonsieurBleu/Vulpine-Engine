@@ -89,7 +89,7 @@ constexpr auto type_name() {
                     if(!strcmp(stateMember, "frustum"))\
                         stateRefTmp.frustumCulled = fromStr<int>(buff->read());\
                     else\
-                        FILE_ERROR_MESSAGE(name, "ModelState3D member '" << stateMember << "' not recognized.");\
+                        FILE_ERROR_MESSAGE(name, "ModelState3D member '" , stateMember , "' not recognized.");\
                 }    }\
 
 
@@ -160,7 +160,7 @@ constexpr auto type_name() {
             const char *mapSafeReadStrTmp = value; \
             auto mapSafeReadIterTmp = map.find(mapSafeReadStrTmp); \
             if(mapSafeReadIterTmp == map.end())\
-                WARNING_MESSAGE(#map << ": Can't find map element'" << mapSafeReadStrTmp << "'. nothing will be loaded for this elemnt")\
+                WARNING_MESSAGE(#map ,  ": Can't find map element'" ,  mapSafeReadStrTmp ,  "'. nothing will be loaded for this elemnt")\
             else \
                 data = mapSafeReadIterTmp->second; \
         } 
@@ -170,7 +170,7 @@ constexpr auto type_name() {
             const char *mapSafeReadStrTmp = value; \
             auto mapSafeReadIterTmp = map.find(mapSafeReadStrTmp); \
             if(mapSafeReadIterTmp == map.end())\
-                WARNING_MESSAGE(#map << ": Can't find map element'" << mapSafeReadStrTmp << "'. nothing will be loaded for this elemnt")\
+                WARNING_MESSAGE(#map ,  ": Can't find map element'" ,  mapSafeReadStrTmp ,  "'. nothing will be loaded for this elemnt")\
             else \
                 data(mapSafeReadIterTmp->second); \
         } 
@@ -180,13 +180,13 @@ constexpr auto type_name() {
             const char *mapSafeReadStrTmp = value; \
             auto mapSafeReadIterTmp = map.find(mapSafeReadStrTmp); \
             if(mapSafeReadIterTmp == map.end())\
-                WARNING_MESSAGE(#map << ": Can't find map element'" << mapSafeReadStrTmp << "'. nothing will be loaded for this element")\
+                WARNING_MESSAGE(#map ,  ": Can't find map element'" ,  mapSafeReadStrTmp ,  "'. nothing will be loaded for this element")\
             else \
                 data((castType)mapSafeReadIterTmp->second); \
         } 
 
     #define MEMBER_NOTRECOGNIZED_ERROR {\
-        FILE_ERROR_MESSAGE(buff->getSource(), type_name<decltype(data)>() << " member '" << member << "' not recognized. This element will be skipped.");\
+        FILE_ERROR_MESSAGE(buff->getSource(), type_name<decltype(data)>() ,  " member '" ,  member ,  "' not recognized. This element will be skipped.");\
         buff->skipUntilNewElement();\
     }\
 

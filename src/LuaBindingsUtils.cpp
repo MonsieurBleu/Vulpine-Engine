@@ -17,7 +17,7 @@ std::string_view getLuaTypeName(const std::string_view &name)
         return alias->second;
 
     WARNING_MESSAGE(
-        "When generating LUA documentation for type '" << name << "'. No declared alias exist for this type."
+        "When generating LUA documentation for type '" ,  name ,  "'. No declared alias exist for this type."
     )
 
     return name;

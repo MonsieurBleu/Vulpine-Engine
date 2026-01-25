@@ -13,7 +13,7 @@ Filewatcher::Filewatcher(const std::string & path)
     }
     else
     {
-        ERROR_MESSAGE("Trying to create Filewatcher for a non existant file '" << path << "'")
+        ERROR_MESSAGE("Trying to create Filewatcher for a non existant file '" ,  path ,  "'")
     }
 }
 
@@ -23,7 +23,7 @@ bool Filewatcher::hasChanged()
 
     if(!std::filesystem::exists(path))
     {
-        WARNING_MESSAGE("Filewatcher created for file '" << path << "' can't track modifications. The file no longer exist.");
+        WARNING_MESSAGE("Filewatcher created for file '" ,  path ,  "' can't track modifications. The file no longer exist.");
         return false;
     }
 

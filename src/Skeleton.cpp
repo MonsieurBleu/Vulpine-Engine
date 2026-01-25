@@ -30,7 +30,7 @@ void Skeleton::applyGraph(SkeletonAnimationState &state)
 
     if (state.size() != s)
     {
-        ERROR_MESSAGE("Bones number between animation state and skeleton don't match :" << state.name);
+        ERROR_MESSAGE("Bones number between animation state and skeleton don't match :" ,  state.name);
 
         return;
     }

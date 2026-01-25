@@ -200,7 +200,7 @@ struct StrFlag : FlagData {
         try {
             return std::stoi(value);
         } catch (...) {
-            WARNING_MESSAGE("Failed to convert string to int: " + value);
+            WARNING_MESSAGE("Failed to convert string to int: ", value);
             return 0;
         }
     }
@@ -210,7 +210,7 @@ struct StrFlag : FlagData {
         try {
             return std::stof(value);
         } catch (...) {
-            WARNING_MESSAGE("Failed to convert string to float: " + value);
+            WARNING_MESSAGE("Failed to convert string to float: ", value);
             return 0.0f;
         }
     }

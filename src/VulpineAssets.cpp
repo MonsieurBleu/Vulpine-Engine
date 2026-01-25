@@ -21,7 +21,7 @@ MeshVao loadVulpineMesh(const char *filename)
 
     if(!file)
     {
-        FILE_ERROR_MESSAGE(filename, strerror(errno) << "! The loader will return an empty object.")
+        FILE_ERROR_MESSAGE(filename, strerror(errno) ,  "! The loader will return an empty object.")
         return MeshVao();
     }
 
@@ -98,7 +98,7 @@ void Skeleton::load(const char* filename)
 
     if(!file)
     {
-        FILE_ERROR_MESSAGE(filename, strerror(errno) << "! The loader will return an empty object.");
+        FILE_ERROR_MESSAGE(filename, strerror(errno) ,  "! The loader will return an empty object.");
         return;
     }
 

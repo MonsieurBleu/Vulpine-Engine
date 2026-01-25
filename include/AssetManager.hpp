@@ -62,7 +62,7 @@ class Loader
                         static T dummy;
                         return dummy;
                     }
-                    FILE_ERROR_MESSAGE(elem, "No loader information was loaded for the element " << elem << ".")
+                    FILE_ERROR_MESSAGE(elem, "No loader information was loaded for the element " ,  elem ,  ".")
                     return Loader<T>::loadedAssets.begin()->second;
                 }
 
