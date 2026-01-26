@@ -64,7 +64,7 @@ private:
     static void logAsType(LogSeverity type, const MessageTypes&... messages)
     {
         bool should_cout = (type & LogTermDisplayBits) != 0;
-        ss.clear();
+        ss = std::stringstream();
         switch (type)
         {
             case LogSeverity::INFO:
