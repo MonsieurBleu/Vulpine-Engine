@@ -235,6 +235,7 @@ inline bool isFloat(const std::string& s, float& value) {
 
 void angleVectors(const glm::vec3& angles, glm::vec3& forward, glm::vec3& right, glm::vec3& up);
 
+void ensureNonZeroVectorComponents(glm::vec3& v);
 
 // get a specific line from a string, lines are 0-indexed and separated by '\n'. 
 // assumes a null-terminated string.

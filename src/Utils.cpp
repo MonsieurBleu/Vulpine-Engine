@@ -275,3 +275,10 @@ std::string getLineFromString(const char* str, size_t line)
 
     return std::string(str + startIdx, endIdx - startIdx);
 }
+
+void ensureNonZeroVectorComponents(glm::vec3& v)
+{
+    v.x = v.x == 0.0f ? 0.0001f : v.x;
+    v.y = v.y == 0.0f ? 0.0001f : v.y;
+    v.z = v.z == 0.0f ? 0.0001f : v.z;
+}
