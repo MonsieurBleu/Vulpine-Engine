@@ -170,7 +170,7 @@ private:
 
             logFile << timeString;
             
-            logFile << str;
+            logFile << str << std::flush;
         }
     }
 
