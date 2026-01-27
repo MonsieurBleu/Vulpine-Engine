@@ -202,7 +202,7 @@ static std::unordered_map<std::string_view, std::string_view> luaOperatorNames =
 #define __VBIND_OPERATOR_LAMBDA_COMMA(op, opend, type) , __VBIND_OPERATOR_LAMBDA(op, opend, type)
 #define __VBIND_OPERATOR_LAMBDA_LIST(op, opend, first, ...) __VBIND_OPERATOR_LAMBDA(op, opend, first) MAPGEN_FOR_EACH_TWO_ARG(__VBIND_OPERATOR_LAMBDA_COMMA, op, opend, __VA_ARGS__)
 
-#define __VBIND_OPERATOR_LAMBDA_2WAY(op, opend, type) [](const CURRENT_CLASS_BINDING &a, const type b){return a op b opend;}, [](const type a, const CURRENT_CLASS_BINDING &b){return a op b opend;}
+#define __VBIND_OPERATOR_LAMBDA_2WAY(op, opend, type) [](CURRENT_CLASS_BINDING &a, const type b){return a op b opend;}, [](type a, const CURRENT_CLASS_BINDING &b){return a op b opend;}
 #define __VBIND_OPERATOR_LAMBDA_COMMA_2WAY(op, opend, type) , __VBIND_OPERATOR_LAMBDA_2WAY(op, opend, type)
 #define __VBIND_OPERATOR_LAMBDA_LIST_2WAY(op, opend, first, ...) __VBIND_OPERATOR_LAMBDA_2WAY(op, opend, first) MAPGEN_FOR_EACH_TWO_ARG(__VBIND_OPERATOR_LAMBDA_COMMA_2WAY, op, opend, __VA_ARGS__)
 

@@ -134,7 +134,9 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     if(&parent != child.get())
     {
         auto &parentBox = parent.comp<WidgetBox>();
-        box.depth = parentBox.depth+0.0001;
+
+        if(!box.staticDepth)
+            box.depth = parentBox.depth+0.0001;
 
         box.useClassicInterpolation = box.useClassicInterpolation ? true : parentBox.useClassicInterpolation;
 

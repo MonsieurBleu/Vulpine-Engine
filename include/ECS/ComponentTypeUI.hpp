@@ -99,6 +99,7 @@ struct WidgetBox
     vec2 displayRangeMax = vec2(UNINITIALIZED_FLOAT);
 
     float depth = 0.f;
+    bool staticDepth = false;
 
     float lastChangeTime = 0.f;
     int synchCounter = 0;
