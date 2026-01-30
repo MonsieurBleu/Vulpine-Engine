@@ -256,7 +256,7 @@ static std::unordered_map<std::string_view, std::string_view> luaOperatorNames =
 #define __VBIND_ENUM_ADD_MEMBER(x) , UNPARENT x
 
 #define VBIND_ADD_ENUM(name, first, ...) \
-    luaHeader << "---@enum " << name << "\n local " << name << " = {\n"; \
+    luaHeader << "---@enum " << name << "\n " << name << " = {\n"; \
     __VBIND_ENUM_WRITE_MEMBER first \
     MAPGEN_FOR_EACH(__VBIND_ENUM_WRITE_MEMBER_EXPAND, __VA_ARGS__) \
     luaHeader << "}\n"; \
