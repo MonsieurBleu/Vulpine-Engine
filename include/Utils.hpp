@@ -206,6 +206,57 @@ constexpr Colour inline operator""_rgba(const char *s, std::size_t)
 
 using namespace colours::literals;
 
+namespace EngineLitterals
+{
+
+struct StrHex
+{
+    uint64_t num;
+
+    constexpr operator uint8_t()
+    {
+        return (uint8_t)num;
+    }
+
+    constexpr operator uint16_t()
+    {
+        return (uint16_t)num;
+    }
+
+    constexpr operator uint32_t()
+    {
+        return (uint32_t)num;
+    }
+
+    constexpr operator uint64_t()
+    {
+        return (uint64_t)num;
+    }
+};
+
+namespace litterals
+{
+    constexpr StrHex inline operator""_hex(const char *s, std::size_t size)
+    {
+        switch (size)
+        {
+            case 0:
+                return {};
+            case 1:
+                return {(uint64_t)s[0]};
+            case 2:
+                return {(uint64_t)(s[0]) | (uint64_t)(s[1]) << 8};
+            case 3:
+                return {(uint64_t)(s[0]) | (uint64_t)(s[1]) << 8 | (uint64_t)(s[2]) << 16};
+            default:
+                return {(uint64_t)(s[0]) | (uint64_t)(s[1]) << 8 | (uint64_t)(s[2]) << 16 | (uint64_t)(s[3]) << 24};
+        }
+    }
+};
+
+} // namespace EngineLitterals
+
+using namespace EngineLitterals::litterals;
 
 inline void str2lower(char* s) {
     for (; *s; ++s) *s = tolower(*s);
