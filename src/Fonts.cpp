@@ -328,6 +328,7 @@ void SingleStringBatch::batchText()
 {
     size_t size = text.size();
     int usedChar = 0;
+    int lastCharLine = 0;
     if (!size)
     {
         text = U" ";
@@ -371,8 +372,15 @@ void SingleStringBatch::batchText()
         switch (text[i])
         {
             case U'\n':
-                c.x = b.x;
+
+                if(align == CENTERED)
+                    for(int i = lastCharLine*6; i < usedChar*6; i++)
+                        p[i].x -= c.x*0.5;
+
+                c.x = 0;
+                // c.x = b.x;
                 c.y -= charSize;
+                lastCharLine = usedChar;
                 continue;
                 break;
 
@@ -428,17 +436,15 @@ void SingleStringBatch::batchText()
         }
         else
             c.x += charSize * info.advance;
+    
+
     }
 
     textSize = vec2(textSize.x, -c.y + textSize.y);
 
     if(align == CENTERED)
-    {
-        for(int i = 0; i < usedChar*6; i++)
-        {
-            p[i] -= vec3(c.x*0.5, 0, 0);
-        }
-    }
+        for(int i = lastCharLine*6; i < usedChar*6; i++)
+            p[i].x -= c.x*0.5;
 
     if (!vao.get() || !vao->getHandle())
     {
