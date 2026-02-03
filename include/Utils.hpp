@@ -18,6 +18,7 @@
     #define STR_CASE_STR(str1, str2) strcasestr(str1, str2)
 #endif
 
+inline thread_local bool currentThreadID = -1;
 
 // glm print overloads
 std::ostream& operator<<(std::ostream& os, const glm::vec2& u);

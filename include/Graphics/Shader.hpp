@@ -22,7 +22,8 @@ enum ShaderError
     ShaderOk,
     ShaderNoFile,
     ShaderCompileError,
-    ShaderLinkingError
+    ShaderLinkingError,
+    ShaderWrongThread
 };
 
 /*

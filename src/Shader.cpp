@@ -36,10 +36,10 @@ ShaderError Shader::refresh(std::vector<std::string> &dependencies)
 {
     shader = glCreateShader(type);
 
-    if (shader == 0)
-    {
-        ERROR_MESSAGE("error while calling glCreateShader, in all likelyhood this is a driver problem :/");
-    }
+    // if (shader == 0)
+    // {
+    //     ERROR_MESSAGE("error while calling glCreateShader, in all likelyhood this is a driver problem :/");
+    // }
 
     dependencies.push_back(Path);
 
@@ -61,23 +61,17 @@ ShaderError Shader::refresh(std::vector<std::string> &dependencies)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
     glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &logLength);
 
-    if (logLength > 0 && shader != 0)
+    if (logLength > 0)
     {
-        char* ShaderError = new char[logLength];
-        glGetShaderInfoLog(shader, logLength, NULL, ShaderError);
-        if (result)
-        {
-            WARNING_MESSAGE("Error compiling shader ", TERMINAL_FILENAME, TERMINAL_UNDERLINE, Path, TERMINAL_RESET, " logLength: ", logLength, " Error: ", ShaderError);
-        }
-        else {
-            ERROR_MESSAGE("Error compiling shader ", TERMINAL_FILENAME, TERMINAL_UNDERLINE, Path, TERMINAL_RESET, " logLength: ", logLength, " Error: ", ShaderError);
-        }
+        GLchar* ShaderError = new char[logLength];
 
-        
+        glGetShaderInfoLog(shader, logLength, NULL, ShaderError);
 
         // std::cerr << ShaderError << std::endl
         //           << TERMINAL_RESET;
         
+        std::stringstream tmpss;
+
         int cnt = 0;
         // while(true)
         for(; cnt < logLength; cnt++)
@@ -91,35 +85,55 @@ ShaderError Shader::refresh(std::vector<std::string> &dependencies)
                 if((lineCNT += (code[j] == '\n')) == lineNB)
                     break;
 
-            // std::cerr << TERMINAL_ERROR << "\n";
+            tmpss << TERMINAL_ERROR << "\n";
 
             for(; cnt < logLength; cnt++)
             {
                 if(ShaderError[cnt] == '\n')
                     break;
 
-                // std::cerr << ShaderError[cnt];
+                tmpss << ShaderError[cnt];
             }
 
-            // std::cerr << TERMINAL_INFO << "\n";
+            tmpss << TERMINAL_INFO << "\n";
 
             for(j++; j < codeSize; j++)
             {
                 if(code[j] == '\n')
                     break;
 
-                // std::cerr << code[j];
+                tmpss << code[j];
             }
 
-            ERROR_MESSAGE(
-                ShaderError[cnt],
-                TERMINAL_INFO,
-                code[j]
-            );
+            // ERROR_MESSAGE(
+            //     // ShaderError[cnt],
+            //     TERMINAL_INFO,
+            //     code[j]
+            // );
             
             // std::cerr << "\n" << TERMINAL_RESET;
         }
-        // std::cerr << "\n" << TERMINAL_RESET;
+        tmpss << "\n" << TERMINAL_RESET;
+
+        glGetShaderInfoLog(shader, logLength, NULL, ShaderError);
+        if (result and shader)
+        {
+            WARNING_MESSAGE("Error compiling shader ", 
+                "Error compiling shader ", 
+                TERMINAL_FILENAME, TERMINAL_UNDERLINE, Path, TERMINAL_RESET, 
+                TERMINAL_WARNING, tmpss.str(),
+                TERMINAL_RESET
+            );
+        }
+        else {
+            ERROR_MESSAGE(
+                "Error compiling shader ", 
+                TERMINAL_FILENAME, TERMINAL_UNDERLINE, Path, TERMINAL_RESET, 
+                TERMINAL_ERROR, tmpss.str(),
+                TERMINAL_RESET
+            );
+        }
+
 
         delete[] ShaderError;
         if(!result)
@@ -198,6 +212,9 @@ bool ShaderProgram::needRefresh()
 
 ShaderError ShaderProgram::compileAndLink()
 {
+    if(currentThreadID != 0)
+        return ShaderWrongThread;
+
     BenchTimer timer;
     timer.start();
     dependencies.clear();
