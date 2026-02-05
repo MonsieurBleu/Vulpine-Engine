@@ -4,6 +4,9 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <vector>
+#include <filesystem>
+
 
 
 const std::string TERMINAL_UNDERLINE = "\033[4m";
@@ -43,6 +46,7 @@ private:
 
     static inline std::stringstream ss;
 
+    static inline std::string logDir = "data/logs/";
 
     static void log_part(bool should_cout) {}; // default case for recursive unwrapping of arguments
     
@@ -178,8 +182,10 @@ public:
     static void init()
     {
         std::time_t time = std::time({});
-        char timeString[std::size("data/logs/yyyymmddhhmmss.vulpine.log")];
-        std::strftime(std::data(timeString), std::size(timeString), "data/logs/%Y%m%d%H%M%S.vulpine.log", std::gmtime(&time));
+        std::string strDummy = logDir + "yyyymmddhhmmss.log";
+        std::string strFormat = logDir + "%Y%m%d%H%M%S.log";
+        char* timeString = new char[strDummy.size() + 1];
+        std::strftime(timeString, strDummy.size() + 1, strFormat.c_str(), std::gmtime(&time));
         logFile.open(timeString, std::ios::out | std::ios::trunc);
 
         if (!logFile.good())
@@ -189,6 +195,33 @@ public:
         else 
         {
             Logger::debug("Logger initialized :)");
+        }
+
+        cleanOldFiles();
+    }
+
+    static void cleanOldFiles(size_t n_files_to_keep = 5)
+    {
+        namespace fs = std::filesystem;
+
+        std::vector<fs::directory_entry> entries;
+        for (const fs::directory_entry& dir_entry :
+        fs::recursive_directory_iterator(logDir))
+        {
+            if (dir_entry.path().extension() == ".log")
+                entries.push_back(dir_entry);
+        }
+
+        std::sort(
+            entries.begin(), entries.end(), [](const fs::directory_entry& a, const fs::directory_entry& b)
+            {
+                return a.last_write_time().time_since_epoch() > b.last_write_time().time_since_epoch();
+            }
+        );
+
+        for (int i = n_files_to_keep; i < entries.size(); i++)
+        {
+            fs::remove(entries[i].path());
         }
     }
 
