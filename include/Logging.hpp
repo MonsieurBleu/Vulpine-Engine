@@ -26,7 +26,7 @@ public:
     enum LogSeverity {
         INFO       = 1 << 0,
         WARN       = 1 << 1,
-        ERROR      = 1 << 2,
+        _ERROR_      = 1 << 2,
         FILE_ERROR = 1 << 3,
         DEBUG      = 1 << 4
     };
@@ -38,7 +38,7 @@ public:
         const char* filename;
     };
 
-    static inline int LogTermDisplayBits = INFO | WARN | ERROR | FILE_ERROR | DEBUG;
+    static inline int LogTermDisplayBits = INFO | WARN | _ERROR_ | FILE_ERROR | DEBUG;
 
 private:
 
@@ -81,7 +81,7 @@ private:
                 if (should_cout)
                     std::cout  << TERMINAL_WARNING   << "WARNING |";
                 break;
-            case LogSeverity::ERROR:
+            case LogSeverity::_ERROR_:
                 ss  << "[ERROR]";
                 if (should_cout)
                     std::cout  << TERMINAL_ERROR     << "ERROR   |";
@@ -146,7 +146,7 @@ private:
             case LogSeverity::DEBUG:
                 std::cout  << TERMINAL_DEBUG;
                 break;
-            case LogSeverity::ERROR:
+            case LogSeverity::_ERROR_:
             case LogSeverity::FILE_ERROR:
                 std::cout  << TERMINAL_ERROR;
                 break;
@@ -238,8 +238,8 @@ public:
             case FILE_ERROR:
                 logAsType(FILE_ERROR, messages...);
                 break;
-            case ERROR:
-                logAsType(ERROR, messages...);
+            case _ERROR_:
+                logAsType(_ERROR_, messages...);
                 break;
             case WARN:
                 logAsType(WARN, messages...);
@@ -265,7 +265,7 @@ public:
     template <typename... MessageTypes>
     static void error(const MessageTypes&... messages)
     {
-        logAsType(LogSeverity::ERROR, messages...);
+        logAsType(LogSeverity::_ERROR_, messages...);
     }
 
     template <typename... MessageTypes>
