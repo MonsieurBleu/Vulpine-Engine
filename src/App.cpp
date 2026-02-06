@@ -49,7 +49,7 @@ void App::setFullScreen(bool fullscreen)
     if(fullscreen)
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     else
-        glfwSetWindowMonitor(window, NULL, 0, 0, mode->width*0.5, mode->height*0.5, 0);
+        glfwSetWindowMonitor(window, NULL, mode->width*0.5, mode->height*0.5, mode->width*0.5, mode->height*0.5, 0);
 
     isFullScreen = fullscreen;
 }
