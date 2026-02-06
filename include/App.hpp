@@ -45,6 +45,9 @@ class App
 
         void loadAllAssetsInfos(const char *filename);
 
+        bool isFullScreen = false;
+        void setFullScreen(bool fullscreen);
+
         
         vec3 sunDir = vec3(0.0f);
         vec3 moonPos = vec3(0.0f);

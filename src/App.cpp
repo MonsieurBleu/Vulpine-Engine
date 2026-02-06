@@ -25,6 +25,35 @@ Globals globals;
 
 std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> UFTconvert;
 
+void App::setFullScreen(bool fullscreen)
+{
+    // if(fullscreen != isFullScreen)
+    //     return;
+
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+
+    if(!monitor)
+    {
+        ERROR_MESSAGE("Window monitor is null");
+        return;
+    }
+
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    if(!mode)
+    {
+        ERROR_MESSAGE("Window monitor mode is null");
+        return;
+    }
+
+    if(fullscreen)
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+    else
+        glfwSetWindowMonitor(window, NULL, 0, 0, mode->width*0.5, mode->height*0.5, 0);
+
+    isFullScreen = fullscreen;
+}
+
 void App::loadAllAssetsInfos(const char *filename)
 {
     for (auto f : std::filesystem::recursive_directory_iterator(filename))

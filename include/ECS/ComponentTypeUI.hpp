@@ -194,6 +194,8 @@ struct WidgetStyle
 
     CHAINED_MEMBER(WidgetStyle, vec2, spritePosition, vec2(0))
 
+    CHAINED_MEMBER(WidgetStyle, float, minFontScale, 1.0)
+
     bool useAltBackgroundColor = false;
     bool useAltTextColor = false;
 };

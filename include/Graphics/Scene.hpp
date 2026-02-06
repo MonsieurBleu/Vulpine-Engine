@@ -47,7 +47,7 @@ class Scene
 
     public :
         Scene();
-        Scene& add(ModelRef mesh, bool sort = true);
+        Scene& add(ModelRef mesh, bool sort = true, bool putInFront = false);
         Scene& add(SceneLight light);
         Scene& add(ObjectGroupRef group);
 

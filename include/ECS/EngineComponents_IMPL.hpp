@@ -415,9 +415,14 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         text.mesh->text = text.text;
         text.mesh->batchText();
 
+        float nbOfLines = 0;
+        for(auto &c : text.text)
+            if(c == U'\n')
+                nbOfLines ++;
+
         vec2 tsize = text.mesh->getSize();
 
-        tsize.y = 1.5 * text.mesh->charSize;
+        tsize.y = 1.25 * text.mesh->charSize +  text.mesh->charSize*nbOfLines;
 
         tsize.y *= iaspectRatio;
 
@@ -430,6 +435,8 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         tscale = min(
             tscale, 
             vec2(1100)/res
+            *
+            (child->has<WidgetStyle>() ? child->comp<WidgetStyle>().minFontScale : 1.f)
         );
 
 

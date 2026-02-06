@@ -11,13 +11,19 @@ Scene::Scene()
     lightBuffer.send();
 }
 
-Scene& Scene::add(ModelRef mesh, bool sort)
+Scene& Scene::add(ModelRef mesh, bool sort, bool putInFront)
 {
     if(!sort || !mesh->sorted)
     {
         mesh->sorted = false;
         
         unsortedMeshes.push_back(mesh);
+        return *this;
+    }
+
+    if(putInFront)
+    {
+        meshes.push_front(MeshGroup(mesh->getMaterial()).add(mesh));
         return *this;
     }
 
