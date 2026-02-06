@@ -76,10 +76,15 @@ int launchGame(GameType **game, std::string name, Params... initParams)
     {
         const GLubyte *renderer = glGetString(GL_RENDERER); // get renderer string
         const GLubyte *version = glGetString(GL_VERSION);   // version as a string
-        std::cout << TERMINAL_INFO
-                  << "Renderer: " << renderer << "\n"
-                  << "OpenGL version supported " << version << "\n"
-                  << TERMINAL_RESET << "\n";
+        // std::cout << TERMINAL_INFO
+        //           << "Renderer: " << renderer << "\n"
+        //           << "OpenGL version supported " << version << "\n"
+        //           << TERMINAL_RESET << "\n";
+        
+
+        // DEBUG_MESSAGE("GPU : ", glGetString(GL_RENDERER));
+        // DEBUG_MESSAGE("OpenGL version supported : ", glGetString(GL_VERSION));
+
 
         *game = new GameType(window);
 

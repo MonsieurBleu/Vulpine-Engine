@@ -16,7 +16,7 @@ class App
 {
     protected :
 
-        AppState state = AppState::init;
+        
         GLFWwindow* window;
 
         Camera camera;
@@ -57,6 +57,8 @@ class App
         mat3 tangentSpace = mat3(1.0f);
 
     public :
+
+        static inline AppState state = AppState::init;
     
         static inline vec3 ambientLight;
     

@@ -46,7 +46,7 @@ private:
 
     static inline std::stringstream ss;
 
-    static inline std::string logDir = "data/logs/";
+    static inline std::string logDir = "logs/";
 
     static void log_part(bool should_cout) {}; // default case for recursive unwrapping of arguments
     
