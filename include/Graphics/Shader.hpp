@@ -48,7 +48,12 @@ class Shader
     public :
         Shader(){};
 
+        #ifdef __clang__
         static inline std::unordered_map<std::string, std::pair<Filewatcher, bool>> fileWatchers;
+        #elif defined(__GNUC__)
+        static std::unordered_map<std::string, std::pair<Filewatcher, bool>> fileWatchers;
+        #endif
+        
 
         // Prepare the shader for loading from the file at the given path
         //    .vert for vertex shaders

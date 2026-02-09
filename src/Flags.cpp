@@ -1691,8 +1691,14 @@ void LogicBlock::parse_string_cstr(char ** input, size_t &len, size_t allocated,
     static const char logicBlockStart[] = "$(";
     // static const char logicBlockEnd[] = ")";
 
+    #ifdef __clang__
     static thread_local size_t blen = 4096;
     static thread_local char * buffer = new char[blen];
+    #elif defined(__GNUC__)
+    static thread_local size_t blen = 4096;
+    static thread_local char * buffer = new char[blen];
+    #endif
+
 
     char *readHead = *input;
     char *writeHead = buffer;

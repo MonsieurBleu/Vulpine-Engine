@@ -5,9 +5,17 @@
 /*
 *  Hader string stream
 */
+#ifdef __clang__
 inline thread_local std::stringstream luaHeader;
 inline thread_local std::stringstream luaHeaderAppendBuffer;
+#elif defined(__GNUC__)
+static inline thread_local std::stringstream luaHeader;
+static inline thread_local std::stringstream luaHeaderAppendBuffer;
+#endif
+
 inline std::unordered_map<std::string_view, std::string_view> luaBindingTypesAlias;
+
+
 
 /*
 * FUNCTION TRAITS HELPER TEMPLATE

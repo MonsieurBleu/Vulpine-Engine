@@ -770,8 +770,13 @@ private:
         OperationNodePtr toOperationNode() const;
     };
 
-
+    
+    
+    #ifdef __clang__
     thread_local static inline struct ErrorInfos
+    #elif defined(__GNUC__)
+    thread_local static struct ErrorInfos
+    #endif
     {
         bool success;
         enum class ErrorType {

@@ -134,8 +134,14 @@ struct ContinuousInput : public GenericInput
 
 namespace InputManager
 {
+    #ifdef __clang__
     inline std::list<EventInput> eventInputs;
     inline std::list<ContinuousInput> continuousInputs;
+    #elif defined(__GNUC__)
+    static inline std::list<EventInput> eventInputs;
+    static inline std::list<ContinuousInput> continuousInputs;
+    #endif
+
 
     inline GLFWgamepadstate gamepadState;
 

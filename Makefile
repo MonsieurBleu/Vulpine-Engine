@@ -20,12 +20,23 @@ OPTFLAGS =
 CPPFLAGS = $(WFLAGS) --std=c++23 $(OPTFLAGS) -Wno-deprecated-declarations
 INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
+COMPILE_MODE = NONE
+
+ifeq ($(OS),Windows_NT)
+	COMPILE_MODE = Windows
+else 
+	COMPILE_MODE = Linux
+endif
+
+ifeq ($(CC), clang++-20 --target=x86_64-pc-windows-gnu)
+	COMPILE_MODE = Windows
+endif
 
 #  TODO : update links for windows
 
-ifeq ($(OS),Windows_NT)
-	LIBFLAGS = -L./ -Llibs/ -lmingw32 -lglew32 -lglfw3 -lglu32 -lopengl32 -lktx -lsoft_oal -lpthread -lgvc -lcgraph -lcdt -lluajit -llua51 -lassimp
-	LINKFLAGS = libglfw3.a libglfw3dll.a
+ifeq ($(COMPILE_MODE),Windows)
+	LIBFLAGS = -L./ -Llibs/ -lmingw32 -lglew32 -lglfw3 -lglu32 -lopengl32 -lktx -lsoft_oal -pthread -lgvc -lcgraph -lcdt -lluajit -llua51 -lassimp
+	LINKFLAGS = ../Sanctia-Release/libglfw3.a ../Sanctia-Release/libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine_WIN64.a
 else
 	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGLU -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp
@@ -147,7 +158,7 @@ game : vulpine
 game : LIBFLAGSG = $(LIBFLAGS) -lreactphysics3d
 game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@
-	@$(CC) $(GOBJ) $(LINKFLAGS) $(LIBFLAGSG) -o $(GEXECP)
+	@$(CC) $(GOBJ) $(LINKFLAGS) $(CPPFLAGS)$(LIBFLAGSG) -o $(GEXECP)
 	@${GAME_READY}
 
 obj/game/main.o : ../main.cpp

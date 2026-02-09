@@ -18,7 +18,12 @@
     #define STR_CASE_STR(str1, str2) strcasestr(str1, str2)
 #endif
 
+#ifdef __clang__
 inline thread_local bool currentThreadID = -1;
+#elif defined(__GNUC__)
+static inline thread_local bool currentThreadID = -1;
+#endif
+
 
 // glm print overloads
 std::ostream& operator<<(std::ostream& os, const glm::vec2& u);
