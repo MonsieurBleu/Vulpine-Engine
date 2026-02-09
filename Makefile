@@ -28,7 +28,7 @@ else
 	COMPILE_MODE = Linux
 endif
 
-ifeq ($(CC), clang++-20 --target=x86_64-pc-windows-gnu)
+ifeq ($(GEXEC), Sanctia_WIN64.exe)
 	COMPILE_MODE = Windows
 endif
 
