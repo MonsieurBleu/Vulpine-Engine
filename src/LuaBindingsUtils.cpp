@@ -124,7 +124,7 @@ void writeFunctionDocumentation(
         {
             if(j) luaHeader << ", ";
 
-            if(i/2 >= argsNames.size() || j >= argsNames[i].size())
+            if(i/2 >= argsNames.size() || j >= argsNames[i/2].size())
                 luaHeader << getAutoParamName(j, argsType[i][j]) << " : " << argsType[i][j];
             else
                 luaHeader << argsNames[i/2][j] << " : " << argsType[i][j];

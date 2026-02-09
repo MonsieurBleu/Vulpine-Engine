@@ -102,6 +102,8 @@ template<> void Component<WidgetText>::ComponentElem::init()
     data.mesh->uniforms.add(ShaderUniform(&data.mesh->color, 32));
     data.mesh->state.scaleScalar(0);
 
+    // data.mesh->align = data.align;
+
     if(!data.text.size()) 
         data.text = UFTconvert.from_bytes(entity->comp<EntityInfos>().name);
 
@@ -457,9 +459,14 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
             default : break;
         }
 
+        // if(text.mesh->align == StringAlignment::CENTERED)
+        //     initialPos.x += 4.f;
+
         text.mesh->state 
             .setPositionXY(
-                pos + initialPos*(scale - text.mesh->getSize()*tscale))
+                pos + initialPos*(scale - text.mesh->getSize()*tscale)
+                + (text.mesh->align == StringAlignment::CENTERED ? vec2(text.mesh->getSize().x*tscale.x*0.5, 0.0) : vec2(0))
+            )
             .setPositionZ(box.depth+0.00005)
             .setScale(vec3(tscale, 1));
     }
