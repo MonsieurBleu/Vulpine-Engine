@@ -150,6 +150,9 @@ namespace InputManager
     void initJoystick();
     void joystickCallback(int jid, int event);
 
+    // TODO: different deadzone for different inputs
+    inline float joystickDeadzone = 0.1f;
+
     // generic filter functions
     namespace Filters
     {

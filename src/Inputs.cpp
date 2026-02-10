@@ -420,7 +420,8 @@ float InputManager::getGamepadAxisValue(int axisCode)
         return 0.0f;
     }
 
-    return InputManager::gamepadState.axes[axisCode];
+    float v = InputManager::gamepadState.axes[axisCode];
+    return abs(v) > InputManager::joystickDeadzone ? v : 0.0f;
 }
 
 void InputManager::updateGamepadState()
