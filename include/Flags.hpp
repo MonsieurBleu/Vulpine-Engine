@@ -11,6 +11,42 @@
 #include <unordered_map>
 #include <vector>
 
+extern thread_local 
+    struct ErrorInfos
+    // #elif defined(__GNUC__)
+    // thread_local static struct ErrorInfos
+    // #endif
+    {
+        bool success;
+        enum class ErrorType {
+            NONE,
+            UNKNOWN_FLAG,
+            UNSUPPORTED_OPERATION,
+            SYNTAX_ERROR,
+            UNMATCHED_PARENS,
+            UNKNOWN_FUNCTION,
+            FUNCTION_CALL_FAILED,
+            INVALID_ARGUMENTS,
+            MALFORMED_IF_STATEMENT,
+            FUNCTION_CALL_ERROR_COUNT,
+            FUNCTION_CALL_ERROR_TYPE
+        } errorType;
+
+        std::string* fileName;
+        const char* LineContent;
+        int lineNumber;
+        size_t column_start;
+        size_t column_end;
+        std::string* messageExtra;
+
+        ErrorInfos() : success(true), errorType(ErrorType::NONE), lineNumber(-1), column_start(0), column_end(0) {clear();}
+
+        void clear();
+        void printError() const;
+    }
+error    
+;
+
 struct ScriptNameWrapper {
     std::string scriptName;
 };
@@ -772,146 +808,13 @@ private:
 
     
     
-    #ifdef __clang__
-    thread_local static inline struct ErrorInfos
-    #elif defined(__GNUC__)
-    thread_local static struct ErrorInfos
-    #endif
-    {
-        bool success;
-        enum class ErrorType {
-            NONE,
-            UNKNOWN_FLAG,
-            UNSUPPORTED_OPERATION,
-            SYNTAX_ERROR,
-            UNMATCHED_PARENS,
-            UNKNOWN_FUNCTION,
-            FUNCTION_CALL_FAILED,
-            INVALID_ARGUMENTS,
-            MALFORMED_IF_STATEMENT,
-            FUNCTION_CALL_ERROR_COUNT,
-            FUNCTION_CALL_ERROR_TYPE
-        } errorType;
+    // #ifdef __clang__
+    
+    public:
 
-        std::string* fileName;
-        const char* LineContent;
-        int lineNumber;
-        size_t column_start;
-        size_t column_end;
-        std::string* messageExtra;
-
-        ErrorInfos() : success(true), errorType(ErrorType::NONE), lineNumber(-1), column_start(0), column_end(0) {clear();}
-
-        void clear()
-        {
-            success = true;
-            errorType = ErrorType::NONE;
-            fileName = nullptr;
-            LineContent = nullptr;
-            messageExtra = nullptr;
-            lineNumber = -1;
-            column_start = 0;
-            column_end = 0;
-        }
-        void printError() const 
-        {
-            if (success)
-                return;
-
-            std::string errorMsg = "Error: ";
-            switch (errorType) {
-                case ErrorType::UNKNOWN_FLAG:
-                    errorMsg += "Unknown flag: " + *messageExtra;
-                    break;
-                case ErrorType::UNSUPPORTED_OPERATION:
-                    errorMsg += "Unsupported operation";
-                    break;
-                case ErrorType::SYNTAX_ERROR:
-                    errorMsg += "Syntax error";
-                    break;
-                case ErrorType::UNMATCHED_PARENS:
-                    errorMsg += "Unmatched parentheses";
-                    if (messageExtra && !(*messageExtra).empty()) {
-                        errorMsg += ": " + *messageExtra;
-                    }
-                    break;
-                case ErrorType::UNKNOWN_FUNCTION:
-                    errorMsg += "Unknown function: " + *messageExtra;
-                    break;
-                case ErrorType::FUNCTION_CALL_FAILED:
-                    errorMsg += "Function call failed";
-                    break;
-                case ErrorType::INVALID_ARGUMENTS:
-                    errorMsg += "Invalid argument: " + *messageExtra;
-                    break;
-                case ErrorType::MALFORMED_IF_STATEMENT:
-                    errorMsg += "Malformed if statement:" + *messageExtra;
-                    break;
-                case ErrorType::FUNCTION_CALL_ERROR_COUNT:
-                    errorMsg += "Wrong number of arguments in function call. ";
-                    errorMsg += *messageExtra;
-                    break;
-                case ErrorType::FUNCTION_CALL_ERROR_TYPE:
-                    errorMsg += "Wrong argument type in function call. ";
-                    errorMsg += *messageExtra;
-                    break;
-                default:
-                    errorMsg += "Unknown error";
-                    break;
-            }
-
-            if (error.column_start > 0 && LineContent != nullptr)
-            {   
-                std::string line = getLineFromString(LineContent, lineNumber);
-                // count the number of \t before column_start to adjust the column position
-                size_t tabCount = 0;
-                for (size_t i = 0; i < error.column_start - 1 && i < line.length(); i++) {
-                    if (line[i] == '\t') {
-                        tabCount++;
-                    }
-                }
-                // replace tabs with 4 spaces for error display
-                std::string adjustedLine;
-                for (char c : line) {
-                    if (c == '\t') {
-                        adjustedLine += "    ";
-                    } else {
-                        adjustedLine += c;
-                    }
-                }
-                line = adjustedLine;
-                size_t adjustedColumnStart = error.column_start + tabCount * 3; // each tab is replaced by 4 spaces, so we add 3 extra spaces
-                error.column_start = adjustedColumnStart;
-                size_t adjustedColumnEnd = error.column_end + tabCount * 3;
-                error.column_end = adjustedColumnEnd;
-
-                std::cerr << TERMINAL_ERROR << "ERROR   |" << TERMINAL_RESET << " While Parsing Logic Block: " << TERMINAL_INFO << TERMINAL_BOLD << "\"" << line << "\"";
-                if (fileName != nullptr) {
-                    std::cerr << TERMINAL_RESET << " in file " << TERMINAL_FILENAME << *fileName;
-                    if (lineNumber > 0) {
-                        std::cerr << ":" << lineNumber;
-                    }
-                }
-                std::cerr << "\n";
-                std::cerr << TERMINAL_ERROR << "        |> " << errorMsg << "\n";
-                std::cerr << "           \"" << line << "\"\n            ";
-                for (size_t i = 0; i < error.column_start - 1; i++) {
-                    std::cerr << " ";
-                }
-                std::cerr << "^";
-
-                if (error.column_end > error.column_start)
-                {
-                    for (size_t i = error.column_start + 1; i < error.column_end; i++) {
-                        std::cerr << "~";
-                    }
-                }
-                std::cerr << "\n\n";
-
-                std::cerr << TERMINAL_RESET;
-            }
-        }
-    } error;
+    
+    
+private :
 
     static OperationNodePtr buildOperationTree(std::vector<Token> tokens, const std::vector<std::pair<int, int>> &tokenPositions);
     static bool tokenize(const std::string& str, std::vector<Token> &tokens, std::vector<std::pair<int, int>> &tokenPositions); 
@@ -931,6 +834,8 @@ public:
     static void parse_string_cstr(char ** input, size_t &len, size_t Allocated, std::string* filename = nullptr);
     static FlagDataPtr parse_substring_cstr(const char* input, const size_t len, const size_t idx_start, const size_t idx_end);
 };
+
+
 
 struct LogicFlag : FlagData {
     std::string logicBlock;

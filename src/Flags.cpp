@@ -3,6 +3,9 @@
 #include "AssetManagerUtils.hpp"
 #include "Utils.hpp"
 
+thread_local ErrorInfos error;
+
+
 template <>
 std::shared_ptr<FlagData> FlagData::MakeFlagFromScript<int>(const std::string& scriptName);
 template <>
@@ -2117,4 +2120,114 @@ void LogicBlock::registerAllFunctions()
             }
         )
     );
+}
+
+void ErrorInfos::clear()
+{
+    success = true;
+    errorType = ErrorType::NONE;
+    fileName = nullptr;
+    LineContent = nullptr;
+    messageExtra = nullptr;
+    lineNumber = -1;
+    column_start = 0;
+    column_end = 0;
+}
+void ErrorInfos::printError() const 
+{
+    if (success)
+        return;
+
+    std::string errorMsg = "Error: ";
+    switch (errorType) {
+        case ErrorType::UNKNOWN_FLAG:
+            errorMsg += "Unknown flag: " + *messageExtra;
+            break;
+        case ErrorType::UNSUPPORTED_OPERATION:
+            errorMsg += "Unsupported operation";
+            break;
+        case ErrorType::SYNTAX_ERROR:
+            errorMsg += "Syntax error";
+            break;
+        case ErrorType::UNMATCHED_PARENS:
+            errorMsg += "Unmatched parentheses";
+            if (messageExtra && !(*messageExtra).empty()) {
+                errorMsg += ": " + *messageExtra;
+            }
+            break;
+        case ErrorType::UNKNOWN_FUNCTION:
+            errorMsg += "Unknown function: " + *messageExtra;
+            break;
+        case ErrorType::FUNCTION_CALL_FAILED:
+            errorMsg += "Function call failed";
+            break;
+        case ErrorType::INVALID_ARGUMENTS:
+            errorMsg += "Invalid argument: " + *messageExtra;
+            break;
+        case ErrorType::MALFORMED_IF_STATEMENT:
+            errorMsg += "Malformed if statement:" + *messageExtra;
+            break;
+        case ErrorType::FUNCTION_CALL_ERROR_COUNT:
+            errorMsg += "Wrong number of arguments in function call. ";
+            errorMsg += *messageExtra;
+            break;
+        case ErrorType::FUNCTION_CALL_ERROR_TYPE:
+            errorMsg += "Wrong argument type in function call. ";
+            errorMsg += *messageExtra;
+            break;
+        default:
+            errorMsg += "Unknown error";
+            break;
+    }
+
+    if (error.column_start > 0 && LineContent != nullptr)
+    {   
+        std::string line = getLineFromString(LineContent, lineNumber);
+        // count the number of \t before column_start to adjust the column position
+        size_t tabCount = 0;
+        for (size_t i = 0; i < error.column_start - 1 && i < line.length(); i++) {
+            if (line[i] == '\t') {
+                tabCount++;
+            }
+        }
+        // replace tabs with 4 spaces for error display
+        std::string adjustedLine;
+        for (char c : line) {
+            if (c == '\t') {
+                adjustedLine += "    ";
+            } else {
+                adjustedLine += c;
+            }
+        }
+        line = adjustedLine;
+        size_t adjustedColumnStart = error.column_start + tabCount * 3; // each tab is replaced by 4 spaces, so we add 3 extra spaces
+        error.column_start = adjustedColumnStart;
+        size_t adjustedColumnEnd = error.column_end + tabCount * 3;
+        error.column_end = adjustedColumnEnd;
+
+        std::cerr << TERMINAL_ERROR << "ERROR   |" << TERMINAL_RESET << " While Parsing Logic Block: " << TERMINAL_INFO << TERMINAL_BOLD << "\"" << line << "\"";
+        if (fileName != nullptr) {
+            std::cerr << TERMINAL_RESET << " in file " << TERMINAL_FILENAME << *fileName;
+            if (lineNumber > 0) {
+                std::cerr << ":" << lineNumber;
+            }
+        }
+        std::cerr << "\n";
+        std::cerr << TERMINAL_ERROR << "        |> " << errorMsg << "\n";
+        std::cerr << "           \"" << line << "\"\n            ";
+        for (size_t i = 0; i < error.column_start - 1; i++) {
+            std::cerr << " ";
+        }
+        std::cerr << "^";
+
+        if (error.column_end > error.column_start)
+        {
+            for (size_t i = error.column_start + 1; i < error.column_end; i++) {
+                std::cerr << "~";
+            }
+        }
+        std::cerr << "\n\n";
+
+        std::cerr << TERMINAL_RESET;
+    }
 }
