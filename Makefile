@@ -17,7 +17,7 @@ endif
 BUILD_DIR = 
 OPTFLAGS =
 
-CPPFLAGS = $(WFLAGS) --std=c++23 $(OPTFLAGS) -Wno-deprecated-declarations
+CPPFLAGS = $(WFLAGS) --std=c++23 $(OPTFLAGS) -Wno-deprecated-declarations -fsized-deallocation 
 INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
 COMPILE_MODE = NONE
@@ -39,7 +39,7 @@ ifeq ($(COMPILE_MODE),Windows)
 	LINKFLAGS = ../Sanctia-Release/libglfw3.a ../Sanctia-Release/libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine_WIN64.a
 else
-	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGLU -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp
+	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGLU -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp -lstdc++exp
 	LINKFLAGS = -Wl,-rpath,'$$ORIGIN/lib'
 	VULPINE_LIB_NAME = libvulpineEngine_UNIX.a
 endif

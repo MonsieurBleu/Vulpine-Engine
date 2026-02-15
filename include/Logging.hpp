@@ -194,7 +194,7 @@ public:
         }
         else 
         {
-            Logger::debug("Logger initialized :)");
+            Logger::info("Logger initialized :)");
         }
 
         cleanOldFiles();
@@ -315,3 +315,5 @@ public:
         logInfo = newInfo;
     }
 };
+
+void handleSegfaultStackTrace(int signal);
