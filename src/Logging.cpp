@@ -1,5 +1,6 @@
 #include "Logging.hpp"
 
+#include <csignal>
 #include <stacktrace>
 
 void handleSegfaultStackTrace(int signal)
@@ -27,9 +28,32 @@ void handleSegfaultStackTrace(int signal)
         info.line = entry.source_line();
 
         Logger::setInfo(info);
-        Logger::error("ERROR: received Segmentation Fault!\nStacktrace: ", '\n', stacktrace);
+
+        std::stringstream ss;
+        ss << "Unknown Signal " << signal;
+        std::string s = ss.str();
+        const char* signalStr = s.c_str();
+        switch (signal)
+        {
+            case SIGSEGV:
+                signalStr = "SIGSEGV";
+                break;
+            case SIGBUS:
+                signalStr = "SIGBUS";
+                break;
+            case SIGKILL:
+                signalStr = "SIGKILL";
+                break;
+            case SIGABRT:
+                signalStr = "SIGABRT";
+        }
+
+        // maybe a little risky, could cause deadlock or data corruption or something but eh ¯\_(ツ)_/¯
+        // also, sorry if you're reading this exactly because it happened to you
+        // good luck!
+        Logger::error("FATAL ERROR: received Signal ", signalStr, "!\nStacktrace: ", '\n', stacktrace);
     }
     called = true;
 
-    exit(1);
+    _exit(EXIT_FAILURE);
 }
