@@ -180,19 +180,55 @@ std::ostream& operator<<(std::ostream& os, const glm::vec2& u)
 {
     os << "vec2(" << u.x << ", " << u.y << ")";
     return os;
-};
+}
 
 std::ostream& operator<<(std::ostream& os, const glm::vec3& u)
 {
     os << "vec3(" << u.x << ", " << u.y << ", " << u.z << ")";
     return os;
-};
+}
 
 std::ostream& operator<<(std::ostream& os, const glm::vec4& u)
 {
     os << "vec2(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
     return os;
-}   
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::ivec2& u)
+{
+    os << "vec2(" << u.x << ", " << u.y << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::ivec3& u)
+{
+    os << "vec3(" << u.x << ", " << u.y << ", " << u.z << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::ivec4& u)
+{
+    os << "vec2(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::uvec2& u)
+{
+    os << "vec2(" << u.x << ", " << u.y << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::uvec3& u)
+{
+    os << "vec3(" << u.x << ", " << u.y << ", " << u.z << ")";
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const glm::uvec4& u)
+{
+    os << "vec2(" << u.x << ", " << u.y << ", " << u.z << ", " << u.w << ")";
+    return os;
+}
 
 std::ostream& operator<<(std::ostream& os, const glm::mat2& u)
 {

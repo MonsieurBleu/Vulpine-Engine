@@ -30,6 +30,14 @@ std::ostream& operator<<(std::ostream& os, const glm::vec2& u);
 std::ostream& operator<<(std::ostream& os, const glm::vec3& u);
 std::ostream& operator<<(std::ostream& os, const glm::vec4& u);
 
+std::ostream& operator<<(std::ostream& os, const glm::ivec2& u);
+std::ostream& operator<<(std::ostream& os, const glm::ivec3& u);
+std::ostream& operator<<(std::ostream& os, const glm::ivec4& u);
+
+std::ostream& operator<<(std::ostream& os, const glm::uvec2& u);
+std::ostream& operator<<(std::ostream& os, const glm::uvec3& u);
+std::ostream& operator<<(std::ostream& os, const glm::uvec4& u);
+
 std::ostream& operator<<(std::ostream& os, const glm::mat2& u);
 std::ostream& operator<<(std::ostream& os, const glm::mat3& u);
 std::ostream& operator<<(std::ostream& os, const glm::mat4& u);
