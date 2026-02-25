@@ -85,6 +85,8 @@ class AudioSource
         AudioSource& generate();
         AudioSource& play();
         AudioSource& pause();
+        AudioSource& stop();
+        AudioSource& destroy();
         AudioSource& loop(bool doLoop = true);
         AudioSource& updateState();
         AudioSource& setBuffer(ALint buffer);
@@ -93,7 +95,8 @@ class AudioSource
         AudioSource& setPitch(ALfloat pitch);
         AudioSource& setGain(ALfloat gain);
 
-        ALuint getHandle(){return handle;};
+        ALuint getHandle() { return handle; }
+        ALint getState() { return state; }
 };
 
 /*

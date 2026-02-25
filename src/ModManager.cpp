@@ -210,6 +210,8 @@ void AssetLoadInfos::addToGlobalList(AssetVersion &asset)
 
         {{"vFlags", "Flags"}, {false, ""}},
 
+        {{"ogg", "AudioFile"}, {true, ""}},
+
         // {{"Flag", "Flag"}, {false, ""}}
     };
 

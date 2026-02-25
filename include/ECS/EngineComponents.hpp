@@ -1,5 +1,6 @@
 #include <ECS/ModularEntityGroupping.hpp>
 #include <ECS/ComponentTypeUI.hpp>
+#include <ECS/ComponentTypeAudio.hpp>
 
 #ifndef CURRENT_MAX_COMP_USAGE
 // #undef CURRENT_MAX_COMP_USAGE
@@ -51,3 +52,7 @@ void updateEntityCursor(
 );
 
 void updateWidgetsStyle(); 
+
+/***************** AUDIO VULPINE SYSTEMS *****************/
+
+Component(AudioPlayer);

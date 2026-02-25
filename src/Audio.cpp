@@ -152,7 +152,9 @@ ALuint AudioFile::getHandle() { return handle; };
 AudioFile::~AudioFile()
 {
     if (handle && handleRef.use_count() == 1)
+    {
         alCall(alDeleteBuffers, 1, &handle);
+    }
 }
 
 AudioSource::AudioSource()
@@ -163,7 +165,14 @@ AudioSource::AudioSource()
 AudioSource::~AudioSource()
 {
     if (handle && handleRef.use_count() == 1)
-        alCall(alDeleteSources, 1, &handle);
+        destroy();
+}
+
+AudioSource& AudioSource::destroy()
+{
+    alCall(alDeleteSources, 1, &handle);
+
+    return *this;
 }
 
 AudioSource &AudioSource::generate()
@@ -180,6 +189,12 @@ AudioSource &AudioSource::play()
 }
 
 AudioSource &AudioSource::pause()
+{
+    alCall(alSourcePause, handle);
+    return *this;
+}
+
+AudioSource &AudioSource::stop()
 {
     alCall(alSourcePause, handle);
     return *this;

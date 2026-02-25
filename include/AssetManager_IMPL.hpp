@@ -5,6 +5,7 @@
 
 #include <AssetManager.hpp>
 
+#include <Audio.hpp>
 #include <ModManager.hpp>
 #include <Graphics/Animation.hpp>
 #include <Graphics/Skeleton.hpp>
@@ -72,4 +73,6 @@ void loadAllModdedAssetsInfos(const char *filename)
 
     LOAD_ALL_DATA(Flags)
     LOAD_ALL(Flag)
+
+    LOAD_ALL(AudioFile)
 }

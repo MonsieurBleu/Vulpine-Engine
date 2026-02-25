@@ -1,3 +1,4 @@
+#include "Audio.hpp"
 #include "Matrix.hpp"
 #include "VulpineParser.hpp"
 #include <AssetManager.hpp>
@@ -505,6 +506,19 @@ Flag& Loader<Flag>::loadFromInfos()
     std::string flagListName = buff->read();
 
     r = Loader<Flags>::get(flagListName)[name];
+
+    EXIT_ROUTINE_AND_RETURN
+}
+
+template<>
+AudioFile& Loader<AudioFile>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+    LOADER_ASSERT(NEW_VALUE)
+    
+    std::string audioFilename = buff->read();
+
+    r.loadOGG(audioFilename);
 
     EXIT_ROUTINE_AND_RETURN
 }
