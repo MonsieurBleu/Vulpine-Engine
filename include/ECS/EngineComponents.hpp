@@ -55,4 +55,8 @@ void updateWidgetsStyle();
 
 /***************** AUDIO VULPINE SYSTEMS *****************/
 
+#undef CURRENT_CATEGORY
+#define CURRENT_CATEGORY DATA
+
 Component(AudioPlayer);
+Component(AudioScatterer);

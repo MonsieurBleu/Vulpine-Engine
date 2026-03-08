@@ -28,6 +28,11 @@ int launchGame(GameType **game, std::string name, Params... initParams)
         goto quit;
     }
 
+    // if (alcIsExtensionPresent(openALDevice, "ALC_EXT_EFX") == AL_FALSE)
+    // {
+    //     std::cerr << "ERROR: could not get \n";
+    // }
+
     if (!alcCall(alcCreateContext, openALContext, openALDevice, openALDevice, nullptr) || !openALContext)
     {
         std::cerr << "ERROR: could not create audio context\n";
