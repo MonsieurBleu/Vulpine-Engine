@@ -76,12 +76,10 @@ class AudioSource
 {
     private : 
         ALuint handle = 0;
-        std::shared_ptr<ALuint> handleRef;
         ALint state = AL_PAUSED;
 
     public :    
         AudioSource();
-        ~AudioSource();
         AudioSource& generate();
         AudioSource& play();
         AudioSource& pause();
@@ -94,6 +92,7 @@ class AudioSource
         AudioSource& setVelocity(vec3 v);
         AudioSource& setPitch(ALfloat pitch);
         AudioSource& setGain(ALfloat gain);
+        AudioSource& setRelativeToListener(bool relativeToListener);
 
         ALuint getHandle() { return handle; }
         ALint getState() { return state; }
@@ -114,6 +113,7 @@ class AudioFile
     public : 
         ~AudioFile();
         void loadOGG(const std::string &filePath);
+        void loadMP3(const std::string &filePath);
         ALuint getHandle();
 };
 

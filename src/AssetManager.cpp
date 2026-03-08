@@ -518,7 +518,11 @@ AudioFile& Loader<AudioFile>::loadFromInfos()
     
     std::string audioFilename = buff->read();
 
-    r.loadOGG(audioFilename);
+    const std::string ext = getFileExtension(audioFilename);
+    if (ext == "ogg")
+        r.loadOGG(audioFilename);
+    else if (ext == "mp3")
+        r.loadMP3(audioFilename);
 
     EXIT_ROUTINE_AND_RETURN
 }

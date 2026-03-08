@@ -1,6 +1,7 @@
 #include <Audio.hpp>
 #include <Utils.hpp>
 #include <minivorbis.h>
+#include <minimp3_ex.h>
 
 bool check_alc_errors(const std::string &filename, const std::uint_fast32_t line, ALCdevice *device)
 {
@@ -127,6 +128,7 @@ void AudioFile::loadOGG(const std::string &filePath)
             puts("Faulty ogg file :o"); // use https://xiph.org/vorbis/doc/vorbisfile/ov_read.html for handling enums
     }
 
+    // std::cout << "pcmout: " << pcmout << " data_len: " << data_len << " vi->rate: " << vi->rate << std::endl;
     if (!alCall(alBufferData, handle, format, pcmout, data_len, vi->rate))
     {
         std::cerr
@@ -147,6 +149,58 @@ exit:
     return;
 }
 
+void AudioFile::loadMP3(const std::string &filePath)
+{
+    mp3dec_t mp3d;
+    mp3dec_file_info_t info;
+    
+    if (mp3dec_load(&mp3d, filePath.c_str(), &info, NULL, NULL))
+    {
+        std::cerr
+            << TERMINAL_ERROR << "Error loading audio file : "
+            << TERMINAL_FILENAME << filePath
+            << TERMINAL_ERROR << "\n";
+        perror("\tmp3dec_load");
+        std::cerr << TERMINAL_RESET;
+        goto exit;
+    }
+
+    if (!alCall(alGenBuffers, (ALsizei)1, &handle))
+    {
+        std::cerr
+            << TERMINAL_ERROR << "Failed to generate sound buffer\n"
+            << TERMINAL_RESET;
+        goto exit;
+    }
+
+    handleRef = std::make_shared<ALuint>(handle);
+
+    if (info.channels > 2 || info.channels < 1)
+    {
+        std::cerr
+            << TERMINAL_ERROR << "Loaded mp3 file has the wrong number of channels!\n"
+            << TERMINAL_RESET;
+        goto exit;
+    }
+
+    format = info.channels == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+
+    if (!alCall(alBufferData, handle, format, info.buffer, info.samples * sizeof(mp3d_sample_t), info.hz))
+    {
+        std::cerr
+            << TERMINAL_ERROR << "Failed to send audio information buffer to OpenAL!"
+            << TERMINAL_RESET;
+        goto exit;
+    }
+
+    free(info.buffer);
+    return;
+
+exit:
+    if (info.buffer != NULL)
+        free(info.buffer);
+}
+
 ALuint AudioFile::getHandle() { return handle; };
 
 AudioFile::~AudioFile()
@@ -160,12 +214,6 @@ AudioFile::~AudioFile()
 AudioSource::AudioSource()
 {
     // alCall(alGenSources, 1, &handle);
-}
-
-AudioSource::~AudioSource()
-{
-    if (handle && handleRef.use_count() == 1)
-        destroy();
 }
 
 AudioSource& AudioSource::destroy()
@@ -239,5 +287,11 @@ AudioSource &AudioSource::setPitch(ALfloat pitch)
 AudioSource &AudioSource::setGain(ALfloat gain)
 {
     alCall(alSourcef, handle, AL_GAIN, gain);
+    return *this;
+}
+
+AudioSource& AudioSource::setRelativeToListener(bool relativeToListener)
+{
+    alCall(alSourcei, handle, AL_SOURCE_RELATIVE, relativeToListener);
     return *this;
 }
