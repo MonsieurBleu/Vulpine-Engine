@@ -10,6 +10,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
+#include "MappedEnum.hpp"
+
 
 #ifdef _WIN32
     #include <shlwapi.h>
@@ -77,6 +79,15 @@ std::ostream& operator<<(std::ostream& os, const glm::quat& u);
     Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::debug(__VA_ARGS__); \
 }
+
+#define _DEBUG_PRINT_VARIABLE(x)  \
+    #x, ": ", x, " ", \
+
+
+#define DEBUG_PRINT_VARIABLES(...) { \
+    __VA_OPT__(DEBUG_MESSAGE(MAPGEN_FOR_EACH(_DEBUG_PRINT_VARIABLE, __VA_ARGS__) "")); \
+}
+
 
 /// TERMINAL
 #ifdef _WIN32
