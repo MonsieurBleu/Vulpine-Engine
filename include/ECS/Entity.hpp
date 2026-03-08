@@ -304,8 +304,9 @@ void Component<T>::insert(Entity &entity, const T& data)
 
 #include <functional>
 
-template<typename ...T>
-void System(std::function<void(Entity&)> f)
+template<typename ...T, typename F>
+requires std::invocable<F, Entity&>
+void System(F f)
 {
     static VulpineBitSet<MAX_COMP> mask(ComponentInfos<T>::id ...);
 
@@ -315,6 +316,21 @@ void System(std::function<void(Entity&)> f)
     for(int i = 0; i < size && i < maxID; i++)
         if(list[i].enabled && list[i].entity->state == mask)
             f(*list[i].entity);
+}
+;
+
+template<typename ...T, typename F>
+requires std::invocable<F, Entity&, T&...> && (sizeof...(T) > 0)
+void System(F f)
+{
+    static VulpineBitSet<MAX_COMP> mask(ComponentInfos<T>::id ...);
+
+    auto &list = Component<EntityInfos>::elements;
+    int maxID = ComponentGlobals::maxID[ENTITY_LIST];
+    int size = list.size();
+    for(int i = 0; i < size && i < maxID; i++)
+        if(list[i].enabled && list[i].entity->state == mask)
+            f(*list[i].entity, list[i].entity->comp<T>()...);
 }
 ;
 
