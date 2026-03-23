@@ -447,7 +447,10 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _col
     const int stepD = dim.z; //8
     const int stepX = dim.x;
     const int stepY = dim.y;
-    float vFar = 0.5*cam.getState().nearPlane/18.f;
+    // float vFar = 0.5*cam.getState().nearPlane/18.f;
+
+    float vFar = 0.005*cam.getState().nearPlane/18.f;
+
     int nbOfPoints = (stepY +1)*(stepX +1)*(stepD+1)*6;
     GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
     GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
@@ -520,6 +523,143 @@ ClusteredFrustumHelper::ClusteredFrustumHelper(Camera cam,  ivec3 dim, vec3 _col
 
     setVao(vao);
 }
+
+FrustumHelper::FrustumHelper(Camera cam,  ivec3 dim, vec3 _color) : MeshModel3D(Loader<MeshMaterial>::get("basicHelper"))
+{
+    color = _color;
+    createUniforms();
+    uniforms.add(ShaderUniform(&color, 20));
+
+    // state.frustumCulled = false;
+    // depthWrite = false;
+    noBackFaceCulling = true;
+    defaultMode = GL_LINES;
+
+    // const int stepD = dim.z; //8
+    // const int stepX = dim.x;
+    // const int stepY = dim.y;
+    // float vFar = 0.5*cam.getState().nearPlane/18.f;
+
+    // float vFar = 0.005*cam.getState().nearPlane/18.f;
+
+    // int nbOfPoints = (stepY +1)*(stepX +1)*(stepD+1)*6;
+
+
+
+    // float k = depth;
+    // k = 0.001/k;
+    // k -= mod(k, 1.0/nbSlice.z);
+    // if(k > 1.0) k = 0.0;
+
+    mat4 m = inverse(cam.updateProjectionViewMatrix());
+
+    int id = 0;
+
+    // for(int i = 0; i < nbOfPoints; i++)
+    // {
+    //     nor[i] = vec3(2);;
+    //     pos[i] = vec3(1e12);
+    // }
+
+    // for(int i = 0; i <= stepD; i++)
+    // {
+    //     float z = vFar*(float)stepD/(max((float)i, 1e-5f));
+    //     float z2 = vFar*(float)stepD/((float)(i+1));
+
+    //     // z  *= cam.getState().nearPlane;
+    //     // z2 *= cam.getState().nearPlane;
+
+    //     // z = log(-z/0.1)/log(1 + 2*tan(35)/(float)stepY);
+    //     // z2 = log(-z2/0.1)/log(1 + 2*tan(35)/(float)stepY);
+
+    //     // z = (float)stepD/max((float)i, 1e-5f);
+    //     // z2 = (float)stepD/((float)(i+1));
+
+    //     // z = pow(z, 0.5)/vFar;
+    //     // z2 = pow(z2, 0.5)/vFar;
+
+
+    //     for(int j = 0; j <= stepX; j++)
+    //     for(int k = 0; k <= stepY; k++)
+    //     {
+    //         float x = 1.0 - 2.0*(float)j/(float)stepX;
+    //         float y = 1.0 - 2.0*(float)k/(float)stepY;
+
+    //         vec3 p1 = viewToWorld(vec4(-x, -y, z, 1.0), m);
+    //         vec3 p2 = viewToWorld(vec4( x, -y, z, 1.0), m);
+    //         vec3 p3 = viewToWorld(vec4(-x,  y, z, 1.0), m);
+
+    //         pos[id++] = p1; pos[id++] = p2;
+    //         pos[id++] = p1; pos[id++] = p3;
+
+    //         if(i != stepD)
+    //         {
+    //             pos[id++] = p1; 
+    //             pos[id++] = viewToWorld(vec4(-x, -y, z2, 1.0), m);
+    //         }
+    //     }
+    // }
+
+    int nbOfPoints = (dim.x-1)*(dim.y-1)*(dim.z-1)*6;
+
+    GenericSharedBuffer buff(new char[sizeof(vec3)*nbOfPoints]);
+    GenericSharedBuffer buffNormal(new char[sizeof(vec3)*nbOfPoints]);
+
+    vec3 *pos = (vec3*)buff.get();
+    vec3 *nor = (vec3*)buffNormal.get();
+
+
+    cam.updateFrustum();
+    Frustum f = cam.getFrustum();
+
+    mat4 iproj = inverse(cam.getProjectionMatrix());
+    mat4 iview = inverse(cam.getViewMatrix());
+
+    for(int d = 0; d < dim.z-1; d ++)
+    for(int x = 0; x < dim.x-1; x ++)
+    for(int y = 0; y < dim.y-1; y ++)
+    {
+        vec3 ndc = vec3(2.f*vec2(x, y)/(vec2(dim-2)) - 1.f, d/(dim.z-2));
+        vec4 viewpos =iproj * vec4(ndc, 1.0);
+        viewpos /= viewpos.w;
+        vec4 world = iview * viewpos;
+
+        vec3 ndc2 = vec3(2.f*vec2(x+1, y)/(vec2(dim-2)) - 1.f, d/(dim.z-2));
+        vec4 viewpos2 = iproj * vec4(ndc2, 1.0);
+        viewpos2 /= viewpos2.w;
+        vec4 world2 = iview * viewpos2;
+        
+        vec3 ndc3 = vec3(2.f*vec2(x, y+1)/(vec2(dim-2)) - 1.f, d/(dim.z-2));
+        vec4 viewpos3 = iproj * vec4(ndc3, 1.0);
+        viewpos3 /= viewpos3.w;
+        vec4 world3 = iview * viewpos3;
+
+        vec3 ndc4 = vec3(2.f*vec2(x, y)/(vec2(dim-2)) - 1.f, (d+1)/(dim.z-2));
+        vec4 viewpos4 = iproj * vec4(ndc4, 1.0);
+        viewpos4 /= viewpos4.w;
+        vec4 world4 = iview * viewpos4;
+
+        pos[id++] = world;
+        pos[id++] = world2;
+
+        pos[id++] = world;
+        pos[id++] = world3;
+
+        pos[id++] = world;
+        pos[id++] = world4;
+    }
+
+    MeshVao vao(new 
+        VertexAttributeGroup({
+            VertexAttribute(buff, 0, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 1, nbOfPoints, 3, GL_FLOAT, false),
+            VertexAttribute(buffNormal, 2, nbOfPoints, 3, GL_FLOAT, false)
+        })
+    );
+
+    setVao(vao);
+}
+
 
 SkeletonHelper::SkeletonHelper(const SkeletonAnimationState &state) : state(state)
 {
@@ -905,10 +1045,10 @@ PlottingHelper::PlottingHelper(vec4 color, int maxValues) : MeshModel3D(Loader<M
     int nbOfPoints = maxValues*6;
     GenericSharedBuffer buff(new char[sizeof(vec4)*nbOfPoints]);
 
-    vec3 *pos = (vec3*)buff.get();
+    vec4 *pos = (vec4*)buff.get();
     for(int i = 0; i < nbOfPoints; i++)
     {
-        pos[i] = vec3(0);
+        pos[i] = vec4(0);
     }
 
     MeshVao vao(new 

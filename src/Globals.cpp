@@ -23,7 +23,7 @@ float Globals::renderScale() const {return _renderScale;};
 ivec2 Globals::renderSize() const {return _renderSize;};
 const ivec2* Globals::renderSizeAddr() const {return &_renderSize;};
 
-void Globals::drawFullscreenQuad() {_fullscreenQuad.drawVAO();};
+void Globals::drawFullscreenQuad() {_fullscreenQuad.drawVAO(0);};
 
 bool Globals::mouseLeftClick(){return _mouseLeftClick;};
 bool Globals::mouseLeftClickDown(){return _mouseLeftClickDown;};

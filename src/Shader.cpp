@@ -201,6 +201,32 @@ ShaderProgram::ShaderProgram(const std::string _fragPath,
     compileAndLink();
 }
 
+ShaderProgram::ShaderProgram(const std::string _fragPath,
+                             const std::string _vertPath, 
+                             const std::string _tescPath,
+                             const std::string _tesePath,
+                             const std::string _geomPath,
+                             std::vector<ShaderUniform> uniforms,
+                             const std::string &defines)
+    : uniforms(uniforms)
+{
+    frag.prepareLoading(_fragPath, defines);
+
+    if (!_vertPath.empty())
+        vert.prepareLoading(_vertPath, defines);
+
+    if (!_tescPath.empty())
+        tesc.prepareLoading(_tescPath, defines);
+
+    if (!_tesePath.empty())
+        tese.prepareLoading(_tesePath, defines);
+
+    if (!_geomPath.empty())
+        geom.prepareLoading(_geomPath, defines);
+
+    compileAndLink();
+}
+
 bool ShaderProgram::needRefresh()
 {
     for(auto &i : dependencies)

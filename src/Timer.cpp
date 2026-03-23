@@ -35,6 +35,8 @@ bool BenchTimer::isPaused(){return paused;};
 
 void BenchTimer::start()
 {
+    // if(started) return;
+
     if(paused)
     {
         if(resumePending)
@@ -44,8 +46,8 @@ void BenchTimer::start()
         }
         else return;
     }
+    started = true;
     lastStartTime = clockmicro::now();
-    
 }
 
 void BenchTimer::hold()
@@ -59,10 +61,19 @@ void BenchTimer::hold()
 
 void BenchTimer::stop()
 {
+    if(!started) return;
+
     if(paused) return;
 
     clockmicro::time_point now = clockmicro::now();
-    delta = speed*(now-lastStartTime) + holdDeltaBuff;
+
+    if(holdCounter)
+        delta = holdDeltaBuff;
+    else
+        delta = speed*(now-lastStartTime);
+
+    // delta = holdCounter ? holdDeltaBuff.count() : speed*(now-lastStartTime).count();
+    // delta = speed*(now-lastStartTime) + holdDeltaBuff;
     lastTimeUpdate = now;
     deltaS = delta.count()*MS_TO_S;
     elapsedTime += deltaS;
@@ -89,6 +100,7 @@ void BenchTimer::stop()
     }
 
     holdCounter = 0;
+    started = false;
 }
 
 void BenchTimer::setAvgLengthMS(int64_t newLength)

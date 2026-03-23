@@ -45,12 +45,27 @@ FrameBuffer& FrameBuffer::bindTextures()
         textures[i].generate();
         if(textures[i].getAttachement())
         {
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER, 
-                textures[i].getAttachement(), 
-                GL_TEXTURE_2D, 
-                textures[i].getHandle(), 
-                0);
+            switch (textures[i].getTarget()) {
+                case GL_TEXTURE_2D :
+                    glFramebufferTexture2D(
+                        GL_FRAMEBUFFER, 
+                        textures[i].getAttachement(), 
+                        textures[i].getTarget(), 
+                        textures[i].getHandle(), 
+                        0);
+                break;
+
+                case GL_TEXTURE_2D_ARRAY :
+                    glFramebufferTexture(
+                        GL_FRAMEBUFFER, 
+                        textures[i].getAttachement(), 
+                        textures[i].getHandle(), 
+                        0);
+                break;
+
+                default : break;
+            }
+
         }
     }
 
@@ -97,7 +112,7 @@ void FrameBuffer::bindTexture(uint64 id, uint location)
     }
 
     glActiveTexture(GL_TEXTURE0 + location);
-    glBindTexture(GL_TEXTURE_2D, textures[id].getHandle());
+    glBindTexture(textures[id].getTarget(), textures[id].getHandle());
 }
 
 RenderBuffer::RenderBuffer(const ivec2 *resolution) : resolution(resolution)

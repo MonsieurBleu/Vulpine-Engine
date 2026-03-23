@@ -3,6 +3,8 @@
 // #include <sol/variadic_args.hpp>
 // #include <sol/sol.hpp>
 
+
+
 #include <fstream>
 
 #include <glm/glm.hpp>
@@ -17,6 +19,8 @@ using namespace glm;
 #include <Utils.hpp>
 
 #include <Timer.hpp>
+
+#include <Graphics/Camera.hpp>
 
 // MARK: Bind all
 void VulpineLuaBindings::bindAll(sol::state& lua)
@@ -530,6 +534,76 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
     }
     VBIND_CLASS_END
     #undef CURRENT_CLASS_BINDING
+
+
+    VBIND_CLASS_DECLARE(FrustumPlane)
+    #define CURRENT_CLASS_BINDING FrustumPlane
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS((), ())
+
+        VBIND_ADD_MEMBERS(
+            normal, position, distance
+        )
+    }
+    VBIND_CLASS_END
+
+    VBIND_CLASS_DECLARE(Frustum)
+    #define CURRENT_CLASS_BINDING Frustum
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS((), ())
+
+        VBIND_ADD_MEMBERS(
+            top,
+            bottom,
+            right,
+            left,
+            far_,
+            near_
+        )
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    VBIND_CLASS_DECLARE(Camera)
+    #define CURRENT_CLASS_BINDING Camera
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS((), ())
+
+        VBIND_ADD_MEMBERS(
+            dimentionFactor,
+            width,
+            height
+        )
+
+        VBIND_ADD_METHODS(
+            setDirection,
+            setPosition,
+            getLookpoint,
+            init,
+            setForceLookAtPoint,
+            toggleForceLookAtPoint,
+            getPosition,
+            getDirection,
+            getFrustum,
+            updateFrustum,
+            setForcedCornerMode,
+            updateViewMatrix,
+            updateProjectionMatrix,
+            updateProjectionViewMatrix,
+            getViewMatrix,
+            getProjectionMatrix,
+            getProjectionViewMatrix
+        );
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
 }
 
 #include <Globals.hpp>

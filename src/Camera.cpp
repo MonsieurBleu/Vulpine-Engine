@@ -80,6 +80,14 @@ void Camera::updateProjectionMatrix()
 #endif
         break;
 
+    case ORTHOGRAPHIC_FORCED_CORNER:
+#ifdef INVERTED_Z
+        projectionMatrix = glm::ortho<float>(minCorner.x, maxCorner.x, minCorner.y, maxCorner.y, maxCorner.z, minCorner.z);
+#else
+        projectionMatrix = glm::ortho<float>(minCorner.x, maxCorner.x, minCorner.y, maxCorner.y, minCorner.z, maxCorner.z);
+#endif
+        break;
+
     default:
         break;
     }
@@ -87,78 +95,149 @@ void Camera::updateProjectionMatrix()
 
 Frustum Camera::getFrustum() { return frustum; }
 
+vec3 NdcToWorkd(mat4 iproj, mat4 iview, vec4 ndc)
+{
+    vec4 viewpos = iproj * ndc;
+    viewpos /= viewpos.w;
+    
+    return vec3(iview * viewpos);
+}   
+
 void Camera::updateFrustum()
 {
-    if(type == PERSPECTIVE)
+    switch (type) 
     {
-        const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
-
-        const vec3 right = normalize(cross(wup, front));
-        const vec3 up = cross(right, front);
-        const vec3 p = state.position;
-        const float d = length(p);
-
-        const float n = state.nearPlane;
-        const float f = state.farPlane;
-
-        const float halfVSide = f * tanf(state.FOV * .5f);
-        const float halfHSide = halfVSide * width / height;
-        const vec3 fvec = f * front;
-
-        frustum.near_.position = p + (n * front);
-        frustum.near_.distance = length(frustum.near_.position);
-        frustum.near_.normal = front;
-
-        frustum.far_.position = p + fvec;
-        frustum.far_.distance = length(frustum.far_.position);
-        frustum.far_.normal = -front;
-
-        frustum.right.distance = d;
-        frustum.right.position = p;
-        frustum.right.normal = normalize(cross(fvec - (right * halfHSide), up));
-
-        frustum.left.distance = d;
-        frustum.left.position = p;
-        frustum.left.normal = normalize(cross(up, fvec + (right * halfHSide)));
-
-        frustum.top.distance = d;
-        frustum.top.position = p;
-        frustum.top.normal = normalize(cross(right, fvec - up * halfVSide));
-
-        frustum.bottom.distance = d;
-        frustum.bottom.position = p;
-        frustum.bottom.normal = normalize(cross(fvec + up * halfVSide, right));
-    }
-    else
-    {
-        const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
-        const vec3 right = normalize(cross(wup, front));
-        const vec3 up = cross(right, front);
-        const vec3 p = state.position;
+        case PERSPECTIVE :
+        {
+            const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
+    
+            const vec3 right = normalize(cross(wup, front));
+            const vec3 up = cross(right, front);
+            const vec3 p = state.position;
+            const float d = length(p);
+    
+            const float n = state.nearPlane;
+            const float f = state.farPlane;
+    
+            const float halfVSide = f * tanf(state.FOV * .5f);
+            const float halfHSide = halfVSide * width / height;
+            const vec3 fvec = f * front;
+    
+            frustum.near_.position = p + (n * front);
+            // frustum.near_.distance = length(frustum.near_.position);
+            frustum.near_.distance = dot(front, frustum.near_.position);
+            frustum.near_.normal = front;
+    
+            frustum.far_.position = p + fvec;
+            // frustum.far_.distance = length(frustum.far_.position);
+            frustum.far_.distance = dot(-front, frustum.far_.position);
+            frustum.far_.normal = -front;
+    
+            // frustum.right.distance = d;
+            frustum.right.position = p;
+            frustum.right.normal = normalize(cross(fvec - (right * halfHSide), up));
+            frustum.right.distance = dot(frustum.right.normal, frustum.right.position);
+    
+            // frustum.left.distance = d;
+            frustum.left.position = p;
+            frustum.left.normal = normalize(cross(up, fvec + (right * halfHSide)));
+            frustum.left.distance = dot(frustum.left.normal, frustum.left.position);
+    
+            // frustum.top.distance = d;
+            frustum.top.position = p;
+            frustum.top.normal = normalize(cross(right, fvec - up * halfVSide));
+            frustum.top.distance = dot(frustum.top.normal, frustum.top.position);
+    
+            // frustum.bottom.distance = d;
+            frustum.bottom.position = p;
+            frustum.bottom.normal = normalize(cross(fvec + up * halfVSide, right));
+            frustum.bottom.distance = dot(frustum.bottom.normal, frustum.bottom.position);
+        }
+        break;
         
-        const float n = state.nearPlane;
-        const float f = state.farPlane;
+        case ORTHOGRAPHIC :
+        {
+            const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
+            const vec3 right = normalize(cross(wup, front));
+            const vec3 up = cross(right, front);
+            const vec3 p = state.position;
+            
+            const float n = state.nearPlane;
+            const float f = state.farPlane;
+    
+            const float w = dimentionFactor*width/2;
+            const float h = dimentionFactor*height/2;
+     
+            frustum.near_.position = p + (n * front);
+            frustum.near_.normal = front;
+            frustum.near_.distance = dot(frustum.near_.normal, frustum.near_.position);
+    
+            frustum.far_.position = p + (f * front);
+            frustum.far_.normal = -front;
+            frustum.far_.distance = dot(frustum.far_.normal, frustum.far_.position);
+    
+            frustum.right.position = p + (w * right);
+            frustum.right.normal = -right;
+            frustum.right.distance = dot(frustum.right.normal, frustum.right.position);
+    
+            frustum.left.position = p - (w * right);
+            frustum.left.normal = right;
+            frustum.left.distance = dot(frustum.left.normal, frustum.left.position);
+    
+            frustum.top.position = p + (h * up);
+            frustum.top.normal = -up;
+            frustum.top.distance = dot(frustum.top.normal, frustum.top.position);
+    
+            frustum.bottom.position = p - (h * up);
+            frustum.bottom.normal = up;
+            frustum.bottom.distance = dot(frustum.bottom.normal, frustum.bottom.position);
+        }
+        break;
+    
+        case ORTHOGRAPHIC_FORCED_CORNER :
+        {
+            const mat4 iproj = inverse(projectionMatrix);
+            const mat4 iview = inverse(viewMatrix);
 
-        const float w = dimentionFactor*width/2;
-        const float h = dimentionFactor*height/2;
- 
-        frustum.near_.position = p + (n * front);
-        frustum.near_.normal = front;
-
-        frustum.far_.position = p + (f * front);
-        frustum.far_.normal = -front;
-
-        frustum.right.position = p + (w * right);
-        frustum.right.normal = -right;
-
-        frustum.left.position = p - (w * right);
-        frustum.left.normal = right;
-
-        frustum.top.position = p + (h * up);
-        frustum.top.normal = -up;
-
-        frustum.bottom.position = p - (h * up);
-        frustum.bottom.normal = up;
+            const vec3 front = state.forceLookAtpoint ? normalize(state.lookpoint - state.position) : state.direction;
+            const vec3 right = normalize(cross(wup, front));
+            const vec3 up = cross(right, front);
+            const vec3 p = state.position;
+            
+            const float n = minCorner.z;
+            const float f = maxCorner.z;
+     
+            // frustum.near_.position = p + (n * front);
+            frustum.near_.position = NdcToWorkd(iproj, iview, vec4(0, 0, 1.0, 1));
+            frustum.near_.normal = front;
+            frustum.near_.distance = dot(frustum.near_.normal, frustum.near_.position);
+    
+            // frustum.far_.position = p + (f * front);
+            frustum.far_.position = NdcToWorkd(iproj, iview, vec4(0, 0, 0.0, 1));
+            frustum.far_.normal = -front;
+            frustum.far_.distance = dot(frustum.far_.normal, frustum.far_.position);
+    
+            // frustum.right.position = p + (maxCorner.x * right);
+            frustum.right.position = NdcToWorkd(iproj, iview, vec4(-1, 0, 0.5, 1));
+            frustum.right.normal = -right;
+            frustum.right.distance = dot(frustum.right.normal, frustum.right.position);
+    
+            // frustum.left.position = p - (minCorner.x * right);
+            frustum.left.position = NdcToWorkd(iproj, iview, vec4(+1, 0, 0.5, 1));
+            frustum.left.normal = right;
+            frustum.left.distance = dot(frustum.left.normal, frustum.left.position);
+    
+            // frustum.top.position = p + (minCorner.y * up);
+            frustum.top.position = NdcToWorkd(iproj, iview, vec4(0, -1, 0.5, 1));
+            frustum.top.normal = -up;
+            frustum.top.distance = dot(frustum.top.normal, frustum.top.position);
+            
+            // frustum.bottom.position = p - (maxCorner.y * up);
+            frustum.bottom.position = NdcToWorkd(iproj, iview, vec4(0, +1, 0.5, 1));
+            frustum.bottom.normal = up;
+            frustum.bottom.distance = dot(frustum.bottom.normal, frustum.bottom.position);
+        }
+        break;
     }
 }
 

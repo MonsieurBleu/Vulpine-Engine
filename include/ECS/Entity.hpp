@@ -38,15 +38,28 @@
 template<typename T> class PreLaunchVectorFill { public : PreLaunchVectorFill(std::vector<T> &v, T i){v.push_back(i);}; };
 template<typename T, typename D> class PreLaunchMapFill { public : PreLaunchMapFill(std::unordered_map<T, D> &v, const T &i, const D &j){v[i] = j;}; };
 
+/*
+    Each category is a separate ECS. 
+    This help organize and optimize the global ECS by spitting component by their uses.
+
+    DYNAMIC components are component who are only used by entities that moves/update frenquently.
+    This distinction is important because most of systems that will run every frames are made 
+    for dynamic entiites like the player, NPC, movable objects etc... while in most games the 
+    number of systems that run on purely static entities like level decor are rarer.
+    ==> TLDR : Dynamic == frequently updated/used in systems.
+*/
 GENERATE_ENUM(ComponentCategory,
     ENTITY_LIST,
-    DATA,       // Default category, plan data with no important dependencies in the engine
-    UI,
-    GRAPHIC,    // Components that contains graphic related elements, should only be manipulated from the main thread
-    PHYSIC,     // Components that contains physic related elements, should be manipulated with the physic mutex in mind, or in the physics thread directly 
-    SOUND,      // Components that contains Sound related elements
-    AI,         // Components that contains AI related elements, should be manipulated with the AI mutex in mind, or in the AI thread directly 
-    SCRIPTING,  // Components that contains Scripting related elements
+    DATA,               // Default category, plan data with no important dependencies in the engine
+    DATA_DYNAMIC,       // Same as above, but used to separate component used by non static entity and statics ones
+    UI,                 // Reserverd for UI
+    GRAPHIC,            // Components that contains graphic related elements, should only be manipulated from the main thread
+    GRAPHIC_DYNAMIC,    // Components that contains graphic relates elements that only a dynamic/moving object would have, like animation state for example
+    PHYSIC,             // Components that contains physic related elements, should be manipulated with the physic mutex in mind, or in the physics thread directly 
+    PHYSIC_DYNAMIC,     // Same as above, but used to separate component used by non static entity and statics ones
+    SOUND,              // Components that contains Sound related elements
+    AI,                 // Components that contains AI related elements, should be manipulated with the AI mutex in mind, or in the AI thread directly 
+    SCRIPTING,          // Components that contains Scripting related elements
     END 
 );
 
@@ -55,7 +68,7 @@ GENERATE_ENUM(ComponentCategory,
 #endif
 
 #ifndef MAX_COMP
-    #define MAX_COMP 512
+    #define MAX_COMP 64
 #endif
 
 #define NO_ENTITY -1
@@ -75,6 +88,7 @@ struct ComponentGlobals
     static inline int lastID = 0;
     static inline int lastFreeID[ComponentCategory::END] = {0};
     static inline int maxID[ComponentCategory::END] = {0};
+    static inline int garbageMaxID[ComponentCategory::END] = {-1};
 
     static inline CategoryStatus status[ComponentCategory::END][MAX_ENTITY];
 
@@ -182,7 +196,7 @@ class Entity
     public :
 
         VulpineBitSet<MAX_COMP> state;
-        std::array<int, ComponentCategory::END> ids = {NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY};
+        std::array<int, ComponentCategory::END> ids = {NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY};
 
         Entity() : Entity("Unamed Entity"){};
         Entity(const std::string &name){set<EntityInfos>(EntityInfos{name});};
@@ -251,6 +265,8 @@ class Entity
             if(!has<T>()) return;
             Component<T>::elements[ids[Component<T>::category]].markedForDeletion = true;
             state.setFalse(ComponentInfos<T>::id);
+            
+            // Component<T>::elements[ids[Component<T>::category]].enabled = false;
         }
         #endif
         ;  
@@ -264,6 +280,18 @@ class Entity
                     return false;
             
             return true;
+        }
+
+
+        static std::string getComponentMaskNames(const VulpineBitSet<MAX_COMP> &mask)
+        {
+            std::string nameID = "";
+            for(int i = 0; i < MAX_COMP; i++)
+            {
+                if(mask[i]) nameID += ComponentGlobals::ComponentNames[i] + " ";
+            }
+
+            return nameID;
         }
 };
 
@@ -292,8 +320,10 @@ void Component<T>::insert(Entity &entity, const T& data)
             ERROR_MESSAGE("ECS has reached max Entity number of " ,  MAX_ENTITY ,  ". Things are goind to be bad!");
 
         ComponentGlobals::maxID[category] = std::max(ComponentGlobals::maxID[category], lastFreeID);
-
+        ComponentGlobals::garbageMaxID[category] = std::max(ComponentGlobals::garbageMaxID[category], lastFreeID);
     }
+
+    // if(category == PHYSIC_DYNAMIC) WARNING_MESSAGE(id, "  ", entity.toStr());
 
     elements[id] = {data, &entity, true, false, entity.ids[ENTITY_LIST]};
     elements[id].init();
@@ -303,34 +333,103 @@ void Component<T>::insert(Entity &entity, const T& data)
 
 
 #include <functional>
+#include <Timer.hpp>
 
-template<typename ...T, typename F>
+inline thread_local BenchTimer systemTimer;
+
+inline std::unordered_map<std::string, BenchTimer> systemsPreciseTimer;
+
+template<typename FirstType, typename ...T, typename F>
 requires std::invocable<F, Entity&>
-void System(F f)
+void System(F f, int step = 1, int current = 0)
 {
-    static VulpineBitSet<MAX_COMP> mask(ComponentInfos<T>::id ...);
+    static VulpineBitSet<MAX_COMP> mask(ComponentInfos<FirstType>::id, ComponentInfos<T>::id ...);
+    static std::string nameID = Entity::getComponentMaskNames(mask);
+    static BenchTimer &timer = systemsPreciseTimer[nameID];
+    
+    int maxID = ComponentGlobals::maxID[Component<FirstType>::category];
+    if(!maxID) return;
 
-    auto &list = Component<EntityInfos>::elements;
-    int maxID = ComponentGlobals::maxID[ENTITY_LIST];
-    int size = list.size();
-    for(int i = 0; i < size && i < maxID; i++)
-        if(list[i].enabled && list[i].entity->state == mask)
+    systemTimer.start();
+    timer.start();
+
+    auto &list = Component<FirstType>::elements;
+    auto &statusList = ComponentGlobals::status[Component<FirstType>::category];
+    // int size = list.size();
+
+    auto &elist = Component<EntityInfos>::elements;
+
+    // NOTIF_MESSAGE(nameID, "\n\t\t", maxID);
+
+    for(int i = current; i <= maxID; i += step)
+    {
+        // if(list[i].markedForDeletion || (list[i].enabled && !elist[list[i].entityListID].enabled))
+        // {
+        //     list[i].enabled = false;
+        //     list[i].markedForDeletion = false;
+        //     list[i].clean();
+        //     list[i].data = FirstType();
+        // }
+
+        if(true
+            && statusList[i].enabled
+            && !list[i].markedForDeletion
+            && elist[list[i].entityListID].enabled
+            && list[i].enabled 
+            && list[i].entity->state == mask
+        )
             f(*list[i].entity);
+    }
+
+    timer.hold();
+    systemTimer.hold();
 }
 ;
 
-template<typename ...T, typename F>
-requires std::invocable<F, Entity&, T&...> && (sizeof...(T) > 0)
-void System(F f)
+template<typename FirstType, typename ...T, typename F>
+requires std::invocable<F, Entity&, FirstType&, T&...> && (sizeof...(T) > 0)
+void System(F f, int step = 1, int current = 0)
 {
-    static VulpineBitSet<MAX_COMP> mask(ComponentInfos<T>::id ...);
+    static VulpineBitSet<MAX_COMP> mask(ComponentInfos<FirstType>::id, ComponentInfos<T>::id ...);
+    static std::string nameID = Entity::getComponentMaskNames(mask);
+    static BenchTimer &timer = systemsPreciseTimer[nameID];
+    
+    int maxID = ComponentGlobals::maxID[Component<FirstType>::category];
+    if(!maxID) return;
 
-    auto &list = Component<EntityInfos>::elements;
-    int maxID = ComponentGlobals::maxID[ENTITY_LIST];
-    int size = list.size();
-    for(int i = 0; i < size && i < maxID; i++)
-        if(list[i].enabled && list[i].entity->state == mask)
-            f(*list[i].entity, list[i].entity->comp<T>()...);
+    systemTimer.start();
+    timer.start();
+
+    auto &list = Component<FirstType>::elements;
+    auto &statusList = ComponentGlobals::status[Component<FirstType>::category];
+    // int size = list.size();
+
+    auto &elist = Component<EntityInfos>::elements;
+
+    // NOTIF_MESSAGE(nameID, "\n\t\t", maxID);
+
+    for(int i = current; i <= maxID; i += step)
+    {
+        // if(list[i].markedForDeletion || (list[i].enabled && !elist[list[i].entityListID].enabled))
+        // {
+        //     list[i].enabled = false;
+        //     list[i].markedForDeletion = false;
+        //     list[i].clean();
+        //     list[i].data = FirstType();
+        // }
+
+        if(true
+            && statusList[i].enabled
+            && !list[i].markedForDeletion
+            && elist[list[i].entityListID].enabled
+            && list[i].enabled 
+            && list[i].entity->state == mask
+        )
+            f(*list[i].entity, list[i].entity->comp<FirstType>(), list[i].entity->comp<T>()...);
+    }
+
+    timer.hold();
+    systemTimer.hold();
 }
 ;
 
@@ -342,9 +441,16 @@ void ManageGarbage()
     int maxID = ComponentGlobals::maxID[Component<T>::category];
     int size = list.size();
 
+    int garbageMaxID = ComponentGlobals::garbageMaxID[Component<T>::category];
+    if(garbageMaxID == -1) garbageMaxID = size;
+
+    // WARNING_MESSAGE(garbageMaxID)
+
+    // int newMaxID = maxID; 
+
     for(int i = 0; 
     i < size 
-    // && i <= maxID
+    && i <= garbageMaxID
     ; i++)
     {        
         #define NAME(type) #type
@@ -356,13 +462,19 @@ void ManageGarbage()
             list[i].clean();
             list[i].data = T();
         }
+        // else newMaxID = i;
     }
+
+    // garbageMaxID = maxID;
+
+    // maxID = newMaxID;
 }
 ;
 
 template<typename T>
 struct GlobalComponentToggler
 {
+    static inline bool allClear = true;
     static inline bool activated = false;
 
     template<typename C>
@@ -373,14 +485,20 @@ struct GlobalComponentToggler
             for(EntityRef &e : entityList)
                 if(!e->has<T>())
                     e->set<T>({});
+            
+            allClear = false;
         }
         else
         {
+            if(allClear) return;
+            
             for(EntityRef &e : entityList)
                 if(e->has<T>())
                     e->remove<T>();
             
             ManageGarbage<T>();
+
+            allClear = true;
         }
     }
 
@@ -392,40 +510,49 @@ struct GlobalComponentToggler
                 if(!entity.has<T>())
                     entity.set<T>({});
             });
+
+            allClear = false;
         }
         else
         {
+            if(allClear) return;
+
             System<EntityInfos>([](Entity &entity){
                 if(entity.has<T>())
                     entity.remove<T>();
             });
 
             ManageGarbage<T>();
+
+            allClear = true;
         }
     }
 
     static bool needUpdate()
     {
-        if(activated)
-        {
-            bool uptodate = true;
+        if(activated) return true;
+        return !allClear;
 
-            System<EntityInfos>([& uptodate](Entity &entity){
-                uptodate &= entity.has<T>();
-            });
+        // if(activated)
+        // {
+        //     bool uptodate = true;
 
-            return !uptodate;
-        }
-        else
-        {
-            bool uptodate = true;
+        //     System<EntityInfos>([& uptodate](Entity &entity){
+        //         uptodate &= entity.has<T>();
+        //     });
 
-            System<EntityInfos>([& uptodate](Entity &entity){
-                uptodate &= !entity.has<T>();
-            });
+        //     return !uptodate;
+        // }
+        // else
+        // {
+        //     bool uptodate = true;
 
-            return !uptodate;
-        }
+        //     System<EntityInfos>([& uptodate](Entity &entity){
+        //         uptodate &= !entity.has<T>();
+        //     });
+
+        //     return !uptodate;
+        // }
     }
 };
 

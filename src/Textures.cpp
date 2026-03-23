@@ -21,6 +21,13 @@ using namespace glm;
 
 Texture2D::Texture2D(){}
 
+Texture2D& Texture2D::setArrayMode(int size)
+{
+    arraySize = size;
+    _target = GL_TEXTURE_2D_ARRAY;
+    return *this;
+}
+
 bool Texture2D::operator==(Texture2D &a)
 {
     return 
@@ -87,7 +94,7 @@ Texture2D& Texture2D::bind(GLuint location)
     if(generated)
     {
         glActiveTexture(GL_TEXTURE0 + location);
-        glBindTexture(GL_TEXTURE_2D, handle);
+        glBindTexture(_target, handle);
     }
     return *this;
 }
@@ -129,39 +136,60 @@ Texture2D& Texture2D::generate(bool forceTexImageCall)
     if(!generated)
     {
         glGenTextures(1, &handle);
-        glBindTexture(GL_TEXTURE_2D, handle);
+        glBindTexture(_target, handle);
         
         handleRef = std::make_shared<GLuint>(handle);
 
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
+        glTexParameteri(_target, GL_TEXTURE_MIN_FILTER, _filter);
 
         if(_filter == GL_LINEAR_MIPMAP_LINEAR)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         else 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
+            glTexParameteri(_target, GL_TEXTURE_MAG_FILTER, _filter);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
+        glTexParameteri(_target, GL_TEXTURE_WRAP_S, _wrapMode);
+        glTexParameteri(_target, GL_TEXTURE_WRAP_T, _wrapMode);
 
         if(!_pixelSource)
         {
-            glTexImage2D(
-                GL_TEXTURE_2D,
-                0,
-                _internalFormat,
-                _resolution.x,
-                _resolution.y,
-                0,
-                _format,
-                _type,
-                _pixelSource
-            );
+            switch (_target) {
+                case GL_TEXTURE_2D :
+                    glTexImage2D(
+                        _target,
+                        0,
+                        _internalFormat,
+                        _resolution.x,
+                        _resolution.y,
+                        0,
+                        _format,
+                        _type,
+                        _pixelSource
+                    );
+                break;
+
+                case GL_TEXTURE_2D_ARRAY :
+                    glTexImage3D(
+                        _target,
+                        0,
+                        _internalFormat,
+                        _resolution.x,
+                        _resolution.y,
+                        arraySize,
+                        0,
+                        _format,
+                        _type,
+                        _pixelSource
+                    );
+                break;
+
+                default : break;
+            }
         }
         else
         {
             gluBuild2DMipmaps(
-                GL_TEXTURE_2D, 
+                _target, 
                 _internalFormat, 
                 _resolution.x, 
                 _resolution.y, 
@@ -177,23 +205,23 @@ Texture2D& Texture2D::generate(bool forceTexImageCall)
     }
     else
     {
-        glBindTexture(GL_TEXTURE_2D, handle);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, _filter);
+        glBindTexture(_target, handle);
+        glTexParameteri(_target, GL_TEXTURE_MIN_FILTER, _filter);
 
         if(_filter == GL_LINEAR_MIPMAP_LINEAR)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         else 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, _filter);
+            glTexParameteri(_target, GL_TEXTURE_MAG_FILTER, _filter);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, _wrapMode);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, _wrapMode);
+        glTexParameteri(_target, GL_TEXTURE_WRAP_S, _wrapMode);
+        glTexParameteri(_target, GL_TEXTURE_WRAP_T, _wrapMode);
 
         if(forceTexImageCall)
         {
             if(!_pixelSource)
             {
                 glTexImage2D(
-                    GL_TEXTURE_2D,
+                    _target,
                     0,
                     _internalFormat,
                     _resolution.x,
@@ -207,7 +235,7 @@ Texture2D& Texture2D::generate(bool forceTexImageCall)
             else
             {
                 gluBuild2DMipmaps(
-                    GL_TEXTURE_2D, 
+                    _target, 
                     _internalFormat, 
                     _resolution.x, 
                     _resolution.y, 
@@ -219,8 +247,8 @@ Texture2D& Texture2D::generate(bool forceTexImageCall)
         }
     }
 
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_LOD_BIAS, -0.5f);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY, 16.f);
+    // glTexParameterf(_target, GL_TEXTURE_LOD_BIAS, -0.5f);
+    glTexParameterf(_target, GL_TEXTURE_MAX_ANISOTROPY, 16.f);
     
     return *this;
 }
@@ -517,6 +545,7 @@ GLuint64 Texture2D::getBindlessHandle()
 }
 
 ivec2 Texture2D::getResolution() const {return _resolution;};
+GLenum Texture2D::getTarget() const {return _target;};
 GLenum Texture2D::getInternalFormat() const {return _internalFormat;};
 GLenum Texture2D::getFormat() const {return _format;};
 GLenum Texture2D::getPixelType() const {return _type;};

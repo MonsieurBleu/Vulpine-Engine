@@ -7,14 +7,19 @@
 #define CURRENT_MAX_COMP_USAGE MAX_ENTITY
 #endif
 
-#undef CURRENT_CATEGORY
-#define CURRENT_CATEGORY UI
+
 
 /***************** ECS BASE VULPINE COMPONENTS *****************/
+
+#undef CURRENT_CATEGORY
+#define CURRENT_CATEGORY DATA
 
 Component_Init(EntityGroupInfo)
 
 /***************** UI BASE VULPINE COMPONENTS *****************/
+
+#undef CURRENT_CATEGORY
+#define CURRENT_CATEGORY UI
 
 static inline EntityRef cursorHelp;
 

@@ -189,7 +189,7 @@ void App::init()
         ShaderUniform(camera.getViewMatrixAddr(), 3),
         ShaderUniform(camera.getProjectionMatrixAddr(), 4),
         ShaderUniform(camera.getPositionAddr(), 5),
-        // ShaderUniform(camera.getDirectionAddr(),              6),
+        ShaderUniform(camera.getDirectionAddr(),              6),
         ShaderUniform(&ambientLight, 15),
     };
 
@@ -270,6 +270,13 @@ void App::activateMainSceneBindlessTextures()
     scene.useBindlessTextures = true;
     // scene2D.useBindlessTextures = true;
     Shadinclude::shaderDefines += "#define ARB_BINDLESS_TEXTURE\n";
+}
+
+void App::setPlanetSize(float s)
+{
+    globals._planetSize = s;
+
+    Shadinclude::shaderDefines += "#define PLANET_SIZE " + std::to_string(s) + " \n";
 }
 
 void App::activateMainSceneClusteredLighting(ivec3 dimention, float vFar)
@@ -450,6 +457,8 @@ void App::mainloopStartRoutine()
 void App::mainloopPreRenderRoutine()
 {
     globals.currentCamera->updateProjectionViewMatrix();
+
+    globals._playerCamPos = globals.currentCamera->getPosition();
 
     vec3 camPos = globals.currentCamera->getPosition();
     vec3 camFront = globals.currentCamera->getDirection();

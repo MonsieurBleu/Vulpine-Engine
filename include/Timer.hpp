@@ -19,6 +19,7 @@ class BenchTimer
     friend std::ostream &operator<<(std::ostream &os, BenchTimer e);
 
 private:
+    bool started = false;
     bool paused = false;
     bool resumePending = false;
 

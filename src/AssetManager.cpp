@@ -99,9 +99,13 @@ std::shared_ptr<ShaderProgram>& Loader<std::shared_ptr<ShaderProgram>>::loadFrom
         r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), std::string(elems[2]), std::string(elems[3]), uniforms, std::string(preproc));
         break;
 
+    case 5 :
+        r = std::make_shared<ShaderProgram>(std::string(elems[0]), std::string(elems[1]), std::string(elems[2]), std::string(elems[3]),std::string(elems[4]), uniforms, std::string(preproc));
+        break;
+
     default:
-        FILE_ERROR_MESSAGE(name, "Wrong number of source files (" ,  elems.size() ,  ") expected 2, 3 or 4.")        
-        LOADER_ASSERT(elems.size() > 1 && elems.size() < 5)
+        FILE_ERROR_MESSAGE(name, "Wrong number of source files (" ,  elems.size() ,  ") expected 2, 3 or 5.")        
+        LOADER_ASSERT(elems.size() > 1 && elems.size() <= 5)
         break;
     }
 
@@ -245,12 +249,70 @@ MeshModel3D& Loader<MeshModel3D>::loadFromInfos()
         if(!strcasecmp(member, "state"))
             LOAD_MODEL_STATE_3D(r.state)
         else
+        if(!strcasecmp(member, "backface"))
+        {
+            r.noBackFaceCulling = *buff->read() == 't';
+        }
+        else
+        if(!strcasecmp(member, "patchmode"))
+        {
+            if(*buff->read() == 't') r.defaultMode = GL_PATCHES;
+        }
+        else
             FILE_ERROR_MESSAGE(name, "ModelRef member '" ,  member ,  "' not recognized.");
     } 
 
     EXIT_ROUTINE_AND_RETURN 
 }
 
+template<>
+InstancedModelRef& Loader<InstancedModelRef>::loadFromInfos()
+{
+    EARLY_RETURN_IF_LOADED
+
+    // NOTIF_MESSAGE(name);
+
+    // r = newModel();
+    r = InstancedModelRef(new InstancedMeshModel3D());
+
+    while (NEW_VALUE)
+    {
+        char *member = buff->read();
+
+        if(!strcasecmp(member, "mesh"))
+            r->setVao(LOAD_VALUE(MeshVao));
+        else
+        if(!strcasecmp(member, "material"))
+            r->setMaterial(LOAD_VALUE(MeshMaterial));
+        else
+        if(!strcasecmp(member, "texture"))
+        {
+            int location = fromStr<int>(buff->read());
+            r->setMap(location, LOAD_VALUE(Texture2D));
+        }
+        else
+        if(!strcasecmp(member, "state"))
+            LOAD_MODEL_STATE_3D(r->state)
+        else
+        if(!strcasecmp(member, "backface"))
+        {
+            r->noBackFaceCulling = *buff->read() == 't';
+        }
+        else
+        if(!strcasecmp(member, "patchmode"))
+        {
+            if(*buff->read() == 't') r->defaultMode = GL_PATCHES;
+        }
+        else
+            FILE_ERROR_MESSAGE(name, "ModelRef member '" ,  member ,  "' not recognized.");
+    } 
+
+    r->allocate(4096 * 16 * 2);
+    globals.getScene()->add(r);
+    // Globals.getScene->add()
+
+    EXIT_ROUTINE_AND_RETURN 
+}
 
 template<>
 ObjectGroup& Loader<ObjectGroup>::loadFromInfos()
@@ -270,6 +332,19 @@ ObjectGroup& Loader<ObjectGroup>::loadFromInfos()
         if(!strcasecmp(member, "meshes"))
             while (NEW_VALUE)
                 r.add(LOAD_VALUE(MeshModel3D).copy());
+        else
+        if(!strcasecmp(member, "instances"))
+            while (NEW_VALUE)
+        {
+            ModelInstanceRef mir;
+            mir.originalModel = LOAD_VALUE(InstancedModelRef);
+            mir.instance = nullptr;
+            r.add(mir);
+
+            // r.add(LOAD_VALUE(InstancedModelRef)->createInstance());
+            // r.getInstances().back()->enable = false;   
+
+        }
         else
         if(!strcasecmp(member, "state"))
             LOAD_MODEL_STATE_3D(r.state)

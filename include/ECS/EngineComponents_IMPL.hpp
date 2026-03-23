@@ -625,25 +625,32 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
 
 void updateWidgetsStyle()
 {
-    System<WidgetStyle, WidgetBackground>([](Entity &entity)
+    System<WidgetBackground, WidgetStyle>([](Entity &entity)
     {
+        // NOTIF_MESSAGE(entity.toStr())
+
         if(entity.has<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
             return;
 
         auto &s = entity.comp<WidgetStyle>();
         auto &b = entity.comp<WidgetBackground>();
 
+        if(!b.tile || !b.batch) return;
+
         b.tile->color = s.useAltBackgroundColor ? s.backgroundColor2 : s.backgroundColor1;
         b.tile->tileType = s.backGroundStyle;
+
     });
 
-    System<WidgetStyle, WidgetText>([](Entity &entity)
+    System<WidgetText, WidgetStyle>([](Entity &entity)
     {
         if(entity.has<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
             return;
 
         auto &s = entity.comp<WidgetStyle>();
         auto &t = entity.comp<WidgetText>();
+
+        if(!t.mesh) return;
 
         t.mesh->color = s.useAltTextColor ? s.textColor2 : s.textColor1;
     });
@@ -657,6 +664,9 @@ void updateWidgetsStyle()
         vec2 position = entity.has<WidgetStyle>() ? entity.comp<WidgetStyle>().spritePosition : vec2(0);
 
         auto &sprite = entity.comp<WidgetSprite>();
+
+        if(!sprite.sprite) return;
+
         auto &box = entity.comp<WidgetBox>();
         vec2 scale = vec2(box.displayMax - box.displayMin);
 

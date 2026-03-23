@@ -30,7 +30,7 @@ struct LightInfos
     vec4 _color = vec4(1);
     vec4 _direction = vec4(0);
     ivec4 _infos = vec4(0); // a : type, b : shadows
-    mat4 _rShadowMatrix = mat4(0); 
+    mat4 _rShadowMatrix[3] = {mat4(0), mat4(0), mat4(0)}; 
 };
 
 class Light
@@ -53,7 +53,8 @@ class Light
         LightInfos & getInfos() ;
         virtual void applyModifier(const ModelState3D& state);
         
-        Camera shadowCamera;
+        Camera shadowCamera[3];
+        Camera shadowCameraCullingDummy;
         FrameBuffer shadowMap; 
         ivec2 cameraResolution = vec2(1024);
         vec2 shadowCameraSize;

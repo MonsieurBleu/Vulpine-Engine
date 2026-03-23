@@ -59,7 +59,14 @@ struct VulpineBitSet
         setTrue(arg ...);
     };
 
+    VulpineBitSet(){};
+
     bool operator[](int i)
+    {
+        return bytes[i/8]&(1<<(i%8));
+    };
+
+    const bool operator[](int i) const
     {
         return bytes[i/8]&(1<<(i%8));
     };

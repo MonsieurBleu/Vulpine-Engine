@@ -29,6 +29,8 @@ public:
     mat4 rotationMatrix = mat4(1.0);
     mat4 modelMatrix = mat4(1.0);
 
+    bool *externCullPtr = nullptr;
+
     bool frustumCulled = true;
     ModelStatus hide = ModelStatus::UNDEFINED;
 
@@ -37,8 +39,8 @@ public:
 
     ModelState3D &setHideStatus(ModelStatus h)
     {
-        hide = h;
         _needUpdate = true;
+        hide = h;
         return *this;
     }
 

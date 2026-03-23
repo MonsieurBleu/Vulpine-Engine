@@ -12,6 +12,8 @@
 
 #include <Enums.hpp>
 
+#include <Graphics/OcclusionPass.hpp>
+
 class App
 {
     protected :
@@ -27,6 +29,7 @@ class App
         BloomPass Bloom;
         ShaderProgram finalProcessingStage;
 
+
         Scene scene;
         Scene scene2D;
 
@@ -37,6 +40,7 @@ class App
         void activateMainSceneBindlessTextures();
         void activateMainSceneClusteredLighting(ivec3 dimention, float vFar);
 
+        void setPlanetSize(float s);
 
         virtual bool userInput(GLFWKeyInfo input);
         bool baseInput(GLFWKeyInfo input);
@@ -61,6 +65,8 @@ class App
         static inline AppState state = AppState::init;
     
         static inline vec3 ambientLight;
+
+        static inline OcclusionPass occlusionPass;
     
         static void setController(Controller *c);
 

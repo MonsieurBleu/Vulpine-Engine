@@ -60,7 +60,7 @@ MeshMaterial::~MeshMaterial()
     // }
 }
 
-GLuint Mesh::drawVAO(bool depthOnly)
+GLuint Mesh::drawVAO(int layer, bool depthOnly)
 {
     glBindVertexArray(vao->getHandle());
 
@@ -122,18 +122,22 @@ Mesh &Mesh::removeMap(int location)
     return *this;
 }
 
-bool Mesh::cull() { return true; };
+bool Mesh::cull(int layer, int cameraLayers) { return true; };
 
-bool MeshModel3D::cull()
+bool MeshModel3D::cull(int layer, int cameraLayers)
 {
+    
     if (!vao.get())
-        return culled = false;
-        
+        return culled[layer] = false;
+
+    if(externCullEnable)
+        return culled[layer] = (state.externCullPtr ? state.externCullPtr[layer] : culled[layer]);
+    
     if (state.hide == ModelStatus::HIDE)
-        return culled = false;
+        return culled[layer] = false;
 
     if (!state.frustumCulled)
-        return culled = true;
+        return culled[layer] = true;
     
     // if(globals.currentCamera->getType() != CameraType::PERSPECTIVE)
     //     return true;
@@ -152,15 +156,26 @@ bool MeshModel3D::cull()
         length(vec3(m[1])),
         length(vec3(m[2])));
     float radius = max(length(vao->getAABBMax() * scale), length(vao->getAABBMin() * scale));
-    const Frustum f = globals.currentCamera->getFrustum();
+    
+    for(int i = 0; i < cameraLayers; i++)
+    {
+        const Frustum f = globals.currentCamera[i].getFrustum();
 
-    return culled =
+        culled[layer] = 
                dot(f.left.normal, center - f.left.position) > -radius &&
                dot(f.right.normal, center - f.right.position) > -radius &&
                dot(f.far_.normal, center - f.far_.position) > -radius &&
                dot(f.near_.normal, center - f.near_.position) > -radius &&
                dot(f.top.normal, center - f.top.position) > -radius &&
                dot(f.bottom.normal, center - f.bottom.position) > -radius;
+        
+        // if(cameraLayers > 1) WARNING_MESSAGE(culled[layer])
+
+        if(culled[layer]) break;
+    }
+
+
+    return culled[layer];
 }
 
 void MeshModel3D::update()
@@ -205,10 +220,13 @@ void MeshModel3D::resetDrawMode()
         glEnable(GL_CULL_FACE);
 }
 
-GLuint MeshModel3D::drawVAO(bool depthOnly)
+GLuint MeshModel3D::drawVAO(int layer, bool depthOnly)
 {
     if(!vao.get() || !vao.get()->attributes.size()) return 0;
     
+    // static NAMED_TIMER(instanceUpdate)
+    // instanceUpdate.start();
+
     update();
     if(!depthOnly) uniforms.update();
     setDrawMode();
@@ -225,10 +243,33 @@ GLuint MeshModel3D::drawVAO(bool depthOnly)
 
     resetDrawMode();
 
+    // instanceUpdate.stop();
+    // std::cout << instanceUpdate.getLastAvg().count() << "\t\t";
+    // std::cout << instanceUpdate.getDeltaMS() << "\n";
+
     return 1;
 }
 
-bool MeshModel3D::isCulled() { return culled; };
+bool MeshModel3D::isCulled(int layer)
+{ 
+    if(externCullEnable and state.externCullPtr)
+        return state.externCullPtr[layer];
+    
+    return culled[layer]; 
+};
+
+bool MeshModel3D::setExternCull(bool isCulled) /* TODO REMOVE, UNUSED */
+{
+    // culled = isCulled;
+    externCullEnable = true;
+    return isCulled;
+}
+
+void MeshModel3D::disableExternCull()
+{
+    externCullEnable = false;
+}
+
 
 void MeshModel3D::createUniforms()
 {
@@ -368,11 +409,18 @@ void InstancedMeshModel3D::allocate(size_t maxInstanceCount)
     glBindVertexArray(0);
 }
 
-GLuint InstancedMeshModel3D::drawVAO(bool depthOnly)
+GLuint InstancedMeshModel3D::drawVAO(int layer, bool depthOnly)
 {
+    // static NAMED_TIMER(instanceUpdate)
+    // instanceUpdate.start();
+
     update();
     if(!depthOnly) uniforms.update();
     setDrawMode();
+
+    updateInstances(layer);
+
+    // NOTIF_MESSAGE(createdInstance);
 
     glBindVertexArray(vao->getHandle());
 
@@ -387,54 +435,241 @@ GLuint InstancedMeshModel3D::drawVAO(bool depthOnly)
 
     resetDrawMode();
 
+    // instanceUpdate.stop();
+    // std::cout << instanceUpdate.getLastAvg().count() << "\t\t";
+    // std::cout << instanceUpdate.getDeltaMS() << "\n";
+
     return 1;
 }
 
-bool InstancedMeshModel3D::cull()
+bool InstancedMeshModel3D::cull(int layer, int cameraLayers)
 {
+    return culled[layer] = true; 
+    
+    // TODO : remove  or update vvvvvvvvvv
+
+    if(!state.frustumCulled || externCullEnable) return true;
+
+    const Frustum f = globals.currentCamera->getFrustum();
+    
+    int cnt = 0;
+    int mod = globals.appTime.getUpdateCounter()%4;
+
+    for(auto &i : instances)
+    {
+        // i.culled = true;
+
+        if(
+            // cnt%4 == mod and 
+            // false and
+            !i.externCull and
+            i.enable and i.hide != ModelStatus::HIDE and i.frustumCulled
+        )
+        {
+            // if(cnt%4 == mod){cnt ++; continue;}
+
+            mat4 m = i.modelMatrix*state.modelMatrix;
+            vec3 center = vec3(m[3]);
+            vec3 scale = vec3(
+                length(vec3(m[0])),
+                length(vec3(m[1])),
+                length(vec3(m[2])));
+            
+            // const vec3 scale(1);
+            
+            float radius = max(length(vao->getAABBMax() * scale), length(vao->getAABBMin() * scale));
+
+            i.culled =
+               dot(f.left.normal, center - f.left.position) > -radius &&
+               dot(f.right.normal, center - f.right.position) > -radius &&
+               dot(f.far_.normal, center - f.far_.position) > -radius &&
+               dot(f.near_.normal, center - f.near_.position) > -radius &&
+               dot(f.top.normal, center - f.top.position) > -radius &&
+               dot(f.bottom.normal, center - f.bottom.position) > -radius;
+        }
+
+        cnt ++;
+
+        if(cnt > createdInstance) return true;
+    }
+
     return true;
 }
 
 ModelInstance *InstancedMeshModel3D::createInstance()
 {
-    if (createdInstance >= allocatedInstance)
+    if (createdInstance > allocatedInstance)
+    {
+        ERROR_MESSAGE("Instanced Model has reached the maximum number of allowed instance : ", allocatedInstance)
         return nullptr;
+    }
+
+    // WARNING_MESSAGE(createdInstance)
+
+    for(int i = 0; i < createdInstance; i++)
+        if(!instances[i].enable)
+        {
+            // NOTIF_MESSAGE(i, " ", instances[i].enable, " ", instances[i].originalModel);
+
+            instances[i].enable = true;
+
+            return &instances[i];
+        }
 
     ModelInstance *newInstance = &instances[createdInstance];
+    newInstance->enable = true;
     createdInstance++;
     return newInstance;
 }
 
-void InstancedMeshModel3D::updateInstances()
+void InstancedMeshModel3D::removeInstance(ModelInstance * instance)
 {
+    // int id = (instance-instances.data())/sizeof(ModelInstance);
+
+    instance->enable = false;
+    instance->externCullPtr = nullptr;
+    instance->culled = false;
+
+    if(instance == &instances[createdInstance-1])
+    {
+        for(int i = createdInstance-1; i >= 0; i--)
+        {
+            if(instances[i].enable) break;
+            createdInstance--;
+        }
+
+        // WARNING_MESSAGE("DECREASE CREATED INSTANCE CNT TO ", createdInstance)
+    }
+}
+
+void InstancedMeshModel3D::updateInstances(int layer)
+{
+    // if(rand()%8) return;
+
+    // static NAMED_TIMER(instanceUpdate)
+
     mat4 *m = (mat4 *)matricesBuffer->getBufferAddr();
 
     // bool bufferNeedUpdate = false;
 
     drawnInstance = 0;
 
+
+    // std::cout << "=======================\n";
+
+
+
+    // instanceUpdate.start();
+
+
+
+    // float currentStreak = 0;
+    // float streakCounter = 1;
+    // float streakSum = 0;
+
+    const int estimatedStreak = 4;
+
     for (size_t i = 0; i < createdInstance; i++)
     {
         ModelInstance &inst = instances[i];
 
-        inst.update();
+        // inst.update(); // TODO : remove
 
-        if (inst.hide != ModelStatus::HIDE)
+        // std::cout << inst.externCullPtr << "\t" << *inst.externCullPtr << "\n";
+
+        if (
+            inst.hide != ModelStatus::HIDE 
+            and
+            (!state.frustumCulled or (inst.externCullPtr ? inst.externCullPtr[layer] : inst.culled))
+            and
+            inst.enable
+        )
         {
             // memcpy((void *)&m[i], (void *)&inst.modelMatrix, sizeof(mat4));
-            m[i] = inst.modelMatrix;
-            drawnInstance++;
+
+            m[drawnInstance++] = inst.modelMatrix;
+            // drawnInstance++;
+
+            // for(int j = 0; j < estimatedStreak; j++)
+            //     if(instances[i+j].enable)
+            //         {
+            //             m[drawnInstance+i] = instances[i+j].modelMatrix;
+            //         }
+            // drawnInstance += estimatedStreak;
+
+            // currentStreak ++;
+            // streakSum ++;
         }
+        // else
+        // {
+        //     if(currentStreak)
+        //         streakCounter ++;
+            
+        //     currentStreak = 0;
+        // }
     }
+
+    // float avgStreak =streakSum/streakCounter;
+
+    // std::cout << avgStreak << "\t" << streakCounter << "\t" << drawnInstance;
+
+
+
+    // instanceUpdate.stop();
+
+
+
+    // std::cout << instanceUpdate.getLastAvg().count() << "\t\t";
+    // std::cout << instanceUpdate.getDeltaMS() << "\n";
+
+    // std::cout << createdInstance << "\t" << drawnInstance << "\n";
+
+    // NOTIF_MESSAGE(drawnInstance);
+
+    // ERROR_MESSAGE(drawnInstance)
 
     // matricesBuffer->sendAllToGPU();
 
+
+    // glBindBuffer(GL_ARRAY_BUFFER, handle);
+    // glBufferData(GL_ARRAY_BUFFER, bufferSize, nullptr, GL_STREAM_DRAW);
+    // glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSize, buffer.get());
+
+    // instanceUpdate.start();
+
+    
     glBindBuffer(GL_ARRAY_BUFFER, matricesBuffer->getHandle());
-    glBufferData(
+
+    // glBufferData(
+    //     GL_ARRAY_BUFFER,
+    //     sizeof(mat4) * drawnInstance,
+    //     matricesBuffer->getBufferAddr(),
+    //     GL_STATIC_DRAW);
+
+    // if(!gpuAllocated)
+    // {
+    //     glBufferData(
+    //         GL_ARRAY_BUFFER,
+    //         sizeof(mat4) * allocatedInstance,
+    //         nullptr,
+    //         GL_DYNAMIC_DRAW
+    //     );
+    // }
+
+    
+
+    glBufferSubData(
         GL_ARRAY_BUFFER,
+        0,
         sizeof(mat4) * drawnInstance,
-        matricesBuffer->getBufferAddr(),
-        GL_STATIC_DRAW);
+        matricesBuffer->getBufferAddr()
+    );
+
+    // instanceUpdate.stop();
+
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // std::cout << instanceUpdate.getLastAvg().count() << "\t\t";
+    // std::cout << instanceUpdate.getDeltaMS() << "\n";
 }

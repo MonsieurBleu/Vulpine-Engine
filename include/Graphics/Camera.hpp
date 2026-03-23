@@ -16,7 +16,8 @@ using namespace glm;
 enum CameraType
 {
     PERSPECTIVE,
-    ORTHOGRAPHIC
+    ORTHOGRAPHIC,
+    ORTHOGRAPHIC_FORCED_CORNER
 };
 
 struct CameraState
@@ -62,6 +63,9 @@ class Camera
         CameraType type = PERSPECTIVE;
 
         Frustum frustum;
+
+        vec3 minCorner;
+        vec3 maxCorner;
 
     public: 
 
@@ -114,6 +118,8 @@ class Camera
 
         void toggleForceLookAtPoint(){state.forceLookAtpoint = !state.forceLookAtpoint;};
         void setForceLookAtPoint(bool enable){state.forceLookAtpoint = enable;};
+
+        void setForcedCornerMode(vec3 minC, vec3 maxC){minCorner = minC; maxCorner = maxC; type = ORTHOGRAPHIC_FORCED_CORNER;};
 
         void move(vec3 velocity, double deltatime);
 

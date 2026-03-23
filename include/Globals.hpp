@@ -72,8 +72,14 @@ private:
     Scene *_gameScene;
     Scene *_gameScene2D;
 
+    float _planetSize = 8192.f;
+    vec3 _playerCamPos = vec3(0.f);
+
 public:
     // MeshMaterial basicMaterial;
+
+    float planetSize(){return _planetSize;};
+    const vec3 &playerCamPos(){return _playerCamPos;};
 
     Controller *_currentController = nullptr;
     Scene *getScene() const; 

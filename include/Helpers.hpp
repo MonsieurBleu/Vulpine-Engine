@@ -121,6 +121,17 @@ class ClusteredFrustumHelper : public MeshModel3D
 
 typedef std::shared_ptr<ClusteredFrustumHelper> ClusteredFrustumHelperRef;
 
+class FrustumHelper : public MeshModel3D
+{
+    private :
+
+    public : 
+        vec3 color;
+        FrustumHelper(Camera cam, ivec3 dim = ivec3(16, 9, 24), vec3 _color = vec3(0, 1, 0));
+};
+
+typedef std::shared_ptr<FrustumHelper> FrustumHelperRef;
+
 class PointLightHelper : public ObjectGroup
 {
     private : 

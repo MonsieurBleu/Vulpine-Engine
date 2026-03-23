@@ -84,11 +84,14 @@ void Light::activateShadows()
 
     shadowMap.addTexture(
         Texture2D()
+            .setArrayMode(3)
             .setFilter(GL_LINEAR)
             .setResolution(cameraResolution)
-            .setInternalFormat(GL_DEPTH_COMPONENT32F)
             .setFormat(GL_DEPTH_COMPONENT)
-            .setPixelType(GL_FLOAT)
+            // .setInternalFormat(GL_DEPTH_COMPONENT32F)
+            // .setPixelType(GL_FLOAT)
+            .setInternalFormat(GL_DEPTH_COMPONENT16)
+            .setPixelType(GL_UNSIGNED_SHORT)
             .setAttachement(GL_DEPTH_ATTACHMENT)
             .generate()
     ).generate();
@@ -254,30 +257,59 @@ void DirectionLight::applyModifier(const ModelState3D& state)
     // infos._direction = vec4(normalize(vec3(newDirection)), infos._direction.a);
 }
 
+#include <AssetManager.hpp>
+#include <Scripting/ScriptInstance.hpp>
+
 void DirectionLight::updateShadowCamera()
 {
-    // vec3 position = shadowCamera.getPosition();
+    // if(false)
+    // {
+    //     // vec3 position = shadowCamera.getPosition();
+    
+    //     vec3 cPos = globals.currentCamera->getPosition();
+    
+    //     // vec3 cDir = normalize(globals.currentCamera->getDirection()*vec3(1, 0, 1));
+    //     // cPos += globals.currentCamera->getDirection()
+    
+    //     // cPos.y = 0;
+    //     // cPos = vec3(256, 0, 256);
+    
+    //     // NOTIF_MESSAGE(cPos)
+    
+    //     cPos = ceil(cPos);
+    
+    //     // vec3 cDir = globals.currentCamera->getDirection();
+    //     vec3 cDir = normalize(globals.currentCamera->getDirection()*vec3(1, 0, 1));
+    
+    //     // cDir = vec3(0);
+    //     // cPos = vec3(0, 35, 0);
+    
+    //     vec3 position = cPos + vec3(shadowCameraSize.y*0.5)*cDir;
+    //     position = position-mod(position, 1.f);
+    
+    //     shadowCamera = Camera(ORTHOGRAPHIC);
+    //     shadowCamera.init(0.f, shadowCameraSize.x, shadowCameraSize.y, 0.1, 10E3);
+    //     shadowCamera.setDirection(direction());
+    //     shadowCamera.setPosition(position-direction()*vec3(1E3));
+    
+    //     shadowCamera.updateProjectionViewMatrix();
+    // }
 
-    vec3 cPos = globals.currentCamera->getPosition();
-    // cPos.y = 0;
-    // cPos = vec3(0);
+    if(globals.currentCamera)
+    {
+        Loader<ScriptInstance>::get("Shadowmap Fit").run(*globals.currentCamera, vec3(getInfos()._direction));    
+        shadowCamera[0] = threadState["RETURN_Camera_1"];
+        shadowCamera[1] = threadState["RETURN_Camera_2"];
+        shadowCamera[2] = threadState["RETURN_Camera_3"];
 
-    // NOTIF_MESSAGE(cPos)
+        shadowCamera[0].updateProjectionViewMatrix();
+        shadowCamera[1].updateProjectionViewMatrix();
+        shadowCamera[2].updateProjectionViewMatrix();
+    }
 
-    cPos = ceil(cPos);
-
-    vec3 cDir = globals.currentCamera->getDirection();
-    cDir = vec3(0);
-    vec3 position = cPos + vec3(shadowCameraSize.y*0.25)*cDir;
-
-    shadowCamera = Camera(ORTHOGRAPHIC);
-    shadowCamera.init(0.f, shadowCameraSize.x, shadowCameraSize.y, 0.1, 10E3);
-    shadowCamera.setDirection(direction());
-    shadowCamera.setPosition(position-direction()*vec3(1E3));
-
-    shadowCamera.updateProjectionViewMatrix();
-
-    infos._rShadowMatrix = shadowCamera.getProjectionViewMatrix();
+    infos._rShadowMatrix[0] = shadowCamera[0].getProjectionViewMatrix();
+    infos._rShadowMatrix[1] = shadowCamera[1].getProjectionViewMatrix();
+    infos._rShadowMatrix[2] = shadowCamera[2].getProjectionViewMatrix();
 }
 
 PointLight::PointLight()

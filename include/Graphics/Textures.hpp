@@ -28,6 +28,9 @@ class Texture2D
 
         GLenum _attachement = 0;
 
+        GLenum _target = GL_TEXTURE_2D;
+        
+        int arraySize = 1;
         bool generated = false;
 
     public :   
@@ -36,6 +39,8 @@ class Texture2D
         ~Texture2D();
 
         bool operator==(Texture2D &a);
+
+        Texture2D& setArrayMode(int size);
 
         // TODO : add security when the texture is arleady generated
         Texture2D& setResolution(const ivec2 resolution);
@@ -48,6 +53,7 @@ class Texture2D
         Texture2D& setWrapMode(GLenum wrapMode);
 
         ivec2 getResolution() const;
+        GLenum getTarget() const;
         GLenum getInternalFormat() const;
         GLenum getFormat() const;
         GLenum getPixelType() const;

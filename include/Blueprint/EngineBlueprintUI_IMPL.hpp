@@ -892,7 +892,9 @@ EntityRef VulpineBlueprintUI::SceneInfos(Scene& scene)
 
                     // ColoredConstEntry("BINDLESS TEXTURES", [&scene](){return scene.useBindlessTextures ? U"Activated" : U"Disabled";}),
 
-                    ColoredConstEntry("CULL TIME", [&scene](){return ftou32str(scene.cullTime.getLastAvg().count(), 4) + U" ms";}),
+                    ColoredConstEntry("FRUSTUM CULLING TIME", [&scene](){return ftou32str(scene.cullTime.getLastAvg().count(), 4) + U" ms";}),
+
+                    ColoredConstEntry("OCCLUSION CULLING TIME", [&scene](){return ftou32str(scene.occlusionCullingTime.getLastAvg().count(), 4) + U" ms";}),
 
                     ColoredConstEntry("DRAW CALL TIME", [&scene](){return ftou32str(scene.callsTime.getLastAvg().count(), 4) + U" ms";}),
 
@@ -908,9 +910,9 @@ EntityRef VulpineBlueprintUI::SceneInfos(Scene& scene)
                     //     return ftou32str(dim.x) + U"x" + ftou32str(dim.y) + U"x" + ftou32str(dim.z);
                     // }),
 
-                    ColoredConstEntry("FRUSTUM CLUSTER VFAR", [&scene](){ return ftou32str(scene.getClusteredLight().vFar, 5) + U" m";}),
+                    // ColoredConstEntry("FRUSTUM CLUSTER VFAR", [&scene](){ return ftou32str(scene.getClusteredLight().vFar, 5) + U" m";}),
 
-                    ColoredConstEntry("CLUSTER LIGHTING", [&scene](){ return scene.isUSingClusteredLighting() ? U"Activated" : U"Disabled";;}),
+                    ColoredConstEntry("CLUSTER LIGHTING", [&scene](){ return scene.isUSingClusteredLighting() ? U"Activated" : U"Disabled";}),
                 })
             ),
         })

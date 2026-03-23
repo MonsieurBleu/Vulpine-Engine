@@ -99,9 +99,9 @@ class Mesh
         void setBindlessMaps();
 
         virtual GLuint draw(GLenum mode = GL_TRIANGLES);
-        virtual GLuint drawVAO(bool depthOnly = false);
+        virtual GLuint drawVAO(int layer, bool depthOnly = false);
 
-        virtual bool cull();
+        virtual bool cull(int layer, int cameraLayers);
 };
 
 #define MODEL_UNIFORM_START           16
@@ -132,7 +132,8 @@ class MeshModel3D : public Mesh
     protected :
         void createUniforms();
 
-        bool culled = true;
+        bool culled[4] = {true};
+        bool externCullEnable = false;
 
         vec4 lodHeigtTextureRange = vec4(0);
         vec4 lodHeightDispFactors = vec4(0);
@@ -178,9 +179,11 @@ class MeshModel3D : public Mesh
         virtual void update();
         void setDrawMode();
         void resetDrawMode();
-        virtual GLuint drawVAO(bool depthOnly = false);
-        virtual bool cull();
-        bool isCulled();
+        virtual GLuint drawVAO(int layer, bool depthOnly = false);
+        virtual bool cull(int layer, int cameraLayers = 1);
+        bool isCulled(int layer);
+        bool setExternCull(bool isCulled); // unused
+        void disableExternCull();
 
         void tessHeightTextureRange(vec2 min, vec2 max);
         void tessHeighFactors(float uvScale, float heightFactor);
@@ -190,8 +193,16 @@ class MeshModel3D : public Mesh
         void setMenu(FastUI_valueMenu &menu, std::u32string name);
 };
 
+class InstancedMeshModel3D;
+
 class ModelInstance : public ModelState3D
 {
+    public :
+    // InstancedMeshModel3D *originalModel;
+    bool enable = false;
+    bool culled = true;
+    bool externCull = false;
+
     // friend InstancedMeshModel3D;
 
     // private : 
@@ -199,6 +210,12 @@ class ModelInstance : public ModelState3D
     // public : 
         // ModelInstance(bool &uil) : updateInstanceList(uil){};
         // bool &updateInstanceList;
+};
+
+struct ModelInstanceRef
+{
+    InstancedModelRef originalModel;
+    ModelInstance *instance;
 };
 
 class InstancedMeshModel3D : public MeshModel3D
@@ -212,7 +229,11 @@ class InstancedMeshModel3D : public MeshModel3D
         // std::shared_ptr<ModelInstance*> instances;
         std::vector<ModelInstance> instances;
 
+        // bool gpuAllocated = false;
+
     public :
+
+        InstancedMeshModel3D(){};
 
         InstancedMeshModel3D(MeshMaterial material, MeshVao vao)
             : MeshModel3D(material, vao){};
@@ -223,11 +244,12 @@ class InstancedMeshModel3D : public MeshModel3D
          * 
          * @attention All of the instance's states are considered updated
          */
-        void updateInstances();
+        void updateInstances(int layer);
         ModelInstance* createInstance();
+        void removeInstance(ModelInstance * instance);
 
-        GLuint drawVAO(bool depthOnly = false) final;
-        bool cull() final;
+        GLuint drawVAO(int layer, bool depthOnly = false) final;
+        bool cull(int layer, int cameraLayers) final;
 };
 
 MeshVao readOBJ(const std::string filePath, bool useVertexColors = false);

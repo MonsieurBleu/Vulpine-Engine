@@ -31,6 +31,8 @@ void ObjectGroup::update(bool forceUpdate)
 {
     bool globalUpdate = state.update();
     globalUpdate |= forceUpdate;
+    
+    // std::cout << globalUpdate << "\t" << name << "\t";
 
     if(globalUpdate)
     {
@@ -48,21 +50,33 @@ void ObjectGroup::update(bool forceUpdate)
             ManageHideStatus(i->hide, state.hide);
         }
 
+        for(auto i : instances)
+        if(i.instance)
+        {
+            i.instance->modelMatrix = state.modelMatrix * i.instance->forceUpdate().modelMatrix;
+            ManageHideStatus(i.instance->hide, state.hide);
+        }
+
     }
     
     for(auto &i : children)
     {
         if(i->state.needUpdate() || globalUpdate)
+        {
             i->state.modelMatrix = state.modelMatrix * i->state.forceUpdate().modelMatrix;
+            ManageHideStatus(i->state.hide, state.hide);
+            i->update(true);
+        }
 
-        ManageHideStatus(i->state.hide, state.hide);
-        i->update(true);
+        // i->update(globalUpdate);
     }
 
+    updateMeshesBoundingBox();
 }
 
 void ObjectGroup::add(ModelRef meshe)
 {
+    meshe->state.externCullPtr = state.externCullPtr;
     meshes.push_back(meshe);
 }
 
@@ -76,13 +90,23 @@ void ObjectGroup::add(SceneLight light)
 
 void ObjectGroup::add(ObjectGroupRef group)
 {
+    group->state.externCullPtr = state.externCullPtr;
     children.push_back(group);
 }
 
 void ObjectGroup::add(ModelStateRef state)
 {
+    state->externCullPtr = this->state.externCullPtr;
     states.push_back(state);
 }
+
+void ObjectGroup::add(ModelInstanceRef instance)
+{
+    // instance.instance->externCullPtr = state.externCullPtr;
+    instance.instance = nullptr;
+    instances.push_back(instance);
+}
+
 
 void ObjectGroup::setAnimation(SkeletonAnimationState *animation)
 {
@@ -114,23 +138,32 @@ void ObjectGroup::remove(ObjectGroupRef group)
         }
 }
 
-ObjectGroupRef ObjectGroup::copy()
+ObjectGroupRef ObjectGroup::copy(bool *externCullPtr)
 {
-    ObjectGroupRef g = newObjectGroup();
+    ObjectGroupRef g = newObjectGroup(name, externCullPtr);
 
-    g->name = name;
+    // g->name = name;
 
-    g->children.resize(children.size());
-    g->states.resize(states.size());
-    g->meshes.resize(meshes.size());
-    g->lights.resize(lights.size());
+    // g->children.resize(children.size());
+    // g->states.resize(states.size());
+    // g->meshes.resize(meshes.size());
+    // g->lights.resize(lights.size());
     g->state = state.forceUpdate();
 
+    if(!externCullPtr)
+        g->state.externCullPtr = &g->externCulledValue;
+    else
+        g->state.externCullPtr = externCullPtr;
+
+    g->useStaticAABB = useStaticAABB;
+    g->meshesBoundingBox = meshesBoundingBox;
+
     int i = 0;
-    for(auto &c : children) g->children[i++] = c->copy();
-    i = 0;
-    for(auto &c : states) g->states[i++] = ModelStateRef(new ModelState3D(*c));
-    i = 0;
+    // for(auto &c : children) g->children[i++] = c->copy();
+    for(auto c : children) g->add(c->copy(&g->externCulledValue));
+    // i = 0;
+    for(auto &c : states) g->add(ModelStateRef(new ModelState3D(*c)));
+    // i = 0;
     for(auto &c : lights)
         switch (c->getInfos()._infos.a)
         {
@@ -139,14 +172,35 @@ ObjectGroupRef ObjectGroup::copy()
             case DIRECTIONAL_LIGHT : g->lights[i++] = SceneDirectionalLight(new DirectionLight(dynamic_cast<DirectionLight&>(*c))); break;
             default:break;
         }
-    i = 0;
-    for(auto &c : meshes) g->meshes[i++] = c->copy();
+    // i = 0;
+    for(auto &c : meshes) g->add(c->copy());
+
+    for(auto &i : instances)
+    {
+        ModelInstanceRef ni;
+        ni.originalModel = i.originalModel;
+        g->add(ni);
+    } 
+        
 
     return g;
 }
 
 std::pair<vec3, vec3> ObjectGroup::getMeshesBoundingBox()
 {
+    return meshesBoundingBox;
+}
+
+void ObjectGroup::setStaticAABB(vec3 min, vec3 max)
+{
+    meshesBoundingBox = {min, max};
+    useStaticAABB = true;
+}
+
+void ObjectGroup::updateMeshesBoundingBox()
+{
+    if(useStaticAABB) return;
+
     vec3 minb(1e6), maxb(-1e6);
 
     for(auto i : meshes)
@@ -161,14 +215,35 @@ std::pair<vec3, vec3> ObjectGroup::getMeshesBoundingBox()
         maxb = max(maxb, min1);
     }
 
+    for(auto i : instances)
+    if(i.originalModel)
+    {
+        // vec3 min1 = (i.instance->modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMin(), 1.0);
+        // vec3 max1 = (i.instance->modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMax(), 1.0);
+
+        vec3 min1 = (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMin(), 1.0);
+        vec3 max1 = (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMax(), 1.0);
+
+        minb = min(minb, min1);
+        minb = min(minb, max1);
+
+        maxb = max(maxb, max1);
+        maxb = max(maxb, min1);
+    }
+
+
     for(auto i : children)
+    // if(i->state.hide != ModelStatus::HIDE)
     {
         auto m = i->getMeshesBoundingBox();
         minb = min(minb, m.first);
         maxb = max(maxb, m.second);
     }
 
-    return {minb, maxb};
+    // NOTIF_MESSAGE(minb, "\n\t", maxb)
+
+    // return {minb, maxb};
+    meshesBoundingBox = {minb, maxb};
 }
 
 ObjectGroup::meshesToBeMerged::meshesToBeMerged(std::pair<ObjectGroup*, ModelRef> m)
@@ -495,4 +570,131 @@ void ObjectGroup::iterateOnAllMesh_Recursive(std::function<void(ModelRef)> f)
 {
     for(auto i : meshes) f(i);
     for(auto c : children) c->iterateOnAllMesh_Recursive(f);
+}
+
+bool ObjectGroup::isCulled()
+{
+    // if(externCull)
+    //     return externCulledValue;
+
+    // if(externCull)
+    // {
+        if(state.externCullPtr)
+            return *state.externCullPtr;
+        else
+            return externCulledValue;
+    // }
+    return true;
+
+    // return !(externCull and !externCulledValue);
+}
+
+void ObjectGroup::propagateExternCullMode(int layer, bool culled)
+{
+    externCull = true;
+
+    if(state.externCullPtr)
+        state.externCullPtr[layer] = culled;
+
+    // if(state.externCullPtr != &externCulledValue)
+    //     *state.externCullPtr = culled;
+    // else 
+    //     externCulledValue = culled;
+
+    // for(auto i : instances)
+    //     if(i)
+    //     {
+    //         i->culled = culled;
+    //         i->externCull = true;
+    //     }
+
+    // for(auto m : meshes)
+    //     m->setExternCull(culled);
+    
+    // for(auto c : children)
+    //     c->propagateExternCullMode(culled);
+}
+
+void ObjectGroup::propagateExternCullPtr(bool *externCullPtr)
+{
+    state.externCullPtr = externCullPtr;
+
+    for(auto i : instances)
+        if(i.instance)
+            i.instance->externCullPtr = externCullPtr;
+
+    for(auto i : meshes)
+        i->state.externCullPtr = externCullPtr;
+
+    for(auto i : children)
+        i->propagateExternCullPtr(externCullPtr);
+}
+
+void ObjectGroup::disableExternCullMode()
+{
+    externCull = false;
+
+    for(auto i : instances)
+        if(i.instance)
+            i.instance->externCull = false;
+
+    for(auto m : meshes)
+        m->disableExternCull();
+    
+    for(auto c : children)
+        c->disableExternCullMode();
+}
+
+void ObjectGroup::propagateHideStatus()
+{
+    for(auto i = meshes.begin(); i != meshes.end(); i++)
+    {
+        ManageHideStatus((*i)->state.hide, state.hide);
+        (*i)->state.externCullPtr = state.externCullPtr;
+    }
+
+    for(auto &i : lights) i->applyModifier(state);
+
+    for(auto i : states)
+    {
+        ManageHideStatus(i->hide, state.hide);
+        (*i).externCullPtr = state.externCullPtr;
+    }
+
+    for(auto &i : instances)
+    {
+        if(state.hide == ModelStatus::HIDE)
+        {
+            if(i.instance)
+            {
+                // WARNING_MESSAGE("REMOOOVED")
+                i.originalModel->removeInstance(i.instance);
+                i.instance = nullptr;
+            }
+        }
+        else
+        {
+            if(!i.instance)
+            {
+                i.instance = i.originalModel->createInstance();
+                // i.instance->forceUpdate();
+                // i.instance->modelMatrix = state.modelMatrix * i.instance->modelMatrix * i.originalModel->state.modelMatrix;
+                i.instance->modelMatrix = state.modelMatrix * i.instance->forceUpdate().modelMatrix;
+            }
+        }
+
+        if(i.instance)
+        {
+            ManageHideStatus(i.instance->hide, state.hide);
+            (*i.instance).externCullPtr = state.externCullPtr;
+        }
+    }
+
+    
+    for(auto &i : children)
+    {
+        ManageHideStatus(i->state.hide, state.hide);
+        i->state.externCullPtr = state.externCullPtr;
+        i->propagateHideStatus();
+    }
 }

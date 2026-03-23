@@ -9,20 +9,26 @@ struct MeshGroup
 {
     MeshMaterial material;
     std::deque<ModelRef> meshes;
+    std::deque<ModelRef> staticMeshes;
 
     MeshGroup(MeshMaterial _material)
     {
         material = _material;
     }
 
-    MeshGroup& add(ModelRef mesh)
+    MeshGroup& add(ModelRef mesh, bool isStatic)
     {
-        meshes.push_back(mesh);
+        if(isStatic)
+            staticMeshes.push_back(mesh);
+        else 
+            meshes.push_back(mesh);
         return *this;
     }
 
-    uint draw(bool useBindlessTextures);
+    uint draw(int layer, bool useBindlessTextures);
 };
+
+
 
 class Scene
 {
@@ -35,8 +41,9 @@ class Scene
 
         std::deque<SceneLight> lights;
         std::deque<ObjectGroupRef> groups;
+        std::deque<ObjectGroupRef> staticGroups;
 
-        void addGroupElement(ObjectGroupRef group);
+        void addGroupElement(ObjectGroupRef group, bool sort, bool isStatic);
         void removeGroupElement(ObjectGroupRef group);
 
         uint drawcnt = 0;
@@ -46,16 +53,19 @@ class Scene
         void generateLightClusters();
 
     public :
+
+        StaticSceneOctree tree;
+
         Scene();
-        Scene& add(ModelRef mesh, bool sort = true, bool putInFront = false);
+        Scene& add(ModelRef mesh, bool sort = true, bool isStatic = false);
         Scene& add(SceneLight light);
-        Scene& add(ObjectGroupRef group);
+        Scene& add(ObjectGroupRef group, bool sort = true, bool isStatic = false);
 
         void updateAllObjects();
         void generateShadowMaps();
         void genLightBuffer();
-        uint draw();
-        void depthOnlyDraw(Camera &camera, bool cull = false);
+        uint draw(int layer);
+        void depthOnlyDraw(int layer, Camera *camera, bool cull = false, int layers = 0);
 
         void remove(ModelRef mesh);
         void remove(SceneLight light);
@@ -65,7 +75,9 @@ class Scene
          * @brief Cull all MeshModel3D in the scene
          * @attention No arguments, works with the globals.currentCamera attribute
          */
-        void cull();
+        void cull(int layer = 0, int cameraLayers = 1);
+
+        void activateTreeCulling(vec3 worldSize);
 
         uint getDrawCalls();
         uint getPolyCount();
@@ -79,6 +91,7 @@ class Scene
         BenchTimer depthOnlyCallsTime = BenchTimer("Depth Only Calls");
         BenchTimer shadowPassCallsTime = BenchTimer("Shadow Pass Calls");
         BenchTimer lightBufferTime = BenchTimer("Light Buffer Creation");
+        BenchTimer occlusionCullingTime = BenchTimer("Occlusion CUlling");
         void endTimers();
 
         MeshMaterial depthOnlyMaterial;

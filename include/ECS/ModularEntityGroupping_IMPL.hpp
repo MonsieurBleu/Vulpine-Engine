@@ -64,9 +64,16 @@ void ComponentModularity::removeChild(Entity &parent, Entity* child)
 
 void ComponentModularity::synchronizeChildren(EntityRef parent)
 {
+    int synchCompCnt = 0;
+
     for(auto &i : SynchFuncs)
         if(parent->state[i.ComponentID])
+        {
+            synchCompCnt ++;
             i.element(*parent, parent);
+        }
+
+    if(!synchCompCnt) return;
 
     if(parent->has<EntityGroupInfo>())
         for(auto &c : parent->comp<EntityGroupInfo>().children)

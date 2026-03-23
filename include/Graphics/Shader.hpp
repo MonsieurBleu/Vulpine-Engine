@@ -111,6 +111,14 @@ class ShaderProgram
                       std::vector<ShaderUniform> uniforms = {},
                       const std::string &defines = "");
 
+        ShaderProgram(const std::string _fragPath, 
+                      const std::string _vertPath, 
+                      const std::string _tescPath,
+                      const std::string _tesePath,
+                      const std::string _geomPath,
+                      std::vector<ShaderUniform> uniforms = {},
+                      const std::string &defines = "");
+
         ShaderError compileAndLink();
         ShaderError reset(bool hotReload = true);
 
