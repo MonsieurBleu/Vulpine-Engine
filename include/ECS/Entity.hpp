@@ -425,7 +425,55 @@ void System(F f, int step = 1, int current = 0)
             && list[i].enabled 
             && list[i].entity->state == mask
         )
-            f(*list[i].entity, list[i].entity->comp<FirstType>(), list[i].entity->comp<T>()...);
+            f(*list[i].entity, list[i].entity->template comp<FirstType>(), list[i].entity->template comp<T>()...);
+    }
+
+    timer.hold();
+    systemTimer.hold();
+}
+;
+
+
+template<typename FirstType, typename F>
+requires std::invocable<F, Entity&, FirstType&>
+void System(F f, int step = 1, int current = 0)
+{
+    static VulpineBitSet<MAX_COMP> mask(ComponentInfos<FirstType>::id);
+    static std::string nameID = Entity::getComponentMaskNames(mask);
+    static BenchTimer &timer = systemsPreciseTimer[nameID];
+    
+    int maxID = ComponentGlobals::maxID[Component<FirstType>::category];
+    if(!maxID) return;
+
+    systemTimer.start();
+    timer.start();
+
+    auto &list = Component<FirstType>::elements;
+    auto &statusList = ComponentGlobals::status[Component<FirstType>::category];
+    // int size = list.size();
+
+    auto &elist = Component<EntityInfos>::elements;
+
+    // NOTIF_MESSAGE(nameID, "\n\t\t", maxID);
+
+    for(int i = current; i <= maxID; i += step)
+    {
+        // if(list[i].markedForDeletion || (list[i].enabled && !elist[list[i].entityListID].enabled))
+        // {
+        //     list[i].enabled = false;
+        //     list[i].markedForDeletion = false;
+        //     list[i].clean();
+        //     list[i].data = FirstType();
+        // }
+
+        if(true
+            && statusList[i].enabled
+            && !list[i].markedForDeletion
+            && elist[list[i].entityListID].enabled
+            && list[i].enabled 
+            && list[i].entity->state == mask
+        )
+            f(*list[i].entity, list[i].entity->template comp<FirstType>());
     }
 
     timer.hold();
@@ -438,7 +486,7 @@ void ManageGarbage()
 {   
     auto &list = Component<T>::elements;
     auto &elist = Component<EntityInfos>::elements;
-    int maxID = ComponentGlobals::maxID[Component<T>::category];
+    int &maxID = ComponentGlobals::maxID[Component<T>::category];
     int size = list.size();
 
     int garbageMaxID = ComponentGlobals::garbageMaxID[Component<T>::category];
@@ -448,10 +496,7 @@ void ManageGarbage()
 
     // int newMaxID = maxID; 
 
-    for(int i = 0; 
-    i < size 
-    && i <= garbageMaxID
-    ; i++)
+    for(int i = 0; i < size && i <= garbageMaxID; i++)
     {        
         #define NAME(type) #type
         
