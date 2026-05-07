@@ -6,6 +6,22 @@
 ALCdevice *openALDevice = nullptr;
 ALCcontext *openALContext = nullptr;
 
+#ifdef _WIN32
+
+/* Enable dedicated graphics for NVIDIA*/
+extern "C" 
+{
+__declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+}
+
+/* Enable dedicated graphics for AMD*/
+extern "C"
+{
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+
+#endif
+
 template <typename GameType, typename... Params>
 int launchGame(GameType **game, std::string name, Params... initParams)
 {
@@ -14,6 +30,7 @@ int launchGame(GameType **game, std::string name, Params... initParams)
     ALCboolean contextMadeCurrent = false;
 
     atexit(checkHeap);
+
 
 // #ifdef _WIN32
 //     system("cls");

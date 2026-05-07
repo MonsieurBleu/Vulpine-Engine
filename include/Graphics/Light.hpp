@@ -10,7 +10,7 @@
 using namespace glm;
 
 #define MAX_LIGHT_COUNTER 0b100000000000000
-#define MAX_LIGHT_PER_CLUSTER 128
+#define MAX_LIGHT_PER_CLUSTER 32
 #define LIGHT_SHADOW_ACTIVATED 1
 
 class ObjectGroup;

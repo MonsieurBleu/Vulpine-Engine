@@ -194,7 +194,10 @@ void ClusteredLightBuffer::activate(int location)
 
 void ClusteredLightBuffer::update()
 {
-    glNamedBufferSubData(handle, 0, size*MAX_LIGHT_PER_CLUSTER*sizeof(int), buffer.get());
+    // glNamedBufferSubData(handle, 0, size*MAX_LIGHT_PER_CLUSTER*sizeof(int), buffer.get());
+
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, handle);
+    glBufferSubData(handle, 0, size*MAX_LIGHT_PER_CLUSTER*sizeof(int), buffer.get());
 }
 
 

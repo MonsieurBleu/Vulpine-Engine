@@ -41,9 +41,9 @@ void OcclussionQuery::stopQuery()
 
 void OcclussionQuery::retreiveQueryResults()
 {
-    // glGetQueryObjectiv(id, GL_QUERY_RESULT_NO_WAIT, (GLint*)&occluded);
+    glGetQueryObjectiv(id, GL_QUERY_RESULT_NO_WAIT, (GLint*)&occluded);
     // glGetQueryObjectuiv(id, GL_QUERY_RESULT, &occluded);
-    glGetQueryObjectiv(id, GL_QUERY_RESULT, (GLint*)&occluded);
+    // glGetQueryObjectiv(id, GL_QUERY_RESULT, (GLint*)&occluded);
 
     // WARNING_MESSAGE(id, "\t\t", occluded);
 }
