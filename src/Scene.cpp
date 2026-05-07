@@ -133,6 +133,9 @@ uint MeshGroup::draw(int layer, bool useBindlessTextures)
     
     uint drawcnt = 0;
     
+    // WARNING_MESSAGE(material->vert.get_Path())
+    // NOTIF_MESSAGE(staticMeshes.size(), "     ", meshes.size())
+
     if(useBindlessTextures)
     {
         for(auto &i : staticMeshes)
@@ -577,7 +580,7 @@ uint Scene::getShadowMapCount()
 {
     int cnt = 0;
 
-    for(auto &l : lights)
+    for(auto l : lights)
         if(l->getInfos()._infos.b&LIGHT_SHADOW_ACTIVATED)
             cnt++;
 
@@ -595,10 +598,11 @@ void Scene::depthOnlyDraw(int layer, Camera *camera, bool doCulling, int layers)
 
     depthOnlyCallsTime.start();
 
-    if(depthOnlyMaterial)
+    // if(depthOnlyMaterial)
     {
         for(auto i = meshes.begin(); i != meshes.end(); i++)
         {
+            if(!i->material.depthOnly) continue;
 
             // if(i->material.depthOnly)
             //     i->material.depthOnly->activate();
@@ -705,6 +709,7 @@ void Scene::generateShadowMaps()
             && i->shadowCameraSize != vec2(0)
         )
         {
+            // std::cout << &i->shadowMap << "\n";
             i->shadowMap.activate();
             globals.currentCamera = tmp;
             i->updateShadowCamera();
@@ -741,7 +746,7 @@ void Scene::remove(ModelRef mesh)
                 {
                     i->meshes.erase(j);
 
-                    if(!i->meshes.size())
+                    if(!i->meshes.size() && !i->staticMeshes.size())
                         meshes.erase(i);
                     
                     return;
@@ -752,7 +757,7 @@ void Scene::remove(ModelRef mesh)
                 {
                     i->staticMeshes.erase(j);
 
-                    if(!i->meshes.size() and !i->staticMeshes.size())
+                    if(!i->meshes.size() && !i->staticMeshes.size())
                         meshes.erase(i);
                     
                     return;

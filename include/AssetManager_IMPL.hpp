@@ -75,4 +75,8 @@ void loadAllModdedAssetsInfos(const char *filename)
     LOAD_ALL(Flag)
 
     LOAD_ALL(AudioFile)
+
+    #ifdef GAME_SPECIFIC_TYPES_LOAD
+    GAME_SPECIFIC_TYPES_LOAD
+    #endif
 }

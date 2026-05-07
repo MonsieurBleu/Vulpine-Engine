@@ -601,3 +601,24 @@ AudioFile& Loader<AudioFile>::loadFromInfos()
 
     EXIT_ROUTINE_AND_RETURN
 }
+
+DATA_WRITE_FUNC(std::vector<std::string>)
+{
+    out->Tabulate();
+    for(auto &s : data)
+    {
+        out->Entry();
+        out->write("\"", 1);
+        out->write(s.c_str(), s.size());
+        out->write("\"", 1);
+    }
+    DATA_WRITE_END
+}
+
+
+DATA_READ_FUNC_INIT(std::vector<std::string>)
+
+    if(true)
+        data.push_back(member);
+
+DATA_READ_END_FUNC

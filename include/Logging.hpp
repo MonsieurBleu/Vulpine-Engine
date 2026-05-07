@@ -7,7 +7,7 @@
 #include <vector>
 #include <filesystem>
 
-
+#include <algorithm>
 
 const std::string TERMINAL_UNDERLINE = "\033[4m";
 const std::string TERMINAL_ERROR     = "\e[1;31m";
@@ -43,6 +43,7 @@ public:
 private:
 
     static inline std::fstream logFile;
+    static inline std::fstream logFile2;
 
     static inline std::stringstream ss;
 
@@ -173,8 +174,14 @@ private:
             std::strftime(std::data(timeString), std::size(timeString), "[%FT%TZ] ", std::gmtime(&time));
 
             logFile << timeString;
-            
             logFile << str << std::flush;
+
+            if (logFile2.good())
+            {
+                logFile2 << timeString;
+                logFile2 << str << std::flush;
+            }
+
         }
     }
 
@@ -187,6 +194,7 @@ public:
         char* timeString = new char[strDummy.size() + 1];
         std::strftime(timeString, strDummy.size() + 1, strFormat.c_str(), std::gmtime(&time));
         logFile.open(timeString, std::ios::out | std::ios::trunc);
+        logFile2.open(logDir + "latest.log", std::ios::out | std::ios::trunc);
 
         if (!logFile.good())
         {

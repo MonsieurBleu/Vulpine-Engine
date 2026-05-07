@@ -112,6 +112,11 @@ constexpr auto type_name() {
         WRITE_NAME(elem, out); \
         FastTextParser::write<decltype(data.elem)>(data.elem, out->getReadHead());}
     
+    #define FTXTP_WRITE_ELEMENT_STRUCT(data, elem) \
+        {out->Entry(); \
+        WRITE_NAME(elem, out); \
+        DataLoader<decltype(data.elem)>::write(data.elem, out);}
+
     #define FTXTP_WRITE_ELEMENT_COND(data, elem, cond) if(cond) {FTXTP_WRITE_ELEMENT(data, elem)}
 
     #define FTXTP_WRITE_ELEMENT_COND_E(data, elem, cond) if(elem cond) {FTXTP_WRITE_ELEMENT(data, elem)}
@@ -154,6 +159,10 @@ constexpr auto type_name() {
     #define IF_MEMBER_FTXTP_LOAD(data, elem) \
         IF_MEMBER_READ_VALUE(elem)\
             data.elem = FastTextParser::read<decltype(data.elem)>(value);
+
+    #define IF_MEMBER_FTXTP_LOAD_STRUCT(data, elem) \
+        IF_MEMBER(elem)\
+            data.elem = DataLoader<decltype(data.elem)>::read(buff);
 
     #define MAP_SAFE_READ(map, buff, data, value) \
         {                                  \
@@ -206,9 +215,15 @@ constexpr auto type_name() {
 
     #include <MappedEnum.hpp>
 
+    #define UNPARENT(...) __VA_ARGS__
+
     #define FTXTP_WRITE_ELEMENT_AUTOGEN(x) FTXTP_WRITE_ELEMENT(data, x)
 
+    #define FTXTP_WRITE_ELEMENT_AUTOGEN_STRUCT(x) FTXTP_WRITE_ELEMENT_STRUCT(data, x)
+
     #define IF_MEMBER_FTXTP_LOAD_AUTOGEN(x) else IF_MEMBER_FTXTP_LOAD(data, x)
+
+    #define IF_MEMBER_FTXTP_LOAD_AUTOGEN_STRUCT(x) else IF_MEMBER_FTXTP_LOAD_STRUCT(data, x)
 
     #define AUTOGEN_DATA_WRITE_FUNC(T, ...) \
         DATA_WRITE_FUNC(T) \
@@ -280,3 +295,41 @@ constexpr auto type_name() {
         {DataLoader<type>::write(entity->comp<type>(), out);}
 
 
+
+
+
+        
+    #define AUTOGEN_DATA_WRITE_FUNC_STRUCT(T, SimpleTypes, Structs) \
+        DATA_WRITE_FUNC(T) \
+            { \
+                MAPGEN_FOR_EACH(FTXTP_WRITE_ELEMENT_AUTOGEN, UNPARENT SimpleTypes) \
+                MAPGEN_FOR_EACH(FTXTP_WRITE_ELEMENT_AUTOGEN_STRUCT, UNPARENT Structs) \
+                DATA_WRITE_END; \
+            }
+
+    #define AUTOGEN_DATA_READ_FUNC_STRUCT(T, SimpleTypes, Structs) \
+        DATA_READ_FUNC(T) \
+            { \
+                DATA_READ_INIT(T); \
+                while (NEW_VALUE) \
+                { \
+                    const char *member = buff->read(); \
+                    const char *value = nullptr; \
+                    if(false); \
+                    MAPGEN_FOR_EACH(IF_MEMBER_FTXTP_LOAD_AUTOGEN, UNPARENT SimpleTypes) \
+                    MAPGEN_FOR_EACH(IF_MEMBER_FTXTP_LOAD_AUTOGEN_STRUCT, UNPARENT Structs) \
+                    else \
+                        MEMBER_NOTRECOGNIZED_ERROR; \
+                    if(value > buff->data + buff->getReadHead())\
+                        buff->setHead(value);\
+                } \
+                DATA_READ_END; \
+            }
+
+
+    /*
+        Generate Automaticlly the read and write functions for DataLoader<T>.
+    */
+    #define AUTOGEN_DATA_RW_FUNC_STRUCT(T, SimpleTypes, Structs) \
+        AUTOGEN_DATA_WRITE_FUNC_STRUCT(T, SimpleTypes, Structs) \
+        AUTOGEN_DATA_READ_FUNC_STRUCT(T, SimpleTypes, Structs) 

@@ -227,6 +227,18 @@ void AssetLoadInfos::addToGlobalList(AssetVersion &asset)
             break;
         }
 
+    for(auto i : gameFiletypes)
+        if(!strcmp(ext.c_str(), i.first.first.c_str()))
+        {
+            type = i.first.second;
+
+            asset.textless = i.second.first;
+            asset.textlessPrefix = i.second.second;
+
+            break;
+        }
+
+
     if(type.empty()) return;
 
     assetList[type][getNameOnlyFromPath(asset.file.c_str())].push_back(asset);

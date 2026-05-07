@@ -5,6 +5,11 @@
 #include <memory>
 #include <MappedEnum.hpp>
 
+extern const std::vector<std::pair<
+        std::pair<const std::string, const std::string>,
+        std::pair<bool, const std::string>
+    >> gameFiletypes;
+
 struct Mod
 {
     GENERATE_ENUM_FAST_REVERSE(ImportanceCategory, 

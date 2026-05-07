@@ -215,7 +215,7 @@ DirectionLight::DirectionLight()
 DirectionLight& DirectionLight::setDirection(vec3 direction)
 {
     infos._direction = vec4(direction, infos._direction.a);
-    tmpDirection = direction;
+    // tmpDirection = direction;
     return *this;
 }
 

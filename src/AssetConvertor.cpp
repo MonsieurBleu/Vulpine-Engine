@@ -286,7 +286,7 @@ std::string saveAsVulpineMesh__BASE(aiMesh &mesh, std::string folder, VEAC_EXPOR
     if(format == FORMAT_SANCTIA) h.vertexPacking = COMPRESSED_UVEC4_PACKING;
 
     aiString name(folder);
-    name.Append(mesh.mName.C_Str());
+    // name.Append(mesh.mName.C_Str());
     name.Append(".vMesh");
 
     std::ofstream file(name.C_Str(), std::ios::out | std::ios::binary);

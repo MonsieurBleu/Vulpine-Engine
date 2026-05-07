@@ -18,6 +18,8 @@ class FrameBuffer
 
         vec4 clearColor = vec4(0);
 
+        FrameBuffer();
+
         FrameBuffer& addTexture(Texture2D texture);
 
         FrameBuffer& generate();

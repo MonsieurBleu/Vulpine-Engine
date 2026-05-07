@@ -53,9 +53,9 @@ class Light
         LightInfos & getInfos() ;
         virtual void applyModifier(const ModelState3D& state);
         
+        FrameBuffer shadowMap; 
         Camera shadowCamera[3];
         Camera shadowCameraCullingDummy;
-        FrameBuffer shadowMap; 
         ivec2 cameraResolution = vec2(1024);
         vec2 shadowCameraSize;
         void activateShadows();
@@ -67,7 +67,7 @@ class DirectionLight : public Light
 {
     private : 
 
-        vec3 tmpDirection = vec3(0);
+        // vec3 tmpDirection = vec3(0);
 
     public :
 

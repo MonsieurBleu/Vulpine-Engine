@@ -72,6 +72,18 @@ class Loader
             return res->second;
         };
 
+        static T* getIfExist(const std::string &elem, bool silentFail = false)
+        {
+            auto res = Loader<T>::loadedAssets.find(elem);
+
+            if(res == Loader<T>::loadedAssets.end())
+            {
+                return nullptr;
+            }
+
+            return &res->second;
+        };
+
         static Loader<T>& addInfos(const char *filename)
         {
             return addInfos(VulpineTextBuffRef(new VulpineTextBuff(filename)));

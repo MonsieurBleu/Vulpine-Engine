@@ -12,6 +12,8 @@ Entity::~Entity()
 {
     // std::cout << "Destroying " << toStr() << "\n";
 
+    // NOTIF_MESSAGE("Destroying ", toStr());
+
     Component<EntityInfos>::elements[ids[ENTITY_LIST]].enabled = false;
 
     for(int i = 0; i < ComponentCategory::END; i++)
@@ -20,10 +22,28 @@ Entity::~Entity()
             if(ids[i] < ComponentGlobals::lastFreeID[i])
                 ComponentGlobals::lastFreeID[i] = ids[i];
 
-            if(ids[i] == ComponentGlobals::maxID[i]-1)
-                ComponentGlobals::maxID[i]--;
-            
             ComponentGlobals::status[i][ids[i]].enabled = false;
+
+            if(ids[i] >= ComponentGlobals::maxID[i]-1)
+            {
+                // ComponentGlobals::maxID[i]--;                
+
+                for(int j = ids[i]; j >= 0; j--)
+                {
+                    if(ComponentGlobals::status[i][j].enabled)
+                    {
+                        ComponentGlobals::maxID[i] = j;
+                        break;
+                    }
+
+                    if(j == 0) ComponentGlobals::maxID[i] = 0;
+                }
+
+                // WARNING_MESSAGE(i, "   ",  ids[i], "   ", ComponentGlobals::maxID[i]);
+
+            }
+            
+            
         }
     
     if(has<EntityGroupInfo>())

@@ -76,6 +76,20 @@ class CubeHelper : public MeshModel3D
 
 typedef std::shared_ptr<CubeHelper> CubeHelperRef;
 
+// class CubeHelper2 : public InstancedMeshModel3D
+// {
+//     private :
+
+//     public : 
+//         vec3 color;
+        
+//         CubeHelper2(const vec3 min, const vec3 max, vec3 _color = vec3(0, 1, 0));
+
+//         void updateData(const vec3 min, const vec3 max);
+// };
+
+// typedef std::shared_ptr<CubeHelper2> CubeHelper2Ref;
+
 class SphereHelper : public MeshModel3D
 {
     private :

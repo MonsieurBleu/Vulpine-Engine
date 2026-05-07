@@ -3,6 +3,10 @@
 #include <CompilingOptions.hpp>
 #include <Utils.hpp>
 
+FrameBuffer::FrameBuffer()
+{
+    // NOTIF_MESSAGE(this);
+}
 
 Texture2D& FrameBuffer::getTexture(int id)
 {
@@ -17,6 +21,7 @@ FrameBuffer& FrameBuffer::addTexture(Texture2D texture)
 
 FrameBuffer& FrameBuffer::generate()
 {
+    // WARNING_MESSAGE(this, "    ", textures.size())
     generateHandle();
     bindTextures();
     return *this;
