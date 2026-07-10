@@ -203,6 +203,8 @@ class ModelInstance : public ModelState3D
     bool culled = true;
     bool externCull = false;
 
+    uvec4 userData = uvec4(0);
+
     // friend InstancedMeshModel3D;
 
     // private : 
@@ -226,14 +228,16 @@ class InstancedMeshModel3D : public MeshModel3D
         size_t drawnInstance = 0;
         
         std::shared_ptr<VertexAttribute> matricesBuffer;
+        std::shared_ptr<VertexAttribute> userDataBuffer;
         // std::shared_ptr<ModelInstance*> instances;
         std::vector<ModelInstance> instances;
 
         // bool gpuAllocated = false;
+        bool useUserData = false;
 
     public :
 
-        InstancedMeshModel3D(){};
+        InstancedMeshModel3D(bool useUserData = false) : useUserData(useUserData){};
 
         InstancedMeshModel3D(MeshMaterial material, MeshVao vao)
             : MeshModel3D(material, vao){};
@@ -247,6 +251,7 @@ class InstancedMeshModel3D : public MeshModel3D
         void updateInstances(int layer);
         ModelInstance* createInstance();
         void removeInstance(ModelInstance * instance);
+        void resetInstances();
 
         GLuint drawVAO(int layer, bool depthOnly = false) final;
         bool cull(int layer, int cameraLayers) final;

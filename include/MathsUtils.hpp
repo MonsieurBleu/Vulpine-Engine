@@ -6,7 +6,10 @@ using namespace glm;
 
 #include <vector>
 
-
+float linearstep(float e0, float e1, float x);
+vec3 linearstep(vec3 e0, vec3 e1, vec3 x);
+float cubicstep(float edge0, float edge1, float x);
+float invsmoothstep(float edge0, float edge1, float x);
 
 float random01Vec2(vec2 uv);
 
@@ -52,6 +55,10 @@ vec3 rayAlignedPlaneIntersect(vec3 origin, vec3 direction, float axis, float axi
     vec3 hsv2rgb(vec3 hsv);
 
     vec3 rgb2hsv(vec3 c);
+
+    vec4 hsva2rgba(vec4 hsv);
+
+    vec4 rgba2hsva(vec4 c);
 
     // float getHue(vec3 c);
 

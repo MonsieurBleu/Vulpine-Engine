@@ -15,6 +15,7 @@ void SpectatorController::clean()
     frontFactor = 0;
     rightFactor = 0;
     glfwSetInputMode(globals.getWindow(), GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    globals.currentCamera->setMouseFollow(false);
 }
 
 

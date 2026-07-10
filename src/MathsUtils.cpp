@@ -3,6 +3,27 @@
 
 #include <glm/gtc/quaternion.hpp>
 
+float linearstep(float e0, float e1, float x)
+{
+    return clamp((x - e0)/(e1 - e0), 0.f, 1.f);
+}
+
+vec3 linearstep(vec3 e0, vec3 e1, vec3 x)
+{
+    return clamp((x - e0)/(e1 - e0), 0.f, 1.f);
+}
+
+float cubicstep(float edge0, float edge1, float x)
+{
+    float t = (x - edge0) / (edge1 - edge0) - .5;
+    return clamp(t*t*t*4.f + .5f, 0.f, 1.f);
+}
+
+float invsmoothstep(float edge0, float edge1, float x)
+{
+    return .5f + sin(asin(1.f - 2.f*linearstep(edge1, edge0, x))/3.f);
+}
+
 vec3 PhiThetaToDir(vec2 pt)
 {
     vec3 v;
@@ -59,6 +80,11 @@ vec3 hsv2rgb(vec3 hsv)
     return hsv.z * mix(vec3(K.x), clamp(p - vec3(K.x), vec3(0.0), vec3(1.0)), hsv.y);
 }
 
+vec4 hsva2rgba(vec4 hsv)
+{
+    return vec4(hsv2rgb(vec3(hsv)), hsv.a);
+}
+
 vec3 rgb2hsv(vec3 c)
 {
     vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
@@ -69,6 +95,12 @@ vec3 rgb2hsv(vec3 c)
     float e = 1.0e-10;
     return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
+
+vec4 rgba2hsva(vec4 c)
+{
+    return vec4(rgb2hsv(vec3(c)), c.a);
+}
+
 
 // float getHue(vec3 c);
 

@@ -273,7 +273,7 @@ InstancedModelRef& Loader<InstancedModelRef>::loadFromInfos()
     // NOTIF_MESSAGE(name);
 
     // r = newModel();
-    r = InstancedModelRef(new InstancedMeshModel3D());
+    r = InstancedModelRef(new InstancedMeshModel3D(true));
 
     while (NEW_VALUE)
     {

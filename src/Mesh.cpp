@@ -385,15 +385,6 @@ void InstancedMeshModel3D::allocate(size_t maxInstanceCount)
     matricesBuffer->genBuffer();
     matricesBuffer->sendAllToGPU();
 
-    // glBindVertexArray(vao->getHandle());
-    // glBindVertexBuffer(
-    //     3,
-    //     matricesBuffer->getHandle(),
-    //     0,
-    //     sizeof(vec4));
-
-    // glVertexAttribBinding(3, 3);
-    // matricesBuffer->setFormat();
     glBindBuffer(GL_ARRAY_BUFFER, matricesBuffer->getHandle());
     glBindVertexArray(vao->getHandle());
 
@@ -405,6 +396,30 @@ void InstancedMeshModel3D::allocate(size_t maxInstanceCount)
         glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, sizeof(mat4), (void *)((i - beg) * sizeof(vec4)));
         glVertexAttribDivisor(i, 1);
     }
+
+    if(useUserData)
+    {
+        userDataBuffer = std::shared_ptr<VertexAttribute>(
+            new VertexAttribute(
+                GenericSharedBuffer(new char[allocatedInstance * sizeof(uvec4)]),
+                7, 
+                allocatedInstance, 
+                4, 
+                GL_UNSIGNED_INT, 
+                false
+            )
+        );
+
+        userDataBuffer->genBuffer();
+        userDataBuffer->sendAllToGPU();
+
+        glBindBuffer(GL_ARRAY_BUFFER, userDataBuffer->getHandle());
+
+        glEnableVertexAttribArray(7);
+        glVertexAttribIPointer(7, 4, GL_UNSIGNED_INT, sizeof(uvec4), nullptr);
+        glVertexAttribDivisor(7, 1);
+    }
+
 
     glBindVertexArray(0);
 }
@@ -505,16 +520,17 @@ ModelInstance *InstancedMeshModel3D::createInstance()
     }
 
     // WARNING_MESSAGE(createdInstance)
+    
+    if(drawnInstance >= 0) // If the mesh was recently reset, we don't need to find gaps.
+        for(int i = 0; i < createdInstance; i++)
+            if(!instances[i].enable)
+            {
+                // NOTIF_MESSAGE(i, " ", instances[i].enable, " ", instances[i].originalModel);
 
-    for(int i = 0; i < createdInstance; i++)
-        if(!instances[i].enable)
-        {
-            // NOTIF_MESSAGE(i, " ", instances[i].enable, " ", instances[i].originalModel);
+                instances[i].enable = true;
 
-            instances[i].enable = true;
-
-            return &instances[i];
-        }
+                return &instances[i];
+            }
 
     ModelInstance *newInstance = &instances[createdInstance];
     newInstance->enable = true;
@@ -542,6 +558,15 @@ void InstancedMeshModel3D::removeInstance(ModelInstance * instance)
     }
 }
 
+void InstancedMeshModel3D::resetInstances()
+{
+    for(int i = 0; i < createdInstance; i++)
+        instances[i].enable = false;
+
+    drawnInstance = -1; // signaling the model was not drawn after reset
+    createdInstance = 0;
+}
+
 void InstancedMeshModel3D::updateInstances(int layer)
 {
     // if(rand()%8) return;
@@ -549,6 +574,7 @@ void InstancedMeshModel3D::updateInstances(int layer)
     // static NAMED_TIMER(instanceUpdate)
 
     mat4 *m = (mat4 *)matricesBuffer->getBufferAddr();
+    uvec4 *u = useUserData ? (uvec4 *)userDataBuffer->getBufferAddr() : nullptr;
 
     // bool bufferNeedUpdate = false;
 
@@ -587,7 +613,13 @@ void InstancedMeshModel3D::updateInstances(int layer)
         {
             // memcpy((void *)&m[i], (void *)&inst.modelMatrix, sizeof(mat4));
 
-            m[drawnInstance++] = inst.modelMatrix;
+            if(u) u[drawnInstance] = inst.userData;
+            
+            m[drawnInstance] = inst.modelMatrix;
+
+            drawnInstance++;
+
+
             // drawnInstance++;
 
             // for(int j = 0; j < estimatedStreak; j++)
@@ -640,6 +672,7 @@ void InstancedMeshModel3D::updateInstances(int layer)
     
     glBindBuffer(GL_ARRAY_BUFFER, matricesBuffer->getHandle());
 
+
     // glBufferData(
     //     GL_ARRAY_BUFFER,
     //     sizeof(mat4) * drawnInstance,
@@ -664,6 +697,18 @@ void InstancedMeshModel3D::updateInstances(int layer)
         sizeof(mat4) * drawnInstance,
         matricesBuffer->getBufferAddr()
     );
+
+    if(useUserData)
+    {
+        glBindBuffer(GL_ARRAY_BUFFER, userDataBuffer->getHandle());
+
+        glBufferSubData(
+            GL_ARRAY_BUFFER,
+            0,
+            sizeof(uvec4) * drawnInstance,
+            userDataBuffer->getBufferAddr()
+        );
+    }
 
     // instanceUpdate.stop();
 

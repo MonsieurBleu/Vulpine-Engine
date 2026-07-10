@@ -12,6 +12,7 @@
 
 #include "MappedEnum.hpp"
 
+#define PRINTVAR(v) "\n\t", #v, " : ", v
 
 #ifdef _WIN32
     #include <shlwapi.h>
@@ -21,9 +22,9 @@
 #endif
 
 #ifdef __clang__
-inline thread_local bool currentThreadID = -1;
+inline thread_local int currentThreadID = -1;
 #elif defined(__GNUC__)
-static inline thread_local bool currentThreadID = -1;
+static inline thread_local int currentThreadID = -1;
 #endif
 
 

@@ -5,6 +5,28 @@
 #include <ECS/ModularEntityGroupping.hpp>
 #endif
 
+thread_local BenchTimer systemTimer;
+std::unordered_map<std::string, BenchTimer> systemsPreciseTimer;
+std::recursive_mutex systemsPreciseTimerMutex;
+
+BenchTimer& getSystemPreciseTimer(const std::string & nameID)
+{
+    static BenchTimer dummy("SYSTEM TIMER NOT FOUND");
+
+    systemsPreciseTimerMutex.lock();
+
+    // auto elem = systemsPreciseTimer.find(nameID);
+    // BenchTimer & timer = elem == systemsPreciseTimer.end() ? dummy : systemsPreciseTimer[nameID];
+
+    // WARNING_MESSAGE((glm::uint64)nameID.data())
+    // NOTIF_MESSAGE(nameID)
+
+    BenchTimer & timer = systemsPreciseTimer[nameID];
+    systemsPreciseTimerMutex.unlock();
+    return timer;
+}
+
+
 #ifdef VULPINE_COMPONENT_IMPL
 COMPONENT_IMPL(EntityInfos)
 

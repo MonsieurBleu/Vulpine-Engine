@@ -19,7 +19,6 @@ class ModelState3D
 {
 private:
     bool _needUpdate = true;
-    bool usingLookAt = false;
 
 public:
     vec3 position = vec3(0.f);
@@ -105,14 +104,16 @@ public:
 
     ModelState3D &lookAt(vec3 newLookPoint)
     {
-        usingLookAt = true;
+        useQuaternion = false;
         lookAtPoint = newLookPoint;
+        _needUpdate = true;
         return *this;
     }
 
     ModelState3D &disableLookAt()
     {
-        usingLookAt = false;
+        useQuaternion = true;
+        _needUpdate = true;
         return *this;
     }
 

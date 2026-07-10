@@ -659,7 +659,7 @@ void Scene::depthOnlyDraw(int layer, Camera *camera, bool doCulling, int layers)
                 for(auto j : i->staticMeshes)
                     if(j->isCulled(layer))
                     {
-                        j->setBindlessMaps();
+                        j->bindAllMaps();
                         drawcnt += j->drawVAO(layer, true);
                     }
 

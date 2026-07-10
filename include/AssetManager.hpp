@@ -91,13 +91,13 @@ class Loader
 
         static Loader<T>& addInfos(VulpineTextBuffRef buff)
         {
-            bool infoMustBeLoaded = false;
+            // bool infoMustBeLoaded = false;
             const char *ptr = buff->read();
 
             if(*ptr == '|')
             {
                 ptr = buff->read();
-                infoMustBeLoaded = true;
+                // infoMustBeLoaded = true;
             }
             if(*ptr == '~')
             {
@@ -108,7 +108,7 @@ class Loader
             auto check = loadingInfos.find(ptr);
             if(check != loadingInfos.end()) return *check->second;
         
-            assert(!infoMustBeLoaded);
+            // assert(!infoMustBeLoaded);
 
             Loader<T> e;
             e.buff = buff;

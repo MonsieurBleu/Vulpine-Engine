@@ -61,7 +61,8 @@ void AnimationController::update(float dt)
         currentAnimation = currentTransition->to;
         currentAnimation->onEnterAnimation(usr);
 
-        transitioning = true;
+        // transitioning = true;
+        transitioning = currentTransition->transitionLength > 0.f;
         transitionStart = std::chrono::high_resolution_clock::now();
         transitionTimeSinceStart = 0;
         transitionTime = animationTime;
@@ -113,7 +114,7 @@ void AnimationController::update(float dt)
     {
         // std::cout << "transitionning omg " << usr << " " << transitionTime << "\t" << currentTransition->transitionLength << "\n";
         // transitionTime += dt * currentTransition->to->speedCallback(prctTransition, usr);
-        transitionTime += dt * currentSpeed;
+        transitionTime += dt * abs(currentSpeed);
         transitionTimeSinceStart += dt;
 
         float a = 0;
@@ -143,6 +144,7 @@ void AnimationController::update(float dt)
 
         interpolateKeyframes(currentTransition->to, currentTransition->from,
                             // fmod(animationTime, currentAnimation->getLength()), transitionTime, 
+                            currentSpeed, currentTransition->from->speedCallback(timeB, usr),
                             timeA, timeB,
                             animationLTime, transitionLTime, 
                             (1.f-a)
@@ -169,7 +171,7 @@ void AnimationController::update(float dt)
     }
     else
     {
-        currentAnimation->getCurrentFrames(animationTime, animationLTime, currentKeyframeIndexA, currentKeyframes);
+        currentAnimation->getCurrentFrames(animationTime, animationLTime, currentKeyframeIndexA, currentKeyframes, currentSpeed < 0.f);
     }
 }
 

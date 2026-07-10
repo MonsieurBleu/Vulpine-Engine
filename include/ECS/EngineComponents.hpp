@@ -1,6 +1,7 @@
 #include <ECS/ModularEntityGroupping.hpp>
 #include <ECS/ComponentTypeUI.hpp>
 #include <ECS/ComponentTypeAudio.hpp>
+#include <ECS/ComponentType3D.hpp>
 
 #ifndef CURRENT_MAX_COMP_USAGE
 // #undef CURRENT_MAX_COMP_USAGE
@@ -15,6 +16,17 @@
 #define CURRENT_CATEGORY DATA
 
 Component_Init(EntityGroupInfo)
+Component_Init(State3D)
+
+/***************** ECS BASE DYNAMIC VULPINE COMPONENTS *****************/
+
+#undef CURRENT_CATEGORY
+#define CURRENT_CATEGORY DATA_DYNAMIC
+
+Component(DynamicState3D)
+Component(Deplacement)
+Component(ComplexMovements)
+Component(Gauges)
 
 /***************** UI BASE VULPINE COMPONENTS *****************/
 
@@ -65,3 +77,21 @@ void updateWidgetsStyle();
 
 Component(AudioPlayer);
 Component(AudioScatterer);
+
+/***************** PHYSICS VULPINE SYSTEMS *****************/
+#ifdef ECS_JOLT_PHYSICS_INTEGRATION
+
+    #include <JoltIntegration/JoltIntegration.hpp>
+
+    #undef CURRENT_CATEGORY
+    #define CURRENT_CATEGORY PHYSIC
+    Component(JoltBody)
+    template<> void Component<JoltBody>::ComponentElem::clean();
+    
+    #undef CURRENT_CATEGORY
+    #define CURRENT_CATEGORY PHYSIC_DYNAMIC
+    Component(KynematicFlag)
+
+#endif
+
+

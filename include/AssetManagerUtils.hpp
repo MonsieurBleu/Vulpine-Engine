@@ -56,12 +56,12 @@ constexpr auto type_name() {
     #define EXIT_ROUTINE_AND_RETURN end = buff->data + buff->getReadHead(); return r;
 
 
-    #define LOADER_DO_RUNTIME_ASSERT
+    // #define LOADER_DO_RUNTIME_ASSERT
 
     #ifdef LOADER_DO_RUNTIME_ASSERT
         #define LOADER_ASSERT(cond) assert(cond);
     #else
-        #define LOADER_ASSERT(cond) if(cond){ EXIT_ROUTINE_AND_RETURN }
+        #define LOADER_ASSERT(cond) if(!(cond)){ EXIT_ROUTINE_AND_RETURN }
     #endif
 
     #define LOAD_VALUE(type) Loader<type>::addInfos(buff).loadFromInfos()

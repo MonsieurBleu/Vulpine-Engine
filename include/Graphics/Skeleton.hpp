@@ -64,6 +64,10 @@ class SkeletonAnimationState : public std::vector<mat4>
         // uint handle = 0;
         std::shared_ptr<uint> handle;
 
+        // Modifications added after the animations
+        // Usefull to do things like head rotation
+        std::unordered_map<std::string, std::vector<mat4>> modifsLayers; 
+
     public:
         std::string name;
 
@@ -87,4 +91,10 @@ class SkeletonAnimationState : public std::vector<mat4>
         void send();
         void update();
         void activate(int location);
+
+        mat4 getBoneTransform(const std::string & boneName);
+        vec3 getBonePosition (const std::string & boneName);
+
+        void setBoneModif(const std::string & boneName, const std::string & layer, const mat4 & modif);
+        mat4 getBoneModif(const std::string & boneName, const std::string & layer);
 };

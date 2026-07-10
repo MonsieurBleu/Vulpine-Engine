@@ -66,7 +66,7 @@ AnimationRef Animation::load(const std::string &filename)
     return anim;
 }
 
-void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16> & currentKeyframeIndex, std::vector<keyframeData> &data)
+void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16> & currentKeyframeIndex, std::vector<keyframeData> &data, bool inverse)
 {
     // static float lastTime = 0;
 
@@ -74,6 +74,8 @@ void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16
     if(data.empty()) data.resize(keyframes.size());
 
     // if(!repeat) time = clamp(time, 0.f, length);
+
+    // NOTIF_MESSAGE(name)
 
     if(!repeat && time >= length)
     {
@@ -98,14 +100,30 @@ void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16
         return;
     }
 
-    time = fmod(time, length);
+    // NOTIF_MESSAGE(name, "   ", !inverse and time < lastTime, "   ", time, "   ", time+length, "   ", fmod(time+length, length))
+    
+    time = abs(time);
 
-    if (time < lastTime)
+    if(inverse)
+    {
+        time = length - fmod(abs(time), length);
+    }
+    else
+    {
+        time = fmod(time, length);
+    }
+
+    inverse = false;
+
+    if (!inverse and time < lastTime)
     {
         std::fill(currentKeyframeIndex.begin(), currentKeyframeIndex.end(), 0);
     }
 
     lastTime = time;
+
+
+    int s = inverse ? -1 : 1;
 
     for (uint i = 0; i < keyframes.size(); i++)
     {
@@ -124,12 +142,12 @@ void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16
             continue;
         }
 
-        uint nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
+        uint nextKeyframeIndex = (currentKeyframeIndex[i] + s) % keyframes[i].size();
 
-        while (time > keyframes[i][nextKeyframeIndex].time)
+        while (s*time > s*keyframes[i][nextKeyframeIndex].time)
         {
             currentKeyframeIndex[i] = nextKeyframeIndex;
-            nextKeyframeIndex = (currentKeyframeIndex[i] + 1) % keyframes[i].size();
+            nextKeyframeIndex = (currentKeyframeIndex[i] + s) % keyframes[i].size();
 
             /* TODO : fix, this can cause animations to be bugged at low frame rate*/
             if (currentKeyframeIndex[i] == 0)
@@ -163,6 +181,8 @@ void Animation::getCurrentFrames(float time, float & lastTime, std::vector<int16
 void interpolateKeyframes(
     AnimationRef animA, 
     AnimationRef animB, 
+    float speedA,
+    float speedB,
     float t1, 
     float t2,
     float &lt1, 
@@ -174,25 +194,29 @@ void interpolateKeyframes(
 {
     if (animA->keyframes.size() != animB->keyframes.size())
     {        
-        WARNING_MESSAGE("interpolateKeyframes : animations have different number of expected bones.");
-        return;
+        WARNING_MESSAGE(
+            "Animations '", animA->getName(), "' and '", animB->getName(), 
+            "' have different number of expected bones (", animA->keyframes.size(), " and ", animB->keyframes.size(), " respectivly). "
+            "Current controller is using ", data.size(), "."
+        ); 
+        // return;
     }
 
     if (t1 < 0 && t2 < 0)
     {
-        WARNING_MESSAGE("interpolateKeyframes : both animations have negative time.");
+        WARNING_MESSAGE("Animations '", animA->getName(), "' and '", animB->getName(), "' both have negative time");
         return;
     }
 
-    if (t2 < 0)
-        return animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA, data);
+    // if (t2 < 0)
+    //     return animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA, data, speedA < 0.f);
 
-    if (t1 < 0)
-        return animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB, data);
+    // if (t1 < 0)
+    //     return animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB, data, speedB < 0.f);
 
     if (t1 > animA->length && t2 > animB->length)
     {
-        WARNING_MESSAGE("interpolateKeyframes : both animations have time greater than their length.");
+        WARNING_MESSAGE("Animations '", animA->getName(), "' and '", animB->getName(), "' both have time greater than their length");
         return;
     }
 
@@ -201,17 +225,19 @@ void interpolateKeyframes(
     
     /* TODO : figure out what luna meant when making those 2 conditions*/
     if (t1 > animA->length)
-        return animB->getCurrentFrames(t2, lt1, currentKeyframeIndexB, data);
+        return animB->getCurrentFrames(t2, lt1, currentKeyframeIndexB, data, speedB < 0.f);
 
     if (t2 > animB->length)
-        return animA->getCurrentFrames(t1, lt2, currentKeyframeIndexA, data);
+        return animA->getCurrentFrames(t1, lt2, currentKeyframeIndexA, data, speedA < 0.f);
 
     // std::vector<keyframeData> keyframesA;
-    animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA, data);
+    animA->getCurrentFrames(t1, lt1, currentKeyframeIndexA, data, speedA < 0.f);
     static std::vector<keyframeData> keyframesB;
-    animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB, keyframesB);
+    animB->getCurrentFrames(t2, lt2, currentKeyframeIndexB, keyframesB, speedB < 0.f);
 
-    for (uint i = 0; i < data.size(); i++)
+    uint size = min(data.size(), keyframesB.size());
+
+    for (uint i = 0; i < size; i++)
     {
         keyframeData &dataA = data[i];
         keyframeData &dataB = keyframesB[i];

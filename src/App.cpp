@@ -270,6 +270,8 @@ void App::activateMainSceneBindlessTextures()
     scene.useBindlessTextures = true;
     // scene2D.useBindlessTextures = true;
     Shadinclude::shaderDefines += "#define ARB_BINDLESS_TEXTURE\n";
+
+    
 }
 
 void App::setPlanetSize(float s)

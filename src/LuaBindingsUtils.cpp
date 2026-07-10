@@ -20,6 +20,11 @@ std::string_view getLuaTypeName(const std::string_view &name)
         "When generating LUA documentation for type '" ,  name ,  "'. No declared alias exist for this type."
     )
 
+    // for(auto i : luaBindingTypesAlias)
+    // {
+    //     NOTIF_MESSAGE(i.first, " : ", i.second)
+    // }
+
     return name;
 }
 

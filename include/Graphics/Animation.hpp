@@ -140,7 +140,7 @@ class Animation
     {
         return keyframes.size();
     }
-    void getCurrentFrames(float time, float & lastTime, std::vector<int16> & currentKeyframeIndex, std::vector<keyframeData> &data);
+    void getCurrentFrames(float time, float & lastTime, std::vector<int16> & currentKeyframeIndex, std::vector<keyframeData> &data, bool inverse = false);
 
     bool isFinished(float time)
     {
@@ -152,6 +152,7 @@ class Animation
     friend void interpolateKeyframes(
         AnimationRef animA, 
         AnimationRef animB, 
+        float speedA, float speedB,
         float t1, float t2, float &lt1, float &lt2,  float a, 
         std::vector<int16> &currentKeyframeIndexA,
         std::vector<int16> &currentKeyframeIndexB,

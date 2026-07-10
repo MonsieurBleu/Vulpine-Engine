@@ -179,6 +179,15 @@ void SkeletonAnimationState::applyKeyframes(std::vector<keyframeData> keyframes)
 
         (*this)[i] = t;
     }
+
+    for(auto &i : modifsLayers)
+    {
+        int cnt = 0;
+        for(auto &j : i.second)
+        {
+            (*this)[cnt++] *= j;
+        }
+    }
 }
 
 void Skeleton::traverse(std::function<void(int, SkeletonBone &)> f)
@@ -232,4 +241,51 @@ void SkeletonAnimationState::activate(int location)
 {
     if (handle.get() && *handle)
         glBindBufferBase(GL_SHADER_STORAGE_BUFFER, location, *handle);;
+}
+
+#define BONES_NOT_FOUND_EARLY_RETURN(type) \
+    auto elem = skeleton->boneNamesMap.find(boneName); \
+    if(elem == skeleton->boneNamesMap.end()){WARNING_MESSAGE("No bone ", boneName, " in skeleton '", skeleton->name, "'!"); return type;}
+
+mat4 SkeletonAnimationState::getBoneTransform(const std::string & boneName)
+{
+    BONES_NOT_FOUND_EARLY_RETURN(mat4(1))
+    return at(elem->second) * inverse(skeleton->at(elem->second).t);
+}
+
+vec3 SkeletonAnimationState::getBonePosition(const std::string & boneName)
+{
+    BONES_NOT_FOUND_EARLY_RETURN(vec3(0))
+    return at(elem->second) * inverse(skeleton->at(elem->second).t) * vec4(0, 0, 0, 1);
+}
+
+void SkeletonAnimationState::setBoneModif(const std::string & boneName, const std::string & layer, const mat4 & modif)
+{
+    BONES_NOT_FOUND_EARLY_RETURN()
+
+    auto &l = modifsLayers[layer];
+
+    if(l.size() != skeleton->size())
+    {
+        l.resize(skeleton->size());
+        for(auto &i : l) i = mat4(1);
+    }
+
+    l[elem->second] = modif;
+}
+
+
+mat4 SkeletonAnimationState::getBoneModif(const std::string & boneName, const std::string & layer)
+{
+    BONES_NOT_FOUND_EARLY_RETURN(mat4(1))
+
+    auto &l = modifsLayers[layer];
+
+    if(l.size() != skeleton->size())
+    {
+        l.resize(skeleton->size());
+        for(auto &i : l) i = mat4(1);
+    }
+
+    return l[elem->second];
 }

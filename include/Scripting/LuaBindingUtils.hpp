@@ -5,13 +5,13 @@
 /*
 *  Hader string stream
 */
-#ifdef __clang__
-inline thread_local std::stringstream luaHeader;
-inline thread_local std::stringstream luaHeaderAppendBuffer;
-#elif defined(__GNUC__)
-static inline thread_local std::stringstream luaHeader;
-static inline thread_local std::stringstream luaHeaderAppendBuffer;
-#endif
+// #ifdef __clang__
+extern thread_local std::stringstream luaHeader;
+extern thread_local std::stringstream luaHeaderAppendBuffer;
+// #elif defined(__GNUC__)
+// static inline thread_local std::stringstream luaHeader;
+// static inline thread_local std::stringstream luaHeaderAppendBuffer;
+// #endif
 
 inline std::unordered_map<std::string_view, std::string_view> luaBindingTypesAlias;
 
@@ -184,7 +184,7 @@ void writeFunctionDocumentation(
 
 #define VBIND_ADD_CONSTRUCTORS(args, names)                                                     \
     __VBIND_ADD_CONSTRUCTORS(UNPARENT args)                                                     \
-    writeConstructorDocumentation(__VBIND_TO_STR(CURRENT_CLASS_BINDING),                        \
+    writeConstructorDocumentation(___VBIND_CURRENT_CLASS_ALIAS,                        \
         {MAPGEN_FOR_EACH(__VBIND_TO_STRING_VECTOR, UNPARENT names)},                            \
         processArgsTraits({MAPGEN_FOR_EACH(__VBIND_CONSTRUCTOR_ARGS_TO_STRING, UNPARENT args)}) \
     );

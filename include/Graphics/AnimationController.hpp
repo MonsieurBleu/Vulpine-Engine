@@ -83,6 +83,8 @@ public:
     void update(float dt);
 
     void applyKeyframes(SkeletonAnimationState &skeleton);
+
+    AnimationRef getCurrentAnimation(){return currentAnimation;};
 };
 
 typedef std::shared_ptr<AnimationController> AnimationControllerRef;

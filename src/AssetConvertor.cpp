@@ -1011,7 +1011,8 @@ void VEAC::retargetVulpineAnimation(
         return;
     }
 
-    AnimationFileHeader head(anim.mName.C_Str(), durationSeconds, bonesInfosMap.size(), matchedBonesCounter);
+    // AnimationFileHeader head(anim.mName.C_Str(), durationSeconds, bonesInfosMap.size(), matchedBonesCounter);
+    AnimationFileHeader head(anim.mName.C_Str(), durationSeconds, skeleton->getSize(), matchedBonesCounter);
     head.magicNumber = 0x494e4156;
     fwrite(&head, sizeof(AnimationFileHeader), 1, file);
 
@@ -1210,7 +1211,7 @@ void VEAC::retargetVulpineAnimation(
     fclose(file);
     std::cout << TERMINAL_TIMER
               << "Done saving animation"
-              << " (" << head.animatedBoneNumber << " animated bones, " << keyframeNumber << " keyframes total) "
+              << " (" << head.animatedBoneNumber << " animated bones, " << keyframeNumber << " keyframes total, " << head.totalBoneNumber << " total bones)"
               << TERMINAL_FILENAME
               << filename
               << TERMINAL_TIMER
@@ -1302,7 +1303,7 @@ void VEAC::saveAsVulpineAnimation(const aiAnimation &anim, Stencil_BoneMap &bone
     fclose(file);
     std::cout << TERMINAL_TIMER
               << "Done saving animation"
-              << " (" << head.animatedBoneNumber << " animated bones, " << keyframeNumber << " keyframes total) "
+              << " (" << head.animatedBoneNumber << " animated bones, " << keyframeNumber << " keyframes total, " << head.totalBoneNumber << " total bones)"
               << TERMINAL_FILENAME
               << filename
               << TERMINAL_TIMER

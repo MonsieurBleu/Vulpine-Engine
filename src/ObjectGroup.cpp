@@ -167,9 +167,9 @@ ObjectGroupRef ObjectGroup::copy(bool *externCullPtr)
     for(auto &c : lights)
         switch (c->getInfos()._infos.a)
         {
-            case TUBE_LIGHT : g->lights[i++] = SceneTubeLight(new TubeLight(dynamic_cast<TubeLight&>(*c))); break;
-            case POINT_LIGHT : g->lights[i++] = ScenePointLight(new PointLight(dynamic_cast<PointLight&>(*c))); break;
-            case DIRECTIONAL_LIGHT : g->lights[i++] = SceneDirectionalLight(new DirectionLight(dynamic_cast<DirectionLight&>(*c))); break;
+            case TUBE_LIGHT : g->lights[i++] = SceneTubeLight(new TubeLight(static_cast<TubeLight&>(*c))); break;
+            case POINT_LIGHT : g->lights[i++] = ScenePointLight(new PointLight(static_cast<PointLight&>(*c))); break;
+            case DIRECTIONAL_LIGHT : g->lights[i++] = SceneDirectionalLight(new DirectionLight(static_cast<DirectionLight&>(*c))); break;
             default:break;
         }
     // i = 0;

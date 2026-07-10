@@ -83,8 +83,6 @@ struct CategoryStatus
 
 struct ComponentGlobals
 {
-
-
     static inline int lastID = 0;
     static inline int lastFreeID[ComponentCategory::END] = {0};
     static inline int maxID[ComponentCategory::END] = {0};
@@ -188,6 +186,9 @@ struct EntityInfos
 COMPONENT_BASE(EntityInfos, ENTITY_LIST, MAX_ENTITY);
 
 struct templatePass{template<typename ...T> templatePass(T...) {}};
+
+class Entity;
+typedef std::shared_ptr<Entity> EntityRef;
 
 class Entity
 {
@@ -293,6 +294,40 @@ class Entity
 
             return nameID;
         }
+
+        template<typename FirstType>
+        static std::vector<Entity*> LuaSystem(const std::vector<std::string> componentList, uint step, uint current)
+        {
+            std::vector<Entity*> entityList;
+            
+            VulpineBitSet<MAX_COMP> mask(ComponentInfos<FirstType>::id);
+
+            for(auto &c : componentList)
+                mask.setTrue(ComponentGlobals::ComponentNamesMap->at(c));
+
+            int maxID = ComponentGlobals::maxID[Component<FirstType>::category];
+            if(!maxID) return entityList;
+
+            auto &list = Component<FirstType>::elements;
+            auto &statusList = ComponentGlobals::status[Component<FirstType>::category];
+            auto &elist = Component<EntityInfos>::elements;
+
+            for(int i = current; i <= maxID; i += step)
+            {
+                if(true
+                    && statusList[i].enabled
+                    && !list[i].markedForDeletion
+                    && elist[list[i].entityListID].enabled
+                    && list[i].enabled 
+                    && list[i].entity->state == mask
+                )
+                {
+                    entityList.push_back(list[i].entity);
+                }
+            }
+
+            return entityList;
+        }
 };
 
 #include <memory>
@@ -334,10 +369,13 @@ void Component<T>::insert(Entity &entity, const T& data)
 
 #include <functional>
 #include <Timer.hpp>
+#include <mutex>
 
-inline thread_local BenchTimer systemTimer;
+extern thread_local BenchTimer systemTimer;
+extern std::unordered_map<std::string, BenchTimer> systemsPreciseTimer;
+extern std::recursive_mutex systemsPreciseTimerMutex;
 
-inline std::unordered_map<std::string, BenchTimer> systemsPreciseTimer;
+BenchTimer& getSystemPreciseTimer(const std::string & nameID);
 
 template<typename FirstType, typename ...T, typename F>
 requires std::invocable<F, Entity&>
@@ -345,7 +383,7 @@ void System(F f, int step = 1, int current = 0)
 {
     static VulpineBitSet<MAX_COMP> mask(ComponentInfos<FirstType>::id, ComponentInfos<T>::id ...);
     static std::string nameID = Entity::getComponentMaskNames(mask);
-    static BenchTimer &timer = systemsPreciseTimer[nameID];
+    static BenchTimer &timer =  getSystemPreciseTimer(nameID);
     
     int maxID = ComponentGlobals::maxID[Component<FirstType>::category];
     if(!maxID) return;
@@ -392,7 +430,7 @@ void System(F f, int step = 1, int current = 0)
 {
     static VulpineBitSet<MAX_COMP> mask(ComponentInfos<FirstType>::id, ComponentInfos<T>::id ...);
     static std::string nameID = Entity::getComponentMaskNames(mask);
-    static BenchTimer &timer = systemsPreciseTimer[nameID];
+    static BenchTimer &timer = getSystemPreciseTimer(nameID);
     
     int maxID = ComponentGlobals::maxID[Component<FirstType>::category];
     if(!maxID) return;
@@ -440,7 +478,7 @@ void System(F f, int step = 1, int current = 0)
 {
     static VulpineBitSet<MAX_COMP> mask(ComponentInfos<FirstType>::id);
     static std::string nameID = Entity::getComponentMaskNames(mask);
-    static BenchTimer &timer = systemsPreciseTimer[nameID];
+    static BenchTimer &timer = getSystemPreciseTimer(nameID);
     
     int maxID = ComponentGlobals::maxID[Component<FirstType>::category];
     if(!maxID) return;

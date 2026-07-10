@@ -3,7 +3,8 @@
 // #include <sol/variadic_args.hpp>
 // #include <sol/sol.hpp>
 
-
+thread_local std::stringstream luaHeader;
+thread_local std::stringstream luaHeaderAppendBuffer;
 
 #include <fstream>
 
@@ -21,6 +22,17 @@ using namespace glm;
 #include <Timer.hpp>
 
 #include <Graphics/Camera.hpp>
+
+#include <Graphics/Skeleton.hpp>
+
+#include <Graphics/ObjectGroup.hpp>
+
+vec3 extractEulerAngles(mat4 m)
+{
+    vec3 r;
+    glm::extractEulerAngleXYZ(m, r.x, r.y, r.z);
+    return r;
+}
 
 // MARK: Bind all
 void VulpineLuaBindings::bindAll(sol::state& lua)
@@ -288,7 +300,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
     {
         VBIND_CREATE_CLASS
         VBIND_ADD_CONSTRUCTORS(
-            ((float), (float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float), (imat4x4), (mat4)),
+            ((float), (float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float), (imat4x4), (mat4), (mat3)),
             ()
         )
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING, float)
@@ -385,8 +397,10 @@ void VulpineLuaBindings::glm(sol::state &lua)
     ), ());
 
     VBIND_ADD_FUNCTION_OVERLOAD(angle, (((float), const quat &), ((float), const vec2 &, const vec2 &)), ());
+    VBIND_ADD_FUNCTION_OVERLOAD(angleAxis, (((quat), const float &, const vec3 &)), ());
     VBIND_ADD_FUNCTION_OVERLOAD(axis, (((vec3), const quat &)), ());
     VBIND_ADD_FUNCTION_OVERLOAD(slerp, (((quat), const quat &, const quat &, const float)), ());
+    VBIND_ADD_FUNCTION_OVERLOAD(atan2f, (((float), float, float)), ());
 
     VBIND_ADD_FUNCTION_OVERLOAD(radians, (
         ((float), const float),
@@ -397,9 +411,16 @@ void VulpineLuaBindings::glm(sol::state &lua)
 
     VBIND_INIT_HEADER_CATEGORY("VULPINE MATH HELPER FUNCTIONS")
 
+    VBIND_ADD_FUNCTION_OVERLOAD(linearstep, (
+        ((float), const float, const float, const float),
+        ((vec3), vec3, vec3, vec3),
+    ), ());
+
     VBIND_ADD_FUNCTIONS(
         (rgb2hsv, ("rgb")),
         (hsv2rgb, ("hsv")),
+        (rgba2hsva, ("rgb")),
+        (hsva2rgba, ("hsv")),
         (getSaturation, ("rgb")),
         (ColorHexToV, ("hex")),
 
@@ -410,7 +431,8 @@ void VulpineLuaBindings::glm(sol::state &lua)
         (directionToEuler, ()),
         (projectPointOntoPlane, ()),
         (rayAlignedPlaneIntersect, ()),
-        (viewToWorld, ("pos", "inverseProjectionView"))
+        (viewToWorld, ("pos", "inverseProjectionView")),
+        (extractEulerAngles, ("transform"))
     );
 }
 
@@ -604,6 +626,45 @@ void VulpineLuaBindings::VulpineTypes(sol::state &lua)
     VBIND_CLASS_END
     #undef CURRENT_CLASS_BINDING
 
+    VBIND_CLASS_DECLARE(SkeletonAnimationState)
+    #define CURRENT_CLASS_BINDING SkeletonAnimationState
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS((), ())
+
+        VBIND_ADD_MEMBERS(
+            name
+        )
+
+        VBIND_ADD_METHODS(
+            getBoneTransform,
+            getBonePosition,
+            getBoneModif,
+            setBoneModif
+        );
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
+
+    VBIND_CLASS_DECLARE(ObjectGroup)
+    #define CURRENT_CLASS_BINDING ObjectGroup
+    VBIND_CLASS_DECLARE(CURRENT_CLASS_BINDING)
+    {
+        VBIND_CREATE_CLASS
+        VBIND_ADD_CONSTRUCTORS((), ())
+
+        VBIND_ADD_MEMBERS(
+            name, state
+        )
+
+        VBIND_ADD_METHODS(
+            // getChildren, 
+            update
+        );
+    }
+    VBIND_CLASS_END
+    #undef CURRENT_CLASS_BINDING
 }
 
 #include <Globals.hpp>
@@ -655,7 +716,8 @@ void VulpineLuaBindings::Utils(sol::state &lua)
             sceneChromaticAbbColor2,
             sceneChromaticAbbAngleAmplitude,
             sceneHsvShift,
-            sceneVignette
+            sceneVignette,
+            currentCamera
         )
         VBIND_ADD_METHODS(
             screenResolution,

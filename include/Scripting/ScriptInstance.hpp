@@ -39,13 +39,13 @@
 // 	return sol::stack::push(L, description);
 // }
 
-#ifdef __clang__
-inline thread_local std::string threadStateName;
-inline thread_local sol::state threadState;
-#elif defined(__GNUC__)
-static inline thread_local std::string threadStateName;
-static inline thread_local sol::state threadState;
-#endif
+// #ifdef __clang__
+extern thread_local std::string threadStateName;
+extern thread_local sol::state threadState;
+// #elif defined(__GNUC__)
+// static inline thread_local std::string threadStateName;
+// static inline thread_local sol::state threadState;
+// #endif
 
 
 // inline thread_local sol::state threadState(sol::c_call<decltype(&my_panic), &my_panic>);
