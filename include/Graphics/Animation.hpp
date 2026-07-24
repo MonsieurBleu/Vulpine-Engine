@@ -131,7 +131,7 @@ class Animation
         return keyframes[i];
     }
 
-    const std::vector<AnimationKeyframeData> &operator[](int i)
+    std::vector<AnimationKeyframeData> &operator[](int i)
     {
         return keyframes[i];
     }

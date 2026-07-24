@@ -185,7 +185,10 @@ void SkeletonAnimationState::applyKeyframes(std::vector<keyframeData> keyframes)
         int cnt = 0;
         for(auto &j : i.second)
         {
-            (*this)[cnt++] *= j;
+            // (*this)[cnt++] *= j;
+
+            (*this)[cnt] = j * (*this)[cnt];
+            cnt++;
         }
     }
 }

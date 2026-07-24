@@ -97,6 +97,8 @@ glm::quat toGLM(const aiQuaternion a)
     return quat(a.w, a.x, a.y, a.z);
 }
 
+vec3 tmpCompressionScale = vec3(1);
+
 void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPORT_FORMAT format)
 {
     infos.facesCount = mesh.mNumFaces;
@@ -136,7 +138,7 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
             o = uvec4(0);
 
             /* POSITION */
-            o |= uvec4(ivec4(round(positions[i]*1e3f), 0) + 0x800000);
+            o |= uvec4(ivec4(round(positions[i]*1e4f), 0) + 0x800000);
 
             float maxdot = 0.f;
             uvec3 cubeN(0.f);
@@ -158,6 +160,19 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
 
             o |= uvec4(cubeN.x<<24, cubeN.y<<24, cubeN.z<<24, 0);
             o.w = 0;
+
+            // WARNING_MESSAGE(
+            //     PRINTVAR(mesh.GetNumColorChannels())
+            // )
+
+            // for(int i = 0; i < mesh.GetNumColorChannels(); i++)
+            // {
+            //     WARNING_MESSAGE(
+            //         PRINTVAR(mesh.mColors[i]->r),
+            //         PRINTVAR(mesh.mColors[i]->g),
+            //         PRINTVAR(mesh.mColors[i]->b)
+            //     )
+            // }
 
             if(mesh.GetNumColorChannels() > 0)
             {
@@ -282,6 +297,9 @@ std::string saveAsVulpineMesh__BASE(aiMesh &mesh, std::string folder, VEAC_EXPOR
 
     h.AABBmax = vec3(mesh.mAABB.mMax.x, mesh.mAABB.mMax.y, mesh.mAABB.mMax.z);
     h.AABBmin = vec3(mesh.mAABB.mMin.x, mesh.mAABB.mMin.y, mesh.mAABB.mMin.z);
+
+    vec3 maxScale((float)0x00FFFFFF*1e-3);
+    tmpCompressionScale = 0.9f*maxScale/(h.AABBmax - h.AABBmin);
 
     if(format == FORMAT_SANCTIA) h.vertexPacking = COMPRESSED_UVEC4_PACKING;
 

@@ -158,9 +158,25 @@ struct Gauges
 
 struct ComplexMovements
 {
+    enum ClimbTypeEnum : uint8 { High, Low, Platform } climbType;
+
+    float climbAnimSpeed = 1.f;
+
+    /* Safe surface where the entity can climb */
     vec3 closestSurface = vec3(0);
+    
+    /* Edge position and normal where the entity can be placed for climbing-style animation*/
+    vec3 closestEdge = vec3(0);
+    vec3 closestEdgeNormal = vec3(0, 1, 0);
+
+    /* Closest Wall position and normal where the entity can wall jump or can be placed do lean-style animations*/
     vec3 closestWall = vec3(0);
+    vec3 closestWallNormal = vec3(0, 1, 0);
+    
+    /* Used for interpolation purpuses when doing an animation. Target final position will be closest edge/surface/wall/... */
     vec3 animationInitialPosition = vec3(0);
+    
+    /* Used to make sure the player can't infinite loop wall jumps on the same wall */
     vec3 lastWallJumpDirection = vec3(0);
     
     HardGoal<bool> climb = HardGoal<bool>(false);

@@ -7,7 +7,7 @@
 
 #define VARIABLE_PRINT(x) #x, ":", x, "\n\t"
 
-#define MAX_INSTANCE_ALLOCATE 2048
+#define MAX_INSTANCE_ALLOCATE 256
 
 JoltVulpine::DebugRenderer *JoltVulpine::debugRenderer = nullptr;
 JPH::BodyManager::DrawSettings JoltVulpine::debugRendererSettings;
@@ -57,7 +57,7 @@ JPH::DebugRenderer::Batch JoltVulpine::DebugRenderer::CreateTriangleBatch
 {
     auto *geo = new JoltVulpine::DebugRenderer::Geometry();
 
-    NOTIF_MESSAGE(meshCount++)
+    // NOTIF_MESSAGE(meshCount++)
     // return geo;
 
     geo->model = newInstancedModel(true);
@@ -128,7 +128,7 @@ JPH::DebugRenderer::Batch JoltVulpine::DebugRenderer::CreateTriangleBatch
 {
     auto *geo = new JoltVulpine::DebugRenderer::Geometry();
 
-    NOTIF_MESSAGE(meshCount++)
+    // NOTIF_MESSAGE(meshCount++)
     // return geo;
 
     geo->model = newInstancedModel(true);
