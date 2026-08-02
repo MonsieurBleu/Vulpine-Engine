@@ -25,7 +25,7 @@ namespace VulpineAssetConvertor
     /**
      * @brief Translate an assimp mesh into a stencil mesh for further conversions
      */
-    void getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPORT_FORMAT format = FORMAT_DEFAULT);
+    void getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, float &scale, VEAC_EXPORT_FORMAT format = FORMAT_DEFAULT);
 
     /**
      * @brief Translate an assimp mesh's bones into a stencil bonemap for further conversions
@@ -41,13 +41,13 @@ namespace VulpineAssetConvertor
      * @brief Convert an assimp mesh to vulpine mesh and saves it inside the given folder
      * @return Saved file name
      */
-    std::string saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder = "", VEAC_EXPORT_FORMAT format = FORMAT_DEFAULT);
+    std::string saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, float &scale, std::string folder = "", VEAC_EXPORT_FORMAT format = FORMAT_DEFAULT);
 
     /**
      * @brief Convert an assimp mesh to vulpine mesh and saves it inside the given folder
      * @return Saved file name
      */
-    std::string saveAsVulpineMesh(aiMesh &mesh, SkeletonRef target, std::string folder = "", VEAC_EXPORT_FORMAT format  = FORMAT_DEFAULT);
+    std::string saveAsVulpineMesh(aiMesh &mesh, SkeletonRef target, float &scale, std::string folder = "", VEAC_EXPORT_FORMAT format  = FORMAT_DEFAULT);
 
 
     /**

@@ -116,7 +116,7 @@ class TimedValue
 };
 
 
-struct Deplacement
+struct Movement
 {
     SoftGoal<vec3> look = {vec3(1, 0, 0), vec3(1, 0, 0)};
     SoftGoal<vec3> direction = {vec3(1, 0, 0), vec3(1, 0, 0)};

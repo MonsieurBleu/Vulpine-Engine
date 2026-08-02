@@ -24,7 +24,7 @@ Component_Init(State3D)
 #define CURRENT_CATEGORY DATA_DYNAMIC
 
 Component(DynamicState3D)
-Component(Deplacement)
+Component(Movement)
 Component(ComplexMovements)
 Component(Gauges)
 

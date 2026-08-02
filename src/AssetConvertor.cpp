@@ -99,7 +99,7 @@ glm::quat toGLM(const aiQuaternion a)
 
 vec3 tmpCompressionScale = vec3(1);
 
-void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPORT_FORMAT format)
+void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, float &scale, VEAC_EXPORT_FORMAT format)
 {
     infos.facesCount = mesh.mNumFaces;
     infos.verticesCount = mesh.mNumVertices;
@@ -138,7 +138,7 @@ void VEAC::getElementMesh(aiMesh &mesh, STENCIL_BaseMeshInfos &infos, VEAC_EXPOR
             o = uvec4(0);
 
             /* POSITION */
-            o |= uvec4(ivec4(round(positions[i]*1e4f), 0) + 0x800000);
+            o |= uvec4(ivec4(round(positions[i]*1e3f*scale), 0) + 0x800000);
 
             float maxdot = 0.f;
             uvec3 cubeN(0.f);
@@ -290,16 +290,10 @@ void VEAC::getElementMeshSkinned(aiMesh &mesh, SkeletonRef target, STENCIL_MeshI
     infos.weightsID = vWid;
 }
 
-std::string saveAsVulpineMesh__BASE(aiMesh &mesh, std::string folder, VEAC_EXPORT_FORMAT format, VulpineMesh_Header &h, STENCIL_MeshInfos &infos)
+std::string saveAsVulpineMesh__BASE(aiMesh &mesh, std::string folder, VEAC_EXPORT_FORMAT format, VulpineMesh_Header &h, STENCIL_MeshInfos &infos, float &scale)
 {
     h.facesCount = infos.facesCount;
     h.VerticesCount = infos.verticesCount;
-
-    h.AABBmax = vec3(mesh.mAABB.mMax.x, mesh.mAABB.mMax.y, mesh.mAABB.mMax.z);
-    h.AABBmin = vec3(mesh.mAABB.mMin.x, mesh.mAABB.mMin.y, mesh.mAABB.mMin.z);
-
-    vec3 maxScale((float)0x00FFFFFF*1e-3);
-    tmpCompressionScale = 0.9f*maxScale/(h.AABBmax - h.AABBmin);
 
     if(format == FORMAT_SANCTIA) h.vertexPacking = COMPRESSED_UVEC4_PACKING;
 
@@ -366,44 +360,67 @@ std::string saveAsVulpineMesh__BASE(aiMesh &mesh, std::string folder, VEAC_EXPOR
     }
 }
 
-std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, SkeletonRef target, std::string folder, VEAC_EXPORT_FORMAT format)
+std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, SkeletonRef target, float &scale, std::string folder, VEAC_EXPORT_FORMAT format)
 {
     VulpineMesh_Header h;
     STENCIL_MeshInfos infos;
 
+    h.AABBmax = vec3(mesh.mAABB.mMax.x, mesh.mAABB.mMax.y, mesh.mAABB.mMax.z);
+    h.AABBmin = vec3(mesh.mAABB.mMin.x, mesh.mAABB.mMin.y, mesh.mAABB.mMin.z);
+
+    float modelScale = max(h.AABBmax.x - h.AABBmin.x, max(h.AABBmax.y - h.AABBmin.y, h.AABBmax.z - h.AABBmin.z));
+    if(modelScale < 6.0) scale = 10.f;
+    else if(modelScale > 60.0) scale = 0.1f;
+    else scale = 1.0;
+
+    h.AABBmax *= scale;
+    h.AABBmin *= scale;
+
     if (mesh.HasBones())
     {
         h.type = VulpineMesh_Type::ELEMENTS_SKINNED;
-        getElementMesh(mesh, infos, format);
+        getElementMesh(mesh, infos, scale, format);
         getElementMeshSkinned(mesh, target, infos);
     }
     else
     {
         h.type = VulpineMesh_Type::ELEMENTS;
-        getElementMesh(mesh, infos, format);
+        getElementMesh(mesh, infos, scale, format);
     }
 
-    return saveAsVulpineMesh__BASE(mesh, folder, format, h, infos);
+    return saveAsVulpineMesh__BASE(mesh, folder, format, h, infos, scale);
 }
 
-std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, std::string folder, VEAC_EXPORT_FORMAT format)
+std::string VEAC::saveAsVulpineMesh(aiMesh &mesh, Stencil_BoneMap &bonesInfosMap, float &scale, std::string folder, VEAC_EXPORT_FORMAT format)
 {
     VulpineMesh_Header h;
     STENCIL_MeshInfos infos;
 
+    h.AABBmax = vec3(mesh.mAABB.mMax.x, mesh.mAABB.mMax.y, mesh.mAABB.mMax.z);
+    h.AABBmin = vec3(mesh.mAABB.mMin.x, mesh.mAABB.mMin.y, mesh.mAABB.mMin.z);
+
+    
+    float modelScale = max(h.AABBmax.x - h.AABBmin.x, max(h.AABBmax.y - h.AABBmin.y, h.AABBmax.z - h.AABBmin.z));
+    if(modelScale < 6.0) scale = 10.f;
+    else if(modelScale > 60.0) scale = 0.1f;
+    else scale = 1.0;
+
+    h.AABBmax *= scale;
+    h.AABBmin *= scale;
+    
     if (mesh.HasBones())
     {
         h.type = VulpineMesh_Type::ELEMENTS_SKINNED;
-        getElementMesh(mesh, infos, format);
+        getElementMesh(mesh, infos, scale, format);
         getElementMeshSkinned(mesh, bonesInfosMap, infos);
     }
     else
     {
         h.type = VulpineMesh_Type::ELEMENTS;
-        getElementMesh(mesh, infos, format);
+        getElementMesh(mesh, infos, scale, format);
     }
 
-    return saveAsVulpineMesh__BASE(mesh, folder, format, h, infos);
+    return saveAsVulpineMesh__BASE(mesh, folder, format, h, infos, scale);
 }
 
 
@@ -1425,6 +1442,8 @@ int assetConvertor(int argc, char **argv)
 
     if (scene->mNumMeshes)
     {
+        float scale = 1.0;
+
         std::string meshesDir = dirName + "/meshes/";
         std::filesystem::create_directory(meshesDir);
 
@@ -1435,7 +1454,7 @@ int assetConvertor(int argc, char **argv)
             std::cout << mesh.mNumVertices << "\n";
             std::cout << mesh.mNumFaces << "\n";
 
-            VEAC::saveAsVulpineMesh(mesh, bonesInfosMap, meshesDir, format);
+            VEAC::saveAsVulpineMesh(mesh, bonesInfosMap, scale, meshesDir, format);
         }
     }
 

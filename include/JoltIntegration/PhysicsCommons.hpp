@@ -50,7 +50,7 @@ namespace JoltVulpine
 
     extern JPH::PhysicsSystem *jPhysicsSystem;
 
-    extern bool useVelocityBasedDeplacement;
+    extern bool useVelocityBasedMovement;
     extern bool enablePhysics;
 
     JPH::BodyInterface &GetBodyInterface();

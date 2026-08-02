@@ -218,11 +218,19 @@ void ObjectGroup::updateMeshesBoundingBox()
     for(auto i : instances)
     if(i.originalModel)
     {
-        // vec3 min1 = (i.instance->modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMin(), 1.0);
-        // vec3 max1 = (i.instance->modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMax(), 1.0);
+        vec3 min1 = i.instance ?
+            (i.instance->modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMin(), 1.0)
+            :
+            (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMin(), 1.0)
+            ;
 
-        vec3 min1 = (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMin(), 1.0);
-        vec3 max1 = (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMax(), 1.0);
+        vec3 max1 = i.instance ?
+            (i.instance->modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMax(), 1.0) 
+            : 
+            (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMax(), 1.0);
+
+        // vec3 min1 = (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMin(), 1.0);
+        // vec3 max1 = (state.modelMatrix * i.originalModel->state.modelMatrix) * vec4(i.originalModel->getVao()->getAABBMax(), 1.0);
 
         minb = min(minb, min1);
         minb = min(minb, max1);

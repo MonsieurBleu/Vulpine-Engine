@@ -39,7 +39,7 @@ TickTimer JoltVulpine::physicInterpolationTick;
 std::mutex JoltVulpine::physicInterpolationMutex;
 bool JoltVulpine::doPhysicInterpolation = true;
 
-bool JoltVulpine::useVelocityBasedDeplacement = false;
+bool JoltVulpine::useVelocityBasedMovement = false;
 bool JoltVulpine::enablePhysics = false;
 
 // JPH::AssertFailedFunction JPH::AssertFailed;

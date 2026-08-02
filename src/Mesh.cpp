@@ -151,10 +151,14 @@ bool MeshModel3D::cull(int layer, int cameraLayers)
     // if(dot(camToCenter, camToCenter) >= 90000.f)
     //     return culled = false;
 
+    
     vec3 scale = vec3(
         length(vec3(m[0])),
         length(vec3(m[1])),
         length(vec3(m[2])));
+
+    // WARNING_MESSAGE(length(vao->getAABBMax() - vao->getAABBMin()))
+    
     float radius = max(length(vao->getAABBMax() * scale), length(vao->getAABBMin() * scale));
     
     for(int i = 0; i < cameraLayers; i++)
