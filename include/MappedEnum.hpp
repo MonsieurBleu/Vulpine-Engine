@@ -3,35 +3,35 @@
 #include <unordered_map>
 #include <string>
 
-#define GENERATE_ENUM(name, ...)                        \
-    enum name                                           \
-    {                                                   \
-        __VA_ARGS__                                     \
-    };                                                  \
-    static std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)}; \
+#define GENERATE_ENUM(name, ...)                                                                                    \
+    enum name                                                                                                       \
+    {                                                                                                               \
+        __VA_ARGS__                                                                                                 \
+    };                                                                                                              \
+    static std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)};               
 
-    #define GENERATE_ENUM_INLINE(name, ...)                        \
-    enum name                                           \
-    {                                                   \
-        __VA_ARGS__                                     \
-    };                                                  \
-    static inline std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)}; \
+    #define GENERATE_ENUM_INLINE(name, ...)                                                                         \
+    enum name                                                                                                       \
+    {                                                                                                               \
+        __VA_ARGS__                                                                                                 \
+    };                                                                                                              \
+    static inline std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)};        
 
-#define GENERATE_ENUM_FAST_REVERSE(name, ...)      \
-    enum name                                           \
-    {                                                   \
-        __VA_ARGS__                                     \
-    };                                                  \
-    static inline const std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)}; \
+#define GENERATE_ENUM_FAST_REVERSE(name, ...)                                                                       \
+    enum name  : unsigned char                                                                                             \
+    {                                                                                                               \
+        __VA_ARGS__                                                                                                 \
+    };                                                                                                              \
+    static inline const std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)};  \
     static inline const std::string name##ReverseMap[] = {MAPGEN_FOR_EACH(REVERSE_MAP_ARG, __VA_ARGS__)};
 
-#define GENERATE_ENUM_TYPE(name, type, ...)      \
-    enum name : type                                    \
-    {                                                   \
-        __VA_ARGS__                                     \
-    };                                                  \
-    static inline const std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)}; \
-
+#define GENERATE_ENUM_TYPE(name, type, ...)                                                                         \
+    enum class name : type                                                                                          \
+    {                                                                                                               \
+        __VA_ARGS__                                                                                                 \
+    };                                                                                                              \
+    static inline const std::unordered_map<std::string, name> name##Map = {MAPGEN_FOR_EACH(MAP_ARG, __VA_ARGS__)};  \
+    static inline const std::string name##ReverseMap[] = {MAPGEN_FOR_EACH(REVERSE_MAP_ARG, __VA_ARGS__)};
 
 #define PARENS ()
 

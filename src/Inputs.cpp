@@ -95,25 +95,48 @@ void InputManager::processEventInput(const GLFWKeyInfo &event)
     {
         if(!handler.activated) continue;
         
-        int handlerCode;
-        int eventCode;
-        if ((handler.keyCode & VULPINE_GAMEPAD_BIT) == 0)
-        {   
-            handlerCode = handler.isScanCode ? glfwGetKeyScancode(handler.keyCode) : handler.keyCode;
-            eventCode = handler.isScanCode ? event.scanCode : event.key;
+        bool keyGood = false;
 
-            // InputManager::lastNonGamepadUseTime = globals.appTime.getElapsedTime();
-        }
-        else {
-            handlerCode = handler.keyCode;
-            eventCode = event.key;
+        if ((handler.keyCode & VULPINE_GAMEPAD_BIT) == 0 and handler.isScanCode)
+        {
+            // auto h = glfwGetKeyName(handler.keyCode, 0);
+            // auto e = glfwGetKeyName(event.key, 0);
+            // keyGood = e and h and !strcmp(e, h);
 
-            // InputManager::lastGamepadUseTime = globals.appTime.getElapsedTime();
-        }
+            keyGood = glfwGetKeyScancode(handler.keyCode) == event.scanCode;
+        }        
+        else
+            keyGood = handler.keyCode == event.key;
 
-        bool modsGood = !handler.mods || handler.mods == event.mods;
+        // if ((handler.keyCode & VULPINE_GAMEPAD_BIT) == 0)
+        // {   
+        //     // handlerCode = handler.isScanCode ? glfwGetKeyScancode(handler.keyCode) : handler.keyCode;
+        //     // eventCode = handler.isScanCode ? event.scanCode : event.key;
 
-        if (handlerCode == eventCode && modsGood && handler.action == event.action)
+        //     if(handler.isScanCode)
+        //     {
+        //         auto h = glfwGetKeyName(handler.keyCode, 0);
+        //         auto e = glfwGetKeyName(event.key, event.scanCode);
+        //         keyGood = e and h and !strcmp(e, h);
+        //     }
+        //     else 
+        //         keyGood = handler.keyCode == event.key;
+
+        //     // InputManager::lastNonGamepadUseTime = globals.appTime.getElapsedTime();
+        // }
+        // else 
+        // {
+        //     // handlerCode = handler.keyCode;
+        //     // eventCode = event.key;
+
+        //     keyGood = handler.keyCode == event.key;
+
+        //     // InputManager::lastGamepadUseTime = globals.appTime.getElapsedTime();
+        // }
+
+        bool modsGood = !handler.mods or handler.mods == event.mods;
+
+        if (keyGood and modsGood and handler.action == event.action)
         {
             if (handler.filter())
             {

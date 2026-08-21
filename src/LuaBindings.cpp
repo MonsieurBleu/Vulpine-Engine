@@ -27,6 +27,7 @@ using namespace glm;
 
 #include <Graphics/ObjectGroup.hpp>
 
+
 vec3 extractEulerAngles(mat4 m)
 {
     vec3 r;
@@ -322,6 +323,7 @@ void VulpineLuaBindings::glm(sol::state &lua)
             ((float, float, float, float), (mat3),  (vec3)),
             (("w"  , "x"  , "y"  , "z") ,  ("rot"), ("euler"))
         )
+        VBIND_ADD_MEMBERS(w, x, y, z)
         VBIND_ADD_OPERATOR_ADD(CURRENT_CLASS_BINDING)
         VBIND_ADD_OPERATOR_SUB(CURRENT_CLASS_BINDING)
         VBIND_ADD_OPERATOR_MUL(CURRENT_CLASS_BINDING, float, vec3)

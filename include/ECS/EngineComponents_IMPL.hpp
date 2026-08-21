@@ -12,6 +12,44 @@
 
 #include <Scripting/ScriptInstance.hpp>
 
+template<> void Component<HierarchyState3D>::ComponentElem::init()
+{
+    if(entity->has<State3D>())
+    {
+        data.position = entity->comp<State3D>().position;
+        data.rotation = entity->comp<State3D>().rotation;
+        data.scale = entity->comp<State3D>().scale;
+        data.isActive = entity->comp<State3D>().isActive;
+    }
+}
+
+COMPONENT_DEFINE_SYNCH(HierarchyState3D)
+{
+    if(child.get() == &parent or !child->has<State3D>() or !parent.has<State3D>())
+        return;
+
+    // copy the state3d to avoid any thread-related issues
+    auto s = child->comp<State3D>(); 
+    const auto &h = child->comp<HierarchyState3D>();
+    const auto &p = parent.comp<State3D>();
+    
+    if(h.type & 0b001)
+        s.position = p.position + (p.rotation * h.position)*p.scale;
+
+    if(h.type & 0b010)
+        s.rotation = p.rotation * h.rotation;
+
+    if(h.type & 0b100)
+        s.scale = h.scale*p.scale;
+
+    // Updating visibility
+    ModelStatus tmp = h.isActive;
+    ManageHideStatus(tmp, p.isActive);
+    s.isActive = tmp;
+
+    setEntityTransform(*child, s);
+}
+
 COMPONENT_DEFINE_REPARENT(EntityGroupInfo)
 {
     // if(!child->has<EntityGroupInfo>())

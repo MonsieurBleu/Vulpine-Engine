@@ -6,6 +6,7 @@
 #include <Globals.hpp>
 
 #include <MathsUtils.hpp>
+#include <MappedEnum.hpp>
 
 using namespace glm;
 
@@ -20,12 +21,36 @@ struct State3D
 {
     vec3 position = vec3(0);
     quat rotation = quat(1, 0, 0, 0);
+    vec3 scale = vec3(1);
+    ModelStatus isActive = ModelStatus::UNDEFINED;
 };
+
+bool operator==(const State3D &a, const State3D &b);
+
 
 /*
     State3D for entites that uses physic interpolation
 */
 typedef Interpolated<State3D> DynamicState3D;
+
+struct HierarchyState3D : State3D
+{
+    GENERATE_ENUM_FAST_REVERSE(SynchType, 
+        NOTHING        ,
+        POS_ONLY       ,
+        ROT_ONLY       ,
+        POS_AND_ROT    ,
+        SCALE_ONLY     ,
+        SCALE_AND_POS  ,
+        SCALE_AND_ROT  ,
+        ALL            ,
+    );
+ 
+    SynchType type = ALL;
+
+    HierarchyState3D(const State3D & s) : State3D(s), type(SynchType::ALL){};
+    HierarchyState3D(const SynchType type = SynchType::ALL) : type(type){};
+};
 
 
 /*

@@ -10,6 +10,11 @@
 #include <Jolt/Physics/Collision/Shape/ConvexHullShape.h>
 #include <Jolt/Physics/Collision/Shape/StaticCompoundShape.h>
 #include <Jolt/Physics/Collision/Shape/RotatedTranslatedShape.h>
+#include <Jolt/Physics/Collision/Shape/ScaledShape.h>
+
+#include <Jolt/Physics/Collision/NarrowPhaseQuery.h>
+#include <Jolt/Physics/Collision/RayCast.h>
+#include <Jolt/Physics/Collision/CastResult.h>
 
 #include <AssetManager.hpp>
 #include <AssetManagerUtils.hpp>
@@ -77,6 +82,33 @@ JPH::BodyInterface & JoltVulpine::GetBodyInterface()
         return JoltVulpine::jPhysicsSystem->GetBodyInterface();
 }
 
+JoltVulpine::RaycastResult JoltVulpine::simplRayCast(glm::vec3 origin, glm::vec3 direction, JoltVulpine::Layers::Categories category)
+{
+	JoltVulpine::RaycastResult r;
+
+	JPH::RRayCast ray;
+	JPH::RayCastResult result;
+
+	ray.mOrigin = Vvec3(origin);
+	ray.mDirection = Vvec3(direction);
+
+	bool hit = JoltVulpine::jPhysicsSystem->GetNarrowPhaseQuery().CastRay(
+		ray, 
+		result,
+		JPH::BroadPhaseLayerFilter(),
+		JoltVulpine::CategoryCollideFilter(category)
+	);
+
+	if(hit)
+	{
+		r.hit = true;
+		r.point = Vvec3(ray.GetPointOnRay(result.mFraction));
+		r.entity = (Entity*)JoltVulpine::jPhysicsSystem->GetBodyInterface().GetUserData(result.mBodyID);
+	}
+
+	return r;
+}
+
 template<> void Component<JoltBody>::ComponentElem::clean()
 {
 	JPH::BodyID *bodies = &data;
@@ -102,11 +134,13 @@ DATA_READ_FUNC_ENTITY(JoltBody)
 
 	Vvec3 position = Vvec3(0);
 	Vquat rotation = Vquat(JPH::Quat::sIdentity());
+	Vvec3 scale = Vvec3(1);
 
 	if(e->has<State3D>())
 	{
 		position = e->comp<State3D>().position;
 		rotation = e->comp<State3D>().rotation;
+		scale = e->comp<State3D>().scale;
 	}
 
 	while(NEW_VALUE)
@@ -160,7 +194,7 @@ DATA_READ_FUNC_ENTITY(JoltBody)
 				{
 					e->set<KynematicFlag>(true);
 					settings.mMotionType = JPH::EMotionType::Kinematic;
-					e->set<DynamicState3D>(DynamicState3D({position, rotation}, {position, rotation}));
+					// e->set<DynamicState3D>(DynamicState3D({position, rotation}, {position, rotation}));
 				}
 				else
 				{
@@ -364,9 +398,16 @@ DATA_READ_FUNC_ENTITY(JoltBody)
 		settings.mObjectLayer = JPH::ObjectLayerPairFilterMask::sGetObjectLayer(collideCategory, collideWIth);
 		settings.mPosition = position;
 		settings.mRotation = rotation;
+
 		JPH::Body *body = JoltVulpine::jPhysicsSystem->GetBodyInterface().CreateBody(settings);
 
 		// settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
+		
+		if(scale != Vvec3(1.))
+			JoltVulpine::jPhysicsSystem->GetBodyInterface().SetShape(
+				body->GetID(), 
+				body->GetShape()->ScaleShape(scale).Get(), true, JPH::EActivation::Activate)
+			;
 
 		if(sensorMode) 
 			data.sensors[sensorCount-1] = body->GetID();

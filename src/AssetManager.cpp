@@ -259,6 +259,16 @@ MeshModel3D& Loader<MeshModel3D>::loadFromInfos()
             if(*buff->read() == 't') r.defaultMode = GL_PATCHES;
         }
         else
+        if(!strcasecmp(member, "sort"))
+        {
+            r.sorted = *buff->read() == 't';
+        }
+        else
+        if(!strcasecmp(member, "depthWrite"))
+        {
+            r.depthWrite = *buff->read() == 't';
+        }
+        else
             FILE_ERROR_MESSAGE(name, "ModelRef member '" ,  member ,  "' not recognized.");
     } 
 

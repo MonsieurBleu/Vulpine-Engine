@@ -13,6 +13,8 @@ enum class ModelStatus : uint8_t
     UNDEFINED
 };
 
+void ManageHideStatus(ModelStatus &children, ModelStatus parent);
+
 using namespace glm;
 // TODO : FIX LOOKAT
 class ModelState3D

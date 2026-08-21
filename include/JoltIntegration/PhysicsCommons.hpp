@@ -28,6 +28,8 @@
 
 #include <MappedEnum.hpp>
 
+class Entity;
+
 namespace JoltVulpine
 {
     extern std::mutex physicsMutex;
@@ -61,7 +63,9 @@ namespace JoltVulpine
             Categories,
             ENVIRONEMENT,
             HIT_ZONE,
-            PICK_UP
+            PICK_UP,
+            EDITOR1,
+            EDITOR2
         )
     }
 
@@ -75,6 +79,19 @@ namespace JoltVulpine
         }
     };
     
+    class CategoryCollideFilter : public JPH::ObjectLayerFilter
+    {
+        public :
+        Layers::Categories category;
+        CategoryCollideFilter(Layers::Categories category) : ObjectLayerFilter(), category(category){};
+
+        virtual bool ShouldCollide(JPH::ObjectLayer inLayer) const override
+        {
+            auto layer = JPH::ObjectLayerPairFilterMask::sGetObjectLayer(1<<category, 1<<category);
+            return JoltVulpine::jPhysicsSystem->GetObjectLayerPairFilter().ShouldCollide(inLayer, layer);
+        }
+    };
+
     class BodyExcludeFilter : public JPH::BodyFilter
     {
         public : 
@@ -87,6 +104,15 @@ namespace JoltVulpine
                 return  inBodyID != b;
             }
     };
+
+    struct RaycastResult
+    {
+        bool hit = false;
+        Entity *entity = nullptr;
+        glm::vec3 point = glm::vec3(0);
+    };
+
+    RaycastResult simplRayCast(glm::vec3 origin, glm::vec3 direction, Layers::Categories category);
 };
 
 #define GLM_TO_JOLT_TYPE_ALIGNED(name, joltName, additional) \
