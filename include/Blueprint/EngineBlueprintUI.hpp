@@ -11,26 +11,25 @@
 
 namespace VulpineColorUI
 {
-    #define BASE_ALPHA 0.95f*255.f
-    // #define ALPHA2     0.625f*255.f
-    #define ALPHA2     0.2*255.f
+    #define BASE_ALPHA 0.95f
+    #define ALPHA2     0.5f
 
-    inline vec4 LightBackgroundColor1 = vec4(242, 234,  222, BASE_ALPHA)/255.f;
-    inline vec4 LightBackgroundColor2 = vec4(242, 234,  222, ALPHA2*0.f)/255.f;
+    inline vec4 LightBackgroundColor1       = vec4(vec3("#f2eade"_rgb), BASE_ALPHA);
+    inline vec4 LightBackgroundColor2       = vec4(vec3("#f2eade"_rgb), ALPHA2);
 
-    inline vec4 DarkBackgroundColor1  = vec4( 70,  63,  60, BASE_ALPHA)/255.f;
-    inline vec4 DarkBackgroundColor1Opaque  = vec4( 70,  63,  60, 255)/255.f;    
-    inline vec4 DarkBackgroundColor2  = 0.5f*vec4( 53,  49,  48, BASE_ALPHA)/255.f;
-    inline vec4 DarkBackgroundColor2Opaque  = 0.5f*vec4( 53,  49,  48, 255 * 2)/255.f;
+    inline vec4 DarkBackgroundColor1        = vec4(vec3("#463f3c"_rgb), BASE_ALPHA);
+    inline vec4 DarkBackgroundColor1Opaque  = vec4(vec3("#463f3c"_rgb), 1);    
+    inline vec4 DarkBackgroundColor2        = 0.5f*vec4(vec3("#353130"_rgb), BASE_ALPHA);
+    inline vec4 DarkBackgroundColor2Opaque  = vec4(0.5f*vec3("#353130"_rgb), 1);
 
-    inline vec4 HightlightColor1 = vec4(253, 103,  6,   BASE_ALPHA)/255.f;
-    inline vec4 HightlightColor2 = vec4(44, 211,  175,  BASE_ALPHA)/255.f;
-    inline vec4 HightlightColor3 = vec4(217, 38,  144,  BASE_ALPHA)/255.f;
-    inline vec4 HightlightColor4 = vec4(249, 192,  25,  BASE_ALPHA)/255.f;
-    inline vec4 HightlightColor5 = vec4(170, 60,   230, BASE_ALPHA)/255.f;
-
-    inline vec4 HightlightColor6 = vec4(44, 211, 91, BASE_ALPHA)/255.f;
-    inline vec4 HightlightColor7 = vec4(211, 44, 63, BASE_ALPHA)/255.f;
+    inline vec4 HightlightColorOrange = vec4(vec3("#fd6706"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorCyan = vec4(vec3("#2cd3af"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorPink = vec4(vec3("#d92690"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorYellow = vec4(vec3("#f9c019"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorPurple = vec4(vec3("#aa3ce6"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorGreen = vec4(vec3("#2cd35b"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorRed = vec4(vec3("#d32c3f"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorBlue = vec4(vec3("#2c74d3"_rgb), BASE_ALPHA);
 }   
 
 namespace VulpineBlueprintUI

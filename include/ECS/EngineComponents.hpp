@@ -21,8 +21,15 @@ void setEntityTransform(Entity &e, State3D s);
 
 Component_Init(EntityGroupInfo)
 Component_Init(State3D)
+
+/***************** ECS BASE HIERARCHICAL VULPINE COMPONENTS *****************/
+
+#undef CURRENT_CATEGORY
+#define CURRENT_CATEGORY DATA_HIERARCHY
 Component_Synch(HierarchyState3D)
 template<> void Component<HierarchyState3D>::ComponentElem::init();
+Component(EntitySpawner)
+
 
 /***************** ECS BASE DYNAMIC VULPINE COMPONENTS *****************/
 

@@ -107,10 +107,12 @@ constexpr auto type_name() {
     #define DATA_WRITE_FUNC_INIT(T) DATA_WRITE_FUNC(T) { DATA_WRITE_INIT(T)
     #define DATA_WRITE_END_FUNC  DATA_WRITE_END; }
 
-    #define FTXTP_WRITE_ELEMENT(data, elem) \
-        {out->Entry(); \
-        WRITE_NAME(elem, out); \
-        FastTextParser::write<decltype(data.elem)>(data.elem, out->getReadHead());}
+    #define FTXTP_WRITE_ELEMENT(data, elem) { \
+        decltype(data) def = {}; \
+        if(data.elem != def.elem){ \
+            out->Entry(); \
+            WRITE_NAME(elem, out); \
+            FastTextParser::write<decltype(data.elem)>(data.elem, out->getReadHead());}}
     
     #define FTXTP_WRITE_ELEMENT_STRUCT(data, elem) \
         {out->Entry(); \
@@ -299,7 +301,7 @@ constexpr auto type_name() {
 
 
         
-    #define AUTOGEN_DATA_WRITE_FUNC_STRUCT(T, SimpleTypes, Structs) \
+    #define AUTOGEN_DATA_WRITE_FUNC_STRUCT_AN(T, SimpleTypes, Structs) \
         DATA_WRITE_FUNC(T) \
             { \
                 MAPGEN_FOR_EACH(FTXTP_WRITE_ELEMENT_AUTOGEN, UNPARENT SimpleTypes) \
@@ -326,6 +328,28 @@ constexpr auto type_name() {
                 DATA_READ_END; \
             }
 
+
+    /*
+        Generate Automaticlly the read and write functions for DataLoader<T>.
+
+        AN means anonymous, the type name will not be written
+    */
+    #define AUTOGEN_DATA_RW_FUNC_STRUCT_AN(T, SimpleTypes, Structs) \
+        AUTOGEN_DATA_WRITE_FUNC_STRUCT_AN(T, SimpleTypes, Structs) \
+        AUTOGEN_DATA_READ_FUNC_STRUCT(T, SimpleTypes, Structs) 
+
+
+
+
+    #define AUTOGEN_DATA_WRITE_FUNC_STRUCT(T, SimpleTypes, Structs) \
+        DATA_WRITE_FUNC(T) \
+            { \
+                DATA_WRITE_INIT(T); \
+                MAPGEN_FOR_EACH(FTXTP_WRITE_ELEMENT_AUTOGEN, UNPARENT SimpleTypes) \
+                MAPGEN_FOR_EACH(FTXTP_WRITE_ELEMENT_AUTOGEN_STRUCT, UNPARENT Structs) \
+                /*DATA_WRITE_END;*/ \
+                return out; \
+            }
 
     /*
         Generate Automaticlly the read and write functions for DataLoader<T>.

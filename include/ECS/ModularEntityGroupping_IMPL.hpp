@@ -120,12 +120,13 @@ void ComponentModularity::synchronizeChildren(EntityRef parent)
     if(parent->has<EntityGroupInfo>())
         for(auto &c : parent->comp<EntityGroupInfo>().children)
         {
-            synchronizeChildren(c);
+            // synchronizeChildren(c);
             
             for(auto &i : SynchFuncs)
                 if(c->state[i.ComponentID])
                     i.element(*parent, c);
 
+            synchronizeChildren(c);
         }
 }
 

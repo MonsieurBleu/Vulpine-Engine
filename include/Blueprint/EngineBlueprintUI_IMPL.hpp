@@ -72,9 +72,9 @@ EntityRef  VulpineBlueprintUI::Toggable(
             .setbackgroundColor1(vec4(color, 1.))
             // .setbackgroundColor2(VulpineColorUI::LightBackgroundColor2)
             // .setbackgroundColor2(vec4(rgb2hsv(hsv2rgb(vec3(color)) * vec3(1, .5, 2)), color.a*.5))
-            .setbackgroundColor2(vec4(color, ALPHA2/255.f))
+            .setbackgroundColor2(vec4(color, ALPHA2))
 
-            .settextColor1(VulpineColorUI::DarkBackgroundColor1)
+            .settextColor1(VulpineColorUI::DarkBackgroundColor2Opaque)
             .settextColor2(VulpineColorUI::LightBackgroundColor1)
             // .settextColor2(VulpineColorUI::DarkBackgroundColor1)
         , WidgetButton(WidgetButton::Type::CHECKBOX, ifunc, ufunc)
@@ -84,6 +84,14 @@ EntityRef  VulpineBlueprintUI::Toggable(
         e->set<WidgetSprite>(WidgetSprite(icon));
     else
         e->set<WidgetText>(UFTconvert.from_bytes(name));
+
+    e->comp<WidgetBox>().specialFittingScript = [](Entity *p, Entity *e)
+    {
+        e->comp<WidgetStyle>().setbackGroundStyle(
+            e->comp<WidgetBox>().isUnderCursor ? UiTileType::SQUARE : UiTileType::SQUARE_ROUNDED
+        );
+    };
+
 
     return e;
 }
@@ -103,7 +111,7 @@ EntityRef VulpineBlueprintUI::TextInput(
             .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1)
             .setbackgroundColor2(VulpineColorUI::DarkBackgroundColor2)
             .settextColor1(VulpineColorUI::LightBackgroundColor1)
-            .settextColor2(VulpineColorUI::HightlightColor1)
+            .settextColor2(VulpineColorUI::HightlightColorOrange)
         , WidgetText(U"...")
     );
 
@@ -138,7 +146,7 @@ EntityRef VulpineBlueprintUI::TextInput(
             .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1)
             .setbackgroundColor2(VulpineColorUI::DarkBackgroundColor2)
             .settextColor1(VulpineColorUI::LightBackgroundColor1)
-            .settextColor2(VulpineColorUI::HightlightColor1)
+            .settextColor2(VulpineColorUI::HightlightColorOrange)
         , WidgetText(U" ")
     );
 
@@ -332,8 +340,8 @@ EntityRef VulpineBlueprintUI::NamedEntry(
 
     nameRatioSize = nameRatioSize*2. - 1.;
 
-    vec2 titleRange = vec2(-1, nameRatioSize-0.01);
-    vec2 entryRange = vec2(nameRatioSize+0.01, 1);
+    vec2 titleRange = vec2(-1, nameRatioSize);
+    vec2 entryRange = vec2(nameRatioSize, 1);
     vec2 d = vec2(-1, 1);
 
     entry->comp<WidgetBox>().set(
@@ -361,7 +369,7 @@ EntityRef VulpineBlueprintUI::NamedEntry(
                 , WidgetText(name)
                 , WidgetStyle()
                     .setbackgroundColor1(color)
-                    .settextColor1(VulpineColorUI::DarkBackgroundColor1)
+                    .settextColor1(VulpineColorUI::DarkBackgroundColor2Opaque)
                     .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
 
                     // .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor2)
@@ -552,7 +560,7 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
             .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1)
             .setbackgroundColor2(VulpineColorUI::DarkBackgroundColor2)
             .settextColor1(VulpineColorUI::LightBackgroundColor1)
-            .settextColor2(VulpineColorUI::HightlightColor1)
+            .settextColor2(VulpineColorUI::HightlightColorOrange)
         , WidgetText(U"")
     );
 
@@ -799,7 +807,7 @@ EntityRef VulpineBlueprintUI::ColoredConstEntry(
                 , WidgetStyle()
                     .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
                     // .setbackgroundColor1(color)
-                    .settextColor1(VulpineColorUI::DarkBackgroundColor1)
+                    .settextColor1(VulpineColorUI::DarkBackgroundColor2Opaque)
                     // .settextColor1(color)
                     .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
                     // .setbackgroundColor1(color)
@@ -841,7 +849,7 @@ void VulpineBlueprintUI::AddToSelectionMenu(
         , WidgetStyle()
             .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
             .setbackgroundColor2(VulpineColorUI::LightBackgroundColor2)
-            .settextColor1(VulpineColorUI::DarkBackgroundColor1)
+            .settextColor1(VulpineColorUI::DarkBackgroundColor2Opaque)
             .settextColor2(VulpineColorUI::LightBackgroundColor1)
             .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
         , WidgetBackground()
@@ -854,6 +862,13 @@ void VulpineBlueprintUI::AddToSelectionMenu(
         title->set<WidgetText>(WidgetText(UFTconvert.from_bytes(name)));
 
     title->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
+
+    title->comp<WidgetBox>().specialFittingScript = [](Entity *p, Entity *e)
+    {
+        e->comp<WidgetStyle>().setbackGroundStyle(
+            e->comp<WidgetBox>().isUnderCursor ? UiTileType::SQUARE : UiTileType::SQUARE_ROUNDED
+        );
+    };
 
     ComponentModularity::addChild(*titlesParent, title);
     ComponentModularity::addChild(*infosParent , info);
@@ -988,12 +1003,14 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
                     );
 
                     button->comp<WidgetStyle>().setbackgroundColor1(mix(color, VulpineColorUI::LightBackgroundColor1, 0.25f));
+                    button->comp<WidgetStyle>().setbackgroundColor2(mix(color, VulpineColorUI::LightBackgroundColor2, 0.5f));
 
                     i.second->comp<WidgetBox>()
                         .set(vec2(-1, 1), vec2(1, 5))
                         .type = WidgetBox::Type::FOLLOW_SIBLINGS_BOX;
                     
                     i.second->comp<WidgetBox>().useClassicInterpolation = true;
+                    i.second->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
                 }
 
 
@@ -1143,7 +1160,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
         , UI_BASE_COMP
         , WidgetStyle()
             // .setautomaticTabbing(1)
-            // .setbackgroundColor1(VulpineColorUI::HightlightColor1)
+            // .setbackgroundColor1(VulpineColorUI::HightlightColorOrange)
         // , WidgetBackground()
         , WidgetBox([](Entity *parent, Entity *child){
             auto &box = child->comp<WidgetBox>();
@@ -1171,6 +1188,7 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
     );
 
     listScreen->comp<WidgetBox>().set(vec2(-1, 1), vec2(-1, -0.95 - verticalLenghtReduction*0.05));
+    listScreen->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
 
     scrollZone->comp<WidgetBox>().set(vec2(-1, 1), vec2(-0.925 -0.05*verticalLenghtReduction, 1));
 

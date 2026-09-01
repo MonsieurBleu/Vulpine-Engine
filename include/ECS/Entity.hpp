@@ -52,6 +52,7 @@ GENERATE_ENUM(ComponentCategory,
     ENTITY_LIST,
     DATA,               // Default category, plan data with no important dependencies in the engine
     DATA_DYNAMIC,       // Same as above, but used to separate component used by non static entity and statics ones
+    DATA_HIERARCHY,     // Same as DATA, but for component who only do hierarchy based operations
     UI,                 // Reserverd for UI
     GRAPHIC,            // Components that contains graphic related elements, should only be manipulated from the main thread
     GRAPHIC_DYNAMIC,    // Components that contains graphic relates elements that only a dynamic/moving object would have, like animation state for example

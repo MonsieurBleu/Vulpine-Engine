@@ -53,6 +53,19 @@ struct HierarchyState3D : State3D
 };
 
 
+struct EntitySpawner
+{
+    struct info
+    {
+        std::string name = "";
+        std::string cond = "";
+        HierarchyState3D state;
+    };
+
+    std::vector<info> onLoading;
+    std::vector<info> onTrigger;
+};
+
 /*
     Soft Goals represent any physical or logical properties that an entity wants to adcheive.
 */

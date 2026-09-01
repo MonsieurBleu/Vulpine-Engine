@@ -587,7 +587,7 @@ Flag& Loader<Flag>::loadFromInfos()
 {
     EARLY_RETURN_IF_LOADED
     LOADER_ASSERT(NEW_VALUE)
-    
+
     std::string flagListName = buff->read();
 
     r = Loader<Flags>::get(flagListName)[name];

@@ -153,7 +153,6 @@ template<> void Component<WidgetText>::ComponentElem::clean()
     globals.getScene2D()->remove(data.mesh);
 }
 
-
 COMPONENT_DEFINE_SYNCH(WidgetBox)
 {
     // if(&parent == child.get() && child->comp<EntityGroupInfo>().parent)
@@ -196,12 +195,26 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
                 id++;
             }
 
-            int nbLine = parent.comp<WidgetStyle>().automaticTabbing;
+            int nbLine = abs(parent.comp<WidgetStyle>().automaticTabbing);
             int nbRow = ceil((float)parentGroup.children.size()/(float)nbLine);
+
+            // if(parent.comp<WidgetStyle>().automaticTabbing < 0)
+            // {
+            //     nbRow = max(nbRow, -parent.comp<WidgetStyle>().automaticTabbing);
+            // }
 
             vec2 idim = 1.f/vec2(nbRow, nbLine);
             ivec2 tabID(id/nbLine, id%nbLine);
+
+            if(parent.comp<WidgetStyle>().automaticTabbing < 0)
+            {
+                tabID = vec2(tabID.y, tabID.x);
+                idim = vec2(idim.y, idim.x);
+            } 
+
             vec2 tabCoord = vec2(tabID)*idim;
+
+                
 
             vec2 screen(globals.windowSize());
             if(screen.x > screen.y)
@@ -217,7 +230,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
             vec2 scale = screen/(parentBox.max - parentBox.min)*0.5f;
 
-            vec2 space = 1.25f*0.0075f*scale*WidgetBox::tabbingSpacingScale;
+            vec2 space = 0.0075f*scale*WidgetBox::tabbingSpacingScale;
 
             if(parent.has<WidgetStyle>() && !parent.comp<WidgetStyle>().useInternalSpacing)
                 space = vec2(0);
@@ -301,6 +314,9 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         box.min += off;
         box.max += off;
 
+        // box.smoothingAnimationSpeed *= parentBox.smoothingAnimationSpeed;
+        if(parentBox.smoothingAnimationSpeed <= 0.f) box.smoothingAnimationSpeed = 0.f;
+
         // box.min = max(box.displayRangeMin, box.min);
         // box.max = max(box.displayRangeMin, box.max);
 
@@ -325,15 +341,25 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     // else
     //     std::cout << "parent - child  " << box.wasUninitializedLastSynch << "\n";
 
+
+
     /********** APPLYING SMOOTHING ON DISPLAY **********/
 
     float time = globals.appTime.getElapsedTime();
+
+    float a = box.smoothingAnimationSpeed == 0.f ?
+        1. :smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*box.smoothingAnimationSpeed*2.f);
 
     if(
         // tmpMin != vec2(-1, -1) && tmpMax != vec2(1, 1) &&
         
         (box.min != tmpMin || box.max != tmpMax)
         // || box.lastChangeTime == time
+
+        // and
+        // box.displayMin != vec2(UNINITIALIZED_FLOAT)
+        // and
+        // box.displayMax != vec2(UNINITIALIZED_FLOAT)
         )
     {
         box.lastChangeTime = time;
@@ -349,10 +375,50 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
         }
         else
         {
-            box.lastMin = tmpMin;
-            box.lastMax = tmpMax;
+            // if(box.useClassicInterpolation and child->has<WidgetText>() and child->comp<WidgetText>().text == U"New Folder")
+            //     ERROR_MESSAGE(
+            //         PRINTVAR(box.displayMin),
+            //         PRINTVAR(box.lastMin), 
+            //         PRINTVAR(box.min), 
+            //         PRINTVAR(tmpMin), 
+            //         PRINTVAR(a), 
+            //         PRINTVAR(&parent == child.get())
+            //     )
+
+            if(box.displayMin == vec2(UNINITIALIZED_FLOAT) or box.displayMax == vec2(UNINITIALIZED_FLOAT))
+            {
+                box.lastMin = (box.min + box.max)*0.5f;
+                box.lastMax = (box.min + box.max)*0.5f;
+
+                // box.displayMin = box.min;
+                // box.displayMax = box.max;
+            }
+            else
+            {
+                // box.lastMin = box.min;
+                // box.lastMax = box.max;
+
+                box.lastMin = box.displayMin;
+                box.lastMax = box.displayMax;
+            }
+
+            // box.lastMin = tmpMin;
+            // box.lastMax = tmpMax;
+
+            // if(box.useClassicInterpolation and child->has<WidgetText>() and child->comp<WidgetText>().text == U"New Folder")
+            //     NOTIF_MESSAGE(
+            //         PRINTVAR(box.displayMin),
+            //         PRINTVAR(box.lastMin), 
+            //         PRINTVAR(box.min), 
+            //         PRINTVAR(tmpMin), 
+            //         PRINTVAR(a), 
+            //         PRINTVAR(&parent == child.get())
+            //     )
         }
     }
+
+    // if(&parent == child.get())
+    //     return;
 
     // if(parent.comp<WidgetBox>().initMax.x == UNINITIALIZED_FLOAT)
     // {
@@ -381,22 +447,31 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     // if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
     //     return;
 
-    if(hidden) return;
+    // if(hidden) return;
 
-    float a = WidgetBox::smoothingAnimationSpeed == 0.f ?
-        1. :smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*WidgetBox::smoothingAnimationSpeed);
 
-    if(a < 1. && Loader<ScriptInstance>::loadingInfos.find("WidgetBox_SmoothSync") != Loader<ScriptInstance>::loadingInfos.end())
-    {
-        Loader<ScriptInstance>::get("WidgetBox_SmoothSync").run(box.lastMin, box.lastMax, box.min, box.max, a, (int)box.useClassicInterpolation);
-        box.displayMin = threadState["RETURN_vec2_1"];
-        box.displayMax = threadState["RETURN_vec2_2"];
-    }
-    else
-    {
-        box.displayMin = box.min;
-        box.displayMax = box.max;
-    }
+    // if(box.displayMin == vec2(UNINITIALIZED_FLOAT) or box.displayMax == vec2(UNINITIALIZED_FLOAT))
+    // {
+    //     box.displayMin = box.lastMax;
+    //     box.displayMax = box.lastMin;
+    // }
+    // else
+    // {
+    //     vec2 speed = vec2(globals.appTime.getDelta())*0.25f;
+    //     box.displayMin = box.displayMin + sign(box.min-box.displayMin)*min(speed, abs(box.min-box.displayMin));
+    //     box.displayMax = box.displayMax + sign(box.max-box.displayMax)*min(speed, abs(box.max-box.displayMax));
+    // }
+
+    box.displayMin = mix(box.lastMin, box.min, a);
+    box.displayMax = mix(box.lastMax, box.max, a);
+    
+
+    // if(box.useClassicInterpolation and a < 1.f and child->has<WidgetText>() and child->comp<WidgetText>().text == U"New Folder")
+    //     WARNING_MESSAGE(PRINTVAR(box.lastMin), PRINTVAR(box.min), PRINTVAR(child->ids[0]));
+
+
+    // box.displayMin = box.min;
+    // box.displayMax = box.max;
 
     box.displayMin = max(box.displayRangeMin, box.displayMin);
     box.displayMax = max(box.displayRangeMin, box.displayMax);
@@ -405,26 +480,14 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     box.displayMax = min(box.displayRangeMax, box.displayMax);
 
     box.displayMin = min(box.displayMin, box.displayMax);
-    // vec2 mintmp = min(box.displayMin, box.displayMax);
-    // vec2 maxtmp = max(box.displayMin, box.displayMax);
-    // box.displayMin = mintmp;
-    // box.displayMax = maxtmp;
-    
-
-    // if(box.displayRangeMax != vec2(UNINITIALIZED_FLOAT))
-    // {
-    //     std::cout << "MAX = " << box.displayRangeMax.y << "\t";
-    //     std::cout << "RESULT = " << box.displayMax.y << "\n";
-    // }
-
-    // if(hidden) return;
 
     /*
         TODO : move this into a system
     */
     /********** APPLYING DISPLAY VALUES ON ALL RELATED COMPONENTS **********/
 
-
+    if(hidden) return;
+    
     vec2 scale = vec2(box.displayMax - box.displayMin);
     vec2 pos = box.displayMin * vec2(1, -1);
 
@@ -510,6 +573,397 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
     }
 }
 
+
+// COMPONENT_DEFINE_SYNCH(WidgetBox)
+// {
+//     // if(&parent == child.get() && child->comp<EntityGroupInfo>().parent)
+//     //     return;
+
+    
+//     auto &box = child->comp<WidgetBox>();
+//     box.synchCounter ++;
+
+//     bool hidden = child->has<WidgetState>() && child->comp<WidgetState>().status == ModelStatus::HIDE;
+
+//     vec2 tmpMin = box.min;
+//     vec2 tmpMax = box.max;
+
+//     vec2 off = child.get() != &parent && parent.has<WidgetBox>() ? parent.comp<WidgetBox>().scrollOffset : vec2(0);
+
+//     /********** MODYFING BOX VALUES **********/
+//     if(&parent != child.get())
+//     {
+//         auto &parentBox = parent.comp<WidgetBox>();
+
+//         if(!box.staticDepth)
+//             box.depth = parentBox.depth+0.0001;
+
+//         box.useClassicInterpolation = box.useClassicInterpolation ? true : parentBox.useClassicInterpolation;
+
+//         if(box.specialFittingScript)
+//             box.specialFittingScript(&parent, child.get());
+
+//         if(parent.has<WidgetStyle>() && parent.comp<WidgetStyle>().automaticTabbing != 0)
+//         {
+//             int id = 0;
+//             auto &parentGroup = parent.comp<EntityGroupInfo>();
+
+//             for(auto &e : parentGroup.children)
+//             {
+//                 if(e.get() == child.get())
+//                     break;
+
+//                 id++;
+//             }
+
+//             int nbLine = abs(parent.comp<WidgetStyle>().automaticTabbing);
+//             int nbRow = ceil((float)parentGroup.children.size()/(float)nbLine);
+
+//             // if(parent.comp<WidgetStyle>().automaticTabbing < 0)
+//             // {
+//             //     nbRow = max(nbRow, -parent.comp<WidgetStyle>().automaticTabbing);
+//             // }
+
+//             vec2 idim = 1.f/vec2(nbRow, nbLine);
+//             ivec2 tabID(id/nbLine, id%nbLine);
+
+//             if(parent.comp<WidgetStyle>().automaticTabbing < 0)
+//             {
+//                 tabID = vec2(tabID.y, tabID.x);
+//                 idim = vec2(idim.y, idim.x);
+//             } 
+
+//             vec2 tabCoord = vec2(tabID)*idim;
+
+                
+
+//             vec2 screen(globals.windowSize());
+//             if(screen.x > screen.y)
+//             {
+//                 screen.x = screen.y/screen.x;
+//                 screen.y = 1;
+//             }
+//             else
+//             {
+//                 screen.y = screen.x/screen.y;
+//                 screen.x = 1;
+//             }
+
+//             vec2 scale = screen/(parentBox.max - parentBox.min)*0.5f;
+
+//             vec2 space = 0.0075f*scale*WidgetBox::tabbingSpacingScale;
+
+//             if(parent.has<WidgetStyle>() && !parent.comp<WidgetStyle>().useInternalSpacing)
+//                 space = vec2(0);
+
+//             box.initMin = tabCoord + space;
+//             box.initMax = tabCoord - space + idim;
+
+//             box.initMin = box.initMin*2.f - 1.f;
+//             box.initMax = box.initMax*2.f - 1.f;
+//         }
+
+//         vec2 parentMax(+1);
+//         vec2 parentMin(-1);
+
+//         switch (box.type)
+//         {
+//             case WidgetBox::Type::FOLLOW_PARENT_BOX :
+//                 parentMax = parentBox.max;
+//                 parentMin = parentBox.min;
+//                 break;
+
+//             case WidgetBox::Type::FOLLOW_SIBLINGS_BOX :
+//                 parentMax = parentBox.childrenMax;
+//                 parentMin = parentBox.childrenMin;
+
+//                 if(box.synchCounter < 25)
+//                 {
+//                     parentMax = parentMin = vec2(0);
+//                     // NOTIF_MESSAGE("TYO");
+//                 }
+//                 break;
+
+//             default: break;
+//         }
+
+//         vec2 parentScale = (parentBox.max - parentBox.min)*0.5f;
+
+//         vec2 size = (box.initMax - box.initMin) * parentScale;
+//         // vec2 pos = (parentMax + parentMin)*0.5f + box.initMin * (parentMax - parentMin)*0.5f;
+//         // vec2 pos = (parentMax + parentMin)*0.5f + box.initMin * parentScale;
+//         vec2 pos = (parentBox.max + parentBox.min)*0.5f + box.initMin * parentScale;
+
+//         box.min = pos;
+//         box.max = pos + size;
+
+//         box.min += step(box.min, vec2(1)) * (parentMax - parentBox.max);
+//         box.max += step(box.min, vec2(1)) * (parentMax - parentBox.max);
+
+//         box.min -= step(-box.max, vec2(1)) * (parentBox.min - parentMin);
+//         box.max -= step(-box.max, vec2(1)) * (parentBox.min - parentMin);
+
+//         if(!hidden)
+//         {
+//             parentBox.childrenMax = max(parentBox.childrenMax, box.max);
+//             parentBox.childrenMax = max(parentBox.childrenMax, box.min);
+//             // parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMax);
+//             // parentBox.childrenMax = max(parentBox.childrenMax, box.childrenMin);
+
+//             parentBox.childrenMin = min(parentBox.childrenMin, box.max);
+//             parentBox.childrenMin = min(parentBox.childrenMin, box.min);
+//             // parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMax);
+//             // parentBox.childrenMin = min(parentBox.childrenMin, box.childrenMin);
+
+
+//         }
+
+//         if(parentBox.displayRangeMin != vec2(-UNINITIALIZED_FLOAT))
+//         {
+//             box.displayRangeMin = parentBox.displayRangeMin;
+//             // box.displayRangeMin = max(box.displayRangeMin, parentBox.displayRangeMin);
+//         }
+
+
+//         if(parentBox.displayRangeMax != vec2(UNINITIALIZED_FLOAT))
+//         {
+//             box.displayRangeMax = parentBox.displayRangeMax;
+//             // box.displayRangeMax = min(box.displayRangeMax, parentBox.displayRangeMax);
+//         }
+
+
+//         box.min += off;
+//         box.max += off;
+
+//         // box.min = max(box.displayRangeMin, box.min);
+//         // box.max = max(box.displayRangeMin, box.max);
+
+//         // box.min = min(box.displayRangeMax, box.min);
+//         // box.max = min(box.displayRangeMax, box.max);
+
+//     }
+//     else
+//     {
+//         // box.min = clamp(box.min, box.clampEdgeMin, box.childrenMax);
+//         // box.max = clamp(box.max, box.clampEdgeMin, box.childrenMax);
+
+//         box.childrenMax = box.max;
+//         box.childrenMin = box.min;
+//         // box.max = box.initMax;
+//         // box.min = box.initMin;
+
+//     }
+
+//     // if(&parent != child.get())
+//     //     std::cout << "parent - parent " << box.wasUninitializedLastSynch << "\n";
+//     // else
+//     //     std::cout << "parent - child  " << box.wasUninitializedLastSynch << "\n";
+
+//     /********** APPLYING SMOOTHING ON DISPLAY **********/
+
+//     float time = globals.appTime.getElapsedTime();
+
+//     if(
+//         // tmpMin != vec2(-1, -1) && tmpMax != vec2(1, 1) &&
+        
+//         (box.min != tmpMin || box.max != tmpMax)
+//         // || box.lastChangeTime == time
+//         )
+//     {
+//         box.lastChangeTime = time;
+//         // box.lastMin = tmpMin;
+//         // box.lastMax = tmpMax;
+//         // box.lastMin = vec2(0);
+//         // box.lastMax = vec2(0);
+
+//         if(!box.useClassicInterpolation)
+//         {
+//             box.lastMin = (box.min + box.max)*0.5f;
+//             box.lastMax = (box.min + box.max)*0.5f;
+//         }
+//         // else
+//         // {
+//         //     box.lastMin = tmpMin;
+//         //     box.lastMax = tmpMax;
+//         // }
+//     }
+
+//     // if(parent.comp<WidgetBox>().initMax.x == UNINITIALIZED_FLOAT)
+//     // {
+//     //     box.displayMax = box.displayMin = vec2(UNINITIALIZED_FLOAT);
+//     // }
+    
+//     // if(box.displayMax.x == UNINITIALIZED_FLOAT && child.get() != &parent)
+//     // {
+//     //     // std::cout << "YOOOOOOOOOOOOO   " << box.min.x << "\t" << child->comp<EntityInfos>().name << "\n"; 
+        
+//     //     if(!box.useClassicInterpolation)
+//     //     {
+//     //         box.lastMin = (box.min + box.max)*0.5f;
+//     //         box.lastMax = (box.min + box.max)*0.5f;
+
+//     //     }
+//     //     else
+//     //     {
+//     //         box.useClassicInterpolation = true;
+//     //     }
+
+//     //     // box.lastMin = box.lastMax = vec2(0);
+//     //     box.lastChangeTime = time;
+//     // }
+
+//     // if(child.get() == &parent && child->comp<EntityGroupInfo>().parent) 
+//     //     return;
+
+//     // if(hidden) return;
+
+//     float a = WidgetBox::smoothingAnimationSpeed == 0.f ?
+//         1. :smoothstep(0.0f, 1.f, (time - box.lastChangeTime)*WidgetBox::smoothingAnimationSpeed);
+
+//     // if(a < 1. && Loader<ScriptInstance>::loadingInfos.find("WidgetBox_SmoothSync") != Loader<ScriptInstance>::loadingInfos.end())
+//     // {
+//     //     Loader<ScriptInstance>::get("WidgetBox_SmoothSync").run(box.lastMin, box.lastMax, box.min, box.max, box.displayMin, box.displayMax, a, (int)box.useClassicInterpolation);
+//     //     box.displayMin = threadState["RETURN_vec2_1"];
+//     //     box.displayMax = threadState["RETURN_vec2_2"];
+//     // }
+//     // else
+//     // {
+//     //     box.displayMin = box.min;
+//     //     box.displayMax = box.max;
+//     // }
+
+//     // if(!child->has<WidgetSprite>() and !child->has<WidgetText>())
+//     //     a = 1.;
+
+//     // box.displayMin = mix(box.lastMin, box.min, a);
+//     // box.displayMax = mix(box.lastMax, box.max, a);
+
+//     vec2 speed = vec2(globals.appTime.getDelta());
+//     // speed.x *= (float)globals.windowSize().x/(float)globals.windowSize().y;
+    
+//     // if(box.displayMin == vec2(UNINITIALIZED_FLOAT))
+//         box.displayMin = box.min;
+//     // else
+//         // box.displayMin += sign(box.min-box.displayMin)*min(speed, abs(box.min-box.displayMin));
+
+//     // if(box.displayMax == vec2(UNINITIALIZED_FLOAT))
+//         box.displayMax = box.max;
+//     // else
+//     //     box.displayMax += sign(box.max-box.displayMax)*min(speed, abs(box.max-box.displayMax));
+
+//     box.displayMin = max(box.displayRangeMin, box.displayMin);
+//     box.displayMax = max(box.displayRangeMin, box.displayMax);
+
+//     box.displayMin = min(box.displayRangeMax, box.displayMin);
+//     box.displayMax = min(box.displayRangeMax, box.displayMax);
+
+//     box.displayMin = min(box.displayMin, box.displayMax);
+//     // vec2 mintmp = min(box.displayMin, box.displayMax);
+//     // vec2 maxtmp = max(box.displayMin, box.displayMax);
+//     // box.displayMin = mintmp;
+//     // box.displayMax = maxtmp;
+    
+
+//     // if(box.displayRangeMax != vec2(UNINITIALIZED_FLOAT))
+//     // {
+//     //     std::cout << "MAX = " << box.displayRangeMax.y << "\t";
+//     //     std::cout << "RESULT = " << box.displayMax.y << "\n";
+//     // }
+
+//     // if(hidden) return;
+
+//     /*
+//         TODO : move this into a system
+//     */
+//     /********** APPLYING DISPLAY VALUES ON ALL RELATED COMPONENTS **********/
+
+//     if(hidden) return;
+
+//     vec2 scale = vec2(box.displayMax - box.displayMin);
+//     vec2 pos = box.displayMin * vec2(1, -1);
+
+//     // vec2 scale = vec2(box.max - box.min);
+//     // vec2 pos = box.min * vec2(1, -1);
+
+//     scale = max(scale, vec2(0));
+
+
+//     if(child->has<WidgetBackground>())
+//     {
+//         child->comp<WidgetBackground>().tile->setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth);
+//     }
+
+//     // if(child->has<WidgetSprite>())
+//     // {
+//     //     child->comp<WidgetSprite>().sprite->state.setScale(vec3(scale, 1)).setPositionXY(pos).setPositionZ(box.depth+0.000025);
+//     // }
+
+//     float iaspectRatio = (float)(globals.windowWidth())/(float)(globals.windowHeight());
+
+//     float res = sqrt((float)(globals.windowWidth())*(float)(globals.windowHeight()));
+//     res = (float)globals.windowWidth();
+
+//     if(child->has<WidgetText>())
+//     {
+//         auto &text = child->comp<WidgetText>();
+//         text.mesh->text = text.text;
+//         text.mesh->batchText();
+
+//         float nbOfLines = 0;
+//         for(auto &c : text.text)
+//             if(c == U'\n')
+//                 nbOfLines ++;
+
+//         vec2 tsize = text.mesh->getSize();
+
+//         tsize.y = 1.25 * text.mesh->charSize +  text.mesh->charSize*nbOfLines;
+
+//         tsize.y *= iaspectRatio;
+
+//         // vec2 tscale = (scale*vec2(0.95, 0.8)/tsize);
+
+//         vec2 tscale = (scale*vec2(0.9, 0.75)/tsize);
+
+//         tscale = vec2(min(tscale.x, tscale.y));
+
+//         tscale = min(
+//             tscale, 
+//             vec2(1100)/res
+//             *
+//             (child->has<WidgetStyle>() ? child->comp<WidgetStyle>().minFontScale : 1.f)
+//         );
+
+
+//         tscale.y *= iaspectRatio;
+
+//         vec2 initialPos;
+
+//         switch(text.align)
+//         {
+//             case CENTERED :
+//                 initialPos = vec2(0.5, -0.5f);
+//                 break;
+            
+//             case TO_LEFT :
+//                 initialPos = vec2(0.0, -0.5f);
+//                 break;
+            
+//             default : break;
+//         }
+
+//         // if(text.mesh->align == StringAlignment::CENTERED)
+//         //     initialPos.x += 4.f;
+
+//         text.mesh->state 
+//             .setPositionXY(
+//                 pos + initialPos*(scale - text.mesh->getSize()*tscale)
+//                 + (text.mesh->align == StringAlignment::CENTERED ? vec2(text.mesh->getSize().x*tscale.x*0.5, 0.0) : vec2(0))
+//             )
+//             .setPositionZ(box.depth+0.00005)
+//             .setScale(vec3(tscale, 1));
+//     }
+// }
+
 COMPONENT_DEFINE_SYNCH(WidgetState)
 {
     auto &up = child->comp<WidgetState>();
@@ -545,8 +999,10 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
                     // b.lastMax.y = b.min.y;
                     // b.lastMax.y = b.max.y;
                     // b.lastChangeTime = globals.appTime.getElapsedTime();
+                    
                     if(!b.useClassicInterpolation)
                         b.set(vec2(b.initMin.x ,b.initMax.x), vec2(b.initMin.y , b.initMax.y));
+
                     // b.set(vec2(0), vec2(0));
                 }
 

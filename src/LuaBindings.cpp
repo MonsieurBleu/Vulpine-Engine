@@ -365,6 +365,33 @@ void VulpineLuaBindings::glm(sol::state &lua)
         ((float), const vec4 &, const vec4 &)
     ), ());
 
+    VBIND_ADD_FUNCTION_OVERLOAD(sign, (
+        ((float), const float),
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(abs, (
+        ((float), const float),
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(min, (
+        ((float), const float, const float),
+        ((vec2), const vec2 &, const vec2 &),
+        ((vec3), const vec3 &, const vec3 &),
+        ((vec4), const vec4 &, const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(max, (
+        ((float), const float, const float),
+        ((vec2), const vec2 &, const vec2 &),
+        ((vec3), const vec3 &, const vec3 &),
+        ((vec4), const vec4 &, const vec4 &)
+    ), ());
 
     VBIND_ADD_FUNCTION_OVERLOAD(cross, (
         ((vec3), const vec3 &, const vec3 &)
