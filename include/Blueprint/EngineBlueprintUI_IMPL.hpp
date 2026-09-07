@@ -1002,8 +1002,10 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
                         )
                     );
 
-                    button->comp<WidgetStyle>().setbackgroundColor1(mix(color, VulpineColorUI::LightBackgroundColor1, 0.25f));
-                    button->comp<WidgetStyle>().setbackgroundColor2(mix(color, VulpineColorUI::LightBackgroundColor2, 0.5f));
+                    // button->comp<WidgetStyle>().setbackgroundColor1(mix(color, VulpineColorUI::LightBackgroundColor1, 0.25f));
+                    // button->comp<WidgetStyle>().setbackgroundColor2(mix(color, VulpineColorUI::LightBackgroundColor2, 0.5f));
+                    button->comp<WidgetStyle>().setbackgroundColor1(color);
+                    button->comp<WidgetStyle>().setbackgroundColor2(vec4(vec3(color), ALPHA2));
 
                     i.second->comp<WidgetBox>()
                         .set(vec2(-1, 1), vec2(1, 5))
@@ -1209,4 +1211,242 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
         return p;
     else
         return NamedEntry(UFTconvert.from_bytes(name), p, nameSizeRatio, true, color);
+}
+
+#define FOLDER_CHAR '#'
+#define FOLDER_STR "##"
+
+std::string getFileExtension2(const std::string &fileName)
+{
+    std::string result;
+
+    auto i = fileName.rbegin();
+    while (i != fileName.rend())
+    {
+        if (*i == FOLDER_CHAR)
+            break;
+
+        result = *i + result;
+
+        i++;
+    }
+
+    return result;
+}
+
+EntityRef VulpineBlueprintUI::SimpleFolderView(
+    const std::string name,
+    std::vector<Entity*> & list,
+    vec4 folderColor,
+    vec4 fileColor,
+    int columns,
+    int rowsOnScreen,
+    WidgetButton::InteractFunc ifunc, 
+    WidgetButton::UpdateFunc ufunc,
+    bool doSorting
+)
+{
+    auto listScreen = newEntity(name + " - List Screen",
+        UI_BASE_COMP,
+        WidgetStyle(),
+        WidgetBox([&list, ufunc, ifunc, columns, rowsOnScreen, folderColor, fileColor, doSorting](Entity *parent, Entity *child)
+        {            
+            auto &children = child->comp<EntityGroupInfo>().children;
+            std::vector<EntityRef> childrenToKeep;
+            std::vector<Entity*> childrenToAdd;
+
+            /*
+                Checking if any children need to be added or removed
+            */
+            for(const auto &i : list)
+            {
+                bool isFound = false;
+                for(int j = 0; j < children.size(); j++)
+                {
+                    if(children[j]->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr == (uint64)i)
+                    {
+                        isFound = true;
+                        childrenToKeep.push_back(children[j]);
+                        break;
+                    }
+                }
+                if(!isFound)
+                    childrenToAdd.push_back(i);
+            }
+
+            // If no children need to be added/removed, just stop here
+            if(childrenToAdd.empty() and childrenToKeep.size() == children.size())
+                return;
+
+            children.clear();
+            ManageGarbage<state3D>();
+            ManageGarbage<WidgetBackground>();
+            ManageGarbage<WidgetSprite>();
+            ManageGarbage<WidgetText>();
+            ManageGarbage<EntityModel>();
+
+            // Creating new children
+            for(auto &i : childrenToAdd)
+            {
+                auto name = getFileExtension2(i->comp<EntityInfos>().name);
+
+                auto button = VulpineBlueprintUI::Toggable(name, "", ifunc, ufunc);
+                // vec4 color = name.size() > 1 and name[0] == '.' ? folderColor : fileColor;
+                vec4 color = name == i->comp<EntityInfos>().name ? fileColor : folderColor;
+                // button->comp<WidgetStyle>().setbackgroundColor1(mix(color, VulpineColorUI::LightBackgroundColor1, 0.25f));
+                button->comp<WidgetStyle>().setbackgroundColor1(color);
+                button->comp<WidgetStyle>().setbackgroundColor2(vec4(vec3(color), 0.65));
+                // button->comp<WidgetStyle>().setbackgroundColor2(mix(color, VulpineColorUI::LightBackgroundColor2, 0.35f));
+                button->comp<WidgetButton>().setusr((uint64)i);
+
+                auto buttonParent = newEntity(name, 
+                    UI_BASE_COMP,
+                    WidgetStyle(),
+                    EntityGroupInfo({button})
+                );
+
+                buttonParent->comp<WidgetBox>().useClassicInterpolation = true;
+                // buttonParent->comp<WidgetBox>().specialFittingScript = [](Entity *p, Entity *e)
+                // {
+                //     e->comp<EntityGroupInfo>().children[0]->comp<WidgetStyle>().setbackGroundStyle(
+                //         e->comp<WidgetBox>().isUnderCursor ? UiTileType::SQUARE : UiTileType::SQUARE_ROUNDED
+                //     );
+                // };
+
+                childrenToKeep.push_back(buttonParent);
+            }
+
+            // Sorting and re-ading all children
+            if(doSorting)
+                std::sort(
+                    childrenToKeep.begin(),
+                    childrenToKeep.end(),
+                    [](const EntityRef &a, const EntityRef &b)
+                    {
+                        // bool isAFolder = strstr(((Entity*)a->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name.c_str(), FOLDER_STR);
+                        // bool isBFolder = strstr(((Entity*)b->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name.c_str(), FOLDER_STR);
+
+                        bool isAFolder = a->comp<EntityInfos>().name != ((Entity*)a->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name;
+                        bool isBFolder = b->comp<EntityInfos>().name != ((Entity*)b->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name;
+                        return isAFolder > isBFolder or strcasecmp(a->comp<EntityInfos>().name.c_str(), b->comp<EntityInfos>().name.c_str()) < 0;
+                    }
+                );
+
+            for(auto i : childrenToKeep)
+                ComponentModularity::addChild(*child, i);
+
+            // Refreshing children transform
+            int id = 0;
+            for(auto i : child->comp<EntityGroupInfo>().children)
+            {
+                int columnID = id%columns;
+                int rowID = id/columns;
+                vec2 tableDim(1.0/(float)columns, 1.0/(float)rowsOnScreen);
+
+                vec2 xrange(tableDim.x*(float)columnID, tableDim.x*(1.f + (float)columnID));
+                vec2 yrange(tableDim.y*(float)rowID, tableDim.y*(1.f + (float)rowID));
+
+                i->comp<WidgetBox>().set(xrange*2.f - 1.f, yrange*2.f - 1.f);
+                id ++;
+            }
+        })
+    );
+
+
+    auto scrollBar = newEntity(name + " - Scroll Bar",
+        UI_BASE_COMP,
+        WidgetStyle(),
+        WidgetButton(WidgetButton::Type::SLIDER_2D,
+            [rowsOnScreen, columns](Entity *e, vec2 a)
+            {
+                auto p = e->comp<EntityGroupInfo>().parent->comp<EntityGroupInfo>().children[0];
+                int imax = p->comp<EntityGroupInfo>().children[0]->comp<EntityGroupInfo>().children.size()/rowsOnScreen;
+                float max = (float)imax/(float)(columns) - 0.75f;
+                p->comp<WidgetBox>().scrollOffset.y = -a.y*max;
+
+                p->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
+            },
+            [](Entity *e){return vec2(e->comp<WidgetButton>().cur, e->comp<WidgetButton>().cur2);}
+        ),
+        EntityGroupInfo({
+            newEntity(name + " - Scroll Bar 2",
+                UI_BASE_COMP,
+                WidgetBackground(),
+                WidgetStyle()
+                    .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+                    .setbackgroundColor1(fileColor),
+                WidgetBox([rowsOnScreen, columns](Entity *p, Entity *c)
+                {
+                    p = p->comp<EntityGroupInfo>().parent->comp<EntityGroupInfo>().children[0].get();
+                    float o = -p->comp<WidgetBox>().scrollOffset.y;
+
+                    int imax = p->comp<EntityGroupInfo>().children[0]->comp<EntityGroupInfo>().children.size()/rowsOnScreen;
+                    float max = (float)imax/(float)(columns) - 0.75f + 1.f;
+
+                    float ymin = o/max;
+                    float ymax = ymin + 1.f/max;
+
+
+                    c->comp<WidgetBox>().useClassicInterpolation = true;
+                    c->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
+
+                    if(c->comp<WidgetBox>().initMin.y != ymin*2.f - 1.f)
+                        c->comp<WidgetBox>().set(vec2(-1, 1), vec2(ymin, ymax)*2.f - 1.f);
+                })
+            )
+        })
+    );
+
+    auto scrollZone = newEntity(name + " - Scroll Zone"
+        , UI_BASE_COMP
+        , WidgetStyle()
+            // .setautomaticTabbing(1)
+            .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1)
+            .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+        , WidgetBackground()
+        , WidgetBox([rowsOnScreen, columns](Entity *parent, Entity *child){
+            auto &box = child->comp<WidgetBox>();
+
+            int imax = child->comp<EntityGroupInfo>().children[0]->comp<EntityGroupInfo>().children.size()/rowsOnScreen;
+            float max = (float)imax/(float)(columns);
+            
+            if(box.isUnderCursor)
+            {
+                vec2 off = globals.mouseScrollOffset();
+                box.scrollOffset.y += off.y*0.05;
+
+                box.scrollOffset.y = clamp(box.scrollOffset.y,-(float)max+0.75f,0.f);
+
+                globals.clearMouseScroll();
+            }
+
+            box.displayRangeMin = box.min;
+            box.displayRangeMax = box.max;
+
+            auto &b1 = parent->comp<EntityGroupInfo>().children[0]->comp<WidgetBox>();
+            auto &b2 = parent->comp<EntityGroupInfo>().children[1]->comp<WidgetBox>();
+            if(max >= 1.f)
+            {
+                if(b1.initMax.x != 0.9f)
+                {
+                    b1.set(vec2(-1., 0.9), vec2(-1., 1.));
+                    b2.set(vec2(0.9, 1.0), vec2(-1., 1.));
+                }
+            }
+            else
+            {
+                if(b1.initMax.x != 1.f)
+                {
+                    b1.set(vec2(-1., 1.0), vec2(-1., 1.));
+                    b2.set(vec2(0.0, 0.0), vec2(-1., 1.));
+                }
+            }
+        })
+        , EntityGroupInfo({listScreen})
+    );
+
+    scrollZone->comp<WidgetBox>().set(vec2(-1., 0.9), vec2(-1., 1.));
+    scrollBar->comp<WidgetBox>().set(vec2(0.9, 1.0), vec2(-1., 1.));
+
+    return newEntity(name + " - Folder View", UI_BASE_COMP, EntityGroupInfo({scrollZone, scrollBar}));
 }

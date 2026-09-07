@@ -161,6 +161,7 @@ class ShaderUniform
         void activate() const;
 
         void setData(const void *newData){data = newData;};
+        void *getData();
 
         ShaderUniform& setCount(int count);
 

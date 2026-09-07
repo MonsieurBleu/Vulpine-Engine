@@ -44,6 +44,11 @@ int getUniformTypeSize( UniformTypes type)
     return 1;
 }
 
+void *ShaderUniform::getData()
+{
+    return (void*)(dataState == copiedInAdditionalData ? additionalData : data);
+}
+
 void ShaderUniform::activate() const
 {
     if(location == UNIFORM_NO_LOCATION) return;

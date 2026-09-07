@@ -139,4 +139,16 @@ namespace VulpineBlueprintUI
         float nameSizeRatio = 0.f
     );
 
+    EntityRef SimpleFolderView(
+        const std::string name,
+        std::vector<Entity*> & list,
+        vec4 folderColor,
+        vec4 fileColor,
+        int columns,
+        int rowsOnScreen,
+        WidgetButton::InteractFunc ifunc, 
+        WidgetButton::UpdateFunc ufunc,
+        bool doSorting = true
+    );
+
 }

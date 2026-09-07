@@ -130,6 +130,33 @@ void ComponentModularity::synchronizeChildren(EntityRef parent)
         }
 }
 
+void ComponentModularity::synchronizeChildren(Entity *parent)
+{
+    // int synchCompCnt = 0;
+
+    // for(auto &i : SynchFuncs)
+    //     if(parent->state[i.ComponentID])
+    //     {
+    //         synchCompCnt ++;
+    //         i.element(*parent, parent);
+    //     }
+
+    // if(!synchCompCnt) return;
+
+    if(parent->has<EntityGroupInfo>())
+        for(auto &c : parent->comp<EntityGroupInfo>().children)
+        {
+            // synchronizeChildren(c);
+            
+            for(auto &i : SynchFuncs)
+                if(c->state[i.ComponentID])
+                    i.element(*parent, c);
+
+            synchronizeChildren(c);
+        }
+}
+
+
 
 void ComponentModularity::Reparent(Entity& parent, EntityRef child, Entity& newParent)
 {

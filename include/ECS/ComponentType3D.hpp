@@ -52,6 +52,7 @@ struct HierarchyState3D : State3D
     HierarchyState3D(const SynchType type = SynchType::ALL) : type(type){};
 };
 
+class Entity;
 
 struct EntitySpawner
 {
@@ -60,6 +61,7 @@ struct EntitySpawner
         std::string name = "";
         std::string cond = "";
         HierarchyState3D state;
+        std::shared_ptr<Entity> child;
     };
 
     std::vector<info> onLoading;

@@ -539,7 +539,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
             tscale, 
             vec2(1100)/res
             *
-            (child->has<WidgetStyle>() ? child->comp<WidgetStyle>().minFontScale : 1.f)
+            0.80f*(child->has<WidgetStyle>() ? child->comp<WidgetStyle>().minFontScale : 1.f)
         );
 
 

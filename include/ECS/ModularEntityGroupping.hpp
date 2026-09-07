@@ -118,6 +118,7 @@ class ComponentModularity
         static void removeChild(Entity &parent, Entity* child);
 
         static void synchronizeChildren(EntityRef parent);
+        static void synchronizeChildren(Entity *parent);
 
         static void Reparent(Entity& parent, EntityRef child, Entity& newParent);
 

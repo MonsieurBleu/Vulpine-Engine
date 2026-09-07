@@ -379,6 +379,34 @@ void VulpineLuaBindings::glm(sol::state &lua)
         ((vec4), const vec4 &)
     ), ());
 
+    VBIND_ADD_FUNCTION_OVERLOAD(fract, (
+        ((float), const float),
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(round, (
+        ((float), const float),
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(ceil, (
+        ((float), const float),
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(floor, (
+        ((float), const float),
+        ((vec2), const vec2 &),
+        ((vec3), const vec3 &),
+        ((vec4), const vec4 &)
+    ), ());
+
     VBIND_ADD_FUNCTION_OVERLOAD(min, (
         ((float), const float, const float),
         ((vec2), const vec2 &, const vec2 &),
@@ -387,6 +415,13 @@ void VulpineLuaBindings::glm(sol::state &lua)
     ), ());
 
     VBIND_ADD_FUNCTION_OVERLOAD(max, (
+        ((float), const float, const float),
+        ((vec2), const vec2 &, const vec2 &),
+        ((vec3), const vec3 &, const vec3 &),
+        ((vec4), const vec4 &, const vec4 &)
+    ), ());
+
+    VBIND_ADD_FUNCTION_OVERLOAD(mod, (
         ((float), const float, const float),
         ((vec2), const vec2 &, const vec2 &),
         ((vec3), const vec3 &, const vec3 &),
