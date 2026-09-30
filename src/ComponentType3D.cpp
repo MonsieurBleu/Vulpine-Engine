@@ -111,3 +111,14 @@ bool operator==(const State3D &a, const State3D &b)
         a.isActive == b.isActive
     ;
 }
+
+bool operator==(const HierarchyState3D &a, const HierarchyState3D &b)
+{
+    return 
+        a.position == b.position and 
+        a.rotation == b.rotation and 
+        a.scale    == b.scale    and 
+        a.isActive == b.isActive and
+        a.type     == b.type
+    ;
+}

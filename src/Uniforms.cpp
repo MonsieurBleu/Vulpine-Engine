@@ -61,7 +61,14 @@ void ShaderUniform::activate() const
 
     switch (type)
     {
-        case _1f  : glUniform1f(location,  *(float*)udata);     break;
+        case _1f  : 
+
+            if(dataState == rawCopy)
+                glUniform1f(location,  *(float*)&data);    
+            else
+                glUniform1f(location,  *(float*)udata);     
+        
+        break;
         case _2fv : glUniform2fv(location, count, (float *) udata); break;
         case _3fv : glUniform3fv(location, count, (float *) udata); break;
         case _4fv : glUniform4fv(location, count, (float *) udata); break;

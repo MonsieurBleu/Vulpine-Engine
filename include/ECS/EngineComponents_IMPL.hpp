@@ -47,7 +47,8 @@ COMPONENT_DEFINE_SYNCH(HierarchyState3D)
     ManageHideStatus(tmp, p.isActive);
     s.isActive = tmp;
 
-    setEntityTransform(*child, s);
+    if(s != child->comp<State3D>())
+        setEntityTransform(*child, s);
 }
 
 COMPONENT_DEFINE_REPARENT(EntityGroupInfo)
@@ -230,7 +231,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
 
             vec2 scale = screen/(parentBox.max - parentBox.min)*0.5f;
 
-            vec2 space = 0.0075f*scale*WidgetBox::tabbingSpacingScale;
+            vec2 space = 0.75f*0.0075f*scale*WidgetBox::tabbingSpacingScale;
 
             if(parent.has<WidgetStyle>() && !parent.comp<WidgetStyle>().useInternalSpacing)
                 space = vec2(0);
@@ -539,7 +540,7 @@ COMPONENT_DEFINE_SYNCH(WidgetBox)
             tscale, 
             vec2(1100)/res
             *
-            0.80f*(child->has<WidgetStyle>() ? child->comp<WidgetStyle>().minFontScale : 1.f)
+            0.85f*(child->has<WidgetStyle>() ? child->comp<WidgetStyle>().minFontScale : 1.f)
         );
 
 

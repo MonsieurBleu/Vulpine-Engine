@@ -4,6 +4,7 @@
 #ifndef VULPINE_COMPONENT_IMPL
 #include <ECS/ModularEntityGroupping.hpp>
 #endif
+#include <ECS/ComponentType3D.hpp>
 
 thread_local BenchTimer systemTimer;
 std::unordered_map<std::string, BenchTimer> systemsPreciseTimer;
@@ -70,6 +71,12 @@ Entity::~Entity()
     
     if(has<EntityGroupInfo>())
         comp<EntityGroupInfo>().children.clear();
+
+    if(has<EntitySpawner>())
+    {
+        comp<EntitySpawner>().onLoading.clear();
+        comp<EntitySpawner>().onTrigger.clear();
+    }
 }
 
 #endif

@@ -94,6 +94,18 @@ Mesh &Mesh::setVao(MeshVao _vao)
 
 Mesh &Mesh::setMap(int location, Texture2D texture)
 {
+    int cnt = 0;
+    for(auto &i : mapsLocation)
+    {
+        if(i == location)
+        {
+            maps[cnt] = texture;
+            return *this;
+        }
+
+        cnt ++;
+    }
+
     maps.push_back(texture);
     mapsLocation.push_back(location);
     return (*this);
@@ -232,7 +244,14 @@ GLuint MeshModel3D::drawVAO(int layer, bool depthOnly)
     // instanceUpdate.start();
 
     update();
-    if(!depthOnly) uniforms.update();
+    if(!depthOnly)
+    {
+        uniforms.update();
+        if(transparent)
+        {
+            glEnablei(GL_BLEND, 0);
+        }
+    }
     setDrawMode();
 
     glBindVertexArray(vao->getHandle());
@@ -246,7 +265,10 @@ GLuint MeshModel3D::drawVAO(int layer, bool depthOnly)
         glDrawArrays(defaultMode, 0, vao->attributes[MESH_BASE_ATTRIBUTE_LOCATION_POSITION].getVertexCount());
 
     resetDrawMode();
-
+    if(!depthOnly and transparent)
+    {
+        glDisablei(GL_BLEND, 0);
+    }
     // instanceUpdate.stop();
     // std::cout << instanceUpdate.getLastAvg().count() << "\t\t";
     // std::cout << instanceUpdate.getDeltaMS() << "\n";
@@ -360,6 +382,7 @@ ModelRef MeshModel3D::copy()
     m->defaultMode = defaultMode;
     m->state.frustumCulled = state.frustumCulled;
     m->depthWrite = depthWrite;
+    m->transparent = transparent;
     m->uniforms = uniforms;
     m->state = state;
     return m;

@@ -65,6 +65,7 @@ class Mesh
         bool invertFaces = false;
         bool depthWrite = true;
         bool sorted = true;
+        bool transparent = false;
         bool noBackFaceCulling = false;
         float maxDrawDistSquared = 1e12;
 

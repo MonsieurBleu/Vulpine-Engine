@@ -127,7 +127,7 @@ Scene& Scene::add(ObjectGroupRef group, bool sort, bool isStatic)
     return *this;
 }
 
-uint MeshGroup::draw(int layer, bool useBindlessTextures)
+uint MeshGroup::draw(int layer, bool useBindlessTextures, FrameBuffer *fb)
 {
     material->activate();
     
@@ -138,13 +138,15 @@ uint MeshGroup::draw(int layer, bool useBindlessTextures)
 
     if(useBindlessTextures)
     {
+        fb->enableDrawBuffers(VulpineTextureAttachement::StaticOnly);
         for(auto &i : staticMeshes)
             if(i->isCulled(layer))
             {
                 i->setBindlessMaps();
                 drawcnt += i->drawVAO(layer);
             }
-
+        
+        fb->enableDrawBuffers(VulpineTextureAttachement::DynamicOnly);
         for(auto &i : meshes)
             if(i->isCulled(layer))
             {
@@ -154,13 +156,15 @@ uint MeshGroup::draw(int layer, bool useBindlessTextures)
     }
     else
     {
+        fb->enableDrawBuffers(VulpineTextureAttachement::StaticOnly);
         for(auto &i : staticMeshes)
             if(i->isCulled(layer))
             {
                 i->bindAllMaps();
                 drawcnt += i->drawVAO(layer);
             }
-
+        
+        fb->enableDrawBuffers(VulpineTextureAttachement::DynamicOnly);
         for(auto &i : meshes)
             if(i->isCulled(layer))
             {
@@ -444,7 +448,7 @@ void Scene::generateLightClusters()
     delete [] lbuffv;
 }
 
-uint Scene::draw(int layer)
+uint Scene::draw(int layer, FrameBuffer *fb)
 {
     // NOTIF_MESSAGE(
     //     groups.size(), "   ", staticGroups.size()
@@ -456,9 +460,33 @@ uint Scene::draw(int layer)
     // drawcnt = 0;
 
     for(auto &i : meshes)
-        drawcnt += i.draw(layer, useBindlessTextures);
+        drawcnt += i.draw(layer, useBindlessTextures, fb);
     
     // tmp.start();
+
+    if(fb and fb->unsortedDraws.doCopy)
+    {
+        for(int i = 0; i < fb->getNBtextures(); i++)
+            if(fb->getTexture(i).getAttachement() == GL_DEPTH_ATTACHMENT)
+            {
+                auto d = &fb->getTexture(i);
+                glCopyImageSubData(
+
+                    d->getHandle(), 
+                    GL_TEXTURE_2D, 0, 0, 0, 0,
+                    
+                    fb->unsortedDraws.sortedDepthCopy.getHandle(), 
+                    GL_TEXTURE_2D, 0, 0, 0, 0,
+
+                    d->getResolution().x, d->getResolution().y, 1
+                );
+
+                // WARNING_MESSAGE(i);
+                // fb->unsortedDraws.sortedDepthCopy.bind(16);
+                fb->unsortedDraws.sortedDepthCopy.bind(fb->unsortedDraws.location);
+            }
+
+    }
 
     for(auto &i : unsortedMeshes)
         if(i->isCulled(layer))
@@ -468,6 +496,8 @@ uint Scene::draw(int layer)
             else
                 i->bindAllMaps();
             
+            fb->enableDrawBuffers(VulpineTextureAttachement::StaticAndDynamic);
+
             i->getMaterial()->activate();
             drawcnt += i->drawVAO(layer);
             i->getMaterial()->deactivate();
@@ -619,8 +649,8 @@ void Scene::depthOnlyDraw(int layer, Camera *camera, bool doCulling, int layers)
             // ShaderUniform(camera.getDirectionAddr(), 6).activate();
 
             if(layers > 0)
-            for(int i = 0; i < layers; i++)
-                ShaderUniform(camera[i].getProjectionViewMatrixAddr(), 48 + i).activate();
+                for(int i = 0; i < layers; i++)
+                    ShaderUniform(camera[i].getProjectionViewMatrixAddr(), 48 + i).activate();
 
             // if(cull)
             // {
@@ -677,20 +707,35 @@ void Scene::depthOnlyDraw(int layer, Camera *camera, bool doCulling, int layers)
         depthOnlyMaterial->deactivate();
     }
 
+    for(auto i : unsortedMeshes)
+        if(i->isCulled(layer))
+        {
+            if(!i->getMaterial().depthOnly) continue;
+
+            if(useBindlessTextures)
+                i->setBindlessMaps();
+            else
+                i->bindAllMaps();
+            
+            // fb->enableDrawBuffers(VulpineTextureAttachement::StaticAndDynamic);
+
+            i->getMaterial().depthOnly->activate();
+
+            ShaderUniform(camera->getProjectionViewMatrixAddr(), 2).activate();
+            ShaderUniform(camera->getViewMatrixAddr(), 3).activate();
+            ShaderUniform(camera->getProjectionMatrixAddr(), 4).activate();
+
+            if(layers > 0)
+                for(int i = 0; i < layers; i++)
+                    ShaderUniform(camera[i].getProjectionViewMatrixAddr(), 48 + i).activate();
+
+            drawcnt += i->drawVAO(layer);
+
+            i->getMaterial().depthOnly->deactivate();
+        }
+
     glFlush();
     
-    /*
-    We consider that unsorted meshes have special materials, like transparents ones,
-    that cannot be used on depthOnlyDraw. So for the moment, this is disabled.
-
-    if(cull)
-        for(auto i : unsortedMeshes)
-            if(i->cull())
-                i->drawVAO();
-    else
-        for(auto i : unsortedMeshes)
-            i->drawVAO();
-    */
 
    depthOnlyCallsTime.hold();
 }

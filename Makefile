@@ -50,8 +50,8 @@ ifeq ($(COMPILE_MODE),Windows)
 	LINKFLAGS = ../Sanctia-Release/libglfw3.a ../Sanctia-Release/libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine_WIN64.a
 else
+	LINKFLAGS = -Wl,-rpath,'$$ORIGIN/lib' 
 	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGLU -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp -lstdc++exp -lJolt
-	LINKFLAGS = -Wl,-rpath,'$$ORIGIN/lib'
 	VULPINE_LIB_NAME = libvulpineEngine_UNIX.a
 endif
 

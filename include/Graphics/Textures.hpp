@@ -8,6 +8,14 @@
 
 using namespace glm;
 
+enum class VulpineTextureAttachement : uint8
+{
+    None,               // Texture will never be binded as a map or a render target
+    StaticOnly,         // Texture will be used as a map/render target for static meshes
+    DynamicOnly,        // Texture will be used as a map/render target for dynamic meshes
+    StaticAndDynamic,   // Texture will be used as a map/render target for both dynamic static meshes
+};
+
 class Texture2D
 {
     private : 
@@ -22,16 +30,18 @@ class Texture2D
         GLenum _filter = GL_LINEAR;
         GLenum _wrapMode = GL_REPEAT;
 
-        const void* _pixelSource = nullptr;
+        void* _pixelSource = nullptr;
 
         ivec2 _resolution;
 
         GLenum _attachement = 0;
+        VulpineTextureAttachement _vAttachement = VulpineTextureAttachement::StaticAndDynamic;
 
         GLenum _target = GL_TEXTURE_2D;
         
         int arraySize = 1;
         bool generated = false;
+
 
     public :   
 
@@ -48,9 +58,10 @@ class Texture2D
         Texture2D& setFormat(GLenum format);
         Texture2D& setPixelType(GLenum type);
         Texture2D& setFilter(GLenum filter);
-        Texture2D& setPixelSource(const void *source);
+        Texture2D& setPixelSource(void *source);
         Texture2D& setAttachement(GLenum attachement);
         Texture2D& setWrapMode(GLenum wrapMode);
+        Texture2D& setVulpineAttachement(VulpineTextureAttachement vAttachement);
 
         ivec2 getResolution() const;
         GLenum getTarget() const;
@@ -60,7 +71,10 @@ class Texture2D
         GLenum getFilter() const;
         GLenum getAttachement() const;
         GLenum getWrapMode() const;
+        VulpineTextureAttachement getVulpineAttachement() const;
         const void * getPixelSource() const;
+
+        void updateSourceFromGPU();
 
         /* Memory leak of the texture information when using stb */
         Texture2D& loadFromFile(const char* filename);

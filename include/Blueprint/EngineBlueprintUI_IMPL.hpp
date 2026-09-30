@@ -69,7 +69,7 @@ EntityRef  VulpineBlueprintUI::Toggable(
         , WidgetBackground()
         , WidgetStyle()
             .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
-            .setbackgroundColor1(vec4(color, 1.))
+            .setbackgroundColor1(vec4(color, BASE_ALPHA))
             // .setbackgroundColor2(VulpineColorUI::LightBackgroundColor2)
             // .setbackgroundColor2(vec4(rgb2hsv(hsv2rgb(vec3(color)) * vec3(1, .5, 2)), color.a*.5))
             .setbackgroundColor2(vec4(color, ALPHA2))
@@ -94,6 +94,55 @@ EntityRef  VulpineBlueprintUI::Toggable(
 
 
     return e;
+}
+
+EntityRef  VulpineBlueprintUI::Toggable2(
+    const std::string &name,
+    const std::string &icon,
+    WidgetButton::InteractFunc ifunc, 
+    WidgetButton::UpdateFunc ufunc,
+    vec3 color
+)
+{
+    auto e = newEntity(name
+        , UI_BASE_COMP
+        , WidgetBox(vec2(-1.0, -0.65), vec2(-1, 1))
+        , WidgetBackground()
+        , WidgetStyle()
+            .setbackGroundStyle(UiTileType::CIRCLE)
+            .setbackgroundColor1(vec4(color, BASE_ALPHA))
+            .setbackgroundColor2(vec4(color, BASE_ALPHA*0.5 + ALPHA2*0.5))
+        , WidgetButton(WidgetButton::Type::CHECKBOX, ifunc, ufunc)
+    );
+
+    auto title = newEntity(name + " title", UI_BASE_COMP, 
+        WidgetBox(vec2(-0.65, 1.0), vec2(-1, 1)),
+        WidgetBackground(),
+        WidgetStyle()
+            .settextColor1(VulpineColorUI::DarkBackgroundColor2Opaque)
+            .settextColor2(VulpineColorUI::DarkBackgroundColor2Opaque)
+            .setbackgroundColor1(vec4(color, BASE_ALPHA))
+            // .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
+            .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+    );
+
+    if(icon.size())
+        title->set<WidgetSprite>(WidgetSprite(icon));
+    else
+    {
+        title->set<WidgetText>(UFTconvert.from_bytes(name));
+
+        // title->comp<WidgetText>().align = StringAlignment::TO_LEFT;
+        // title->comp<WidgetText>().mesh->align = StringAlignment::TO_LEFT;
+    }
+
+    return newEntity(name + " parent", UI_BASE_COMP, 
+        // WidgetBackground(),
+        WidgetStyle()
+            .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+            .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1),
+        EntityGroupInfo({e, title})
+    );
 }
 
 EntityRef VulpineBlueprintUI::TextInput(
@@ -172,7 +221,8 @@ EntityRef VulpineBlueprintUI::ValueInput(
     std::function<void(float f)> setValue, 
     std::function<float()> getValue,
     float minV, float maxV,
-    float smallIncrement, float bigIncrement
+    float smallIncrement, float bigIncrement,
+    vec4 color
     )
 {
     #define PASS_ARG_COPY setValue, getValue, minV, maxV, smallIncrement, bigIncrement
@@ -202,31 +252,46 @@ EntityRef VulpineBlueprintUI::ValueInput(
         );
     }
 
-    auto incr = Toggable("(+)", "", 
+    auto incr = Toggable("+", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() + smallIncrement, minV, maxV));},
-        [PASS_ARG_COPY](Entity *e){return 1.f;}
+        [PASS_ARG_COPY](Entity *e){return 0.f;},
+        // vec4(vec3(color), BASE_ALPHA)
+        color
     );
 
-    auto decr = Toggable("(-)", "", 
+    auto decr = Toggable("-", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() - smallIncrement, minV, maxV));},
-        [PASS_ARG_COPY](Entity *e){return 1.f;}
+        [PASS_ARG_COPY](Entity *e){return 0.f;},
+        // vec4(vec3(color), BASE_ALPHA)
+        color
     );
 
-    auto Bincr = Toggable("[++]", "", 
+    auto Bincr = Toggable("+ +", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() + bigIncrement, minV, maxV));},
-        [PASS_ARG_COPY](Entity *e){return 1.f;}
+        [PASS_ARG_COPY](Entity *e){return 0.f;},
+        // vec4(vec3(color), BASE_ALPHA)
+        color
     );
 
-    auto Bdecr = Toggable("[--]", "", 
+    auto Bdecr = Toggable("- -", "", 
         [PASS_ARG_COPY](Entity *e, float v){setValue(clamp(getValue() - bigIncrement, minV, maxV));},
-        [PASS_ARG_COPY](Entity *e){return 1.f;}
+        [PASS_ARG_COPY](Entity *e){return 0.f;},
+        // vec4(vec3(color), BASE_ALPHA)
+        color
     );
+
+    Bdecr->comp<WidgetBox>().set(vec2(-1., -0.75), vec2(-1, 1));
+    decr->comp<WidgetBox>().set(vec2(-0.75, -0.5), vec2(-1, 1));
+
+    textInput->comp<WidgetBox>().set(vec2(-0.5, 0.5), vec2(-1, 1));
+    incr->comp<WidgetBox>().set(vec2(0.5, 0.75), vec2(-1, 1));
+    Bincr->comp<WidgetBox>().set(vec2(0.75, 1.0), vec2(-1, 1));
 
     return newEntity(name + " - value input"
         , UI_BASE_COMP
         , WidgetBox()
         , WidgetStyle()
-            .setautomaticTabbing(1)
+            // .setautomaticTabbing(1)
             .setuseInternalSpacing(false)
         , EntityGroupInfo({
             Bdecr, 
@@ -296,10 +361,6 @@ EntityRef VulpineBlueprintUI::ValueInputSlider(
         }, color
     );
 
-    s->comp<WidgetBox>() = WidgetBox(
-        vec2(-1, 1./3.), vec2(-1, 1)
-    );
-
     auto t = VulpineBlueprintUI::TextInput(name, 
         [setValue, getValue, min, max](std::u32string &t)
         {
@@ -311,8 +372,12 @@ EntityRef VulpineBlueprintUI::ValueInputSlider(
         }
     );
 
+    s->comp<WidgetBox>() = WidgetBox(
+        vec2(-1, 0.5), vec2(-1, 1)
+    );
+
     t->comp<WidgetBox>() = WidgetBox(
-        vec2(1./3., 1), vec2(-1, 1)
+        vec2(0.5, 1), vec2(-1, 1)
     );
 
     auto p = newEntity(name + " - Menu"
@@ -673,7 +738,7 @@ EntityRef VulpineBlueprintUI::ColorSelectionScreen(
                 return rgb2hsv(getColor()).r;
             }
             ).setmin(0).setmax(0.99999).setpadding(360)
-        , WidgetSprite("VulpineIcon")
+        , WidgetSprite("icon_dot")
 
         // , EntityGroupInfo({
         //     newEntity(name + " - SLIDER HELPER" 
@@ -787,21 +852,24 @@ EntityRef VulpineBlueprintUI::ColoredConstEntry(
     const std::string &name,
     std::function<std::u32string()> toText,
     vec4 color,
-    bool vertical
+    bool vertical,
+    float nameRatio
 )
 {
     vec4 color2 = color;
     color2.a *= 0.5;
 
+    float s = nameRatio;
+
     return newEntity(name + "- coloredConstEntry"
         , UI_BASE_COMP
         , WidgetBox()
         , WidgetStyle()
-            .setautomaticTabbing(vertical ? 2 : 1)
+            .setautomaticTabbing(vertical ? 2 : 0)
         , EntityGroupInfo({
             newEntity(name
                 , UI_BASE_COMP
-                , WidgetBox(vec2(-1, -0.01), vec2(-1, 1))
+                , WidgetBox(vec2(0, nameRatio)*2.f - 1.f, vec2(-1, 1))
                 , WidgetText(U"**" + UFTconvert.from_bytes(name) + U"**")
                 , WidgetBackground()
                 , WidgetStyle()
@@ -809,8 +877,8 @@ EntityRef VulpineBlueprintUI::ColoredConstEntry(
                     // .setbackgroundColor1(color)
                     .settextColor1(VulpineColorUI::DarkBackgroundColor2Opaque)
                     // .settextColor1(color)
-                    .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
-                    // .setbackgroundColor1(color)
+                    // .setbackgroundColor1(VulpineColorUI::LightBackgroundColor1)
+                    .setbackgroundColor1(color)
             ),
 
             newEntity(name + "- text"
@@ -819,7 +887,7 @@ EntityRef VulpineBlueprintUI::ColoredConstEntry(
                 , WidgetBox([toText](Entity *parent, Entity *child)
                 {
                     child->comp<WidgetText>().text = toText();
-                }).set(vec2(0.01, 1), vec2(-1, 1))
+                }).set(vec2(nameRatio, 1.)*2.f - 1.f, vec2(-1, 1))
                 , WidgetStyle()
                     // .setbackgroundColor1(color2)
                     .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
@@ -1173,14 +1241,14 @@ EntityRef VulpineBlueprintUI::StringListSelectionMenu(
             {
                 box.scrollOffset.y += off.y*0.05;
 
-                box.scrollOffset.y = clamp(
-                    box.scrollOffset.y,
-                    -0.05f*child->comp<EntityGroupInfo>().children[0]->comp<EntityGroupInfo>().children.size(),
-                    0.f
-                );
-
                 globals.clearMouseScroll();
             }
+
+            box.scrollOffset.y = clamp(
+                box.scrollOffset.y,
+                -0.05f*child->comp<EntityGroupInfo>().children[0]->comp<EntityGroupInfo>().children.size(),
+                -0.05f*0.3f
+            );
 
             box.displayRangeMin = box.min;
             box.displayRangeMax = box.max;
@@ -1278,13 +1346,6 @@ EntityRef VulpineBlueprintUI::SimpleFolderView(
             if(childrenToAdd.empty() and childrenToKeep.size() == children.size())
                 return;
 
-            children.clear();
-            ManageGarbage<state3D>();
-            ManageGarbage<WidgetBackground>();
-            ManageGarbage<WidgetSprite>();
-            ManageGarbage<WidgetText>();
-            ManageGarbage<EntityModel>();
-
             // Creating new children
             for(auto &i : childrenToAdd)
             {
@@ -1316,6 +1377,8 @@ EntityRef VulpineBlueprintUI::SimpleFolderView(
                 childrenToKeep.push_back(buttonParent);
             }
 
+            auto tmpCopyWeirdCrashPrevention = childrenToKeep;
+
             // Sorting and re-ading all children
             if(doSorting)
                 std::sort(
@@ -1326,11 +1389,38 @@ EntityRef VulpineBlueprintUI::SimpleFolderView(
                         // bool isAFolder = strstr(((Entity*)a->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name.c_str(), FOLDER_STR);
                         // bool isBFolder = strstr(((Entity*)b->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name.c_str(), FOLDER_STR);
 
-                        bool isAFolder = a->comp<EntityInfos>().name != ((Entity*)a->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name;
-                        bool isBFolder = b->comp<EntityInfos>().name != ((Entity*)b->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name;
-                        return isAFolder > isBFolder or strcasecmp(a->comp<EntityInfos>().name.c_str(), b->comp<EntityInfos>().name.c_str()) < 0;
+                        bool isAFolder = 
+                            a and 
+                            a->has<EntityGroupInfo>() and
+                            !a->comp<EntityGroupInfo>().children.empty() and 
+                            a->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr and
+                            a->comp<EntityInfos>().name 
+                            != 
+                            ((Entity*)a->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name;
+
+                        bool isBFolder = 
+                            b and 
+                            b->has<EntityGroupInfo>() and
+                            !b->comp<EntityGroupInfo>().children.empty() and 
+                            b->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr and
+                            b->comp<EntityInfos>().name != ((Entity*)b->comp<EntityGroupInfo>().children[0]->comp<WidgetButton>().usr)->comp<EntityInfos>().name;
+                        
+                        if(isAFolder and !isBFolder)
+                            return true;
+                        if(!isAFolder and isBFolder)
+                            return false;
+                        else
+                            return strcasecmp(a->comp<EntityInfos>().name.c_str(), b->comp<EntityInfos>().name.c_str()) < 0;
                     }
                 );
+            
+            tmpCopyWeirdCrashPrevention.clear();
+            children.clear();
+            ManageGarbage<state3D>();
+            ManageGarbage<WidgetBackground>();
+            ManageGarbage<WidgetSprite>();
+            ManageGarbage<WidgetText>();
+            ManageGarbage<EntityModel>();
 
             for(auto i : childrenToKeep)
                 ComponentModularity::addChild(*child, i);
@@ -1374,7 +1464,7 @@ EntityRef VulpineBlueprintUI::SimpleFolderView(
                 WidgetBackground(),
                 WidgetStyle()
                     .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
-                    .setbackgroundColor1(fileColor),
+                    .setbackgroundColor1(folderColor),
                 WidgetBox([rowsOnScreen, columns](Entity *p, Entity *c)
                 {
                     p = p->comp<EntityGroupInfo>().parent->comp<EntityGroupInfo>().children[0].get();
@@ -1403,7 +1493,7 @@ EntityRef VulpineBlueprintUI::SimpleFolderView(
             // .setautomaticTabbing(1)
             .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor1)
             .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
-        , WidgetBackground()
+        // , WidgetBackground()
         , WidgetBox([rowsOnScreen, columns](Entity *parent, Entity *child){
             auto &box = child->comp<WidgetBox>();
 
@@ -1415,10 +1505,10 @@ EntityRef VulpineBlueprintUI::SimpleFolderView(
                 vec2 off = globals.mouseScrollOffset();
                 box.scrollOffset.y += off.y*0.05;
 
-                box.scrollOffset.y = clamp(box.scrollOffset.y,-(float)max+0.75f,0.f);
-
                 globals.clearMouseScroll();
             }
+
+            box.scrollOffset.y = clamp(box.scrollOffset.y,-(float)max+0.75f,0.f);
 
             box.displayRangeMin = box.min;
             box.displayRangeMax = box.max;

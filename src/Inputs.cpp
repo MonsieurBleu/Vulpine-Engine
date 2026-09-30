@@ -150,7 +150,7 @@ void InputManager::processContinuousInputs()
 {
     for (auto handler : continuousInputs)
     {
-        if(!handler.activated)
+        if(!handler.activated or !handler.filter())
             continue;
 
         switch (handler.keyCode) {

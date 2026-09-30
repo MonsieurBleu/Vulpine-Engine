@@ -315,10 +315,10 @@ VulpineTextOutputRef DataLoader<Flags>::write(const Flags &data, VulpineTextOutp
                 std::string s;
                 if (pair.second->isLogicBlock) 
                 {
-                    s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"$(" + ((LogicFlag*)(pair.second.flag.get()))->logicBlock + ")\"";
+                    s = pair.second->typeToString() + " \"" + pair.first + "\" \"$(" + ((LogicFlag*)(pair.second.flag.get()))->logicBlock + ")\"";
                 }
                 else {
-                    s = "\"" + pair.second->typeToString() + "\" \"" + pair.first + "\" \"" + pair.second->as_string() + "\"";
+                    s = pair.second->typeToString() + " \"" + pair.first + "\" \"" + pair.second->as_string() + "\"";
                 }
                 out->write(CONST_STRING_SIZED(s));
             }    

@@ -1,5 +1,6 @@
 #pragma once
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 
@@ -52,6 +53,8 @@ struct HierarchyState3D : State3D
     HierarchyState3D(const SynchType type = SynchType::ALL) : type(type){};
 };
 
+bool operator==(const HierarchyState3D &a, const HierarchyState3D &b);
+
 class Entity;
 
 struct EntitySpawner
@@ -66,6 +69,14 @@ struct EntitySpawner
 
     std::vector<info> onLoading;
     std::vector<info> onTrigger;
+
+    /*
+        When this flag is true, during the onLoading sequence of all entities, childs that 
+        should not be spawned will be spawned regardless but will all be set unactive.
+
+        This will make entity loading a bit slower, but is very usefull for things like world editors.
+    */
+    static inline bool loadAllAndHide = false;
 };
 
 /*
