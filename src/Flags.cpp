@@ -3,7 +3,7 @@
 #include "AssetManagerUtils.hpp"
 #include "Utils.hpp"
 
-thread_local ErrorInfos error;
+thread_local ErrorInfos vError;
 
 
 template <>
@@ -700,25 +700,25 @@ FlagDataPtr LogicBlock::FunctionNode::evaluate()
 
     if (func.getName() == "") {
         // WARNING_MESSAGE("Function '" + functionName + "' not found");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::UNKNOWN_FUNCTION;
-        error.messageExtra = &functionName;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::UNKNOWN_FUNCTION;
+        vError.messageExtra = &functionName;
+        vError.printError();
         return FlagData::MakeFlag(0);
     }
 
-    int errorIndexStart = error.column_start;
+    int errorIndexStart = vError.column_start;
     for (int i = 0; i < argumentStrings.size(); i++) {
         std::string argString = argumentStrings[i];
         FlagDataPtr argValue = parse_substring(argString, 0, argString.length());
         if (!argValue) {
             // WARNING_MESSAGE("Failed to evaluate argument: " + argString);
-            error.success = false;
-            error.errorType = ErrorInfos::ErrorType::INVALID_ARGUMENTS;
-            error.messageExtra = &argString;
-            error.column_start = errorIndexStart + argumentStringOffsets[i].first;
-            error.column_end = errorIndexStart + argumentStringOffsets[i].second;
-            error.printError();
+            vError.success = false;
+            vError.errorType = ErrorInfos::ErrorType::INVALID_ARGUMENTS;
+            vError.messageExtra = &argString;
+            vError.column_start = errorIndexStart + argumentStringOffsets[i].first;
+            vError.column_end = errorIndexStart + argumentStringOffsets[i].second;
+            vError.printError();
             switch (func.getArgType(i))
             {
                 case FlagData::INT:
@@ -743,16 +743,16 @@ FlagDataPtr LogicBlock::FunctionNode::evaluate()
     }
 
     std::optional<FlagDataPtr> result = func.call(argValues, argumentStringOffsets);
-    if (error.success == false) 
+    if (vError.success == false) 
     {
         return FlagData::MakeFlag(0);
     }
 
-    if (!result.has_value()) { // shouldn't be reached if error.success is properly set in func.call
+    if (!result.has_value()) { // shouldn't be reached if vError.success is properly set in func.call
         // WARNING_MESSAGE("Function '" + functionName + "' call failed");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_FAILED;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_FAILED;
+        vError.printError();
         return FlagData::MakeFlag(0);
     }
     
@@ -763,9 +763,9 @@ FlagDataPtr LogicBlock::NotOperatorNode::evaluate()
 {
     if (children.size() != 1) {
         // WARNING_MESSAGE("NotOperatorNode must have exactly one child");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        vError.printError();
         return FlagData::MakeFlag(false);
     }
 
@@ -778,9 +778,9 @@ FlagDataPtr LogicBlock::AdditionOperatorNode::evaluate()
 {
     if (children.size() != 2) {
         // WARNING_MESSAGE("AdditionOperatorNode must have exactly two children");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        vError.printError();
         return FlagData::MakeFlag(0);
     }
 
@@ -802,9 +802,9 @@ FlagDataPtr LogicBlock::MultiplicationOperatorNode::evaluate()
 {
     if (children.size() != 2) {
         // WARNING_MESSAGE("MultiplicationOperatorNode must have exactly two children");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        vError.printError();
         return FlagData::MakeFlag(0);
     }
 
@@ -827,9 +827,9 @@ FlagDataPtr LogicBlock::ComparisonOperatorNode::evaluate()
 {
     if (children.size() != 2) {
         // WARNING_MESSAGE("ComparisonOperatorNode must have exactly two children");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        vError.printError();
         return FlagData::MakeFlag(false);
     }
 
@@ -862,9 +862,9 @@ FlagDataPtr LogicBlock::EqualityOperatorNode::evaluate()
 {
     if (children.size() != 2) {
         // WARNING_MESSAGE("EqualityOperatorNode must have exactly two children");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        vError.printError();
         return FlagData::MakeFlag(false);
     }
 
@@ -890,9 +890,9 @@ FlagDataPtr LogicBlock::LogicalAndOperatorNode::evaluate()
 {
     if (children.size() != 2) {
         // WARNING_MESSAGE("LogicalAndOperatorNode must have exactly two children");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        vError.printError();
         return FlagData::MakeFlag(false);
     }
 
@@ -907,9 +907,9 @@ FlagDataPtr LogicBlock::LogicalOrOperatorNode::evaluate()
 {
     if (children.size() != 2) {
         // WARNING_MESSAGE("LogicalOrOperatorNode must have exactly two children");
-        error.success = false;
-        error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-        error.printError();
+        vError.success = false;
+        vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+        vError.printError();
         return FlagData::MakeFlag(false);
     }
 
@@ -1068,11 +1068,11 @@ bool LogicBlock::tokenize(const std::string& str, std::vector<Token> &tokens, st
 
                     if (parenCount != 0) {
                         // WARNING_MESSAGE("Unmatched parentheses in function call: " + str.substr(start, i - start));
-                        error.success = false;
-                        error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                        error.column_start = tempPos;
-                        error.column_end = tempPos;
-                        error.printError();
+                        vError.success = false;
+                        vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                        vError.column_start = tempPos;
+                        vError.column_end = tempPos;
+                        vError.printError();
                         return false;
                     }
 
@@ -1142,19 +1142,19 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
                 else 
                 {
                     // WARNING_MESSAGE("Flag '" + flagName + "' not found, defaulting to false");
-                    error.success = false;
-                    error.errorType = ErrorInfos::ErrorType::UNKNOWN_FLAG;
-                    error.messageExtra = &flagName;
-                    error.printError();
+                    vError.success = false;
+                    vError.errorType = ErrorInfos::ErrorType::UNKNOWN_FLAG;
+                    vError.messageExtra = &flagName;
+                    vError.printError();
                     flagClone = FlagData::MakeFlag(false);
                 }
                 
                 return std::make_shared<FlagValueNode>(flagClone.flag);
             }
             // WARNING_MESSAGE("Unrecognized flag or value: " + value + ", defaulting to false");
-            error.success = false;
-            error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-            error.printError();
+            vError.success = false;
+            vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+            vError.printError();
             return std::make_shared<FlagValueNode>(FlagData::MakeFlag(false));
         }
         case FUNCTION:
@@ -1164,9 +1164,9 @@ LogicBlock::OperationNodePtr LogicBlock::Token::toOperationNode() const
             size_t parenClosePos = value.rfind(')');
             if (parenOpenPos == std::string::npos || parenClosePos == std::string::npos || parenClosePos <= parenOpenPos) {
                 // WARNING_MESSAGE("Invalid function token: " + value);
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR; // shouldn't be happening due to prior checks (hopefully)
-                error.printError();
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR; // shouldn't be happening due to prior checks (hopefully)
+                vError.printError();
                 return nullptr;
             }
             std::string functionName = value.substr(0, parenOpenPos);
@@ -1238,10 +1238,10 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
 
     OperationNodePtr currentNode = nullptr;
 
-    int errorColumnOffsetStart = error.column_start;
+    int errorColumnOffsetStart = vError.column_start;
     for (int i = 0; i < tokens.size(); i++) {
-        error.column_start = errorColumnOffsetStart + tokenPositions[i].first;
-        error.column_end = errorColumnOffsetStart + tokenPositions[i].second;
+        vError.column_start = errorColumnOffsetStart + tokenPositions[i].first;
+        vError.column_end = errorColumnOffsetStart + tokenPositions[i].second;
         const Token& token = tokens[i];
         if (token.type == Token::TokenType::PARENS_OPEN)
         {
@@ -1260,9 +1260,9 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
             }
             if (parenCount != 0) {
                 // WARNING_MESSAGE("Mismatched parentheses in logic block");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                error.printError();
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                vError.printError();
                 return nullptr;
             }
             std::vector<Token> paren_tokens = std::vector<Token>(tokens.begin() + i + 1, tokens.begin() + j);
@@ -1291,11 +1291,11 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
         else if (token.type == Token::TokenType::PARENS_CLOSE)
         {
             // WARNING_MESSAGE("Mismatched parentheses in logic block");
-            error.success = false;
-            error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-            error.column_start = i;
-            error.column_end = i;
-            error.printError();
+            vError.success = false;
+            vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+            vError.column_start = i;
+            vError.column_end = i;
+            vError.printError();
             return nullptr;
         }
         OperationNodePtr newNode = token.toOperationNode();
@@ -1332,9 +1332,9 @@ LogicBlock::OperationNodePtr LogicBlock::buildOperationTree(std::vector<Token> t
                     currentNode = newNode;
                 } else {
                     // WARNING_MESSAGE("Operator node without left operand");
-                    error.success = false;
-                    error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-                    error.printError();
+                    vError.success = false;
+                    vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+                    vError.printError();
                     return nullptr;
                 }
                 break;
@@ -1367,13 +1367,13 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
             }
             if (j >= substring.length() || substring[j] != '(') {
                 // WARNING_MESSAGE("Malformed if statement in logic block");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
-                error.column_start = i;
-                error.column_end = i;
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                vError.column_start = i;
+                vError.column_end = i;
                 static std::string info = " missing opening parenthesis for condition";
-                error.messageExtra = &info;
-                error.printError();
+                vError.messageExtra = &info;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
             // find matching closing paren
@@ -1391,18 +1391,18 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
             }
             if (parenCount != 0) {
                 // WARNING_MESSAGE("Mismatched parentheses in if statement");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                error.column_start = j;
-                error.column_end = j;
-                error.printError();
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                vError.column_start = j;
+                vError.column_end = j;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
             // parse the condition
-            size_t col_start_old = error.column_start;
-            size_t col_end_old = error.column_end;
-            error.column_start = idx_start + j + 1;
-            error.column_end = idx_start + k;
+            size_t col_start_old = vError.column_start;
+            size_t col_end_old = vError.column_end;
+            vError.column_start = idx_start + j + 1;
+            vError.column_end = idx_start + k;
             FlagDataPtr conditionFlag = parse_substring(substring, j + 1, k);
             bool condition = conditionFlag->as_bool();
             // find then
@@ -1412,13 +1412,13 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
             }
             if (substring.substr(thenIdx, 4) != "then") {
                 // WARNING_MESSAGE("Malformed if statement, missing 'then'");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
-                error.column_start = thenIdx;
-                error.column_end = thenIdx;
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                vError.column_start = thenIdx;
+                vError.column_end = thenIdx;
                 static std::string info = " missing 'then' keyword";
-                error.messageExtra = &info;
-                error.printError();
+                vError.messageExtra = &info;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
             thenIdx += 4;
@@ -1429,13 +1429,13 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
             }
             if (j >= substring.length() || substring[j] != '(') {
                 // WARNING_MESSAGE("Malformed then block in if statement");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
-                error.column_start = j;
-                error.column_end = j;
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                vError.column_start = j;
+                vError.column_end = j;
                 static std::string info = " missing opening parenthesis for then block";
-                error.messageExtra = &info;
-                error.printError();
+                vError.messageExtra = &info;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
             parenCount = 1;
@@ -1452,11 +1452,11 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
             }
             if (parenCount != 0) {
                 // WARNING_MESSAGE("Mismatched parentheses in then block");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                error.column_start = j;
-                error.column_end = j;
-                error.printError();
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                vError.column_start = j;
+                vError.column_end = j;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
             size_t thenContentStart = j + 1;
@@ -1480,13 +1480,13 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
                 }
                 if (j >= substring.length() || substring[j] != '(') {
                     // WARNING_MESSAGE("Malformed else block in if statement");
-                    error.success = false;
-                    error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
-                    error.column_start = j;
-                    error.column_end = j;
+                    vError.success = false;
+                    vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                    vError.column_start = j;
+                    vError.column_end = j;
                     static std::string info = " missing opening parenthesis for else block";
-                    error.messageExtra = &info;
-                    error.printError();
+                    vError.messageExtra = &info;
+                    vError.printError();
                     return FlagData::MakeFlag(false);
                 }
                 parenCount = 1;
@@ -1503,11 +1503,11 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
                 }
                 if (parenCount != 0) {
                     // WARNING_MESSAGE("Mismatched parentheses in else block");
-                    error.success = false;
-                    error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                    error.column_start = j;
-                    error.column_end = j;
-                    error.printError();
+                    vError.success = false;
+                    vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                    vError.column_start = j;
+                    vError.column_end = j;
+                    vError.printError();
                     return FlagData::MakeFlag(false);
                 }
                 elseContentStart = j + 1;
@@ -1515,18 +1515,18 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
                 elseContent = substring.substr(j + 1, k - j - 1);
             }
             if (condition) {
-                error.column_start = idx_start + thenContentStart;
-                error.column_end = idx_start + thenContentEnd;
+                vError.column_start = idx_start + thenContentStart;
+                vError.column_end = idx_start + thenContentEnd;
                 ifResult = parse_substring(thenContent, 0, thenContent.length());
             } else if (!elseContent.empty()) {
-                error.column_start = idx_start + elseContentStart;
-                error.column_end = idx_start + elseContentEnd;
+                vError.column_start = idx_start + elseContentStart;
+                vError.column_end = idx_start + elseContentEnd;
                 // std::cout << "Parsing else content: " << elseContent << std::endl;
                 ifResult = parse_substring(elseContent, 0, elseContent.length());  
             } 
 
-            error.column_start = col_start_old;
-            error.column_end = col_end_old;
+            vError.column_start = col_start_old;
+            vError.column_end = col_end_old;
 
             if (ifResult)
             {
@@ -1549,12 +1549,12 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
                 }
 
                 substring = substring.substr(0, i) + ifResultStr + substring.substr(k + 1);
-                // advance error.column_start by the length of the old if statement minus the length of the new result
+                // advance vError.column_start by the length of the old if statement minus the length of the new result
                 // std::cout << "i: " << i << ", k: " << k << ", ifResultStr.length: " << ifResultStr.length() << std::endl;
-                // std::cout << "Old error.column_start: " << error.column_start << std::endl;
-                error.column_start += (k + 1 - i) - ifResultStr.length();
-                // std::cout << "Updated error.column_start to: " << error.column_start << std::endl;
-                error.column_end = error.column_start;
+                // std::cout << "Old vError.column_start: " << vError.column_start << std::endl;
+                vError.column_start += (k + 1 - i) - ifResultStr.length();
+                // std::cout << "Updated vError.column_start to: " << vError.column_start << std::endl;
+                vError.column_end = vError.column_start;
                 i += ifResultStr.length() - 1;
             }
             else 
@@ -1592,13 +1592,13 @@ FlagDataPtr LogicBlock::parse_substring(const std::string& str, size_t idx_start
 
 void LogicBlock::parse_string(std::string& str, std::string* filename)
 {
-    error.clear();
-    error.fileName = filename;
-    error.lineNumber = 0;
+    vError.clear();
+    vError.fileName = filename;
+    vError.lineNumber = 0;
     std::string lineContentStr = str; // copy the content cause it's modified in place
-    error.LineContent = lineContentStr.c_str();
-    error.column_start = 0;
-    error.column_end = 0;
+    vError.LineContent = lineContentStr.c_str();
+    vError.column_start = 0;
+    vError.column_end = 0;
 
 
     std::string logicBlockStart = "$(";
@@ -1618,7 +1618,7 @@ void LogicBlock::parse_string(std::string& str, std::string* filename)
                 lineStart = i + 1;
             }
         }
-        error.lineNumber = newlineCount;
+        vError.lineNumber = newlineCount;
         size_t startIdx = pos + logicBlockStart.length();
         size_t endIdx = startIdx;
         int parenCount = 1;
@@ -1632,17 +1632,17 @@ void LogicBlock::parse_string(std::string& str, std::string* filename)
         }
         if (parenCount != 0) {
             // WARNING_MESSAGE("Mismatched parentheses in logic block");
-            error.success = false;
-            error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-            error.column_start = startGlobalIdx + (pos - oldPos) + 1;
-            error.column_end = lineContentStr.length() + 1;
+            vError.success = false;
+            vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+            vError.column_start = startGlobalIdx + (pos - oldPos) + 1;
+            vError.column_end = lineContentStr.length() + 1;
             
-            error.printError();
-            error.clear();
+            vError.printError();
+            vError.clear();
         }
         startGlobalIdx += pos - oldPos + logicBlockStart.length();
-        error.column_start = startGlobalIdx - lineStart;
-        error.column_end = startGlobalIdx - lineStart;
+        vError.column_start = startGlobalIdx - lineStart;
+        vError.column_end = startGlobalIdx - lineStart;
         FlagDataPtr resultFlag = parse_substring(str, startIdx, endIdx - 1);
 
 
@@ -1685,11 +1685,11 @@ void writeInBuffer(
 
 void LogicBlock::parse_string_cstr(char ** input, size_t &len, size_t allocated, std::string* filename) 
 {
-    error.clear();
-    error.fileName = filename;
-    error.lineNumber = 0;
+    vError.clear();
+    vError.fileName = filename;
+    vError.lineNumber = 0;
     std::string lineContentStr(*input, len); // copy the content cause it's modified in place
-    error.LineContent = lineContentStr.c_str();
+    vError.LineContent = lineContentStr.c_str();
 
     static const char logicBlockStart[] = "$(";
     // static const char logicBlockEnd[] = ")";
@@ -1723,7 +1723,7 @@ void LogicBlock::parse_string_cstr(char ** input, size_t &len, size_t allocated,
                 lineStart = i+1;
             }
         }
-        error.lineNumber = newlineCount;
+        vError.lineNumber = newlineCount;
 
         size_t startIdx = (pos - readHead) + sizeof(logicBlockStart)-1;
         size_t endIdx = startIdx;
@@ -1741,23 +1741,23 @@ void LogicBlock::parse_string_cstr(char ** input, size_t &len, size_t allocated,
 
         if (parenCount != 0)
         {
-            error.success = false;
-            error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+            vError.success = false;
+            vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
             static std::string info = " unmatched parentheses in logic block";
-            error.messageExtra = &info;
+            vError.messageExtra = &info;
             
-            error.column_start = startGlobalIdx + (globalPos - oldPos) + 1;
-            error.column_end = lineContentStr.length() + 1;
+            vError.column_start = startGlobalIdx + (globalPos - oldPos) + 1;
+            vError.column_end = lineContentStr.length() + 1;
 
-            error.printError();
-            error.clear();
+            vError.printError();
+            vError.clear();
         }
 
         startGlobalIdx += globalPos - oldPos + sizeof(logicBlockStart) - 1;
 
         // FlagDataPtr resultFlag = parse_substring_cstr(*input, len, startIdx, endIdx-1);
-        error.column_start = startGlobalIdx - lineStart;
-        error.column_end = startGlobalIdx - lineStart;
+        vError.column_start = startGlobalIdx - lineStart;
+        vError.column_end = startGlobalIdx - lineStart;
 
         FlagDataPtr resultFlag = parse_substring(readHead, startIdx, endIdx - 1);
 
@@ -1824,13 +1824,13 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
                 j++;
             }
             if (j >= idx_end || input[j] != '(') {
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
                 static std::string info = " missing opening parenthesis for condition";
-                error.messageExtra = &info;
-                error.column_start = j;
-                error.column_end = j;
-                error.printError();
+                vError.messageExtra = &info;
+                vError.column_start = j;
+                vError.column_end = j;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
             // find matching closing paren
@@ -1853,11 +1853,11 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
             }
             if (parenCount != 0)
             {
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                error.column_start = j;
-                error.column_end = j;
-                error.printError();
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                vError.column_start = j;
+                vError.column_end = j;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
 
@@ -1865,7 +1865,7 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
             // parse the condition
             // FlagDataPtr conditionFlag = parse_substring(input, j + 1, k);
             FlagDataPtr conditionFlag = parse_substring_cstr(input, len, j+1, k);
-            if(!error.success) return FlagData::MakeFlag(false);
+            if(!vError.success) return FlagData::MakeFlag(false);
 
             bool condition = conditionFlag->as_bool();
             // find then
@@ -1881,13 +1881,13 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
                 input[thenIdx+3] != 'n'
             )
             {
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
                 static std::string info = " missing 'then' keyword";
-                error.messageExtra = &info;
-                error.column_start = k + 1;
-                error.column_end = k + 1;
-                error.printError();
+                vError.messageExtra = &info;
+                vError.column_start = k + 1;
+                vError.column_end = k + 1;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
             thenIdx += 4;
@@ -1897,13 +1897,13 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
 
             if (j >= idx_end || input[j] != '(')
             {
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
                 static std::string info = " missing opening parenthesis for then block";
-                error.messageExtra = &info;
-                error.column_start = j;
-                error.column_end = j;
-                error.printError();
+                vError.messageExtra = &info;
+                vError.column_start = j;
+                vError.column_end = j;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
 
@@ -1924,11 +1924,11 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
 
             if (parenCount != 0)
             {
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                error.column_start = j;
-                error.column_end = j;
-                error.printError();
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                vError.column_start = j;
+                vError.column_end = j;
+                vError.printError();
                 return FlagData::MakeFlag(false);
             }
 
@@ -1958,13 +1958,13 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
 
                 if (j >= idx_end || input[j] != '(')
                 {
-                    error.success = false;
-                    error.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
+                    vError.success = false;
+                    vError.errorType = ErrorInfos::ErrorType::MALFORMED_IF_STATEMENT;
                     static std::string info = " missing opening parenthesis for else block";
-                    error.messageExtra = &info;
-                    error.column_start = j;
-                    error.column_end = j;
-                    error.printError();
+                    vError.messageExtra = &info;
+                    vError.column_start = j;
+                    vError.column_end = j;
+                    vError.printError();
                     return FlagData::MakeFlag(false);
                 }
 
@@ -1984,11 +1984,11 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
                 }
                 if (parenCount != 0)
                 {
-                    error.success = false;
-                    error.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
-                    error.column_start = j;
-                    error.column_end = j;
-                    error.printError();
+                    vError.success = false;
+                    vError.errorType = ErrorInfos::ErrorType::UNMATCHED_PARENS;
+                    vError.column_start = j;
+                    vError.column_end = j;
+                    vError.printError();
                     return FlagData::MakeFlag(false);
                 }
 
@@ -2008,7 +2008,7 @@ FlagDataPtr LogicBlock::LogicBlock::parse_substring_cstr(const char* input, cons
                 ifResult = parse_substring_cstr(input, len, elseContent_idx_start, elseContent_idx_end);
             } 
 
-            if(!error.success)
+            if(!vError.success)
                 return FlagData::MakeFlag(false);
 
             if (ifResult)
@@ -2180,12 +2180,12 @@ void ErrorInfos::printError() const
             break;
     }
 
-    if (error.column_start > 0 && LineContent != nullptr)
+    if (vError.column_start > 0 && LineContent != nullptr)
     {   
         std::string line = getLineFromString(LineContent, lineNumber);
         // count the number of \t before column_start to adjust the column position
         size_t tabCount = 0;
-        for (size_t i = 0; i < error.column_start - 1 && i < line.length(); i++) {
+        for (size_t i = 0; i < vError.column_start - 1 && i < line.length(); i++) {
             if (line[i] == '\t') {
                 tabCount++;
             }
@@ -2200,10 +2200,10 @@ void ErrorInfos::printError() const
             }
         }
         line = adjustedLine;
-        size_t adjustedColumnStart = error.column_start + tabCount * 3; // each tab is replaced by 4 spaces, so we add 3 extra spaces
-        error.column_start = adjustedColumnStart;
-        size_t adjustedColumnEnd = error.column_end + tabCount * 3;
-        error.column_end = adjustedColumnEnd;
+        size_t adjustedColumnStart = vError.column_start + tabCount * 3; // each tab is replaced by 4 spaces, so we add 3 extra spaces
+        vError.column_start = adjustedColumnStart;
+        size_t adjustedColumnEnd = vError.column_end + tabCount * 3;
+        vError.column_end = adjustedColumnEnd;
 
         std::cerr << TERMINAL_ERROR << "ERROR   |" << TERMINAL_RESET << " While Parsing Logic Block: " << TERMINAL_INFO << TERMINAL_BOLD << "\"" << line << "\"";
         if (fileName != nullptr) {
@@ -2215,14 +2215,14 @@ void ErrorInfos::printError() const
         std::cerr << "\n";
         std::cerr << TERMINAL_ERROR << "        |> " << errorMsg << "\n";
         std::cerr << "           \"" << line << "\"\n            ";
-        for (size_t i = 0; i < error.column_start - 1; i++) {
+        for (size_t i = 0; i < vError.column_start - 1; i++) {
             std::cerr << " ";
         }
         std::cerr << "^";
 
-        if (error.column_end > error.column_start)
+        if (vError.column_end > vError.column_start)
         {
-            for (size_t i = error.column_start + 1; i < error.column_end; i++) {
+            for (size_t i = vError.column_start + 1; i < vError.column_end; i++) {
                 std::cerr << "~";
             }
         }

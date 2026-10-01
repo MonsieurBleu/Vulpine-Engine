@@ -44,7 +44,7 @@ extern thread_local
         void clear();
         void printError() const;
     }
-error    
+vError
 ;
 
 struct ScriptNameWrapper {
@@ -566,12 +566,12 @@ public:
             if (expectedArgTypes.size() != args.size()) {
                 // WARNING_MESSAGE("Function " + name + " called with incorrect number of arguments. Expected " +
                 //                 std::to_string(expectedArgTypes.size()) + ", got " + std::to_string(args.size()) + ".");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_ERROR_COUNT;
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_ERROR_COUNT;
                 static std::string errorMsg = "In function " + name + ", Expected " +
                     std::to_string(expectedArgTypes.size()) + ", got " + std::to_string(args.size()) + ".";
-                error.messageExtra = &errorMsg;
-                error.printError();
+                vError.messageExtra = &errorMsg;
+                vError.printError();
                 return std::nullopt;
             }
 
@@ -587,17 +587,17 @@ public:
                     //                 std::to_string(i) + ". Expected " +
                     //                 FlagData::TypeReverseMap[expectedArgTypes[i]] + ", got " +
                     //                 FlagData::TypeReverseMap[args[i]->type] + ".");
-                    error.success = false;
-                    error.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_ERROR_TYPE;
+                    vError.success = false;
+                    vError.errorType = ErrorInfos::ErrorType::FUNCTION_CALL_ERROR_TYPE;
                     static std::string errorMsg = "In function " + name + ", argument " +
                         std::to_string(i) + ": Expected " +
                         FlagData::TypeReverseMap[expectedArgTypes[i]] + ", got " +
                         FlagData::TypeReverseMap[args[i]->type] + ".";
-                    error.messageExtra = &errorMsg;
+                    vError.messageExtra = &errorMsg;
                     std::cout << "Offsets: " << argumentStringOffsets[i].first << ", " << argumentStringOffsets[i].second << std::endl;
-                    error.column_end = error.column_start + argumentStringOffsets[i].second;
-                    error.column_start += argumentStringOffsets[i].first;
-                    error.printError();
+                    vError.column_end = vError.column_start + argumentStringOffsets[i].second;
+                    vError.column_start += argumentStringOffsets[i].first;
+                    vError.printError();
                     return std::nullopt;
                 }
             }
@@ -630,9 +630,9 @@ private:
         {
             if (children.size() + 1 > expectedChildren) {
                 // WARNING_MESSAGE("Trying to add too many children to OperationNode");
-                error.success = false;
-                error.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
-                error.printError();
+                vError.success = false;
+                vError.errorType = ErrorInfos::ErrorType::SYNTAX_ERROR;
+                vError.printError();
                 return;
             }
             child->parent = shared_from_this();
