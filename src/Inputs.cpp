@@ -412,7 +412,7 @@ void InputManager::initJoystick()
 {
     for (int i = 0; i < GLFW_JOYSTICK_LAST; i++)
     {
-        if (glfwJoystickPresent(i) == GLFW_TRUE)
+        if (glfwJoystickPresent(i) == GLFW_TRUE && glfwGetGamepadState(i, &gamepadState) == GLFW_TRUE)
         {
             currentJoystick = i;
             NOTIF_MESSAGE("Joystick " ,  i ,  " connected");

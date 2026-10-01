@@ -12,6 +12,8 @@
 
 #include "MappedEnum.hpp"
 
+#include "Logging.hpp"
+
 #define PRINTVAR(v) "\n\t", #v, " : ", v
 
 #ifdef _WIN32
@@ -49,7 +51,7 @@ std::ostream& operator<<(std::ostream& os, const glm::quat& u);
 
 /// LOGGING
 
-#include "Logging.hpp"
+
 #define FILE_ERROR_MESSAGE(filename, ...) { \
     Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::fileError(filename, __VA_ARGS__); \
