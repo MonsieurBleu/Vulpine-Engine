@@ -2,6 +2,7 @@
 #include <ECS/ComponentTypeUI.hpp>
 #include <ECS/ComponentTypeAudio.hpp>
 #include <ECS/ComponentType3D.hpp>
+#include <ECS/ComponentTypeNavigation.hpp>
 
 #ifndef CURRENT_MAX_COMP_USAGE
 // #undef CURRENT_MAX_COMP_USAGE
@@ -83,13 +84,27 @@ void updateEntityCursor(
 
 void updateWidgetsStyle(); 
 
-/***************** AUDIO VULPINE SYSTEMS *****************/
+/***************** AUDIO VULPINE COMPONENTS *****************/
 
 #undef CURRENT_CATEGORY
 #define CURRENT_CATEGORY SOUND
 
 Component(AudioPlayer);
 Component(AudioScatterer);
+
+/***************** NAVIGATION VULPINE COMPONENTS *****************/
+
+#undef CURRENT_CATEGORY
+#define CURRENT_CATEGORY NAVIGATION
+/*
+Component(NavLoaderComponent);
+*/
+
+Component(Pathfind);
+template<> void Component<Pathfind>::ComponentElem::init();
+template<> void Component<Pathfind>::ComponentElem::clean();
+
+
 
 /***************** PHYSICS VULPINE SYSTEMS *****************/
 #ifdef ECS_JOLT_PHYSICS_INTEGRATION
@@ -106,5 +121,3 @@ Component(AudioScatterer);
     Component(KynematicFlag)
 
 #endif
-
-

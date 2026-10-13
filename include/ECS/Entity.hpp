@@ -59,6 +59,7 @@ GENERATE_ENUM(ComponentCategory,
     PHYSIC,             // Components that contains physic related elements, should be manipulated with the physic mutex in mind, or in the physics thread directly 
     PHYSIC_DYNAMIC,     // Same as above, but used to separate component used by non static entity and statics ones
     SOUND,              // Components that contains Sound related elements
+    NAVIGATION,         // Components that contains Navigation related elements
     AI,                 // Components that contains AI related elements, should be manipulated with the AI mutex in mind, or in the AI thread directly 
     SCRIPTING,          // Components that contains Scripting related elements
     END 

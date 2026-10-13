@@ -312,6 +312,31 @@ inline bool isFloat(const std::string& s, float& value) {
     return (*p == 0);
 }
 
+// cool variadric min & max wrappers for multi argument min/max
+template <typename T>
+inline constexpr T minN(T arg0, T arg1)
+{
+    return glm::min(arg0, arg1);
+}
+
+template <typename T, typename... Args>
+inline constexpr T minN(T arg0, T arg1, Args... args)
+{
+    return glm::min(arg0, minN(arg1, args...));
+}
+
+template <typename T>
+inline constexpr T maxN(T arg0, T arg1)
+{
+    return glm::max(arg0, arg1);
+}
+
+template <typename T, typename... Args>
+inline constexpr T maxN(T arg0, T arg1, Args... args)
+{
+    return glm::max(arg0, maxN(arg1, args...));
+}
+
 void angleVectors(const glm::vec3& angles, glm::vec3& forward, glm::vec3& right, glm::vec3& up);
 
 void ensureNonZeroVectorComponents(glm::vec3& v);

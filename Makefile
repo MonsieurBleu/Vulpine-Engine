@@ -26,9 +26,11 @@ OPTFLAGS =
 
 # JOLTFLAGS = -DJPH_BUILD_SHARED_LIBRARY -DJPH_CROSS_PLATFORM_DETERMINISTIC -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM -DJPH_SHARED_LIBRARY -DJPH_USE_AVX -DJPH_USE_AVX2 -DJPH_USE_CPU_COMPUTE -DJPH_USE_F16C -DJPH_USE_LZCNT -DJPH_USE_SSE4_1 -DJPH_USE_SSE4_2 -DJPH_USE_TZCNT -DNDEBUG
 # JOLTFLAGS = -DJPH_BUILD_SHARED_LIBRARY -DJPH_CROSS_PLATFORM_DETERMINISTIC -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM -DJPH_SHARED_LIBRARY -DNDEBUG
-JOLTFLAGS = -DJPH_BUILD_SHARED_LIBRARY -DJPH_CROSS_PLATFORM_DETERMINISTIC -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM -DJPH_SHARED_LIBRARY -DNDEBUG
+JOLTFLAGS = -DJPH_BUILD_SHARED_LIBRARY -DJPH_CROSS_PLATFORM_DETERMINISTIC -DJPH_DEBUG_RENDERER -DJPH_OBJECT_STREAM -DJPH_SHARED_LIBRARY -DNDEBUG 
 
-CPPFLAGS = $(WFLAGS) --std=c++23 $(OPTFLAGS) -Wno-deprecated-declarations -fsized-deallocation $(JOLTFLAGS)
+RECASTFLAGS = -DDT_POLYREF64 -DDT_VIRTUAL_QUERYFILTER
+
+CPPFLAGS = $(WFLAGS) --std=c++23 $(OPTFLAGS) -Wno-deprecated-declarations -fsized-deallocation $(JOLTFLAGS) $(RECASTFLAGS) -fno-rtti
 INCLUDE = -Iinclude -IexternalLibs -I../externalLibs
 
 COMPILE_MODE = NONE
@@ -50,8 +52,8 @@ ifeq ($(COMPILE_MODE),Windows)
 	LINKFLAGS = ../Sanctia-Release/libglfw3.a ../Sanctia-Release/libglfw3dll.a
 	VULPINE_LIB_NAME = libvulpineEngine_WIN64.a
 else
-	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGLU -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp -lstdc++exp -lJolt
-	LINKFLAGS = -Wl,-rpath,'$$ORIGIN/lib'
+	LIBFLAGS = -L./ -Llibs/ -lGLEW -lglfw3 -lGLU -lGL -lktx -lopenal -lgvc -lcgraph -lcdt -lluajit-5.1 -lassimp -lstdc++exp -lJolt -lRecast -lDetour -lDebugUtils -lDetourCrowd -lDetourTileCache
+	LINKFLAGS = -Wl,-rpath,'$$ORIGIN/lib' -fuse-ld=mold -L/usr/local/lib/
 	VULPINE_LIB_NAME = libvulpineEngine_UNIX.a
 endif
 
@@ -169,7 +171,7 @@ game : vulpine
 game : LIBFLAGSG = $(LIBFLAGS) -lreactphysics3d
 game : game_base_echo $(GOBJ)
 	@$(LINKING_EXECUTABLE) $@
-	@$(CC) $(GOBJ) $(LINKFLAGS) $(CPPFLAGS)$(LIBFLAGSG) -o $(GEXECP)
+	@$(CC) $(GOBJ) $(LINKFLAGS) $(CPPFLAGS) $(LIBFLAGSG) -o $(GEXECP)
 	@${GAME_READY}
 
 obj/game/main.o : ../main.cpp
