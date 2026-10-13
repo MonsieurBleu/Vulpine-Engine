@@ -121,7 +121,8 @@ struct WidgetBox
 struct WidgetText
 {
     WidgetText(){};
-    WidgetText(std::u32string newText, StringAlignment align = StringAlignment::CENTERED) : text(newText), align(align){};
+    WidgetText(const std::u32string & newText, StringAlignment align = StringAlignment::CENTERED) : text(newText), align(align){};
+    WidgetText(const std::string & newText, StringAlignment align = StringAlignment::CENTERED) : text(UFTconvert.from_bytes(newText)), align(align){};
     SingleStringBatchRef mesh;
     std::u32string text;
     StringAlignment align;

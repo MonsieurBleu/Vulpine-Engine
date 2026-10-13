@@ -1540,3 +1540,98 @@ EntityRef VulpineBlueprintUI::SimpleFolderView(
 
     return newEntity(name + " - Folder View", UI_BASE_COMP, EntityGroupInfo({scrollZone, scrollBar}));
 }
+
+void VulpineBlueprintUI::UserNotif::init(EntityRef gamescreen)
+{
+    parent = newEntity("User Notifs", UI_BASE_COMP,
+        WidgetBox(vec2(0.5, 1.0), vec2(1.0, 1.4))
+    );
+
+    ComponentModularity::addChild(*gamescreen, parent);
+}
+
+void VulpineBlueprintUI::UserNotif::update()
+{
+    const float messageTime = 4.0;
+
+    float time = globals.appTime.getElapsedTime() - lastTimePop;
+
+    if(time > messageTime && !parent->comp<EntityGroupInfo>().children.empty())
+    {
+        lastTimePop = globals.appTime.getElapsedTime();
+        ComponentModularity::removeChild(*parent, parent->comp<EntityGroupInfo>().children[0]);
+    }
+}
+
+void VulpineBlueprintUI::UserNotif::sent(
+        vec3 color,
+        std::string header,
+        std::string messageLigne1,
+        std::string messageLigne2,
+        std::string messageLigne3
+    )
+{
+    auto headerEntity = newEntity("Message Header", UI_BASE_COMP,
+        WidgetBox(vec2(-1, 1), vec2(-1.0, -0.5)),
+        WidgetText(header),
+        WidgetBackground(),
+        WidgetStyle()
+            .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+            .setbackgroundColor1(vec4(color, BASE_ALPHA))
+            .settextColor1(VulpineColorUI::DarkBackgroundColor2)
+    );
+    
+    auto message = newEntity("Message Header", UI_BASE_COMP,
+        WidgetBox(vec2(-1, 1), vec2(-0.5, 0.75)),
+        WidgetText(messageLigne1 + "\n" + messageLigne2 + "\n" + messageLigne3),
+        WidgetBackground(),
+        WidgetStyle()
+            .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+            .setbackgroundColor1(VulpineColorUI::DarkBackgroundColor2)
+            .settextColor1(vec4(color, BASE_ALPHA))
+    );
+    
+    auto timeBar = newEntity("Message Timebar", UI_BASE_COMP,
+        WidgetBox(vec2(-1, 1), vec2(0.75, 1.0)),
+        WidgetBackground(),
+        WidgetStyle()
+            .setbackGroundStyle(UiTileType::SQUARE_ROUNDED)
+            .setbackgroundColor1(vec4(color, BASE_ALPHA))
+    );
+
+    timeBar->comp<WidgetBox>().specialFittingScript = [](Entity* parent, Entity* child)
+    {
+        const float messageTime = 4.0;
+        float time = globals.appTime.getElapsedTime() - lastTimePop;
+        float a = parent == VulpineBlueprintUI::UserNotif::parent->comp<EntityGroupInfo>().children[0].get() ? linearstep(0., messageTime, time) : 0.0;
+        
+        child->comp<WidgetBox>().set(vec2(a*2.f - 1.f, 1.f), vec2(0.75, 1.0));
+
+        // auto &b = child->comp<WidgetBox>();
+
+        // b.initMin = vec2(a*2.f - 1.f, 0.75);
+        // b.initMax = vec2(1.0, 1.0);
+
+        // child->comp<WidgetBox>().useClassicInterpolation = true;
+        // child->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
+    };
+
+    timeBar->comp<WidgetBox>().useClassicInterpolation = true;
+    timeBar->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
+    message->comp<WidgetBox>().useClassicInterpolation = true;
+    message->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
+    headerEntity->comp<WidgetBox>().useClassicInterpolation = true;
+    headerEntity->comp<WidgetBox>().smoothingAnimationSpeed = 0.f;
+
+    auto e = newEntity("UserNotif", UI_BASE_COMP, 
+        WidgetBox(vec2(-1, 1), vec2(-2, -1)),
+        EntityGroupInfo({headerEntity, message, timeBar})
+    );
+
+    e->comp<WidgetBox>().type = WidgetBox::FOLLOW_SIBLINGS_BOX;
+
+    if(parent->comp<EntityGroupInfo>().children.empty())
+        lastTimePop = globals.appTime.getElapsedTime();
+
+    ComponentModularity::addChild(*parent, e);
+}

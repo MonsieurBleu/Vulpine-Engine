@@ -4,10 +4,14 @@
 // #include <ECS/EngineComponents.hpp>
 // #endif
 
+#include <ECS/ComponentTypeUI.hpp>
 #include <Timer.hpp>
 #include <Helpers.hpp>
 
 #define UI_BASE_COMP VulpineBlueprintUI::UIcontext, WidgetState(), WidgetBox()
+
+class Entity;
+typedef std::shared_ptr<Entity> EntityRef;
 
 namespace VulpineColorUI
 {
@@ -161,4 +165,22 @@ namespace VulpineBlueprintUI
         bool doSorting = true
     );
 
+    namespace UserNotif
+    {
+        inline EntityRef parent;
+
+        void init(EntityRef gamescreen);
+
+        void update();
+
+        inline float lastTimePop = 0.;
+    
+        void sent(
+            vec3 color,
+            std::string header,
+            std::string messageLigne1,
+            std::string messageLigne2 = "",
+            std::string messageLigne3 = ""
+        );
+    };
 }
