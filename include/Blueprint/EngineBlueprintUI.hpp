@@ -17,10 +17,10 @@ namespace VulpineColorUI
     inline vec4 LightBackgroundColor1       = vec4(vec3("#f2eade"_rgb), BASE_ALPHA);
     inline vec4 LightBackgroundColor2       = vec4(vec3("#f2eade"_rgb), ALPHA2);
 
-    inline vec4 DarkBackgroundColor1        = vec4(vec3("#463f3c"_rgb), BASE_ALPHA);
-    inline vec4 DarkBackgroundColor1Opaque  = vec4(vec3("#463f3c"_rgb), 1);    
-    inline vec4 DarkBackgroundColor2        = 0.5f*vec4(vec3("#353130"_rgb), BASE_ALPHA);
-    inline vec4 DarkBackgroundColor2Opaque  = vec4(0.5f*vec3("#353130"_rgb), 1);
+    inline vec4 DarkBackgroundColor1        = vec4(0.75f*vec3("#463f3c"_rgb), BASE_ALPHA);
+    inline vec4 DarkBackgroundColor1Opaque  = vec4(0.75f*vec3("#463f3c"_rgb), 1);    
+    inline vec4 DarkBackgroundColor2        = vec4(0.25f*vec3("#353130"_rgb), BASE_ALPHA);
+    inline vec4 DarkBackgroundColor2Opaque  = vec4(0.25f*vec3("#353130"_rgb), 1);
 
     inline vec4 HightlightColorOrange = vec4(vec3("#fd6706"_rgb), BASE_ALPHA);
     inline vec4 HightlightColorCyan = vec4(vec3("#2cd3af"_rgb), BASE_ALPHA);
@@ -29,7 +29,7 @@ namespace VulpineColorUI
     inline vec4 HightlightColorPurple = vec4(vec3("#aa3ce6"_rgb), BASE_ALPHA);
     inline vec4 HightlightColorGreen = vec4(vec3("#2cd35b"_rgb), BASE_ALPHA);
     inline vec4 HightlightColorRed = vec4(vec3("#d32c3f"_rgb), BASE_ALPHA);
-    inline vec4 HightlightColorBlue = vec4(vec3("#2c74d3"_rgb), BASE_ALPHA);
+    inline vec4 HightlightColorBlue = vec4(vec3("#368dfe"_rgb), BASE_ALPHA);
 }   
 
 namespace VulpineBlueprintUI
@@ -54,12 +54,21 @@ namespace VulpineBlueprintUI
         vec3 color = VulpineColorUI::LightBackgroundColor1
     );
 
+    EntityRef Toggable2(
+        const std::string &name,
+        const std::string &icon,
+        WidgetButton::InteractFunc ifunc, 
+        WidgetButton::UpdateFunc ufunc,
+        vec3 color = VulpineColorUI::LightBackgroundColor1
+    );
+
     EntityRef ValueInput(
         const std::string &name,
         std::function<void(float f)> setValue, 
         std::function<float()> getValue,
         float minV, float maxV,
-        float smallIncrement = 0.f, float bigIncrement = 0.f
+        float smallIncrement = 0.f, float bigIncrement = 0.f,
+        vec4 color = VulpineColorUI::LightBackgroundColor1
         );
 
     EntityRef TextInput(
@@ -109,7 +118,8 @@ namespace VulpineBlueprintUI
         const std::string &name,
         std::function<std::u32string()> toText,
         vec4 color = VulpineColorUI::LightBackgroundColor1,
-        bool vertical = false
+        bool vertical = false,
+        float nameRatio = 0.5
     );
 
     EntityRef TimerPlot(

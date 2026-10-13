@@ -25,7 +25,7 @@ struct MeshGroup
         return *this;
     }
 
-    uint draw(int layer, bool useBindlessTextures);
+    uint draw(int layer, bool useBindlessTextures, FrameBuffer *fb);
 };
 
 
@@ -64,7 +64,7 @@ class Scene
         void updateAllObjects();
         void generateShadowMaps();
         void genLightBuffer();
-        uint draw(int layer);
+        uint draw(int layer, FrameBuffer *fb);
         void depthOnlyDraw(int layer, Camera *camera, bool cull = false, int layers = 0);
 
         void remove(ModelRef mesh);

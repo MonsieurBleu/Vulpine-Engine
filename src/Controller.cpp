@@ -208,7 +208,9 @@ void OrbitController::update()
             // globals.currentCamera->setType(CameraType::PERSPECTIVE);
             // globals.currentCamera->wup = vec3(0, 1, 0);
             globals.currentCamera->setPosition(position + 
-                normalize(globals.currentCamera->getPosition() - position)*distance
+                // normalize(globals.currentCamera->getPosition() - position)
+                -globals.currentCamera->getDirection()
+                *distance
                 );
         }
 
@@ -283,6 +285,7 @@ void OrbitController::mouseEvent(vec2 dir, GLFWwindow* window)
             front = normalize(front);
 
             globals.currentCamera->setPosition(position + front*distance);
+            // globals.currentCamera->setDirection(normalize(front*distance));
         }
         
         // glfwSetCursorPos(window, center.x, center.y);

@@ -396,10 +396,14 @@ DATA_READ_FUNC_ENTITY(JoltBody)
 			Creating the body
 		********/
 		settings.mObjectLayer = JPH::ObjectLayerPairFilterMask::sGetObjectLayer(collideCategory, collideWIth);
-		settings.mPosition = position;
-		settings.mRotation = rotation;
+		// settings.mPosition = position;
+		// settings.mRotation = rotation;
+
+		// WARNING_MESSAGE(position)
 
 		JPH::Body *body = JoltVulpine::jPhysicsSystem->GetBodyInterface().CreateBody(settings);
+
+		// JoltVulpine::jPhysicsSystem->GetBodyInterface().SetPositionAndRotation(body->GetID(), position, rotation, JPH::EActivation::Activate);
 
 		// settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
 		
@@ -413,6 +417,8 @@ DATA_READ_FUNC_ENTITY(JoltBody)
 			data.sensors[sensorCount-1] = body->GetID();
 		else
 		 	data = JoltBody(body->GetID());
+
+		body->SetPositionAndRotationInternal(position, rotation);
 			
 		JoltVulpine::bodiesToAddMutex.lock();
 		JoltVulpine::bodiesToAdd.push_back(body->GetID());

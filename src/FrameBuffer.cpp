@@ -40,6 +40,11 @@ FrameBuffer& FrameBuffer::resizeAll(ivec2 newres)
         if(t.getResolution() != newres)
             t.setResolution(newres).generate(true);
 
+    if(unsortedDraws.doCopy)
+    {
+        unsortedDraws.sortedDepthCopy.setResolution(newres).generate(true);
+    }
+
     return *this;
 }
 
@@ -74,10 +79,72 @@ FrameBuffer& FrameBuffer::bindTextures()
         }
     }
 
-    const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5};
-    glDrawBuffers(6, buffers);
+    // const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5};
+    // glDrawBuffers(6, buffers);
+
+    // enableDrawBuffers(VulpineTextureAttachement::StaticOnly);
+    // enableDrawBuffers(VulpineTextureAttachement::DynamicOnly);
+    // enableDrawBuffers(VulpineTextureAttachement::StaticAndDynamic);
 
     return *this;
+}
+
+void FrameBuffer::enableDrawBuffers(const VulpineTextureAttachement type)
+{
+    // return;
+    // if(type == VulpineTextureAttachement::None) return;
+
+    GLenum buffers[16] = {
+        GL_NONE, GL_NONE, GL_NONE, GL_NONE, 
+        GL_NONE, GL_NONE, GL_NONE, GL_NONE, 
+        GL_NONE, GL_NONE, GL_NONE, GL_NONE, 
+        GL_NONE, GL_NONE, GL_NONE, GL_NONE
+    };
+
+    // GLenum buffers2[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6, GL_COLOR_ATTACHMENT7};
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, handle);
+
+    // WARNING_MESSAGE("================================")
+
+    int maxId = 0;
+    for(auto &i : textures)
+    {
+        int attachement = i.getAttachement();
+        if(attachement != clamp(attachement, GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT15))
+            continue;
+
+        int id = attachement - GL_COLOR_ATTACHMENT0;
+        // int id = maxId;
+        int vAttachement = (int)i.getVulpineAttachement();
+        maxId = max(id, maxId);
+
+        
+        if((int)type & vAttachement)
+        {
+            // drawBuffersToEnable[(int)type-1][id] = attachement;
+
+            drawBuffersToEnable[(int)type-1][id] = GL_COLOR_ATTACHMENT0 + id;
+
+            // buffers[id] = GL_COLOR_ATTACHMENT0 + id;
+            
+            // NOTIF_MESSAGE(PRINTVAR(id), PRINTVAR(buffers[id]), PRINTVAR(buffers2[id]),  PRINTVAR(buffers[id] != buffers2[id]))
+
+            // NOTIF_MESSAGE(PRINTVAR(drawBuffersToEnable[(int)type-1][id]), PRINTVAR((int)attachement), PRINTVAR(id), PRINTVAR(maxId))
+            // maxId++;
+        }
+        else
+        {
+            drawBuffersToEnable[(int)type-1][id] = GL_NONE;
+            // NOTIF_MESSAGE(PRINTVAR(drawBuffersToEnable[(int)type-1][id]), PRINTVAR((int)attachement), PRINTVAR(id), PRINTVAR((int)type))
+        }
+    }
+
+    glDrawBuffers(maxId+1, drawBuffersToEnable[(int)type-1]);
+    // glDrawBuffers(maxId+1, buffers);
+
+    // const GLenum buffers[]{ GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4, GL_COLOR_ATTACHMENT5, GL_COLOR_ATTACHMENT6};
+    // glDrawBuffers(6, buffers);
 }
 
 void FrameBuffer::activate()

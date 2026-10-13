@@ -11,10 +11,17 @@ class FrameBuffer
 {
     protected : 
         std::vector<Texture2D> textures;
-
+        GLenum drawBuffersToEnable[16][3] = {{GL_NONE}};
         GLuint handle = 0;
 
     public : 
+
+        struct UnsortedDraws
+        {
+            bool doCopy = false;
+            int location = 8;
+            Texture2D sortedDepthCopy;
+        } unsortedDraws;
 
         vec4 clearColor = vec4(0);
 
@@ -38,6 +45,8 @@ class FrameBuffer
         int getNBtextures() const{return textures.size();};
 
         FrameBuffer& resizeAll(ivec2 newres);
+
+        void enableDrawBuffers(const VulpineTextureAttachement type);
 };
 
 #define RENDER_BUFFER_COLOR_TEXTURE_ID 0

@@ -65,7 +65,7 @@ Texture2D& Texture2D::setPixelType(GLenum type)
     return *this;
 }
 
-Texture2D& Texture2D::setPixelSource(const void *source)
+Texture2D& Texture2D::setPixelSource(void *source)
 {
     _pixelSource = source;
     return *this;
@@ -82,6 +82,13 @@ Texture2D& Texture2D::setAttachement(GLenum attachement)
     _attachement = attachement;
     return *this;
 }
+
+Texture2D& Texture2D::setVulpineAttachement(VulpineTextureAttachement vAttachement)
+{
+    _vAttachement = vAttachement;
+    return *this;
+}
+
 
 Texture2D& Texture2D::setWrapMode(GLenum wrapMode)
 {
@@ -393,7 +400,30 @@ Texture2D& Texture2D::loadFromFileEXR(const char* filename)
 
     // 4. Free image data
 
+    // WARNING_MESSAGE(
+    //     PRINTVAR(filename),
+    //     PRINTVAR(exr_header.compression_type),
+    //     PRINTVAR(exr_header.tiled),
+    //     PRINTVAR(exr_header.chunk_count),
+    //     PRINTVAR(exr_header.line_order),
+    //     PRINTVAR(exr_header.custom_attributes),
+    //     PRINTVAR(exr_header.multipart),
+    //     PRINTVAR(exr_header.tile_level_mode),
+    //     PRINTVAR(exr_header.num_channels),
+    //     PRINTVAR(exr_header.long_name),
+    //     PRINTVAR(exr_header.pixel_aspect_ratio),
+    //     PRINTVAR(exr_header.channels[0].name)
+    // );
 
+    // for(int i = 0; i < exr_header.num_custom_attributes; i++)
+    // {
+    //     ERROR_MESSAGE(
+    //         PRINTVAR(exr_header.custom_attributes[i].name),
+    //         PRINTVAR(exr_header.custom_attributes[i].type),
+    //         PRINTVAR(exr_header.custom_attributes[i].size),
+    //         PRINTVAR(exr_header.custom_attributes[i].pad0)
+    //     )
+    // }
 
     FreeEXRImage(&exr_image);
     FreeEXRHeader(&exr_header);
@@ -553,3 +583,12 @@ GLenum Texture2D::getFilter() const {return _filter;};
 GLenum Texture2D::getAttachement() const {return _attachement;};
 GLenum Texture2D::getWrapMode() const {return _wrapMode;};
 const void * Texture2D::getPixelSource() const {return _pixelSource;};
+VulpineTextureAttachement Texture2D::getVulpineAttachement() const {return _vAttachement;};
+
+void Texture2D::updateSourceFromGPU()
+{
+    if(_pixelSource)
+    {
+        glGetTexImage(_target, 0, _format, _type, _pixelSource);
+    }
+}
