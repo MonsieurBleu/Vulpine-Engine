@@ -15,25 +15,20 @@
 #include <unordered_map>
 #include <vector>
 
-#include "JoltIntegration/JoltIntegration.hpp"
-
-#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
-#include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
-#include <Jolt/Geometry/OrientedBox.h>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
 using namespace glm;
 
-// does the static navmesh generation by querying the physics world and using recast to build it
+// this module does the static navmesh generation by querying the physics world and using recast to build it
 
-#define NAVMESH_BUILD_THREAD_ID THREAD_ID_NAVMESH_BUILD
-
-#include <recastnavigation/Recast.h>
-#include <recastnavigation/DetourNavMesh.h>
-#include <recastnavigation/DetourNavMeshQuery.h>
-#include <recastnavigation/DetourNavMeshBuilder.h>
-
+class dtNavMesh;
+class dtNavMeshQuery;
+class rcHeightfield;
+class rcCompactHeightfield;
+class rcContourSet;
+class rcPolyMesh;
+class rcPolyMeshDetail;
+class rcContext;
 
 namespace VulpineNav
 {
@@ -212,7 +207,9 @@ namespace NavMesh
 {
 static constexpr int kLoadRadius = 6;
 static constexpr int kUnloadRadius = 8;
-namespace NavMeshInternals
+
+// internals & stuff
+namespace detail
 {
 
 static constexpr i64 kFramesPerPriority = 60;
@@ -272,14 +269,7 @@ struct RecastScratch
     rcPolyMesh*           pmesh = nullptr;
     rcPolyMeshDetail*     dmesh = nullptr;
 
-    ~RecastScratch()
-    {
-        rcFreeHeightField(hf);
-        rcFreeCompactHeightfield(chf);
-        rcFreeContourSet(cset);
-        rcFreePolyMesh(pmesh);
-        rcFreePolyMeshDetail(dmesh);
-    }
+    ~RecastScratch();
 };
 
 
@@ -305,19 +295,9 @@ inline u64 frame = 0;
 inline std::vector<LoadRequest> newRequests;
 inline std::vector<BuildResult> resultsScratch;
 
-// shared with worker
-extern std::thread worker;
-extern std::mutex requestMutex;
-extern std::condition_variable cv;
-extern bool worker_quit;
-extern std::priority_queue<LoadRequest, std::vector<LoadRequest>, std::greater<LoadRequest>> buildQueue;
-extern std::vector<BuildResult> results;
-extern std::vector<MeshTier::MeshTier> buildTiers;
-
 // worker state
 inline TileGeometry workerGeo;
 inline std::vector<u8> workerAreas;
-inline rcContext workerCtx{false};
 
 NavMeshData createMeshData(const MeshTier::MeshTier& tier);
 
@@ -372,7 +352,7 @@ static inline ivec2 clampSpan(const ivec2& s)
     return {max(s.x, 0), min(s.y, kMaxIdx)}; 
 }
 
-static inline ivec2 rowSpan(const ivec2& cell, int radius, int y);
+ivec2 rowSpan(const ivec2& cell, int radius, int y);
 
 static inline SpanPair subtractSpan(const ivec2& a, const ivec2& b)
 {
@@ -415,39 +395,21 @@ void releaseTile(int x, int y);
 
 void addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
 
-static inline void removeMeshTile(NavMeshData& mesh, int x, int y)
-{
-    dtTileRef ref = mesh.navMesh->getTileRefAt(x, y, 0);
-    if (ref)
-        mesh.navMesh->removeTile(ref, nullptr, nullptr);
-}
+void removeMeshTile(NavMeshData& mesh, int x, int y);
 
 void addAll(BuildResult& r);
 
-static inline void freeAll(BuildResult& r)
-{
-    for (BuiltTile& t : r.tiles)
-        dtFree(t.data);
-    r.tiles.clear();
-}
+void freeAll(BuildResult& r);
 
 void integrate(BuildResult& r);
 BuildResult buildRequest(const LoadRequest& req, u64 mask, const std::vector<MeshTier::MeshTier>& tiers);
 void workerLoop();
 int addTier(const MeshTier::MeshTier& tier);
 
-void appendShapeTriangles(const JPH::TransformedShape& shape, const JPH::AABox& box, TileGeometry& geo);
-
 void gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo);
 
-rcConfig makeTileConfig(const MeshTier::MeshTier& tier, ivec2 coord, const TileGeometry& geo);
-
 bool buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeometry& geo, u8*& data, int& size);
-
-
-} // namespace NavMeshInternals
-
-using namespace NavMeshInternals;
+} // namespace detail
 
 void init();
 
@@ -457,23 +419,23 @@ int ResolveAgent(const MeshTier::AgentShape& shape);
 
 inline bool ValidSlot(int slot)
 {
-    return slot >= 0 && (size_t)slot < navMeshes.size();
+    return slot >= 0 && (size_t)slot < detail::navMeshes.size();
 }
 
 inline dtNavMesh* GetNavMesh(int slot)
 {
-    return ValidSlot(slot) ? navMeshes[slot].navMesh : nullptr;
+    return ValidSlot(slot) ? detail::navMeshes[slot].navMesh : nullptr;
 }
 
 inline dtNavMeshQuery* GetNavMeshQuery(int slot)
 {
-    return ValidSlot(slot) ? navMeshes[slot].navMeshQuery : nullptr;
+    return ValidSlot(slot) ? detail::navMeshes[slot].navMeshQuery : nullptr;
 }
 
 inline int SlotFromTierId(MeshTier::TierId id)
 {
-    for (size_t s = 0; s < navMeshes.size(); s++)
-        if (navMeshes[s].key == id)
+    for (size_t s = 0; s < detail::navMeshes.size(); s++)
+        if (detail::navMeshes[s].key == id)
             return (int)s;
     return -1;
 }
@@ -490,9 +452,9 @@ inline dtNavMeshQuery* GetNavMeshQueryByTierId(MeshTier::TierId id)
 
 inline int FindAgentSlot(const MeshTier::AgentShape& shape)
 {
-    for (size_t s = 0; s < navMeshes.size(); s++)
+    for (size_t s = 0; s < detail::navMeshes.size(); s++)
     {
-        if (MeshTier::covers(tierRegistry.tier(navMeshes[s].key), shape))
+        if (MeshTier::covers(detail::tierRegistry.tier(detail::navMeshes[s].key), shape))
             return (int)s;
     }
     return -1;
@@ -529,6 +491,8 @@ void DebugDrawTiles(TDraw& draw,
                     float yMax = kWorldMaxY,
                     bool drawUnloaded = false)
 {
+    using namespace detail;
+    
     constexpr vec3 kPendingColor  = vec3(1.0f, 0.85f, 0.1f);
     constexpr vec3 kLoadedColor   = vec3(0.1f, 0.9f, 0.2f);
     constexpr vec3 kUnloadedColor = vec3(0.35f, 0.35f, 0.35f);
@@ -571,6 +535,8 @@ void DebugDrawTileQuads(TDraw& draw,
                         bool drawDiagonal = true,
                         ModelState3D state = ModelState3D())
 {
+    using namespace detail;
+
     constexpr vec3 kPendingColor    = "#ffd91a"_rgb;
     constexpr vec3 kLoadedNearColor = "#1ae633"_rgb;   // loaded, inside an agent's load radius
     constexpr vec3 kLoadedFarColor  = "#1a99f2"_rgb;  // loaded, only kept alive by the unload radius

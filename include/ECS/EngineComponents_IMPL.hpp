@@ -1475,7 +1475,6 @@ template<> void Component<AgentNavigation>::ComponentElem::init()
 
 template<> void Component<AgentNavigation>::ComponentElem::clean() 
 {
-    NOTIF_MESSAGE("cln");
     if (this->data.initialized)
     {
         VulpineNav::NavMesh::UnloadLoader(this->data.lastPos);
@@ -1485,6 +1484,5 @@ template<> void Component<AgentNavigation>::ComponentElem::clean()
 
 void ManageNavGarbage()
 {
-    // NOTIF_MESSAGE("MANAGE GARBAGE");
     ManageGarbage<AgentNavigation>();
 }

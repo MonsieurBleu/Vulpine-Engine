@@ -2,7 +2,7 @@
 #include "Globals.hpp"
 #include "Graphics/ObjectGroup.hpp"
 #include "MathsUtils.hpp"
-#include "Navigation/NavMesh.hpp"
+
 #include "ECS/ComponentTypeNavigation.hpp"
 
 #include "JoltIntegration/PhysicsCommons.hpp"
@@ -13,6 +13,19 @@
 #ifndef DT_POLYREF64
 #error "DT_POLYREF64 must be defined."
 #endif
+
+#include <recastnavigation/Recast.h>
+#include <recastnavigation/DetourNavMesh.h>
+#include <recastnavigation/DetourNavMeshQuery.h>
+#include <recastnavigation/DetourNavMeshBuilder.h>
+
+#include "Navigation/NavMesh.hpp"
+
+#include "JoltIntegration/JoltIntegration.hpp"
+
+#include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
+#include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
+#include <Jolt/Geometry/OrientedBox.h>
 
 namespace VulpineNav
 {
@@ -120,18 +133,56 @@ TierId TierRegistry::resolve(const AgentShape& shape) {
 
 } // namespace MeshTier
 
-namespace NavMesh::NavMeshInternals
+using namespace NavMesh::detail;
+
+// builder-main thread shared definition
+namespace NavMesh::detail
 {
-std::thread worker = std::thread();
-std::mutex requestMutex = std::mutex();
-std::condition_variable cv = std::condition_variable();
+
+// shared with worker
+std::thread worker;
+std::mutex requestMutex;
+std::condition_variable cv;
 bool worker_quit = false;
-std::priority_queue<NavMesh::LoadRequest, std::vector<NavMesh::LoadRequest>, std::greater<NavMesh::LoadRequest>> buildQueue = std::priority_queue<NavMesh::LoadRequest, std::vector<NavMesh::LoadRequest>, std::greater<NavMesh::LoadRequest>>();
-std::vector<NavMesh::BuildResult> results = std::vector<NavMesh::BuildResult>();
-std::vector<MeshTier::MeshTier> buildTiers = std::vector<MeshTier::MeshTier>();
+std::priority_queue<LoadRequest, std::vector<LoadRequest>, std::greater<LoadRequest>> buildQueue;
+std::vector<BuildResult> results;
+std::vector<MeshTier::MeshTier> buildTiers;
+
+rcContext workerCtx {false};
+
+RecastScratch::~RecastScratch()
+{
+    rcFreeHeightField(hf);
+    rcFreeCompactHeightfield(chf);
+    rcFreeContourSet(cset);
+    rcFreePolyMesh(pmesh);
+    rcFreePolyMeshDetail(dmesh);
 }
 
-ivec2 NavMesh::NavMeshInternals::rowSpan(const ivec2& cell, int radius, int y)
+void removeMeshTile(NavMeshData& mesh, int x, int y)
+{
+    dtTileRef ref = mesh.navMesh->getTileRefAt(x, y, 0);
+    if (ref)
+        mesh.navMesh->removeTile(ref, nullptr, nullptr);
+}
+
+void freeAll(BuildResult& r)
+{
+    for (BuiltTile& t : r.tiles)
+        dtFree(t.data);
+    r.tiles.clear();
+}
+
+rcConfig makeTileConfig(const MeshTier::MeshTier& tier, ivec2 coord, const TileGeometry& geo);
+
+void appendShapeTriangles(const JPH::TransformedShape& shape, const JPH::AABox& box, TileGeometry& geo);
+
+} // namespace NavMesh::detail
+
+
+
+
+ivec2 NavMesh::detail::rowSpan(const ivec2& cell, int radius, int y)
 {
     int dy = y - cell.y;
 
@@ -147,7 +198,7 @@ ivec2 NavMesh::NavMeshInternals::rowSpan(const ivec2& cell, int radius, int y)
     return {cell.x - (int)w, cell.x + (int)w};
 }
 
-void NavMesh::NavMeshInternals::addNear(int y, ivec2 span, ivec2 center, i64 baseKey)
+void NavMesh::detail::addNear(int y, ivec2 span, ivec2 center, i64 baseKey)
 {
     span = clampSpan(span);
     const int dy = y - center.y;
@@ -168,7 +219,7 @@ void NavMesh::NavMeshInternals::addNear(int y, ivec2 span, ivec2 center, i64 bas
     }
 }
 
-void NavMesh::NavMeshInternals::removeFar(int y, ivec2 span)
+void NavMesh::detail::removeFar(int y, ivec2 span)
 {
     span = clampSpan(span);
     u16* farRow = &grid.farCount[(size_t)y * worldTileLength];
@@ -184,7 +235,7 @@ void NavMesh::NavMeshInternals::removeFar(int y, ivec2 span)
     }
 }
 
-void NavMesh::NavMeshInternals::updateRow(int y, ivec2 prevTile, ivec2 newTile, ivec2 prevUnload, ivec2 newUnload, i64 baseKey)
+void NavMesh::detail::updateRow(int y, ivec2 prevTile, ivec2 newTile, ivec2 prevUnload, ivec2 newUnload, i64 baseKey)
 {
     const ivec2 prevLoad = rowSpan(prevTile, kLoadRadius, y);
     const ivec2 newLoad  = rowSpan(newTile, kLoadRadius, y);
@@ -207,7 +258,7 @@ void NavMesh::NavMeshInternals::updateRow(int y, ivec2 prevTile, ivec2 newTile, 
     removeFar(y, leftFar.right);
 }
 
-void NavMesh::NavMeshInternals::releaseTile(int x, int y)
+void NavMesh::detail::releaseTile(int x, int y)
 {
     size_t i = idxFromTileCoord(x, y);
     if (grid.state[i] != Loaded) // tile already unloaded
@@ -219,7 +270,7 @@ void NavMesh::NavMeshInternals::releaseTile(int x, int y)
     grid.state[i] = Unloaded;
 }
 
-void NavMesh::NavMeshInternals::addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size)
+void NavMesh::detail::addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size)
 {
     if (mesh.navMesh->getTileAt(x, y, 0) ||
         dtStatusFailed(mesh.navMesh->addTile(data, size, DT_TILE_FREE_DATA, 0, nullptr)))
@@ -228,7 +279,7 @@ void NavMesh::NavMeshInternals::addMeshTile(NavMeshData& mesh, int x, int y, u8*
     }
 }
 
-void NavMesh::NavMeshInternals::addAll(BuildResult& r)
+void NavMesh::detail::addAll(BuildResult& r)
 {
     const ivec2 c = coordFromIdx(r.req.idx);
     for (BuiltTile& t : r.tiles)
@@ -236,7 +287,7 @@ void NavMesh::NavMeshInternals::addAll(BuildResult& r)
     r.tiles.clear();
 }
 
-void NavMesh::NavMeshInternals::integrate(BuildResult& r)
+void NavMesh::detail::integrate(BuildResult& r)
 {
     const u32 i = r.req.idx;
     const bool wanted = grid.loaded[i];
@@ -276,7 +327,7 @@ void NavMesh::NavMeshInternals::integrate(BuildResult& r)
 }
 
 
-NavMesh::BuildResult NavMesh::NavMeshInternals::buildRequest(const LoadRequest& req, u64 mask, const std::vector<MeshTier::MeshTier>& tiers)
+BuildResult NavMesh::detail::buildRequest(const LoadRequest& req, u64 mask, const std::vector<MeshTier::MeshTier>& tiers)
 {
     BuildResult r{req, true, 0, {}};
 
@@ -310,9 +361,9 @@ NavMesh::BuildResult NavMesh::NavMeshInternals::buildRequest(const LoadRequest& 
     return r;
 }
 
-void NavMesh::NavMeshInternals::workerLoop()
+void NavMesh::detail::workerLoop()
 {
-    currentThreadID = NAVMESH_BUILD_THREAD_ID;
+    currentThreadID = THREAD_ID_NAVMESH_BUILD;
 
     std::vector<MeshTier::MeshTier> tiers; // snapshot of the tiers
 
@@ -344,7 +395,7 @@ void NavMesh::NavMeshInternals::workerLoop()
     }
 }
 
-int NavMesh::NavMeshInternals::addTier(const MeshTier::MeshTier& tier)
+int NavMesh::detail::addTier(const MeshTier::MeshTier& tier)
 {
     assert(navMeshes.size() < kMaxTiers);
 
@@ -411,11 +462,6 @@ void NavMesh::Tick()
     for (BuildResult& r : resultsScratch)
         integrate(r);
     resultsScratch.clear();
-
-    {
-        std::lock_guard<std::mutex> lock(requestMutex);
-        ManageNavGarbage();
-    }
 }
 
 void NavMesh::CreateLoader(vec3 pos, u8 priority)
@@ -473,7 +519,7 @@ void NavMesh::UnloadLoader(vec3 pos)
     }
 }
 
-void NavMesh::NavMeshInternals::appendShapeTriangles(const JPH::TransformedShape& shape, const JPH::AABox& box, TileGeometry& geo)
+void NavMesh::detail::appendShapeTriangles(const JPH::TransformedShape& shape, const JPH::AABox& box, TileGeometry& geo)
 {
     // compound shapes don't iterate triangles directly, so walk their leaves.
     JPH::AllHitCollisionCollector<JPH::TransformedShapeCollector> leaves;
@@ -506,7 +552,7 @@ void NavMesh::NavMeshInternals::appendShapeTriangles(const JPH::TransformedShape
     }
 }
 
-void NavMesh::NavMeshInternals::gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo)
+void NavMesh::detail::gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo)
 {
     geo.clear();
 
@@ -539,7 +585,7 @@ void NavMesh::NavMeshInternals::gatherTileGeometry(ivec2 coord, float padding, T
     }
 }
 
-rcConfig NavMesh::NavMeshInternals::makeTileConfig(const MeshTier::MeshTier& tier, ivec2 coord, const TileGeometry& geo)
+rcConfig NavMesh::detail::makeTileConfig(const MeshTier::MeshTier& tier, ivec2 coord, const TileGeometry& geo)
 {
     rcConfig cfg{};
     cfg.cs = kCellSize;
@@ -567,7 +613,7 @@ rcConfig NavMesh::NavMeshInternals::makeTileConfig(const MeshTier::MeshTier& tie
     return cfg;
 }
 
-bool NavMesh::NavMeshInternals::buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeometry& geo, u8*& data, int& size)
+bool NavMesh::detail::buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeometry& geo, u8*& data, int& size)
 {
     data = nullptr;
     size = 0;
@@ -666,7 +712,7 @@ bool NavMesh::NavMeshInternals::buildTierTile(ivec2 coord, const MeshTier::MeshT
     return true;
 }
 
-NavMesh::NavMeshData NavMesh::NavMeshInternals::createMeshData(const MeshTier::MeshTier& tier)
+NavMesh::detail::NavMeshData NavMesh::detail::createMeshData(const MeshTier::MeshTier& tier)
 {
     dtNavMeshParams params{};
     params.orig[0] = kWorldOrigin.x;
@@ -697,7 +743,7 @@ void NavMesh::init()
         std::lock_guard<std::mutex> lock(requestMutex);
         worker_quit = false;
     }
-    worker = std::thread(&NavMesh::workerLoop);
+    worker = std::thread(&workerLoop);
 }
 
 void VulpineNav::NavMesh::DebugDrawTileInstanced(float y,
