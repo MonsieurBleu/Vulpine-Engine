@@ -1474,11 +1474,16 @@ template<> void Component<Pathfind>::ComponentElem::init()
 
 template<> void Component<Pathfind>::ComponentElem::clean() 
 {
+    NOTIF_MESSAGE("cln");
     if (this->data.initialized)
+    {
         VulpineNav::NavMesh::UnloadLoader(this->data.lastPos);
+        this->data.initialized = false;
+    }
 }
 
 void ManageNavGarbage()
 {
+    // NOTIF_MESSAGE("MANAGE GARBAGE");
     ManageGarbage<Pathfind>();
 }

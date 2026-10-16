@@ -1,5 +1,9 @@
 #pragma once
+#include "AssetManager.hpp"
 #include "CompilingOptions.hpp"
+#include "Globals.hpp"
+#include "Graphics/ObjectGroup.hpp"
+#include "MathsUtils.hpp"
 #include "Matrix.hpp"
 #include "Utils.hpp"
 
@@ -70,6 +74,15 @@ inline size_t idxFromTileCoord(ivec2 tileCoord)
 inline ivec2 coordFromIdx(size_t idx)
 {
     return {(int)idx % worldTileLength, (int)(idx / worldTileLength)};
+}
+
+inline vec3 tileToWorldPos(const ivec2& tilePos)
+{
+    return vec3(
+        (tilePos.x + 0.5f) * kTileWorldSize + kWorldOrigin.x,
+        kWorldOrigin.y,
+        (tilePos.y + 0.5f) * kTileWorldSize + kWorldOrigin.z
+    );
 }
 
 // writes the position to tileX & tileY
@@ -296,13 +309,13 @@ inline std::vector<LoadRequest> newRequests;
 inline std::vector<BuildResult> resultsScratch;
 
 // shared with worker
-inline std::thread worker;
-inline std::mutex requestMutex;
-inline std::condition_variable cv;
-inline bool quit = false;
-inline std::priority_queue<LoadRequest, std::vector<LoadRequest>, std::greater<LoadRequest>> buildQueue;
-inline std::vector<BuildResult> results;
-inline std::vector<MeshTier::MeshTier> buildTiers;
+extern std::thread worker;
+extern std::mutex requestMutex;
+extern std::condition_variable cv;
+extern bool worker_quit;
+extern std::priority_queue<LoadRequest, std::vector<LoadRequest>, std::greater<LoadRequest>> buildQueue;
+extern std::vector<BuildResult> results;
+extern std::vector<MeshTier::MeshTier> buildTiers;
 
 // worker state
 inline TileGeometry workerGeo;
@@ -403,7 +416,7 @@ inline void requestTile(size_t i, i64 key)
 
 void releaseTile(int x, int y);
 
-static void addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
+void addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
 
 static inline void removeMeshTile(NavMeshData& mesh, int x, int y)
 {
@@ -426,11 +439,11 @@ BuildResult buildRequest(const LoadRequest& req, u64 mask, const std::vector<Mes
 void workerLoop();
 int addTier(const MeshTier::MeshTier& tier);
 
-static void appendShapeTriangles(const JPH::TransformedShape& shape, const JPH::AABox& box, TileGeometry& geo);
+void appendShapeTriangles(const JPH::TransformedShape& shape, const JPH::AABox& box, TileGeometry& geo);
 
-static void gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo);
+void gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo);
 
-static rcConfig makeTileConfig(const MeshTier::MeshTier& tier, ivec2 coord, const TileGeometry& geo);
+rcConfig makeTileConfig(const MeshTier::MeshTier& tier, ivec2 coord, const TileGeometry& geo);
 
 bool buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeometry& geo, u8*& data, int& size);
 
@@ -439,10 +452,7 @@ bool buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeomet
 
 using namespace NavMeshInternals;
 
-inline void init()
-{
-    worker = std::thread(&NavMesh::workerLoop);
-}
+void init();
 
 void shutdown();
 
@@ -554,6 +564,7 @@ void DebugDrawTiles(TDraw& draw,
     }
 }
 
+
 // also much more optimised for large number of tiles since they're all bundled into a single mesh
 template <typename TDraw>
 void DebugDrawTileQuads(TDraw& draw,
@@ -563,10 +574,10 @@ void DebugDrawTileQuads(TDraw& draw,
                         bool drawDiagonal = true,
                         ModelState3D state = ModelState3D())
 {
-    constexpr vec3 kPendingColor    = vec3(1.0f, 0.85f, 0.1f);
-    constexpr vec3 kLoadedNearColor = vec3(0.1f, 0.9f, 0.2f);   // loaded, inside an agent's load radius
-    constexpr vec3 kLoadedFarColor  = vec3(0.1f, 0.6f, 0.95f);  // loaded, only kept alive by the unload radius
-    constexpr vec3 kUnloadedColor   = vec3(0.35f, 0.35f, 0.35f);
+    constexpr vec3 kPendingColor    = "#ffd91a"_rgb;
+    constexpr vec3 kLoadedNearColor = "#1ae633"_rgb;   // loaded, inside an agent's load radius
+    constexpr vec3 kLoadedFarColor  = "#1a99f2"_rgb;  // loaded, only kept alive by the unload radius
+    constexpr vec3 kUnloadedColor   = "#595959"_rgb;
 
     const size_t vertsPerQuad = drawDiagonal ? 6 : 12;
 
@@ -591,7 +602,6 @@ void DebugDrawTileQuads(TDraw& draw,
         }
         else
         {
-            // degenerate triangles: one per edge
             out.push_back(a); out.push_back(b); out.push_back(b);
             out.push_back(b); out.push_back(c); out.push_back(c);
             out.push_back(c); out.push_back(d); out.push_back(d);
@@ -611,7 +621,6 @@ void DebugDrawTileQuads(TDraw& draw,
             {
             case Pending:  bucket = &pending;  break;
             case Loaded:
-                // near = within some agent's load radius; far = loaded but only inside the unload radius
                 bucket = grid.nearCount[idx] > 0 ? &loadedNear : &loadedFar;
                 break;
             case Unloaded: bucket = drawUnloaded ? &unloaded : nullptr; break;
@@ -643,6 +652,15 @@ void DebugDrawTileQuads(TDraw& draw,
     flush(loadedFar,  kLoadedFarColor);
     flush(unloaded,   kUnloadedColor);
 }
-};
+
+
+void DebugDrawTileInstanced(
+    float y,
+    float duration = 0.0f,
+    bool drawUnloaded = false,
+    bool drawDiagonal = true,
+    ModelState3D state = ModelState3D());
+
+} // namespace NavMesh
 
 } // namespace VulpineNav

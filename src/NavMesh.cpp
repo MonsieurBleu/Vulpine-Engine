@@ -114,6 +114,17 @@ TierId TierRegistry::resolve(const AgentShape& shape) {
 
 } // namespace MeshTier
 
+namespace NavMesh::NavMeshInternals
+{
+std::thread worker = std::thread();
+std::mutex requestMutex = std::mutex();
+std::condition_variable cv = std::condition_variable();
+bool worker_quit = false;
+std::priority_queue<NavMesh::LoadRequest, std::vector<NavMesh::LoadRequest>, std::greater<NavMesh::LoadRequest>> buildQueue = std::priority_queue<NavMesh::LoadRequest, std::vector<NavMesh::LoadRequest>, std::greater<NavMesh::LoadRequest>>();
+std::vector<NavMesh::BuildResult> results = std::vector<NavMesh::BuildResult>();
+std::vector<MeshTier::MeshTier> buildTiers = std::vector<MeshTier::MeshTier>();
+}
+
 ivec2 NavMesh::NavMeshInternals::rowSpan(const ivec2& cell, int radius, int y)
 {
     int dy = y - cell.y;
@@ -263,7 +274,7 @@ NavMesh::BuildResult NavMesh::NavMeshInternals::buildRequest(const LoadRequest& 
 {
     BuildResult r{req, true, 0, {}};
 
-    if (!grid.loaded[req.idx].load(std::memory_order_relaxed))
+    if (!grid.loaded[req.idx].load(std::memory_order_relaxed) || !JoltVulpine::jPhysicsSystem)
         return r;
 
     r.skipped = false;
@@ -305,9 +316,9 @@ void NavMesh::NavMeshInternals::workerLoop()
         // block for mutex lock scope
         {
             std::unique_lock<std::mutex> lock(requestMutex);
-            while (!quit && buildQueue.empty())
+            while (!worker_quit && buildQueue.empty())
                 cv.wait(lock);
-            if (quit)
+            if (worker_quit)
                 return;
 
             req = buildQueue.top();
@@ -322,8 +333,6 @@ void NavMesh::NavMeshInternals::workerLoop()
 
         std::lock_guard<std::mutex> lock(requestMutex);
         results.push_back(std::move(r));
-
-        ManageNavGarbage();
     }
 }
 
@@ -352,14 +361,17 @@ void NavMesh::shutdown()
 {
     {
         std::lock_guard<std::mutex> lock(requestMutex);
-        quit = true;
+        worker_quit = true;
     }
     cv.notify_one();
-    worker.join();
+    if (worker.joinable())
+        worker.join();
 
-    for (BuildResult& r : results)
-        freeAll(r);
+    while (!buildQueue.empty()) buildQueue.pop();
+    for (BuildResult& r : results) freeAll(r);
     results.clear();
+    for (BuildResult& r : resultsScratch) freeAll(r);
+    resultsScratch.clear();
 }
 
 int NavMesh::ResolveAgent(const MeshTier::AgentShape& shape)
@@ -391,6 +403,11 @@ void NavMesh::Tick()
     for (BuildResult& r : resultsScratch)
         integrate(r);
     resultsScratch.clear();
+
+    {
+        std::lock_guard<std::mutex> lock(requestMutex);
+        ManageNavGarbage();
+    }
 }
 
 void NavMesh::CreateLoader(vec3 pos, u8 priority)
@@ -664,6 +681,66 @@ NavMesh::NavMeshData NavMesh::NavMeshInternals::createMeshData(const MeshTier::M
     }
 
     return mesh;
+}
+
+void NavMesh::init()
+{
+    {
+        std::lock_guard<std::mutex> lock(requestMutex);
+        worker_quit = false;
+    }
+    worker = std::thread(&NavMesh::workerLoop);
+}
+
+void VulpineNav::NavMesh::DebugDrawTileInstanced(float y,
+                        float duration,
+                        bool drawUnloaded,
+                        bool drawDiagonal,
+                        ModelState3D state)
+{
+    constexpr vec3 kUnloadedColor   = "#595959"_rgb;
+    constexpr size_t kCountMax = 50;
+
+    static bool initialized = false;
+    static std::shared_ptr<ObjectGroup> model = Loader<ObjectGroup>::get("Cube Helper").copy();
+
+    if (!initialized)
+    {
+        globals.getScene()->add(model);
+        initialized = true;
+
+        auto m = model->getInstances()[0].originalModel;
+
+        for (int ty = 0; ty < (int)worldTileLength; ++ty)
+            for (int tx = 0; tx < (int)worldTileLength; ++tx)
+                    m->createInstance();
+    }
+
+    auto m = model->getInstances()[0].originalModel;
+
+    for (int ty = 0; ty < (int)worldTileLength; ++ty)
+    {
+        for (int tx = 0; tx < (int)worldTileLength; ++tx)
+        {
+            const size_t idx = idxFromTileCoord(tx, ty);
+            const TileState st = grid.state[idx];
+
+            vec3 color;
+            if (st == TileState::Unloaded)
+            {
+                color = kUnloadedColor;
+            }
+            else 
+            {
+                color = hsv2rgb({0.6 - 0.5 * ((float)grid.nearCount[idx] / kCountMax), 0.8, 1.0});
+            }
+
+            auto& inst = m->getInstances()[idx];
+            inst.setPosition(VulpineNav::tileToWorldPos({tx, ty}) + vec3(0, 128, 0)).scaleScalar(VulpineNav::kTileWorldSize);
+            inst.userData = uvec4(uvec3(color*256.f), 0.f);
+            inst.update();
+        }
+    }
 }
 
 } // namespace VulpineNav
