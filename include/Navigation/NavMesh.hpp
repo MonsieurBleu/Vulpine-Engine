@@ -30,7 +30,7 @@ using namespace glm;
 
 // does the static navmesh generation by querying the physics world and using recast to build it
 
-#define NAVMESH_BUILD_THREAD_ID 3
+#define NAVMESH_BUILD_THREAD_ID THREAD_ID_NAVMESH_BUILD
 
 #include <recastnavigation/Recast.h>
 #include <recastnavigation/DetourNavMesh.h>

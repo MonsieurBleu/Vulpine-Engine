@@ -238,7 +238,7 @@ bool ShaderProgram::needRefresh()
 
 ShaderError ShaderProgram::compileAndLink()
 {
-    if(currentThreadID != 0)
+    if(currentThreadID != THREAD_ID_MAIN)
         return ShaderWrongThread;
 
     BenchTimer timer;

@@ -23,10 +23,20 @@
     #define STR_CASE_STR(str1, str2) strcasestr(str1, str2)
 #endif
 
+enum ThreadID : int
+{
+    THREAD_ID_UNDEFINED = -1,
+    THREAD_ID_MAIN = 0,
+    THREAD_ID_RP3D_MAIN = 1,
+    THREAD_ID_JOLT_MAIN = 2,
+    THREAD_ID_NAVMESH_BUILD = 3,
+    THREAD_ID_NAVMESH_QUERY = 4,
+};
+
 #ifdef __clang__
-inline thread_local int currentThreadID = -1;
+inline thread_local int currentThreadID = THREAD_ID_UNDEFINED;
 #elif defined(__GNUC__)
-static inline thread_local int currentThreadID = -1;
+static inline thread_local int currentThreadID = THREAD_ID_UNDEFINED;
 #endif
 
 
