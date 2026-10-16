@@ -33,6 +33,7 @@ void SpectatorController::updateDirectionStateWASD()
     upFactor = 0;
     frontFactor = 0;
     rightFactor = 0;
+    absUpFactor = 0;
 
     GLFWwindow *window = globals.getWindow();
 
@@ -52,9 +53,15 @@ void SpectatorController::updateDirectionStateWASD()
         rightFactor --;
 
     if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || InputManager::getGamepadButtonValue(VULPINE_GAMEPAD_BUTTON_A))
-        upFactor ++;
+        absUpFactor ++;
 
     if(glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        absUpFactor --;
+
+    if(glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        upFactor ++;
+
+    if(glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         upFactor --;
 
     if(glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
@@ -69,13 +76,20 @@ void SpectatorController::update()
     const float delta = globals.appTime.getDelta();
     const float dspeed = speed * delta * (sprintActivated ? sprintFactor : 1.f);
 
-    const vec3 front = globals.currentCamera->getDirection();
-    const vec3 up = vec3(0, 1, 0);
-    const vec3 right = cross(up, front);
-    deplacementDir = front*(float)frontFactor + up*(float)upFactor + right*(float)rightFactor;
+    const vec3 worldUp = vec3(0, 1, 0);
 
-    float l = length(deplacementDir);
-    globals.currentCamera->setPosition(cpos + dspeed*deplacementDir/max(l, 1e-9f));
+    const vec3 front = globals.currentCamera->getDirection();
+    const vec3 right = cross(worldUp, front);
+    const vec3 up = cross(front, right);
+
+    moveDir = 
+        worldUp * (float)absUpFactor + 
+        front   * (float)frontFactor + 
+        right   * (float)rightFactor + 
+        up      * (float)upFactor;
+
+    float l = length(moveDir);
+    globals.currentCamera->setPosition(cpos + dspeed*moveDir/max(l, 1e-9f));
 }
 
 bool SpectatorController::inputs(GLFWKeyInfo& input)
@@ -142,16 +156,33 @@ void Controller::mouseEvent(vec2 dir, GLFWwindow* window)
         else
             dir.y /= globals.windowWidth()/globals.windowHeight();
 
-        float yaw = radians(-dir.x);
-        float pitch = radians(-dir.y);
+        // float yaw = radians(-dir.x);
+        // float pitch = radians(-dir.y);
 
-        vec3 up = vec3(0,1,0);
-        vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
-        front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
-        front = normalize(front);
+        // vec3 up = vec3(0,1,0);
+        // vec3 front = mat3(rotate(mat4(1), yaw, up)) * globals.currentCamera->getDirection();
+        // front = mat3(rotate(mat4(1), pitch, cross(front, up))) * front;
+        // front = normalize(front);
 
-        front.y = clamp(front.y, -0.9f, 0.9f);
-        globals.currentCamera->setDirection(front);
+        // front.y = clamp(front.y, -0.9f, 0.9f);
+        // globals.currentCamera->setDirection(front);
+
+        vec3 d = normalize(globals.currentCamera->getDirection());
+        float yaw = atan2(d.z, d.x);
+        float pitch = asin(clamp(d.y, -1.0f, 1.0f));
+
+        yaw += radians(dir.x);
+        pitch += radians(-dir.y);
+
+        constexpr float eps = 0.001f;
+        constexpr float maxPitch = half_pi<float>() - eps;
+        pitch = clamp(pitch, -maxPitch, maxPitch);
+        
+        vec3 front( cos(pitch) * cos(yaw),
+                    sin(pitch),
+                    cos(pitch) * sin(yaw));
+
+        globals.currentCamera->setDirection(normalize(front));
 
         glfwSetCursorPos(window, center.x, center.y);
     }

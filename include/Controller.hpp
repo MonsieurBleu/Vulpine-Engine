@@ -6,7 +6,7 @@
 class Controller
 {
     protected : 
-        vec3 deplacementDir;
+        vec3 moveDir;
 
     public : 
         /**
@@ -43,6 +43,7 @@ class SpectatorController : public Controller
     protected : 
         bool sprintActivated = false;
         int upFactor = 0;
+        int absUpFactor = 0;
         int frontFactor = 0;
         int rightFactor = 0;
 
