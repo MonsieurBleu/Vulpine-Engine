@@ -1,5 +1,11 @@
+#include "AssetManager.hpp"
+#include "Globals.hpp"
+#include "Graphics/ObjectGroup.hpp"
+#include "MathsUtils.hpp"
 #include "Navigation/NavMesh.hpp"
 #include "ECS/ComponentTypeNavigation.hpp"
+
+#include "JoltIntegration/PhysicsCommons.hpp"
 
 #ifndef DT_VIRTUAL_QUERYFILTER
 #error "DT_VIRTUAL_QUERYFILTER must be defined."
@@ -306,6 +312,8 @@ NavMesh::BuildResult NavMesh::NavMeshInternals::buildRequest(const LoadRequest& 
 
 void NavMesh::NavMeshInternals::workerLoop()
 {
+    currentThreadID = NAVMESH_BUILD_THREAD_ID;
+
     std::vector<MeshTier::MeshTier> tiers; // snapshot of the tiers
 
     while (true)

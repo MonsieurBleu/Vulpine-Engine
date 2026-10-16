@@ -1,9 +1,5 @@
 #pragma once
-#include "AssetManager.hpp"
 #include "CompilingOptions.hpp"
-#include "Globals.hpp"
-#include "Graphics/ObjectGroup.hpp"
-#include "MathsUtils.hpp"
 #include "Matrix.hpp"
 #include "Utils.hpp"
 
@@ -19,7 +15,8 @@
 #include <unordered_map>
 #include <vector>
 
-#include "JoltIntegration/PhysicsCommons.hpp"
+#include "JoltIntegration/JoltIntegration.hpp"
+
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
 #include <Jolt/Geometry/OrientedBox.h>

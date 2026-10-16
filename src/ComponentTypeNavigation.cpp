@@ -2,4 +2,4 @@
 #include <AssetManager.hpp>
 #include <AssetManagerUtils.hpp>
 
-AUTOGEN_DATA_RW_FUNC(Pathfind, initialized, hasTarget, target)
+AUTOGEN_DATA_RW_FUNC(AgentNavigation, navmeshBuildPriority)

@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Entity.hpp"
+#include "JoltIntegration/PhysicsCommons.hpp"
 #include "Navigation/NavMesh.hpp"
 #ifndef VULPINE_COMPONENT_IMPL
 #include <ECS/EngineComponents.hpp>
@@ -1443,11 +1444,11 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
     ComponentModularity::synchronizeChildren(cursorHelp);
 }
 
-template<> void Component<Pathfind>::ComponentElem::init() 
+template<> void Component<AgentNavigation>::ComponentElem::init() 
 {
     if (!this->entity->has<State3D>())
     {
-        ERROR_MESSAGE("Entity got `Pathfind` component without having `State3D`");
+        ERROR_MESSAGE("Entity got `AgentNavigation` component without having `State3D`");
         return;
     }
 
@@ -1472,7 +1473,7 @@ template<> void Component<Pathfind>::ComponentElem::init()
     this->data.lastPos = state3D.position;
 }
 
-template<> void Component<Pathfind>::ComponentElem::clean() 
+template<> void Component<AgentNavigation>::ComponentElem::clean() 
 {
     NOTIF_MESSAGE("cln");
     if (this->data.initialized)
@@ -1485,5 +1486,5 @@ template<> void Component<Pathfind>::ComponentElem::clean()
 void ManageNavGarbage()
 {
     // NOTIF_MESSAGE("MANAGE GARBAGE");
-    ManageGarbage<Pathfind>();
+    ManageGarbage<AgentNavigation>();
 }

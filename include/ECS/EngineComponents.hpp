@@ -100,9 +100,9 @@ Component(AudioScatterer);
 Component(NavLoaderComponent);
 */
 
-Component(Pathfind);
-template<> void Component<Pathfind>::ComponentElem::init();
-template<> void Component<Pathfind>::ComponentElem::clean();
+Component(AgentNavigation);
+template<> void Component<AgentNavigation>::ComponentElem::init();
+template<> void Component<AgentNavigation>::ComponentElem::clean();
 
 
 
