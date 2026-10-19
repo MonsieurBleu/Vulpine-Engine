@@ -931,6 +931,9 @@ void VulpineBlueprintUI::AddToSelectionMenu(
 
     title->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
 
+    info->comp<WidgetState>().statusToPropagate = ModelStatus::HIDE;
+    info->comp<WidgetState>().status = ModelStatus::UNDEFINED;
+
     title->comp<WidgetBox>().specialFittingScript = [](Entity *p, Entity *e)
     {
         e->comp<WidgetStyle>().setbackGroundStyle(

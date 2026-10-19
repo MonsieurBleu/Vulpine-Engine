@@ -54,6 +54,7 @@ namespace JoltVulpine
 
     extern bool useVelocityBasedMovement;
     extern bool enablePhysics;
+    extern bool quitThread;
 
     JPH::BodyInterface &GetBodyInterface();
 
