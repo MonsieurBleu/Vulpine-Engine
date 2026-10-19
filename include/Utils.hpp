@@ -12,6 +12,8 @@
 
 #include "MappedEnum.hpp"
 
+#include "Logging.hpp"
+
 #define PRINTVAR(v) "\n\t", #v, " : ", v
 
 #ifdef _WIN32
@@ -21,10 +23,20 @@
     #define STR_CASE_STR(str1, str2) strcasestr(str1, str2)
 #endif
 
+enum ThreadID : int
+{
+    THREAD_ID_UNDEFINED = -1,
+    THREAD_ID_MAIN = 0,
+    THREAD_ID_RP3D_MAIN = 1,
+    THREAD_ID_JOLT_MAIN = 2,
+    THREAD_ID_NAVMESH_BUILD = 3,
+    THREAD_ID_NAVMESH_QUERY = 4,
+};
+
 #ifdef __clang__
-inline thread_local int currentThreadID = -1;
+inline thread_local int currentThreadID = THREAD_ID_UNDEFINED;
 #elif defined(__GNUC__)
-static inline thread_local int currentThreadID = -1;
+static inline thread_local int currentThreadID = THREAD_ID_UNDEFINED;
 #endif
 
 
@@ -49,7 +61,7 @@ std::ostream& operator<<(std::ostream& os, const glm::quat& u);
 
 /// LOGGING
 
-#include "Logging.hpp"
+
 #define FILE_ERROR_MESSAGE(filename, ...) { \
     Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::fileError(filename, __VA_ARGS__); \
@@ -308,6 +320,31 @@ inline bool isFloat(const std::string& s, float& value) {
     value = strtof(s.c_str(), &p);
 
     return (*p == 0);
+}
+
+// cool variadric min & max wrappers for multi argument min/max
+template <typename T>
+inline constexpr T minN(T arg0, T arg1)
+{
+    return glm::min(arg0, arg1);
+}
+
+template <typename T, typename... Args>
+inline constexpr T minN(T arg0, T arg1, Args... args)
+{
+    return glm::min(arg0, minN(arg1, args...));
+}
+
+template <typename T>
+inline constexpr T maxN(T arg0, T arg1)
+{
+    return glm::max(arg0, arg1);
+}
+
+template <typename T, typename... Args>
+inline constexpr T maxN(T arg0, T arg1, Args... args)
+{
+    return glm::max(arg0, maxN(arg1, args...));
 }
 
 void angleVectors(const glm::vec3& angles, glm::vec3& forward, glm::vec3& right, glm::vec3& up);

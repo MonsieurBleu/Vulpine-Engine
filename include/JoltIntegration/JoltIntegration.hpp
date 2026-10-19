@@ -18,5 +18,7 @@ struct JoltBody : JPH::BodyID
 /*
     If an entity has this component, it has sensor or kynematic main body.
     If the flag is true, the main body is kynematic.
+
+    NOTE: it's actually spelled kinematic :p
 */
 typedef bool KynematicFlag;

@@ -21,7 +21,7 @@
 */
 #include <Jolt/Physics/Collision/BroadPhase//ObjectVsBroadPhaseLayerFilterMask.h>
 
-#define JOLT_MAIN_THREAD_ID 2
+#define JOLT_MAIN_THREAD_ID THREAD_ID_JOLT_MAIN
 
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>

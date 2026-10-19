@@ -2,6 +2,8 @@
 #pragma once
 
 #include "Entity.hpp"
+#include "JoltIntegration/PhysicsCommons.hpp"
+#include "Navigation/NavMesh.hpp"
 #ifndef VULPINE_COMPONENT_IMPL
 #include <ECS/EngineComponents.hpp>
 #endif
@@ -1463,4 +1465,47 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
 
     /* TODO : maybe remove later*/
     ComponentModularity::synchronizeChildren(cursorHelp);
+}
+
+template<> void Component<AgentNavigation>::ComponentElem::init() 
+{
+    if (!this->entity->has<State3D>())
+    {
+        ERROR_MESSAGE("Entity got `AgentNavigation` component without having `State3D`");
+        return;
+    }
+
+    State3D state3D = this->entity->comp<State3D>();
+
+    if (this->entity->has<JoltBody>())
+    {
+        JoltBody bodyID = this->entity->comp<JoltBody>();
+        JPH::AABox bounds = JoltVulpine::GetBodyInterface().GetTransformedShape(bodyID).GetWorldSpaceBounds();
+
+        JPH::Vec3 extents = bounds.GetExtent();
+        float radius = max(extents.GetX(), extents.GetZ());
+        float height = extents.GetY();
+
+        // TODO: resolve max climb & max slope
+        VulpineNav::NavMesh::ResolveAgent({.radius = radius, .height = height, .maxClimb = 2.0f, .maxSlopeDeg = 55.0f});
+    }
+
+    VulpineNav::NavMesh::CreateLoader(state3D.position, this->data.navmeshBuildPriority);
+
+    this->data.initialized = true;
+    this->data.lastPos = state3D.position;
+}
+
+template<> void Component<AgentNavigation>::ComponentElem::clean() 
+{
+    if (this->data.initialized)
+    {
+        VulpineNav::NavMesh::UnloadLoader(this->data.lastPos);
+        this->data.initialized = false;
+    }
+}
+
+void ManageNavGarbage()
+{
+    ManageGarbage<AgentNavigation>();
 }

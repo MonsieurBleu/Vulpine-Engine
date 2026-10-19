@@ -254,6 +254,9 @@ class InstancedMeshModel3D : public MeshModel3D
         void removeInstance(ModelInstance * instance);
         void resetInstances();
 
+        inline const std::vector<ModelInstance>& getInstancesConst() { return instances; }
+        inline std::vector<ModelInstance>& getInstances() { return instances; }
+
         GLuint drawVAO(int layer, bool depthOnly = false) final;
         bool cull(int layer, int cameraLayers) final;
 };
