@@ -7,6 +7,7 @@
 #include <algorithm>
 
 std::string Shadinclude::shaderDefines;
+std::string Shadinclude::optionShaderDefines;
 
 // uint16 ShaderProgram::useCount[MAX_SHADER_HANDLE] = {(uint16)0};
 
