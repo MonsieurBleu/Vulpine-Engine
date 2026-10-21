@@ -1444,7 +1444,7 @@ void updateEntityCursor(vec2 screenPos, bool down, bool click, WidgetUI_Context&
     ComponentModularity::synchronizeChildren(cursorHelp);
 }
 
-template<> void Component<AgentNavigation>::ComponentElem::init() 
+template<> void Component<AgentNavigation>::ComponentElem::init()
 {
     if (!this->entity->has<State3D>())
     {
@@ -1452,29 +1452,30 @@ template<> void Component<AgentNavigation>::ComponentElem::init()
         return;
     }
 
-    State3D state3D = this->entity->comp<State3D>();
+    const State3D& state3D = this->entity->comp<State3D>();
+    AgentNavigation& nav = this->data;
 
-    if (this->entity->has<JoltBody>())
+    if (nav.profileFromBody && this->entity->has<JoltBody>())
     {
-        JoltBody bodyID = this->entity->comp<JoltBody>();
-        JPH::AABox bounds = JoltVulpine::GetBodyInterface().GetTransformedShape(bodyID).GetWorldSpaceBounds();
+        const JoltBody& bodyID = this->entity->comp<JoltBody>();
+        const JPH::Vec3 half = JoltVulpine::GetBodyInterface().GetShape(bodyID)->GetLocalBounds().GetExtent();
 
-        JPH::Vec3 extents = bounds.GetExtent();
-        float radius = max(extents.GetX(), extents.GetZ());
-        float height = extents.GetY();
-
-        // TODO: resolve max climb & max slope
-        VulpineNav::NavMesh::ResolveAgent({.radius = radius, .height = height, .maxClimb = 2.0f, .maxSlopeDeg = 55.0f});
+        nav.profile.radius = max(half.GetX(), half.GetZ());
+        nav.profile.height = half.GetY() * 2.0f;
     }
 
-    VulpineNav::NavMesh::CreateLoader(state3D.position, this->data.navmeshBuildPriority);
+    VulpineNav::NavMesh::ResolveAgent({nav.profile.radius, nav.profile.height, nav.profile.maxClimb, nav.profile.maxSlopeDeg});
 
-    this->data.initialized = true;
-    this->data.lastPos = state3D.position;
+    VulpineNav::NavMesh::CreateLoader(state3D.position, nav.navmeshBuildPriority);
+
+    nav.initialized = true;
+    nav.lastPos = state3D.position;
 }
 
-template<> void Component<AgentNavigation>::ComponentElem::clean() 
+template<> void Component<AgentNavigation>::ComponentElem::clean()
 {
+    ResetAgentNavigation(this->data);
+
     if (this->data.initialized)
     {
         VulpineNav::NavMesh::UnloadLoader(this->data.lastPos);

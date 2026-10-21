@@ -1,17 +1,11 @@
 #pragma once
 #include "CompilingOptions.hpp"
 #include "Matrix.hpp"
-#include "Utils.hpp"
 
-#include <array>
-#include <atomic>
 #include <cassert>
-#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <mutex>
-#include <queue>
-#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -34,11 +28,11 @@ namespace VulpineNav
 {
 constexpr size_t worldSize = 4096;
 
-static constexpr float kCellSize = 0.3f; // meters per voxel, kind of acts as the resolution of the navmesh, in terms of accuracy and performance
+static constexpr float kCellSize = 0.2f; // meters per voxel, kind of acts as the resolution of the navmesh, in terms of accuracy and performance
 static constexpr float kCellHeight = 0.2f;
-static constexpr int   kTileCells = 64; // tile edge in voxels
+static constexpr int   kTileCells = 96; // tile edge in voxels
 
-static constexpr float kTileWorldSize = kTileCells * kCellSize; // 0.3 * 64 = 19.2m tile side length
+static constexpr float kTileWorldSize = kTileCells * kCellSize; // 0.2 * 96 = 19.2m tile side length
 
 static constexpr float kWorldMinY = 0;
 static constexpr float kWorldMaxY = 512; // TODO: confirm this
@@ -200,245 +194,26 @@ private:
 };
 }
 
-
-
-
 namespace NavMesh
 {
 static constexpr int kLoadRadius = 6;
 static constexpr int kUnloadRadius = 8;
 
-// internals & stuff
-namespace detail
-{
-
-static constexpr i64 kFramesPerPriority = 60;
-static constexpr int kMaxIdx = worldTileLength - 1;
-static constexpr u32 kMaxTiers = 64;
 
 
-enum TileState : u8 { Unloaded, Pending, Loaded };
+void Init();
 
-struct TileGrid
-{
-    std::array<u16, worldTileLength * worldTileLength> nearCount;
-    std::array<u16, worldTileLength * worldTileLength> farCount;
-    std::array<std::atomic<u8>, worldTileLength * worldTileLength> loaded;
-    std::array<TileState, worldTileLength * worldTileLength> state;
-};
-
-struct NavMeshData
-{
-    dtNavMesh* navMesh;
-    dtNavMeshQuery* navMeshQuery;
-    MeshTier::TierId key;
-};
-
-struct LoadRequest
-{
-    i64 key;
-    size_t idx;
-    u64 slotMask;
-    bool operator>(const LoadRequest& o) const { return key > o.key; }
-};
-
-struct BuiltTile
-{
-    u8* data;
-    int size;
-    u8 slot;
-};
-
-struct TileGeometry
-{
-    std::vector<float> verts;  // xyz, unindexed: 3 verts per triangle
-    std::vector<int>   tris;
-    float minY = 0.0f;
-    float maxY = 0.0f;
-
-    void clear() { verts.clear(); tris.clear(); minY = FLT_MAX; maxY = -FLT_MAX; }
-    int vertCount() const { return (int)verts.size() / 3; }
-    int triCount() const { return (int)tris.size() / 3; }
-};
-
-struct RecastScratch
-{
-    rcHeightfield*        hf    = nullptr;
-    rcCompactHeightfield* chf   = nullptr;
-    rcContourSet*         cset  = nullptr;
-    rcPolyMesh*           pmesh = nullptr;
-    rcPolyMeshDetail*     dmesh = nullptr;
-
-    ~RecastScratch();
-};
-
-
-struct BuildResult
-{
-    LoadRequest req;
-    bool skipped; // tile was unwanted when the worker picked it up (maybe it was unloaded before it could build it)
-    u64 builtMask; // tiers the worker attempted
-    std::vector<BuiltTile> tiles;
-};
-
-struct SpanPair
-{
-    ivec2 left;
-    ivec2 right;
-};
-
-// main thread state
-inline TileGrid grid;
-inline std::vector<NavMeshData> navMeshes; // index == slot
-inline MeshTier::TierRegistry tierRegistry;
-inline u64 frame = 0;
-inline std::vector<LoadRequest> newRequests;
-inline std::vector<BuildResult> resultsScratch;
-
-// worker state
-inline TileGeometry workerGeo;
-inline std::vector<u8> workerAreas;
-
-NavMeshData createMeshData(const MeshTier::MeshTier& tier);
-
-// helpers
-static inline u64 allSlots(size_t count) 
-{ 
-    return count >= 64 ? ~0ull : (1ull << count) - 1; 
-}
-
-static inline void tileWorldBounds(const ivec2& coord, float padding, vec3& bmin, vec3& bmax)
-{
-    bmin.x = kWorldOrigin.x + coord.x * kTileWorldSize - padding;
-    bmin.y = kWorldMinY;
-    bmin.z = kWorldOrigin.z + coord.y * kTileWorldSize - padding;
-
-    bmax.x = kWorldOrigin.x + (coord.x + 1) * kTileWorldSize + padding;
-    bmax.y = kWorldMaxY;
-    bmax.z = kWorldOrigin.z + (coord.y + 1) * kTileWorldSize + padding;
-}
-
-// because of how recast builds tiled navmeshes, we need a small padding around each cell that it can then merge with other tiles
-// so we iterate over every tier to find the largest one to use
-static inline int borderCells(const MeshTier::MeshTier& tier)
-{
-    return (int)ceilf(tier.radius / kCellSize) + 3;
-}
-
-static inline float gatherPadding(u64 mask, const std::vector<MeshTier::MeshTier>& tiers)
-{
-    int cells = 0;
-    for (u32 s = 0; s < tiers.size(); s++)
-    {
-        if (mask & (1ull << s))
-            cells = max(cells, borderCells(tiers[s]));
-    }
-    return cells * kCellSize;
-}
-
-
-inline i64 requestKey(u8 priority)
-{ 
-    return (i64)frame - (i64)priority * kFramesPerPriority; 
-}
-
-static inline ivec2 rowRange(int yMin, int yMax) 
-{ 
-    return {max(yMin, 0), min(yMax, kMaxIdx)}; 
-}
-
-static inline ivec2 clampSpan(const ivec2& s)
-{ 
-    return {max(s.x, 0), min(s.y, kMaxIdx)}; 
-}
-
-ivec2 rowSpan(const ivec2& cell, int radius, int y);
-
-static inline SpanPair subtractSpan(const ivec2& a, const ivec2& b)
-{
-    return {{a.x, min(a.y, b.x - 1)}, {max(a.x, b.y + 1), a.y}};
-}
-
-// base tile update methods
-void addNear(int y, ivec2 span, ivec2 center, i64 baseKey);
-void removeFar(int y, ivec2 span);
-void updateRow(int y, ivec2 prevTile, ivec2 newTile, ivec2 prevUnload, ivec2 newUnload, i64 baseKey);
-
-inline void removeNear(int y, ivec2 span)
-{
-    span = clampSpan(span);
-    u16* nearRow = &grid.nearCount[(size_t)y * worldTileLength];
-
-    for (int x = span.x; x <= span.y; ++x)
-        --nearRow[x];
-}
-
-inline void addFar(int y, ivec2 span)
-{
-    span = clampSpan(span);
-    u16* farRow = &grid.farCount[(size_t)y * worldTileLength];
-
-    for (int x = span.x; x <= span.y; ++x)
-        ++farRow[x];
-}
-
-inline void requestTile(size_t i, i64 key)
-{
-    if (grid.state[i] != Unloaded) // tile already loaded or pending 
-        return;
-
-    grid.state[i] = Pending;
-    newRequests.push_back({key, i, 0});
-}
-
-void releaseTile(int x, int y);
-
-void addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
-
-void removeMeshTile(NavMeshData& mesh, int x, int y);
-
-void addAll(BuildResult& r);
-
-void freeAll(BuildResult& r);
-
-void integrate(BuildResult& r);
-BuildResult buildRequest(const LoadRequest& req, u64 mask, const std::vector<MeshTier::MeshTier>& tiers);
-void workerLoop();
-int addTier(const MeshTier::MeshTier& tier);
-
-void gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo);
-
-bool buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeometry& geo, u8*& data, int& size);
-} // namespace detail
-
-void init();
-
-void shutdown();
+void Shutdown();
 
 int ResolveAgent(const MeshTier::AgentShape& shape);
 
-inline bool ValidSlot(int slot)
-{
-    return slot >= 0 && (size_t)slot < detail::navMeshes.size();
-}
+bool ValidSlot(int slot);
 
-inline dtNavMesh* GetNavMesh(int slot)
-{
-    return ValidSlot(slot) ? detail::navMeshes[slot].navMesh : nullptr;
-}
+dtNavMesh* GetNavMesh(int slot);
 
-inline dtNavMeshQuery* GetNavMeshQuery(int slot)
-{
-    return ValidSlot(slot) ? detail::navMeshes[slot].navMeshQuery : nullptr;
-}
+dtNavMeshQuery* GetNavMeshQuery(int slot);
 
-inline int SlotFromTierId(MeshTier::TierId id)
-{
-    for (size_t s = 0; s < detail::navMeshes.size(); s++)
-        if (detail::navMeshes[s].key == id)
-            return (int)s;
-    return -1;
-}
+int SlotFromTierId(MeshTier::TierId id);
 
 inline dtNavMesh* GetNavMeshByTierId(MeshTier::TierId id)
 {
@@ -450,15 +225,7 @@ inline dtNavMeshQuery* GetNavMeshQueryByTierId(MeshTier::TierId id)
     return GetNavMeshQuery(SlotFromTierId(id));
 }
 
-inline int FindAgentSlot(const MeshTier::AgentShape& shape)
-{
-    for (size_t s = 0; s < detail::navMeshes.size(); s++)
-    {
-        if (MeshTier::covers(detail::tierRegistry.tier(detail::navMeshes[s].key), shape))
-            return (int)s;
-    }
-    return -1;
-}
+int FindAgentSlot(const MeshTier::AgentShape& shape);
 
 inline dtNavMesh* GetNavMesh(const MeshTier::AgentShape& shape)
 {
@@ -481,141 +248,160 @@ inline dtNavMeshQuery* GetOrCreateNavMeshQuery(const MeshTier::AgentShape& shape
 }
 
 void Tick();
+
+// incremented when Tick adds or removes tiles
+u64 GetVersion();
+
+class QueryReadLock
+{
+public:
+    QueryReadLock();
+    ~QueryReadLock();
+    QueryReadLock(const QueryReadLock&) = delete;
+    QueryReadLock& operator=(const QueryReadLock&) = delete;
+};
+
+void CancelWriterWait();
+
+bool IsTileWanted(vec3 pos);
+
 void CreateLoader(vec3 pos, u8 priority);
 void UpdateLoaderPosition(vec3 prevPos, vec3 newPos, u8 priority);
 void UnloadLoader(vec3 pos);
 
-template <typename TDraw>
-void DebugDrawTiles(TDraw& draw,
-                    float yMin = kWorldMinY,
-                    float yMax = kWorldMaxY,
-                    bool drawUnloaded = false)
+
+
+// == navmesh geometry debug ==
+
+struct DebugEdge
 {
-    using namespace detail;
-    
-    constexpr vec3 kPendingColor  = vec3(1.0f, 0.85f, 0.1f);
-    constexpr vec3 kLoadedColor   = vec3(0.1f, 0.9f, 0.2f);
-    constexpr vec3 kUnloadedColor = vec3(0.35f, 0.35f, 0.35f);
+    vec3 start, end;
+};
 
-    for (int y = 0; y < (int)worldTileLength; ++y)
-    {
-        for (int x = 0; x < (int)worldTileLength; ++x)
-        {
-            const TileState st = grid.state[idxFromTileCoord(x, y)];
+struct DebugGeometry
+{
+    std::vector<vec3> triangles;
+    std::vector<DebugEdge> walls;
+    std::vector<DebugEdge> unlinked;
 
-            vec3 color;
-            switch (st)
-            {
-            case Pending:  color = kPendingColor;  break;
-            case Loaded:   color = kLoadedColor;   break;
-            case Unloaded:
-                if (!drawUnloaded) continue;
-                color = kUnloadedColor;
-                break;
-            default: continue;
-            }
+    void clear() { triangles.clear(); walls.clear(); unlinked.clear(); }
+};
 
-            vec3 bmin, bmax;
-            tileWorldBounds({x, y}, 0.0f, bmin, bmax);
-            bmin.y = yMin;
-            bmax.y = yMax;
+void GetDebugGeometry(vec3 center, int tileRadius, int slot, DebugGeometry& out);
 
-            draw.drawBox(bmin, bmax, 0.0f, ModelState3D(), color);
-        }
-    }
+template <typename LineT, typename Drawer>
+void DebugDrawGeometry(Drawer& draw, vec3 center, int tileRadius = 1, int slot = 0)
+{
+    static DebugGeometry geo;
+    static std::vector<LineT> walls, unlinked;
+
+    GetDebugGeometry(center, tileRadius, slot, geo);
+
+    if (!geo.triangles.empty())
+        draw.drawMesh(geo.triangles.data(), geo.triangles.size() / 3, 0.0f, {}, vec3(0.15f, 0.55f, 0.75f));
+
+    walls.clear();
+    for (const DebugEdge& e : geo.walls)
+        walls.push_back(LineT{e.start, e.end});
+    if (!walls.empty())
+        draw.drawLines(walls, 0.0f, {}, vec3(1.0f, 0.85f, 0.1f));
+
+    unlinked.clear();
+    for (const DebugEdge& e : geo.unlinked)
+        unlinked.push_back(LineT{e.start, e.end});
+    if (!unlinked.empty())
+        draw.drawLines(unlinked, 0.0f, {}, vec3(1.0f, 0.1f, 0.8f));
 }
 
+// == build input debug ==
 
-// also much more optimised for large number of tiles since they're all bundled into a single mesh
-template <typename TDraw>
-void DebugDrawTileQuads(TDraw& draw,
-                        float y,
-                        float duration = 0.0f,
-                        bool drawUnloaded = false,
-                        bool drawDiagonal = true,
-                        ModelState3D state = ModelState3D())
+struct DebugInputGeometry
 {
-    using namespace detail;
+    std::vector<vec3> walkable;
+    std::vector<vec3> steep;
+    std::vector<vec3> flipped;
 
-    constexpr vec3 kPendingColor    = "#ffd91a"_rgb;
-    constexpr vec3 kLoadedNearColor = "#1ae633"_rgb;   // loaded, inside an agent's load radius
-    constexpr vec3 kLoadedFarColor  = "#1a99f2"_rgb;  // loaded, only kept alive by the unload radius
-    constexpr vec3 kUnloadedColor   = "#595959"_rgb;
+    void clear() { walkable.clear(); steep.clear(); flipped.clear(); }
+};
 
-    const size_t vertsPerQuad = drawDiagonal ? 6 : 12;
+void GetDebugInputGeometry(vec3 center, int slot, DebugInputGeometry& out);
 
-    static std::vector<vec3> pending, loadedNear, loadedFar, unloaded;
+template <typename Drawer>
+void DebugDrawInputGeometry(Drawer& draw, vec3 center, int slot = 0)
+{
+    static DebugInputGeometry geo;
+    GetDebugInputGeometry(center, slot, geo);
 
-    pending.clear();
-    loadedNear.clear();
-    loadedFar.clear();
-    unloaded.clear();
-
-    auto pushQuad = [&](std::vector<vec3>& out, const vec3& bmin, const vec3& bmax)
-    {
-        const vec3 a(bmin.x, y, bmin.z);
-        const vec3 b(bmax.x, y, bmin.z);
-        const vec3 c(bmax.x, y, bmax.z);
-        const vec3 d(bmin.x, y, bmax.z);
-
-        if (drawDiagonal)
-        {
-            out.push_back(a); out.push_back(b); out.push_back(c);
-            out.push_back(a); out.push_back(c); out.push_back(d);
-        }
-        else
-        {
-            out.push_back(a); out.push_back(b); out.push_back(b);
-            out.push_back(b); out.push_back(c); out.push_back(c);
-            out.push_back(c); out.push_back(d); out.push_back(d);
-            out.push_back(d); out.push_back(a); out.push_back(a);
-        }
-    };
-
-    for (int ty = 0; ty < (int)worldTileLength; ++ty)
-    {
-        for (int tx = 0; tx < (int)worldTileLength; ++tx)
-        {
-            const size_t idx = idxFromTileCoord(tx, ty);
-            const TileState st = grid.state[idx];
-
-            std::vector<vec3>* bucket = nullptr;
-            switch (st)
-            {
-            case Pending:  bucket = &pending;  break;
-            case Loaded:
-                bucket = grid.nearCount[idx] > 0 ? &loadedNear : &loadedFar;
-                break;
-            case Unloaded: bucket = drawUnloaded ? &unloaded : nullptr; break;
-            default: break;
-            }
-            if (!bucket)
-                continue;
-
-            vec3 bmin, bmax;
-            tileWorldBounds({tx, ty}, 0.0f, bmin, bmax);
-
-            if (bucket->capacity() == 0)
-                bucket->reserve(vertsPerQuad * 64);
-
-            pushQuad(*bucket, bmin, bmax);
-        }
-    }
-
-    auto flush = [&](std::vector<vec3>& verts, const vec3& color)
-    {
-        if (verts.empty())
-            return;
-        // every 3 verts = 1 triangle
-        draw.drawMesh(verts.data(), verts.size() / 3, duration, state, color);
-    };
-
-    flush(pending,    kPendingColor);
-    flush(loadedNear, kLoadedNearColor);
-    flush(loadedFar,  kLoadedFarColor);
-    flush(unloaded,   kUnloadedColor);
+    if (!geo.walkable.empty())
+        draw.drawMesh(geo.walkable.data(), geo.walkable.size() / 3, 0.0f, {}, vec3(0.2f, 0.9f, 0.3f));
+    if (!geo.steep.empty())
+        draw.drawMesh(geo.steep.data(), geo.steep.size() / 3, 0.0f, {}, vec3(0.45f, 0.45f, 0.45f));
+    if (!geo.flipped.empty())
+        draw.drawMesh(geo.flipped.data(), geo.flipped.size() / 3, 0.0f, {}, vec3(1.0f, 0.1f, 0.8f));
 }
 
+// == build pipeline debug ==
+
+struct DebugBuildStages
+{
+    std::vector<vec3> rasterized;  // 0: after rasterization (slope test only)
+    std::vector<vec3> filtered;    // 1: after low hanging / ledge / low height filters
+    std::vector<vec3> eroded;      // 2: after erosion by the agent radius
+    std::vector<vec3> regions;     // 3: after region building (small regions culled)
+    std::vector<vec3> polys;       // 4: poly mesh vertices of the final tile
+
+    float cellSize = 0.0f;
+    bool buildSucceeded = false;
+
+    void clear()
+    {
+        rasterized.clear(); filtered.clear(); eroded.clear(); regions.clear(); polys.clear();
+        buildSucceeded = false;
+    }
+};
+
+
+void GetDebugBuildStages(vec3 center, int slot, DebugBuildStages& out);
+
+template <typename LineT, typename Drawer>
+void DebugDrawBuildStage(Drawer& draw, vec3 center, int stage, int slot = 0, int rebuildEvery = 120)
+{
+    static DebugBuildStages stages;
+    static std::vector<LineT> lines;
+    static ivec2 lastTile(-1);
+    static int lastSlot = -1;
+    static int calls = 0;
+
+    const ivec2 tile = worldToTileCoord(center);
+    if (tile != lastTile || slot != lastSlot || ++calls >= rebuildEvery)
+    {
+        GetDebugBuildStages(center, slot, stages);
+        lastTile = tile;
+        lastSlot = slot;
+        calls = 0;
+    }
+
+    const std::vector<vec3>* sources[5] = {
+        &stages.rasterized, &stages.filtered, &stages.eroded, &stages.regions, &stages.polys};
+    const vec3 colors[5] = {
+        vec3(0.9f, 0.9f, 0.9f), // rasterized: white
+        vec3(1.0f, 0.8f, 0.1f), // filtered: yellow
+        vec3(1.0f, 0.4f, 0.1f), // eroded: orange
+        vec3(0.2f, 0.9f, 0.3f), // regions: green
+        vec3(0.2f, 0.6f, 1.0f), // poly verts: blue
+    };
+    stage = clamp(stage, 0, 4);
+
+    const float h = (stages.cellSize > 0.0f ? stages.cellSize : 0.3f) * 0.35f;
+    lines.clear();
+    for (const vec3& p : *sources[stage])
+    {
+        lines.push_back(LineT{p + vec3(-h, 0, -h), p + vec3(h, 0, h)});
+        lines.push_back(LineT{p + vec3(-h, 0, h), p + vec3(h, 0, -h)});
+    }
+    if (!lines.empty())
+        draw.drawLines(lines, 5.0f, {}, colors[stage]);
+}
 
 void DebugDrawTileInstanced(
     float y,
