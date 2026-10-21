@@ -546,6 +546,7 @@ void ManageGarbage()
             list[i].markedForDeletion = false;
             list[i].clean();
             list[i].data = T();
+            list[i].entity = nullptr;
         }
         // else newMaxID = i;
     }

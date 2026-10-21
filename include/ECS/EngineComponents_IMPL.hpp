@@ -1083,6 +1083,20 @@ COMPONENT_DEFINE_SYNCH(WidgetState)
             default : break;
         }
     
+        // if(child->comp<EntityInfos>().name == "World Editor")
+        // {
+        //     auto &button = child->comp<WidgetButton>();
+        //     Entity* e = (Entity*)button.usr;   
+
+        //     WARNING_MESSAGE(
+        //         PRINTVAR(globals.appTime.getUpdateCounter()),
+        //         PRINTVAR(isIndirectHST),
+        //         PRINTVAR((int)up.statusToPropagate),
+        //         PRINTVAR((int)up.status),
+        //         PRINTVAR((int)e->comp<WidgetState>().statusToPropagate),
+        //         PRINTVAR((int)e->comp<WidgetState>().status)
+        //     )
+        // }
     }
     
     if(up.statusToPropagate == ModelStatus::UNDEFINED)
@@ -1124,7 +1138,16 @@ void updateWidgetsStyle()
 {
     System<WidgetBackground, WidgetStyle>([](Entity &entity)
     {
-        // NOTIF_MESSAGE(entity.toStr())
+        // if(entity.ids[ComponentCategory::UI] < 0 or entity.ids[ComponentCategory::UI] > 1<<16)
+        // {
+        //     ERROR_MESSAGE(
+        //         PRINTVAR(&entity),
+        //         PRINTVAR(entity.ids[ComponentCategory::UI])
+        //     )
+
+        //     NOTIF_MESSAGE(entity.toStr())
+        //     return;
+        // }
 
         if(entity.has<WidgetState>() && entity.comp<WidgetState>().status == ModelStatus::HIDE)
             return;

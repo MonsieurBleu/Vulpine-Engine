@@ -71,6 +71,7 @@ class Shadinclude
 {
 public:
 	static std::string shaderDefines;
+	static std::string optionShaderDefines;
 
 	// Return the source code of the complete shader
 	static std::string load(std::string &path, std::vector<std::string> &dependencies, const std::string &includeIndentifier = "#include ", const std::string &defines = "")
@@ -123,7 +124,7 @@ public:
 			}
 
 			if(isRecursiveCall && lineCnt == 1)
-				fullSourceCode += shaderDefines  + '\n' + defines + '\n';
+				fullSourceCode += shaderDefines  + '\n' + optionShaderDefines + '\n' + defines + '\n';
 
 			fullSourceCode += lineBuffer + '\n';
 			lineCnt ++;
