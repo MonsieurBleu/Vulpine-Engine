@@ -86,13 +86,14 @@ ifeq ($(OS),Windows_NT)
 	ECHO_N = echo  
 else 
 	STRDEC = "
-	ECHO_N = echo -n
+	ECHO_N = echo -n -e
 endif
 
-ESC=
-CLEAR_LINE=${ESC}[2K
-MOVE_UP=${ESC}[1A
-MOVE_DOWN=${ESC}[1B
+ESC=\x1b
+CSI=${ESC}[
+CLEAR_LINE=${CSI}2K${CSI}G
+MOVE_UP=${CSI}1A
+MOVE_DOWN=${CSI}1B
 
 CR=
 
