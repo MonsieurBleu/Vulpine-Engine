@@ -204,7 +204,7 @@ void interpolateKeyframes(
 
     if (t1 < 0 && t2 < 0)
     {
-        WARNING_MESSAGE("Animations '", animA->getName(), "' and '", animB->getName(), "' both have negative time");
+        // WARNING_MESSAGE("Animations '", animA->getName(), "' and '", animB->getName(), "' both have negative time");
         return;
     }
 
