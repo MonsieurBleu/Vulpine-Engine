@@ -25,6 +25,16 @@ struct AgentProfile
     {
         return { radius, height, maxClimb, maxSlopeDeg };
     }
+
+    bool operator==(const AgentProfile& other) const noexcept
+    {
+        return radius == other.radius
+            && height == other.height
+            && maxClimb == other.maxClimb
+            && maxSlopeDeg == other.maxSlopeDeg;
+    }
+
+    bool operator!=(const AgentProfile& other) const noexcept { return !(*this == other); }
 };
 
 // consider adding "smart pointer"-like system for tracking leaked paths

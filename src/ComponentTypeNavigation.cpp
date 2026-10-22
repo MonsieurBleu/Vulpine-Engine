@@ -2,9 +2,10 @@
 #include <AssetManager.hpp>
 #include <AssetManagerUtils.hpp>
 
-AUTOGEN_DATA_RW_FUNC(AgentNavigation, navmeshBuildPriority)
-
 using namespace VulpineNav::NavServer;
+AUTOGEN_DATA_RW_FUNC(AgentProfile, height, maxClimb, maxSlopeDeg, radius)
+AUTOGEN_DATA_RW_FUNC_STRUCT(AgentNavigation, (navmeshBuildPriority, hasGoal, goal, profileFromBody, arriveTolerance), (profile))
+
 
 namespace
 {
