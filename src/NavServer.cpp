@@ -17,7 +17,7 @@
 namespace VulpineNav::NavServer
 {
 AgentProfile const AgentProfile::Humanoid = {
-    .radius = 0.2f,
+    .radius = 0.25f,
     .height = 2.0f,
     .maxClimb = 0.5f,
     .maxSlopeDeg = 45.0f
