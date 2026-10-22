@@ -9,11 +9,8 @@
 
 struct AgentNavigation
 {
-    bool initialized = false;
-    vec3 lastPos = vec3(0);
+    // set by user   
     uint8_t navmeshBuildPriority = 0;
-
-    // set by user
     VulpineNav::NavServer::AgentProfile profile = VulpineNav::NavServer::AgentProfile::Humanoid;
     bool profileFromBody = true;
     vec3 goal = vec3(0);
@@ -21,6 +18,9 @@ struct AgentNavigation
     float arriveTolerance = 0.5f;
 
     struct {
+        bool initialized = false;
+        vec3 lastPos = vec3(0);
+
         // read by movement systems
         vec2 moveDirection = vec2(0); // horizontal & normalized, zero when arrived / no path
         VulpineNav::NavServer::PathStatus status = VulpineNav::NavServer::PathStatus::Invalid;

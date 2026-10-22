@@ -1491,18 +1491,18 @@ template<> void Component<AgentNavigation>::ComponentElem::init()
 
     VulpineNav::NavMesh::CreateLoader(state3D.position, nav.navmeshBuildPriority);
 
-    nav.initialized = true;
-    nav.lastPos = state3D.position;
+    nav.detail.initialized = true;
+    nav.detail.lastPos = state3D.position;
 }
 
 template<> void Component<AgentNavigation>::ComponentElem::clean()
 {
     ResetAgentNavigation(this->data);
 
-    if (this->data.initialized)
+    if (this->data.detail.initialized)
     {
-        VulpineNav::NavMesh::UnloadLoader(this->data.lastPos);
-        this->data.initialized = false;
+        VulpineNav::NavMesh::UnloadLoader(this->data.detail.lastPos);
+        this->data.detail.initialized = false;
     }
 }
 
