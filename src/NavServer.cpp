@@ -1,8 +1,8 @@
 #include "Navigation/NavServer.hpp"
-#include "ECS/ComponentTypeNavigation.hpp"
 #include "Navigation/NavMesh.hpp"
 #include "Utils.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cfloat>
 #include <condition_variable>
@@ -13,6 +13,7 @@
 
 #include <recastnavigation/DetourNavMesh.h>
 #include <recastnavigation/DetourNavMeshQuery.h>
+#include <recastnavigation/DetourPathCorridor.h>
 
 namespace VulpineNav::NavServer
 {
@@ -61,6 +62,9 @@ struct QueryResult
     PathStatus status = PathStatus::NoPath;
     bool startMissing = false;
     std::vector<vec3> points;
+    std::vector<dtPolyRef> polys;
+    vec3 pathStart = vec3(0);
+    vec3 pathEnd = vec3(0);
 };
 
 struct PathSlot
@@ -69,6 +73,9 @@ struct PathSlot
     bool inUse = false;
     PathStatus status = PathStatus::Invalid;
     std::vector<vec3> points;
+    std::vector<dtPolyRef> polys;
+    vec3 pathStart = vec3(0);
+    vec3 pathEnd = vec3(0);
 };
 
 struct DelayedRetry
@@ -337,6 +344,10 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
     for (int i = 0; i < straightCount; i++)
         res.points[i] = vec3(straight[i * 3], straight[i * 3 + 1], straight[i * 3 + 2]);
 
+    res.polys.assign(polys, polys + polyCount);
+    res.pathStart = startPt;
+    res.pathEnd = pathEnd;
+
     res.status = partial ? PathStatus::Partial : PathStatus::Complete;
     return res;
 }
@@ -497,12 +508,16 @@ void Tick()
             }
             slot.status = PathStatus::NoPath;
             slot.points.clear();
+            slot.polys.clear();
             debugRecord(req, slot.status, slot.points);
             continue;
         }
 
         slot.status = res.status;
         slot.points = std::move(res.points);
+        slot.polys = std::move(res.polys);
+        slot.pathStart = res.pathStart;
+        slot.pathEnd = res.pathEnd;
         debugRecord(req, slot.status, slot.points);
     }
     finishedScratch.clear();
@@ -572,6 +587,7 @@ PathHandle RequestPath(vec3 start, vec3 goal, const AgentProfile& profile, Prior
     PathSlot& slot = slots[index];
     slot.inUse = true;
     slot.points.clear();
+    slot.polys.clear();
 
     const PathHandle handle{index, slot.generation};
 
@@ -619,6 +635,8 @@ void ReleasePath(PathHandle path)
     s->status = PathStatus::Invalid;
     s->points.clear();
     s->points.shrink_to_fit();
+    s->polys.clear();
+    s->polys.shrink_to_fit();
     freeSlots.push_back(path.index);
 }
 
@@ -698,7 +716,7 @@ bool CanWalkStraight(vec3 from, vec3 to, const AgentProfile& profile)
     if (dtStatusDetail(st, DT_BUFFER_TOO_SMALL))
         return false;
 
-    // recast doesn't see height for it's raycasts so we need to check the height difference manually
+    // the raycast is 2D so we reject targets on another floor
     float h = 0.0f;
     if (dtStatusFailed(q->getPolyHeight(visited[visitedCount - 1], ptr(to), &h)))
         return false;
@@ -744,6 +762,165 @@ bool MoveAlongSurface(vec3 from, vec3 to, vec3& out, const AgentProfile& profile
 
     out = result;
     return true;
+}
+
+// == path corridor ==
+
+namespace
+{
+constexpr int kCorridorMaxPolys = kMaxPathPolys;
+const dtQueryFilter corridorFilter;
+
+static_assert(sizeof(dtPolyRef) == sizeof(uint64_t));
+static_assert(int(kCornerEnd) == int(DT_STRAIGHTPATH_END) && int(kCornerOffMesh) == int(DT_STRAIGHTPATH_OFFMESH_CONNECTION));
+}
+
+struct PathCorridor::Impl
+{
+    dtPathCorridor corridor;
+    int meshSlot = -1;
+    bool hasPath = false;
+
+    Impl() { corridor.init(kCorridorMaxPolys); }
+
+    dtNavMeshQuery* query() const
+    {
+        if (!hasPath || currentThreadID != THREAD_ID_MAIN)
+            return nullptr;
+        return NavMesh::GetNavMeshQuery(meshSlot);
+    }
+};
+
+PathCorridor::PathCorridor() = default;
+PathCorridor::~PathCorridor() = default;
+PathCorridor::PathCorridor(const PathCorridor&) {}
+PathCorridor& PathCorridor::operator=(const PathCorridor& o)
+{
+    if (this != &o)
+        Clear();
+    return *this;
+}
+PathCorridor::PathCorridor(PathCorridor&&) noexcept = default;
+PathCorridor& PathCorridor::operator=(PathCorridor&&) noexcept = default;
+
+bool PathCorridor::Adopt(PathHandle path, const AgentProfile& profile)
+{
+    const PathSlot* s = resolve(path);
+    if (!s || s->polys.empty())
+        return false;
+    if (s->status != PathStatus::Complete && s->status != PathStatus::Partial)
+        return false;
+
+    const int meshSlot = slotFor(profile, false);
+    if (meshSlot < 0)
+        return false;
+
+    if (!m)
+        m = std::make_unique<Impl>();
+
+    const int count = std::min((int)s->polys.size(), kCorridorMaxPolys);
+    m->corridor.reset(s->polys.front(), ptr(s->pathStart));
+    m->corridor.setCorridor(ptr(s->pathEnd), s->polys.data(), count);
+    m->meshSlot = meshSlot;
+    m->hasPath = true;
+    return true;
+}
+
+void PathCorridor::Clear()
+{
+    if (m)
+        m->hasPath = false;
+}
+
+bool PathCorridor::Empty() const
+{
+    return !m || !m->hasPath;
+}
+
+bool PathCorridor::MovePosition(vec3 pos)
+{
+    dtNavMeshQuery* q = m ? m->query() : nullptr;
+    return q && m->corridor.movePosition(ptr(pos), q, &corridorFilter);
+}
+
+bool PathCorridor::MoveTarget(vec3 target)
+{
+    dtNavMeshQuery* q = m ? m->query() : nullptr;
+    if (!q || !m->corridor.moveTargetPosition(ptr(target), q, &corridorFilter))
+        return false;
+
+    // moveTargetPosition keeps the old height, which hides a goal that moved to another floor
+    const int n = m->corridor.getPathCount();
+    vec3 t = Target();
+    float h = t.y;
+    if (n > 0 && dtStatusSucceed(q->getPolyHeight(m->corridor.getPath()[n - 1], ptr(t), &h)))
+    {
+        static std::vector<dtPolyRef> scratch; // setCorridor memcpys, can't pass it its own path
+        scratch.assign(m->corridor.getPath(), m->corridor.getPath() + n);
+        t.y = h;
+        m->corridor.setCorridor(ptr(t), scratch.data(), n);
+    }
+    return true;
+}
+
+void PathCorridor::OptimizeVisibility(vec3 next, float range)
+{
+    if (dtNavMeshQuery* q = m ? m->query() : nullptr)
+        m->corridor.optimizePathVisibility(ptr(next), range, q, &corridorFilter);
+}
+
+bool PathCorridor::IsValid(int lookAhead)
+{
+    dtNavMeshQuery* q = m ? m->query() : nullptr;
+    return q && m->corridor.isValid(lookAhead, q, &corridorFilter);
+}
+
+bool PathCorridor::CanSee(vec3 to)
+{
+    dtNavMeshQuery* q = m ? m->query() : nullptr;
+    if (!q)
+        return false;
+
+    float t = 0.0f;
+    float hitNormal[3];
+    dtPolyRef visited[16];
+    int visitedCount = 0;
+    const dtStatus st = q->raycast(m->corridor.getFirstPoly(), m->corridor.getPos(), ptr(to), &corridorFilter,
+                                   &t, hitNormal, visited, &visitedCount, 16);
+    return dtStatusSucceed(st) && t == FLT_MAX;
+}
+
+int PathCorridor::FindCorners(Corner* out, int maxCorners)
+{
+    dtNavMeshQuery* q = m ? m->query() : nullptr;
+    if (!q)
+        return 0;
+
+    maxCorners = std::min(maxCorners, kMaxCorners);
+    float verts[kMaxCorners * 3];
+    unsigned char flags[kMaxCorners];
+    dtPolyRef polys[kMaxCorners];
+    const int n = m->corridor.findCorners(verts, flags, polys, maxCorners, q, &corridorFilter);
+
+    for (int i = 0; i < n; i++)
+        out[i] = {vec3(verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2]), flags[i], polys[i]};
+    return n;
+}
+
+vec3 PathCorridor::Position() const
+{
+    if (!m)
+        return vec3(0);
+    const float* p = m->corridor.getPos();
+    return vec3(p[0], p[1], p[2]);
+}
+
+vec3 PathCorridor::Target() const
+{
+    if (!m)
+        return vec3(0);
+    const float* p = m->corridor.getTarget();
+    return vec3(p[0], p[1], p[2]);
 }
 
 bool RandomPointAround(vec3 center, float radius, vec3& out, const AgentProfile& profile)

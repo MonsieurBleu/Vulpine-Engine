@@ -2,6 +2,7 @@
 
 #include "Navigation/NavMesh.hpp"
 #include <cstdint>
+#include <memory>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -85,6 +86,60 @@ PathStatus GetStatus(PathHandle path);
 // must be called when done with the query, internal result is freed & handle is invalidated
 // safe to call on an unset or already released handle
 void ReleasePath(PathHandle path);
+
+// == path corridor ==
+
+// same values as Detour's DT_STRAIGHTPATH_* flags
+enum CornerFlags : uint8_t
+{
+    kCornerEnd     = 0x02,
+    kCornerOffMesh = 0x04, // start of an off-mesh connection, nothing is returned past it
+};
+
+struct Corner
+{
+    vec3 pos;
+    uint8_t flags = 0;
+    uint64_t poly = 0;
+};
+
+// Keeps an agent attached to a polygon corridor between path requests (wraps dtPathCorridor).
+// Main thread only. Copies start empty: a corridor belongs to one agent and is cheap to request again.
+class PathCorridor
+{
+public:
+    static constexpr int kMaxCorners = 4;
+
+    PathCorridor();
+    ~PathCorridor();
+    PathCorridor(const PathCorridor&);
+    PathCorridor& operator=(const PathCorridor&);
+    PathCorridor(PathCorridor&&) noexcept;
+    PathCorridor& operator=(PathCorridor&&) noexcept;
+
+    // takes the corridor of a Complete or Partial request
+    bool Adopt(PathHandle path, const AgentProfile& profile);
+    void Clear();
+    bool Empty() const;
+
+    // both clamp to the mesh, compare Position() / Target() with what you passed to see how far off they are
+    bool MovePosition(vec3 pos);
+    bool MoveTarget(vec3 target);
+
+    void OptimizeVisibility(vec3 next, float range);
+    bool IsValid(int lookAhead);
+    // 2D raycast from the corridor position, true if `to` is reachable in a straight line
+    bool CanSee(vec3 to);
+
+    int FindCorners(Corner* out, int maxCorners);
+
+    vec3 Position() const;
+    vec3 Target() const;
+
+private:
+    struct Impl;
+    std::unique_ptr<Impl> m;
+};
 
 // == synchronous & fast queries ==
 bool IsOnNavmesh(vec3 pos, const AgentProfile& profile = {});
