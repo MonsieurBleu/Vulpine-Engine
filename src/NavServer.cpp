@@ -39,6 +39,8 @@ constexpr int kMaxStraightPoints = 256;
 constexpr u64 kRetryDelayFrames = 10;
 constexpr u32 kMaxStartAttempts = 30; // about 5 seconds at 60fps
 
+constexpr u32 kMaxInFlight = 16;
+
 constexpr u32 kDeadGeneration = 0xffffffff;
 
 struct QueryRequest
@@ -59,6 +61,8 @@ struct QueryResult
 {
     QueryRequest req;
     PathStatus status = PathStatus::NoPath;
+    PartialReason partialReason = PartialReason::None;
+    u64 partialWatch = 0;
     bool startMissing = false;
     std::vector<vec3> points;
     std::vector<dtPolyRef> polys;
@@ -71,6 +75,8 @@ struct PathSlot
     u32 generation = 0;
     bool inUse = false;
     PathStatus status = PathStatus::Invalid;
+    PartialReason partialReason = PartialReason::None;
+    u64 partialWatch = 0;
     std::vector<vec3> points;
     std::vector<dtPolyRef> polys;
     vec3 pathStart = vec3(0);
@@ -101,6 +107,7 @@ struct CachedProfile
 
 // == main thread state ==
 u64 frame = 0;
+u32 inFlight = 0; // slots in the Pending state
 std::vector<PathSlot> slots;
 std::vector<u32> freeSlots;
 std::vector<QueryRequest> newRequests;
@@ -157,7 +164,7 @@ void appendPath(std::vector<DebugSegment>& out, const std::vector<vec3>& points)
 // == shared with the query thread (guarded by `queueMutex`) ==
 std::jthread worker;
 std::mutex queueMutex;
-std::condition_variable cv;
+std::condition_variable_any cv;
 std::priority_queue<QueryRequest, std::vector<QueryRequest>, std::greater<QueryRequest>> requestQueue;
 std::vector<QueryResult> finished;
 std::vector<u32> liveGeneration;
@@ -259,24 +266,54 @@ bool snapToMesh(const dtNavMeshQuery* q, const dtQueryFilter& filter, const vec3
 
 // == query thread ==
 
-// if goal is unreachable (no navmesh): 
-// walk from goal to start and use the first valid point as a proxy goal
+// the goal isn't on the mesh: use the nearest mesh around it, or failing that,
+// the first mesh found walking back towards the start
 bool findProxyGoal(dtNavMeshQuery* q, const dtQueryFilter& filter, const QueryRequest& req,
                    dtPolyRef& outRef, vec3& outPt)
 {
+    for (float radius : {2.0f, 4.0f, 8.0f})
+    {
+        const vec3 ext(radius, req.extents.y, radius);
+        if (snapToMesh(q, filter, req.goal, ext, outRef, outPt))
+            return true;
+    }
+
     const vec3 delta = req.goal - req.start;
     const float dist = length(vec2(delta.x, delta.z));
     if (dist < 0.001f)
         return false;
 
+    constexpr float kStep = 2.0f;
     const vec3 ext(req.extents.x, max(req.extents.y, 32.0f), req.extents.z);
-    const float step = kTileWorldSize * 0.5f;
-
-    for (float d = dist - step; d > 0.0f; d -= step)
+    for (float d = dist - kStep; d > 0.0f; d -= kStep)
     {
         const vec3 p = req.start + delta * (d / dist);
-        snapToMesh(q, filter, p, ext, outRef, outPt);
-        if (outRef)
+        if (snapToMesh(q, filter, p, ext, outRef, outPt))
+            return true;
+    }
+    return false;
+}
+
+bool tileBuilt(const dtNavMeshQuery* q, ivec2 tile)
+{
+    if (tile.x < 0 || tile.y < 0 || tile.x >= (int)worldTileLength || tile.y >= (int)worldTileLength)
+        return false;
+    return q->getAttachedNavMesh()->getTileAt(tile.x, tile.y, 0) != nullptr;
+}
+
+// a path stopping at a tile border with nothing built past it hit unloaded mesh, not a dead end
+bool endsAtMissingTile(const dtNavMeshQuery* q, const vec3& pathEnd)
+{
+    constexpr float kBorderDistance = 1.0f;
+
+    const ivec2 tile = worldToTileCoord(pathEnd);
+    const vec2 local = vec2(pathEnd.x - kWorldOrigin.x, pathEnd.z - kWorldOrigin.z) - vec2(tile) * kTileWorldSize;
+
+    const ivec2 sides[4] = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    const float dists[4] = {local.x, kTileWorldSize - local.x, local.y, kTileWorldSize - local.y};
+    for (int i = 0; i < 4; i++)
+    {
+        if (dists[i] < kBorderDistance && !tileBuilt(q, tile + sides[i]))
             return true;
     }
     return false;
@@ -300,6 +337,7 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
     }
 
     bool partial = false;
+    PartialReason reason = PartialReason::None;
 
     dtPolyRef endRef = 0;
     vec3 endPt;
@@ -309,6 +347,7 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
         if (!findProxyGoal(q, filter, req, endRef, endPt))
             return res; // no path at all
         partial = true;
+        reason = tileBuilt(q, worldToTileCoord(req.goal)) ? PartialReason::GoalOffMesh : PartialReason::Unloaded;
     }
 
     dtPolyRef polys[kMaxPathPolys];
@@ -318,8 +357,8 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
     if (dtStatusFailed(st) || polyCount == 0)
         return res;
 
-    if (dtStatusDetail(st, DT_PARTIAL_RESULT) || dtStatusDetail(st, DT_OUT_OF_NODES)
-        || dtStatusDetail(st, DT_BUFFER_TOO_SMALL))
+    bool searchLimited = dtStatusDetail(st, DT_OUT_OF_NODES) || dtStatusDetail(st, DT_BUFFER_TOO_SMALL);
+    if (dtStatusDetail(st, DT_PARTIAL_RESULT) || searchLimited)
         partial = true;
 
     // partial corridor
@@ -328,6 +367,8 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
     {
         q->closestPointOnPoly(polys[polyCount - 1], ptr(endPt), ptr(pathEnd), nullptr);
         partial = true;
+        if (reason == PartialReason::None)
+            reason = endsAtMissingTile(q, pathEnd) ? PartialReason::Unloaded : PartialReason::Disconnected;
     }
 
     float straight[kMaxStraightPoints * 3];
@@ -337,7 +378,10 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
     if (straightCount == 0)
         return res;
     if (straightCount == kMaxStraightPoints)
+    {
         partial = true;
+        searchLimited = true;
+    }
 
     res.points.resize(straightCount);
     for (int i = 0; i < straightCount; i++)
@@ -348,6 +392,14 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
     res.pathEnd = pathEnd;
 
     res.status = partial ? PathStatus::Partial : PathStatus::Complete;
+    if (partial)
+    {
+        // the end of a truncated search says nothing about reachability, the agent should walk it and search again
+        res.partialReason = searchLimited ? PartialReason::SearchLimit
+                          : reason != PartialReason::None ? reason : PartialReason::Disconnected;
+        // read under the query lock, so it matches the mesh this search saw
+        res.partialWatch = GetWatchVersion(req.goal, pathEnd);
+    }
     return res;
 }
 
@@ -383,8 +435,8 @@ void WorkerLoop(std::stop_token stop_token)
         QueryRequest req;
         {
             std::unique_lock lock(queueMutex);
-            cv.wait(lock, [&] { return stop_token.stop_requested() || !requestQueue.empty(); });
-            if (stop_token.stop_requested())
+            // wakes on stop requests too, a plain wait + notify after request_stop can miss the wakeup
+            if (!cv.wait(lock, stop_token, [] { return !requestQueue.empty(); }))
                 break;
 
             req = requestQueue.top();
@@ -425,9 +477,7 @@ void Init()
 
 void Shutdown()
 {
-    worker.get_stop_source().request_stop();
-    
-    cv.notify_one();
+    worker.request_stop();
 
     NavMesh::CancelWriterWait();
 
@@ -435,6 +485,7 @@ void Shutdown()
         worker.join();
 
     while (!requestQueue.empty()) requestQueue.pop();
+    inFlight = 0;
     finished.clear();
     finishedScratch.clear();
     liveGeneration.clear();
@@ -505,6 +556,8 @@ void Tick()
                 retries.push_back({frame + kRetryDelayFrames, again});
                 continue; // try again later
             }
+            if (slot.status == PathStatus::Pending)
+                inFlight--;
             slot.status = PathStatus::NoPath;
             slot.points.clear();
             slot.polys.clear();
@@ -512,7 +565,11 @@ void Tick()
             continue;
         }
 
+        if (slot.status == PathStatus::Pending)
+            inFlight--;
         slot.status = res.status;
+        slot.partialReason = res.partialReason;
+        slot.partialWatch = res.partialWatch;
         slot.points = std::move(res.points);
         slot.polys = std::move(res.polys);
         slot.pathStart = res.pathStart;
@@ -587,6 +644,8 @@ PathHandle RequestPath(vec3 start, vec3 goal, const AgentProfile& profile, Prior
     slot.inUse = true;
     slot.points.clear();
     slot.polys.clear();
+    slot.partialReason = PartialReason::None;
+    slot.partialWatch = 0;
 
     const PathHandle handle{index, slot.generation};
 
@@ -598,6 +657,7 @@ PathHandle RequestPath(vec3 start, vec3 goal, const AgentProfile& profile, Prior
     }
 
     slot.status = PathStatus::Pending;
+    inFlight++;
     newRequests.push_back({
         (i64)frame - (i64)priority * kFramesPerPriority,
         index, slot.generation, meshSlot,
@@ -623,12 +683,36 @@ PathStatus GetStatus(PathHandle path)
     return s ? s->status : PathStatus::Invalid;
 }
 
+PartialReason GetPartialReason(PathHandle path)
+{
+    const PathSlot* s = resolve(path);
+    return s ? s->partialReason : PartialReason::None;
+}
+
+u64 GetWatchVersion(vec3 goal, vec3 pathEnd)
+{
+    return NavMesh::GetRegionVersion(goal) + NavMesh::GetRegionVersion(pathEnd);
+}
+
+u64 GetPartialWatch(PathHandle path)
+{
+    const PathSlot* s = resolve(path);
+    return s ? s->partialWatch : 0;
+}
+
+bool CanRequestPath()
+{
+    return inFlight < kMaxInFlight;
+}
+
 void ReleasePath(PathHandle path)
 {
     PathSlot* s = resolve(path);
     if (!s)
         return;
 
+    if (s->status == PathStatus::Pending)
+        inFlight--;
     s->inUse = false;
     s->generation++;
     s->status = PathStatus::Invalid;

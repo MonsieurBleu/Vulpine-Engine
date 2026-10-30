@@ -59,6 +59,16 @@ enum class PathStatus : uint8_t
     Invalid,   // handle expired or released
 };
 
+// why a path is Partial, each wants a different retry policy
+enum class PartialReason : uint8_t
+{
+    None,
+    Unloaded,     // the goal, or the mesh between here and there, isn't built yet
+    GoalOffMesh,  // the goal tile is built but the goal isn't on it (on a prop, mid-air...)
+    Disconnected, // the goal is on mesh the start can't reach
+    SearchLimit,  // ran out of search nodes or path buffer, the end is just how far the search got
+};
+
 enum class Priority : uint8_t { Low = 0, Normal = 1, High = 2 };
 
 void Init();
@@ -81,6 +91,16 @@ PathHandle RequestPath(
 PathStatus GetPath(PathHandle path, std::vector<vec3>& outPoints);
 
 PathStatus GetStatus(PathHandle path);
+
+PartialReason GetPartialReason(PathHandle path);
+
+// changes when tiles around the goal or the path end are added or removed.
+// GetPartialWatch is its value when the search ran, a partial path is worth retrying once they differ
+u64 GetWatchVersion(vec3 goal, vec3 pathEnd);
+u64 GetPartialWatch(PathHandle path);
+
+// false while too many requests are in flight, requesting anyway just queues them behind the others
+bool CanRequestPath();
 
 // releases or cancels a path request
 // must be called when done with the query, internal result is freed & handle is invalidated

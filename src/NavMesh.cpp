@@ -152,6 +152,8 @@ struct TileGrid
     std::array<u16, worldTileLength * worldTileLength> farCount;
     std::array<std::atomic<u8>, worldTileLength * worldTileLength> loaded;
     std::array<TileState, worldTileLength * worldTileLength> state;
+    // bumped (under navMutex) whenever any tier's tile at this index is added or removed
+    std::array<std::atomic<u32>, worldTileLength * worldTileLength> version;
 };
 
 struct NavMeshData
@@ -324,15 +326,15 @@ void requestTile(size_t i, i64 key)
 
 void releaseTile(int x, int y);
 
-void addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
+bool addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
 
-void removeMeshTile(NavMeshData& mesh, int x, int y);
+bool removeMeshTile(NavMeshData& mesh, int x, int y);
 
-void addAll(BuildResult& r);
+bool addAll(BuildResult& r);
 
 void freeAll(BuildResult& r);
 
-void integrate(BuildResult& r);
+bool integrate(BuildResult& r);
 BuildResult buildRequest(const LoadRequest& req, u64 mask, const std::vector<MeshTier::MeshTier>& tiers);
 void workerLoop(std::stop_token stop_token);
 int addTier(const MeshTier::MeshTier& tier);
@@ -349,7 +351,7 @@ std::atomic<bool> writerWaiting = false;
 // shared with worker
 std::jthread worker;
 std::mutex requestMutex;
-std::condition_variable cv;
+std::condition_variable_any cv;
 std::priority_queue<LoadRequest, std::vector<LoadRequest>, std::greater<LoadRequest>> buildQueue;
 std::vector<BuildResult> results;
 std::vector<MeshTier::MeshTier> buildTiers;
@@ -365,11 +367,10 @@ RecastScratch::~RecastScratch()
     rcFreePolyMeshDetail(dmesh);
 }
 
-void removeMeshTile(NavMeshData& mesh, int x, int y)
+bool removeMeshTile(NavMeshData& mesh, int x, int y)
 {
     dtTileRef ref = mesh.navMesh->getTileRefAt(x, y, 0);
-    if (ref)
-        mesh.navMesh->removeTile(ref, nullptr, nullptr);
+    return ref && dtStatusSucceed(mesh.navMesh->removeTile(ref, nullptr, nullptr));
 }
 
 void freeAll(BuildResult& r)
@@ -508,24 +509,31 @@ void NavMesh::detail::releaseTile(int x, int y)
     grid.state[i] = Unloaded;
 }
 
-void NavMesh::detail::addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size)
+bool NavMesh::detail::addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size)
 {
     if (mesh.navMesh->getTileAt(x, y, 0) ||
         dtStatusFailed(mesh.navMesh->addTile(data, size, DT_TILE_FREE_DATA, 0, nullptr)))
     {
         dtFree(data);
+        return false;
     }
+    return true;
 }
 
-void NavMesh::detail::addAll(BuildResult& r)
+bool NavMesh::detail::addAll(BuildResult& r)
 {
     const ivec2 c = coordFromIdx(r.req.idx);
+    bool added = false;
     for (BuiltTile& t : r.tiles)
-        addMeshTile(navMeshes[t.slot], c.x, c.y, t.data, t.size);
+        added |= addMeshTile(navMeshes[t.slot], c.x, c.y, t.data, t.size);
     r.tiles.clear();
+
+    if (added)
+        grid.version[r.req.idx].fetch_add(1, std::memory_order_relaxed);
+    return added;
 }
 
-void NavMesh::detail::integrate(BuildResult& r)
+bool NavMesh::detail::integrate(BuildResult& r)
 {
     const u32 i = r.req.idx;
     const bool wanted = grid.loaded[i];
@@ -534,10 +542,9 @@ void NavMesh::detail::integrate(BuildResult& r)
     if (r.req.slotMask != 0)
     {
         if (wanted && grid.state[i] == Loaded)
-            addAll(r);
-        else
-            freeAll(r);
-        return;
+            return addAll(r);
+        freeAll(r);
+        return false;
     }
 
     // resolve pending tile
@@ -546,22 +553,23 @@ void NavMesh::detail::integrate(BuildResult& r)
     {
         freeAll(r);
         grid.state[i] = Unloaded;
-        return;
+        return false;
     }
 
     if (r.skipped) 
     {
         newRequests.push_back(r.req);
-        return;
+        return false;
     }
 
-    addAll(r);
+    const bool added = addAll(r);
     grid.state[i] = Loaded;
 
     // tiers added while this tile was being built
     const u64 missing = allSlots(navMeshCount.load(std::memory_order_relaxed)) & ~r.builtMask;
     if (missing)
         newRequests.push_back({r.req.key, i, missing});
+    return added;
 }
 
 
@@ -613,9 +621,8 @@ void NavMesh::detail::workerLoop(std::stop_token stop_token)
         // block for mutex lock scope
         {
             std::unique_lock<std::mutex> lock(requestMutex);
-            while (!stop_token.stop_requested() && buildQueue.empty())
-                cv.wait(lock);
-            if (stop_token.stop_requested())
+            // wakes on stop requests too, a plain wait + notify after request_stop can miss the wakeup
+            if (!cv.wait(lock, stop_token, [] { return !buildQueue.empty(); }))
                 return;
 
             req = buildQueue.top();
@@ -659,8 +666,7 @@ int NavMesh::detail::addTier(const MeshTier::MeshTier& tier)
 
 void NavMesh::Shutdown()
 {
-    worker.get_stop_source().request_stop();
-    cv.notify_one();
+    worker.request_stop();
     if (worker.joinable())
         worker.join();
 
@@ -711,23 +717,32 @@ void NavMesh::Tick()
         return;
     }
 
+    bool changed = false;
+
     const u32 count = navMeshCount.load(std::memory_order_relaxed);
     for (const ivec2& c : pendingRemovals)
     {
-        if (grid.loaded[idxFromTileCoord(c)]) // wanted again, keep the old tile
+        const size_t idx = idxFromTileCoord(c);
+        if (grid.loaded[idx]) // wanted again, keep the old tile
             continue;
+
+        bool removed = false;
         for (u32 s = 0; s < count; s++)
-            removeMeshTile(navMeshes[s], c.x, c.y);
+            removed |= removeMeshTile(navMeshes[s], c.x, c.y);
+        if (removed)
+            grid.version[idx].fetch_add(1, std::memory_order_relaxed);
+        changed |= removed;
     }
     pendingRemovals.clear();
 
     for (BuildResult& r : resultsScratch)
-        integrate(r);
+        changed |= integrate(r);
     resultsScratch.clear();
 
     navMutex.unlock();
 
-    meshVersion++;
+    if (changed)
+        meshVersion++;
 
     writerWaiting.store(false, std::memory_order_release);
     writerWaiting.notify_all();
@@ -747,6 +762,24 @@ NavMesh::QueryReadLock::~QueryReadLock()
 u64 NavMesh::GetVersion()
 {
     return meshVersion;
+}
+
+u64 NavMesh::GetRegionVersion(vec3 pos, int tileRadius)
+{
+    const ivec2 c = worldToTileCoord(pos);
+    u64 sum = 0;
+    for (int y = c.y - tileRadius; y <= c.y + tileRadius; y++)
+    {
+        if (y < 0 || y >= (int)worldTileLength)
+            continue;
+        for (int x = c.x - tileRadius; x <= c.x + tileRadius; x++)
+        {
+            if (x < 0 || x >= (int)worldTileLength)
+                continue;
+            sum += grid.version[idxFromTileCoord(x, y)].load(std::memory_order_relaxed);
+        }
+    }
+    return sum;
 }
 
 void NavMesh::CancelWriterWait()

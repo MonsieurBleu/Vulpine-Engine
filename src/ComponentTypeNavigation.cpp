@@ -64,10 +64,12 @@ void pollPending(AgentNavigation& nav)
         d.corridor.Clear();
 
     d.status = (st == PathStatus::Invalid) ? PathStatus::NoPath : st;
+    d.partialReason = d.status == PathStatus::Partial ? GetPartialReason(d.pending) : PartialReason::None;
+    d.partialWatch = GetPartialWatch(d.pending);
     d.cooldownFrames = d.status == PathStatus::NoPath ? kNoPathCooldownFrames : kRetryCooldownFrames;
 
-    // the search saw the mesh as it was when requested
-    d.validatedVersion = d.pathVersion;
+    // tiles may have changed between the search and now, validate the new corridor right away
+    d.validatedVersion = 0;
 
     ReleasePath(d.pending);
     d.pending = {};
@@ -117,6 +119,8 @@ bool needsRepath(const AgentNavigation& nav, vec3 pos, bool corridorLost)
     {
     case PathStatus::Complete:
     {
+        if (d.cooldownFrames > 0)
+            return false;
         const vec3 target = d.corridor.Target();
         return xzDistance(target, nav.goal) > kTargetFollowError
             || glm::abs(target.y - nav.goal.y) > nav.profile.height;
@@ -126,9 +130,13 @@ bool needsRepath(const AgentNavigation& nav, vec3 pos, bool corridorLost)
             return true;
         if (d.cooldownFrames > 0)
             return false;
-        if (GetNavmeshVersion() != d.pathVersion)
+        // tiles around the goal or the path end were added or removed since the search
+        if (GetWatchVersion(d.pathGoal, d.corridor.Target()) != d.partialWatch)
             return true;
-        return d.corridor.Empty() || xzDistance(pos, d.corridor.Target()) < kPartialEndDistance;
+        // the other reasons won't change until the goal or the mesh does, retrying would just twitch
+        if (d.partialReason == PartialReason::SearchLimit)
+            return d.corridor.Empty() || xzDistance(pos, d.corridor.Target()) < kPartialEndDistance;
+        return false;
     case PathStatus::NoPath:
         return distance(nav.goal, d.pathGoal) > kRepathGoalDrift || d.cooldownFrames == 0;
     default:
@@ -250,9 +258,10 @@ void ResetAgentNavigation(AgentNavigation& nav)
     d.speedScale = 0.0f;
     d.status = PathStatus::Invalid;
     d.arrived = false;
+    d.partialReason = PartialReason::None;
     d.cooldownFrames = 0;
-    d.pathVersion = 0;
     d.validatedVersion = 0;
+    d.partialWatch = 0;
 }
 
 void UpdateAgentNavigation(AgentNavigation& nav, vec3 pos)
@@ -276,11 +285,13 @@ void UpdateAgentNavigation(AgentNavigation& nav, vec3 pos)
     d.arrived = xzDistance(pos, nav.goal) <= nav.arriveTolerance + nav.goalRadius
              && glm::abs(pos.y - nav.goal.y) <= nav.profile.height;
 
-    if (needsRepath(nav, pos, corridorLost))
+    // over budget the request just waits a frame, needsRepath stays true until it goes through
+    if (needsRepath(nav, pos, corridorLost) && CanRequestPath())
     {
-        d.pending = RequestPath(pos, nav.goal, nav.profile);
+        // agents with nothing to follow are standing still, serve them first
+        const Priority priority = d.corridor.Empty() ? Priority::High : Priority::Normal;
+        d.pending = RequestPath(pos, nav.goal, nav.profile, priority);
         d.pathGoal = nav.goal;
-        d.pathVersion = GetNavmeshVersion();
 
         if (d.corridor.Empty())
             d.status = PathStatus::Pending;

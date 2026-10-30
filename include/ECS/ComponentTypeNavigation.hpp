@@ -34,6 +34,7 @@ struct AgentNavigation
         vec2 moveDirection = vec2(0); // horizontal & normalized, zero when arrived / no path
         float speedScale = 0.0f;      // 0 to 1, modified to smooth out movement
         VulpineNav::NavServer::PathStatus status = VulpineNav::NavServer::PathStatus::Invalid;
+        VulpineNav::NavServer::PartialReason partialReason = VulpineNav::NavServer::PartialReason::None;
         bool arrived = false;
 
         std::array<VulpineNav::NavServer::Corner, VulpineNav::NavServer::PathCorridor::kMaxCorners> corners{};
@@ -45,8 +46,9 @@ struct AgentNavigation
 
         // goal the current path was requested for
         vec3 pathGoal = vec3(0);
-        uint64_t pathVersion = 0;
         uint64_t validatedVersion = 0;
+        // GetWatchVersion(pathGoal, path end) when the partial path was searched
+        uint64_t partialWatch = 0;
 
         uint16_t cooldownFrames = 0;
     } detail;

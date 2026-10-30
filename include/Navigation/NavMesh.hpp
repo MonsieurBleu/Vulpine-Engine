@@ -254,6 +254,10 @@ void Tick();
 // incremented when Tick adds or removes tiles
 u64 GetVersion();
 
+// sum of the per-tile versions in the square of tiles around pos, changes whenever one of them
+// is added or removed. safe from any thread; read under QueryReadLock it matches what queries see
+u64 GetRegionVersion(vec3 pos, int tileRadius = 1);
+
 class QueryReadLock
 {
 public:
