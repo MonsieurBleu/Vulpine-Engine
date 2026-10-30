@@ -88,7 +88,7 @@ struct ComponentGlobals
     static inline int lastID = 0;
     static inline int lastFreeID[ComponentCategory::END] = {0};
     static inline int maxID[ComponentCategory::END] = {0};
-    static inline int garbageMaxID[ComponentCategory::END] = {-1};
+    static inline int garbageMaxID[ComponentCategory::END] = FILLED_C_ARRAY(ComponentCategory::END, -1);
 
     static inline CategoryStatus status[ComponentCategory::END][MAX_ENTITY];
 
@@ -199,7 +199,8 @@ class Entity
     public :
 
         VulpineBitSet<MAX_COMP> state;
-        std::array<int, ComponentCategory::END> ids = {NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY, NO_ENTITY};
+        // constexpr initializer for automatic resizing
+        std::array<int, ComponentCategory::END> ids = make_full_array<ComponentCategory::END, -1>;
 
         Entity() : Entity("Unamed Entity"){};
         Entity(const std::string &name){set<EntityInfos>(EntityInfos{name});};

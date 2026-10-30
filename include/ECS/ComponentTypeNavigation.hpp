@@ -69,5 +69,3 @@ void DebugDrawAgentNavigation(Drawer& draw, const AgentNavigation& nav, vec3 pos
         draw.drawLines(gap, 0.0f, {}, vec3(0.6f, 0.6f, 0.6f));
     }
 }
-
-void ManageNavGarbage();

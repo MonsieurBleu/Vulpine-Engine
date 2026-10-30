@@ -5,6 +5,7 @@
 #include <Graphics/Shader.hpp>
 #include <VertexBuffer.hpp>
 #include <Graphics/Textures.hpp>
+#include "Utils.hpp"
 
 #define MESH_BASE_ATTRIBUTE_LOCATION_POSITION 0
 #define MESH_BASE_ATTRIBUTE_LOCATION_COLOR    1
@@ -133,7 +134,7 @@ class MeshModel3D : public Mesh
     protected :
         void createUniforms();
 
-        bool culled[4] = {true};
+        bool culled[4] = FILLED_C_ARRAY(4, true);
         bool externCullEnable = false;
 
         vec4 lodHeigtTextureRange = vec4(0);
