@@ -63,33 +63,27 @@ std::ostream& operator<<(std::ostream& os, const glm::quat& u);
 
 
 #define FILE_ERROR_MESSAGE(filename, ...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::fileError(filename, __VA_ARGS__); \
 }
 
 #define WARNING_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::warn(__VA_ARGS__); \
 }
 
 #define ERROR_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::error(__VA_ARGS__); \
 }
 
 #define NOTIF_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::info(__VA_ARGS__); \
 }
 
 // also adding a macro called info cause I never remember it's called notif in this engine :(
 #define INFO_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::info(__VA_ARGS__); \
 }
 
 #define DEBUG_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::debug(__VA_ARGS__); \
 }
 

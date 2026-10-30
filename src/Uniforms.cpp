@@ -235,7 +235,10 @@ std::ostream& operator<<(std::ostream& os, ShaderUniformGroup g)
     std::cout << TERMINAL_INFO;
     std::cout << "ShaderUniformGroup\n" << "{\n"; 
 
-    os << "\tstate : " << (g.safe ? "safe" : TERMINAL_ERROR + "unsafe" + TERMINAL_INFO) << "\n";
+    if (g.safe)
+        os << "\tstate : " << "safe" << "\n";
+    else
+        os << "\tstate : " << TERMINAL_ERROR << "unsafe" << TERMINAL_INFO << "\n";
 
     for(uint64 i = 0; i < g.uniforms.size(); i++)
     {

@@ -118,6 +118,7 @@ std::ostream &operator<<(std::ostream &os, GLenum_t e)
     return os;
 }
 
+// TODO: consider using the logger here instead of a custom print that never reaches the log file
 void printGLerror(
     GLenum _source,
     GLenum _type,
@@ -130,27 +131,27 @@ void printGLerror(
     GLenum_t type(_type);
     GLenum_t source(_source);
 
-    const std::string *color = &TERMINAL_RESET;
+    std::string_view color = TERMINAL_RESET;
 
     if (type.val == GL_DEBUG_TYPE_ERROR)
     {
-        color = &TERMINAL_ERROR;
+        color = TERMINAL_ERROR;
     }
     else if (severity.val == GL_DEBUG_SEVERITY_NOTIFICATION)
     {
-        color = &TERMINAL_NOTIF;
+        color = TERMINAL_NOTIF;
     }
     else
     {
-        color = &TERMINAL_WARNING;
+        color = TERMINAL_WARNING;
     }
 
     std::cerr
-        << TERMINAL_NOTIF << "\nGL CALLBACK " << *color << "[" << type << "]"
-        << TERMINAL_RESET << "\n\tid       = " << *color << id
-        << TERMINAL_RESET << "\n\tfrom     = " << *color << source
-        << TERMINAL_RESET << "\n\tseverity = " << *color << severity
-        << TERMINAL_RESET << "\n\tmessage  = " << *color << message
+        << TERMINAL_NOTIF << "\nGL CALLBACK " << color << "[" << type << "]"
+        << TERMINAL_RESET << "\n\tid       = " << color << id
+        << TERMINAL_RESET << "\n\tfrom     = " << color << source
+        << TERMINAL_RESET << "\n\tseverity = " << color << severity
+        << TERMINAL_RESET << "\n\tmessage  = " << color << message
         << "\n\n"
         << TERMINAL_RESET;
 }
