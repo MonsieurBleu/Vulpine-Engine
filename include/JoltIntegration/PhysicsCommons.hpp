@@ -24,6 +24,7 @@
 #define JOLT_MAIN_THREAD_ID THREAD_ID_JOLT_MAIN
 
 #include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
 #include <MappedEnum.hpp>
@@ -54,7 +55,6 @@ namespace JoltVulpine
 
     extern bool useVelocityBasedMovement;
     extern bool enablePhysics;
-    extern bool quitThread;
 
     JPH::BodyInterface &GetBodyInterface();
 

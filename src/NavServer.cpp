@@ -149,10 +149,9 @@ void appendPath(std::vector<DebugSegment>& out, const std::vector<vec3>& points)
 }
 
 // == shared with the query thread (guarded by `queueMutex`) ==
-std::thread worker;
+std::jthread worker;
 std::mutex queueMutex;
 std::condition_variable cv;
-bool worker_quit = false;
 std::priority_queue<QueryRequest, std::vector<QueryRequest>, std::greater<QueryRequest>> requestQueue;
 std::vector<QueryResult> finished;
 std::vector<u32> liveGeneration;
@@ -363,19 +362,19 @@ dtNavMeshQuery* workerQuery(std::vector<dtNavMeshQuery*>& queries, int slot)
 }
 
 // main worker thread loop
-void WorkerLoop()
+void WorkerLoop(std::stop_token stop_token)
 {
     currentThreadID = THREAD_ID_NAVMESH_QUERY;
 
     std::vector<dtNavMeshQuery*> queries;
 
-    while (true)
+    while (!stop_token.stop_requested())
     {
         QueryRequest req;
         {
             std::unique_lock lock(queueMutex);
-            cv.wait(lock, [] { return worker_quit || !requestQueue.empty(); });
-            if (worker_quit)
+            cv.wait(lock, [&] { return stop_token.stop_requested() || !requestQueue.empty(); });
+            if (stop_token.stop_requested())
                 break;
 
             req = requestQueue.top();
@@ -410,20 +409,14 @@ void Init()
 {
     assert(!worker.joinable());
 
-    {
-        std::lock_guard lock(queueMutex);
-        worker_quit = false;
-    }
     frame = 0;
-    worker = std::thread(&WorkerLoop);
+    worker = std::jthread(&WorkerLoop);
 }
 
 void Shutdown()
 {
-    {
-        std::lock_guard lock(queueMutex);
-        worker_quit = true;
-    }
+    worker.get_stop_source().request_stop();
+    
     cv.notify_one();
 
     NavMesh::CancelWriterWait();

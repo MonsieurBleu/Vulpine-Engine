@@ -338,7 +338,7 @@ void freeAll(BuildResult& r);
 
 void integrate(BuildResult& r);
 BuildResult buildRequest(const LoadRequest& req, u64 mask, const std::vector<MeshTier::MeshTier>& tiers);
-void workerLoop();
+void workerLoop(std::stop_token stop_token);
 int addTier(const MeshTier::MeshTier& tier);
 
 void gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo);
@@ -351,10 +351,9 @@ std::mutex navMutex;
 std::atomic<bool> writerWaiting = false;
 
 // shared with worker
-std::thread worker;
+std::jthread worker;
 std::mutex requestMutex;
 std::condition_variable cv;
-bool worker_quit = false;
 std::priority_queue<LoadRequest, std::vector<LoadRequest>, std::greater<LoadRequest>> buildQueue;
 std::vector<BuildResult> results;
 std::vector<MeshTier::MeshTier> buildTiers;
@@ -604,13 +603,13 @@ BuildResult NavMesh::detail::buildRequest(const LoadRequest& req, u64 mask, cons
     return r;
 }
 
-void NavMesh::detail::workerLoop()
+void NavMesh::detail::workerLoop(std::stop_token stop_token)
 {
     currentThreadID = THREAD_ID_NAVMESH_BUILD;
 
     std::vector<MeshTier::MeshTier> tiers; // snapshot of the tiers
 
-    while (true)
+    while (!stop_token.stop_requested())
     {
         LoadRequest req;
         u64 mask;
@@ -618,9 +617,9 @@ void NavMesh::detail::workerLoop()
         // block for mutex lock scope
         {
             std::unique_lock<std::mutex> lock(requestMutex);
-            while (!worker_quit && buildQueue.empty())
+            while (!stop_token.stop_requested() && buildQueue.empty())
                 cv.wait(lock);
-            if (worker_quit)
+            if (stop_token.stop_requested())
                 return;
 
             req = buildQueue.top();
@@ -664,10 +663,7 @@ int NavMesh::detail::addTier(const MeshTier::MeshTier& tier)
 
 void NavMesh::Shutdown()
 {
-    {
-        std::lock_guard<std::mutex> lock(requestMutex);
-        worker_quit = true;
-    }
+    worker.get_stop_source().request_stop();
     cv.notify_one();
     if (worker.joinable())
         worker.join();
@@ -1104,11 +1100,7 @@ void NavMesh::Init()
 {
     assert(!worker.joinable());
 
-    {
-        std::lock_guard<std::mutex> lock(requestMutex);
-        worker_quit = false;
-    }
-    worker = std::thread(&workerLoop);
+    worker = std::jthread(&workerLoop);
 }
 
 void VulpineNav::NavMesh::GetDebugGeometry(vec3 center, int tileRadius, int slot, DebugGeometry& out)
