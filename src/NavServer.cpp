@@ -1,8 +1,8 @@
 #include "Navigation/NavServer.hpp"
+#include "ECS/ComponentTypeNavigation.hpp"
 #include "Navigation/NavMesh.hpp"
 #include "Utils.hpp"
 
-#include <atomic>
 #include <cassert>
 #include <cfloat>
 #include <condition_variable>
@@ -19,8 +19,8 @@ namespace VulpineNav::NavServer
 AgentProfile const AgentProfile::Humanoid = {
     .radius = 0.25f,
     .height = 2.0f,
-    .maxClimb = 0.5f,
-    .maxSlopeDeg = 45.0f
+    .maxClimb = kHumanoidStepHeight,
+    .maxSlopeDeg = 47.0f
 };
 
 namespace
@@ -686,12 +686,24 @@ bool CanWalkStraight(vec3 from, vec3 to, const AgentProfile& profile)
         return false;
 
     // 2D raycast along the mesh surface
+    constexpr int kMaxVisited = 64;
     float t = 0.0f;
     float hitNormal[3];
-    dtPolyRef visited[64];
+    dtPolyRef visited[kMaxVisited];
     int visitedCount = 0;
-    q->raycast(startRef, ptr(startPt), ptr(to), &filter, &t, hitNormal, visited, &visitedCount, 64);
-    return t == FLT_MAX;
+    const dtStatus st = q->raycast(startRef, ptr(startPt), ptr(to), &filter, &t, hitNormal, visited, &visitedCount, kMaxVisited);
+    if (dtStatusFailed(st) || t != FLT_MAX || visitedCount == 0)
+        return false;
+
+    if (dtStatusDetail(st, DT_BUFFER_TOO_SMALL))
+        return false;
+
+    // recast doesn't see height for it's raycasts so we need to check the height difference manually
+    float h = 0.0f;
+    if (dtStatusFailed(q->getPolyHeight(visited[visitedCount - 1], ptr(to), &h)))
+        return false;
+
+    return glm::abs(h - to.y) <= profile.height * 0.5f;
 }
 
 bool MoveAlongSurface(vec3 from, vec3 to, vec3& out, const AgentProfile& profile)
@@ -753,6 +765,6 @@ bool RandomPointAround(vec3 center, float radius, vec3& out, const AgentProfile&
                                                        &frand, &randomRef, ptr(out));
     return dtStatusSucceed(st) && randomRef != 0;
 }
-    
+
 } // namespace VulpineNav::NavServer
 

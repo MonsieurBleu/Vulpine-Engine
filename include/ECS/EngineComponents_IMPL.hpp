@@ -1505,8 +1505,3 @@ template<> void Component<AgentNavigation>::ComponentElem::clean()
         this->data.detail.initialized = false;
     }
 }
-
-void ManageNavGarbage()
-{
-    ManageGarbage<AgentNavigation>();
-}

@@ -29,10 +29,12 @@ namespace VulpineNav
 constexpr size_t worldSize = 4096;
 
 static constexpr float kCellSize = 0.1f; // meters per voxel, kind of acts as the resolution of the navmesh, in terms of accuracy and performance
-static constexpr float kCellHeight = 0.2f;
+static constexpr float kCellHeight = kCellSize / 2.0f;
 static constexpr int   kTileCells = 192; // tile edge in voxels
 
-static constexpr float kTileWorldSize = kTileCells * kCellSize; // 0.2 * 96 = 19.2m tile side length
+static constexpr float kTileWorldSize = kTileCells * kCellSize; // 0.1 * 192 = 19.2m tile side length
+
+static constexpr float kDetailMaxError = 0.2f;
 
 static constexpr float kWorldMinY = 0;
 static constexpr float kWorldMaxY = 512; // TODO: confirm this

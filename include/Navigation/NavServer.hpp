@@ -11,6 +11,9 @@ using namespace glm;
 namespace VulpineNav::NavServer
 {
 
+// TODO: move this to a better place
+inline constexpr float kHumanoidStepHeight = 0.55f;
+
 struct AgentProfile
 {
     float radius = Humanoid.radius;

@@ -170,7 +170,7 @@ void UpdateAgentNavigation(AgentNavigation& nav, glm::vec3 pos)
 
     pollPending(nav);
 
-    d.arrived = xzDistance(pos, nav.goal) <= nav.arriveTolerance
+    d.arrived = xzDistance(pos, nav.goal) <= nav.arriveTolerance + nav.goalRadius
              && glm::abs(pos.y - nav.goal.y) <= nav.profile.height;
 
     if (needsRepath(nav, pos))

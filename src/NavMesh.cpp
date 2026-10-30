@@ -863,6 +863,9 @@ void NavMesh::detail::gatherTileGeometry(ivec2 coord, float padding, TileGeometr
     tileWorldBounds(coord, padding, bmin, bmax);
     const JPH::AABox box = JPH::AABox(bmin, bmax);
 
+    // acquire the physics lock for gathering the geometry (even if we only gather static bodies)
+    std::lock_guard<std::mutex> physicsLock(JoltVulpine::physicsMutex);
+
     JPH::PhysicsSystem& physics = *JoltVulpine::jPhysicsSystem;
 
     JPH::AllHitCollisionCollector<JPH::CollideShapeBodyCollector> bodies;
@@ -894,8 +897,9 @@ rcConfig NavMesh::detail::makeTileConfig(const MeshTier::MeshTier& tier, ivec2 c
     cfg.cs = kCellSize;
     cfg.ch = kCellHeight;
     cfg.walkableSlopeAngle = tier.maxSlopeDeg;
-    cfg.walkableHeight = (int)ceilf(tier.height / cfg.ch);
-    cfg.walkableClimb = (int)floorf(tier.maxClimb / cfg.ch);
+    // -epsilon so float noise doesn't cost a whole voxel
+    cfg.walkableHeight = (int)ceilf(tier.height / cfg.ch - 1e-3f);
+    cfg.walkableClimb = (int)floorf(tier.maxClimb / cfg.ch + 1e-3f);
     cfg.walkableRadius = (int)ceilf(tier.radius / cfg.cs);
     cfg.maxEdgeLen = (int)(12.0f / cfg.cs);
     cfg.maxSimplificationError = 1.3f;
@@ -903,7 +907,7 @@ rcConfig NavMesh::detail::makeTileConfig(const MeshTier::MeshTier& tier, ivec2 c
     cfg.mergeRegionArea = rcSqr(20);
     cfg.maxVertsPerPoly = DT_VERTS_PER_POLYGON;
     cfg.detailSampleDist = cfg.cs * 6;
-    cfg.detailSampleMaxError = cfg.ch;
+    cfg.detailSampleMaxError = kDetailMaxError;
 
     cfg.tileSize = kTileCells;
     cfg.borderSize = borderCells(tier);
