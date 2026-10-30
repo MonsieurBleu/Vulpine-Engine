@@ -40,7 +40,6 @@ constexpr u64 kRetryDelayFrames = 10;
 constexpr u32 kMaxStartAttempts = 30; // about 5 seconds at 60fps
 
 constexpr u32 kDeadGeneration = 0xffffffff;
-constexpr u32 kNoIndex = 0xffffffff;
 
 struct QueryRequest
 {

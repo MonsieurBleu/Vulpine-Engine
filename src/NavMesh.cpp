@@ -10,8 +10,6 @@
 #include <queue>
 #include <thread>
 
-#include "ECS/ComponentTypeNavigation.hpp"
-
 #include "JoltIntegration/PhysicsCommons.hpp"
 
 #ifndef DT_VIRTUAL_QUERYFILTER
@@ -27,8 +25,6 @@
 #include <recastnavigation/DetourNavMeshBuilder.h>
 
 #include "Navigation/NavMesh.hpp"
-
-#include "JoltIntegration/JoltIntegration.hpp"
 
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
