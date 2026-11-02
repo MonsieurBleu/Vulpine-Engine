@@ -1574,6 +1574,8 @@ void VulpineBlueprintUI::UserNotif::sent(
         std::string messageLigne3
     )
 {
+    maxNotif = 8;
+
     auto headerEntity = newEntity("Message Header", UI_BASE_COMP,
         WidgetBox(vec2(-1, 1), vec2(-1.0, -0.5)),
         WidgetText(header),
@@ -1635,6 +1637,15 @@ void VulpineBlueprintUI::UserNotif::sent(
 
     if(parent->comp<EntityGroupInfo>().children.empty())
         lastTimePop = globals.appTime.getElapsedTime();
+
+    while(parent->comp<EntityGroupInfo>().children.size() > maxNotif)
+        parent->comp<EntityGroupInfo>().children.pop_back();
+        // ComponentModularity::removeChild(*parent, parent->comp<EntityGroupInfo>().children.back());
+
+    // GG::ManageGarbage();
+
+    ManageGarbage<WidgetBackground>();
+    ManageGarbage<WidgetText>();
 
     ComponentModularity::addChild(*parent, e);
 }
