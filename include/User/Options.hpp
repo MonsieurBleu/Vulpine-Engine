@@ -3,7 +3,7 @@
 #include <string>
 #include <functional>
 
-class Flag;
+struct Flag;
 
 namespace Option 
 {
