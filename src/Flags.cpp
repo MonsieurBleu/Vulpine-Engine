@@ -134,6 +134,10 @@ Flag& Flags::getFlag(const std::string& name) {
     return Loader<Flag>::get(name, true);
 }
 
+Flag& Flags::getFlagLocal(const std::string& name) {
+    return flags[name];
+}
+
 FlagData& FlagData::operator=(int v)
 {
     if(type != INT) {
