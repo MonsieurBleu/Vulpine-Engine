@@ -62,6 +62,7 @@ class Mesh
     public :
 
         GLenum defaultMode = GL_TRIANGLES;
+        uint patchVertices = 3;
         bool invertFaces = false;
         bool depthWrite = true;
         bool sorted = true;
@@ -219,6 +220,16 @@ struct ModelInstanceRef
 {
     InstancedModelRef originalModel;
     ModelInstance *instance;
+    // Safe copy of user data, used to initialize the instance
+    uvec4 userData; 
+
+    // Always use this method to change userdata
+    // It's simply safer and assure that no user data could be lost when the instance is deleted/created
+    void setUserData(uvec4 ud)
+    {
+        userData = ud;
+        if(instance) instance->userData = ud;
+    }
 };
 
 class InstancedMeshModel3D : public MeshModel3D

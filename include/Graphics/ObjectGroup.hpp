@@ -176,6 +176,8 @@ public:
     std::deque<SceneLight>& getLights(){return lights;};
     std::deque<ModelInstanceRef>& getInstances(){return instances;};
 
+    void setInstancesUserData(uvec4 ud, std::function<bool(InstancedModelRef)> filter = [](InstancedModelRef m){return true;});
+
     void iterateOnAllMesh_Recursive(std::function<void(ModelRef)> f);
 
     /*

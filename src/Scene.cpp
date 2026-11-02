@@ -467,6 +467,7 @@ uint Scene::draw(int layer, FrameBuffer *fb)
     if(fb and fb->unsortedDraws.doCopy)
     {
         for(int i = 0; i < fb->getNBtextures(); i++)
+        {
             if(fb->getTexture(i).getAttachement() == GL_DEPTH_ATTACHMENT)
             {
                 auto d = &fb->getTexture(i);
@@ -481,10 +482,26 @@ uint Scene::draw(int layer, FrameBuffer *fb)
                     d->getResolution().x, d->getResolution().y, 1
                 );
 
-                // WARNING_MESSAGE(i);
-                // fb->unsortedDraws.sortedDepthCopy.bind(16);
                 fb->unsortedDraws.sortedDepthCopy.bind(fb->unsortedDraws.location);
             }
+            
+            if(fb->getTexture(i).getAttachement() == fb->unsortedDraws.userInfoAttachement)
+            {
+                auto d = &fb->getTexture(i);
+                glCopyImageSubData(
+
+                    d->getHandle(), 
+                    GL_TEXTURE_2D, 0, 0, 0, 0,
+                    
+                    fb->unsortedDraws.sortedUserInfoCopy.getHandle(), 
+                    GL_TEXTURE_2D, 0, 0, 0, 0,
+
+                    d->getResolution().x, d->getResolution().y, 1
+                );
+
+                fb->unsortedDraws.sortedUserInfoCopy.bind(fb->unsortedDraws.location + 1);
+            }
+        }
 
     }
 
@@ -897,8 +914,8 @@ void Scene::cull(int layer, int cameraLayers)
 
     for(auto i = meshes.begin(); i != meshes.end(); i++)
     {
-        for(auto j : i->staticMeshes)
-            j->cull(layer, cameraLayers);
+        // for(auto j : i->staticMeshes)
+        //     j->cull(layer, cameraLayers);
 
         for(auto j : i->meshes)
             j->cull(layer, cameraLayers);

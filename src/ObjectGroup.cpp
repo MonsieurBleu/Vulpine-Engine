@@ -179,6 +179,7 @@ ObjectGroupRef ObjectGroup::copy(bool *externCullPtr)
     {
         ModelInstanceRef ni;
         ni.originalModel = i.originalModel;
+        ni.userData = i.userData;
         g->add(ni);
     } 
         
@@ -653,6 +654,19 @@ void ObjectGroup::disableExternCullMode()
         c->disableExternCullMode();
 }
 
+void ObjectGroup::setInstancesUserData(uvec4 ud, std::function<bool(InstancedModelRef)> filter)
+{
+    for(auto &i : instances)
+        if(filter(i.originalModel))
+        {
+            i.setUserData(ud);
+            // ERROR_MESSAGE(ud.x);
+        }
+    
+    for(auto i : children)
+        i->setInstancesUserData(ud, filter);
+}
+
 void ObjectGroup::propagateHideStatus()
 {
     for(auto i = meshes.begin(); i != meshes.end(); i++)
@@ -671,11 +685,17 @@ void ObjectGroup::propagateHideStatus()
 
     for(auto &i : instances)
     {
+
+        /*
+            Manage the creation & deletion of instance instdead of siply hiding them.
+            Very useful to gain a lot of performances on level of details management
+        */
         if(state.hide == ModelStatus::HIDE)
         {
             if(i.instance)
             {
-                // WARNING_MESSAGE("REMOOOVED")
+                // Saving user data for later use
+                // i.userData = i.instance->userData;
                 i.originalModel->removeInstance(i.instance);
                 i.instance = nullptr;
             }
@@ -688,8 +708,17 @@ void ObjectGroup::propagateHideStatus()
                 // i.instance->forceUpdate();
                 // i.instance->modelMatrix = state.modelMatrix * i.instance->modelMatrix * i.originalModel->state.modelMatrix;
                 i.instance->modelMatrix = state.modelMatrix * i.instance->forceUpdate().modelMatrix;
+
+                // Restoring user data
+                i.instance->userData = i.userData;
+
+                // WARNING_MESSAGE(
+                //     PRINTVAR(i.instance->userData.x),
+                //     PRINTVAR(i.userData.x)
+                // );
             }
         }
+        
 
         if(i.instance)
         {
