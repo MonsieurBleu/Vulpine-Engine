@@ -384,7 +384,12 @@ DATA_READ_FUNC_ENTITY(JoltBody)
 				JPH::Shape::ShapeResult result = shapes.Create();
 
 				if(result.IsValid())
-					settings.SetShape(result.Get());
+				{
+					if(scale != Vvec3(1.))
+						settings.SetShape(result.Get()->ScaleShape(scale).Get());
+					else
+						settings.SetShape(result.Get());
+				}
 				else
 				{
 					ERROR_MESSAGE("Non-valid shape ", result.GetError())
@@ -401,24 +406,27 @@ DATA_READ_FUNC_ENTITY(JoltBody)
 
 		// WARNING_MESSAGE(position)
 
+		settings.mPosition = position;
+		settings.mRotation = rotation;
+
 		JPH::Body *body = JoltVulpine::jPhysicsSystem->GetBodyInterface().CreateBody(settings);
 
 		// JoltVulpine::jPhysicsSystem->GetBodyInterface().SetPositionAndRotation(body->GetID(), position, rotation, JPH::EActivation::Activate);
 
 		// settings.mMotionQuality = JPH::EMotionQuality::LinearCast;
 		
-		if(scale != Vvec3(1.))
-			JoltVulpine::jPhysicsSystem->GetBodyInterface().SetShape(
-				body->GetID(), 
-				body->GetShape()->ScaleShape(scale).Get(), true, JPH::EActivation::Activate)
-			;
+		// if(scale != Vvec3(1.))
+		// 	JoltVulpine::jPhysicsSystem->GetBodyInterface().SetShape(
+		// 		body->GetID(), 
+		// 		body->GetShape()->ScaleShape(scale).Get(), true, JPH::EActivation::Activate)
+		// 	;
 
 		if(sensorMode) 
 			data.sensors[sensorCount-1] = body->GetID();
 		else
 		 	data = JoltBody(body->GetID());
 
-		body->SetPositionAndRotationInternal(position, rotation);
+		// body->SetPositionAndRotationInternal(position, rotation);
 			
 		JoltVulpine::bodiesToAddMutex.lock();
 		JoltVulpine::bodiesToAdd.push_back(body->GetID());

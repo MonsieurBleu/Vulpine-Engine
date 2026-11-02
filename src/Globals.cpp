@@ -26,7 +26,13 @@ const ivec2* Globals::renderSizeAddr() const {return &_renderSize;};
 void Globals::drawFullscreenQuad() {_fullscreenQuad.drawVAO(0);};
 
 bool Globals::mouseLeftClick(){return _mouseLeftClick;};
-bool Globals::mouseLeftClickDown(){return _mouseLeftClickDown;};
+bool Globals::mouseLeftClickDown()
+{
+    return glfwGetMouseButton (_window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+
+    return _mouseLeftClickDown;
+
+};
 bool Globals::mouseRightClick(){return _mouseRightClick;};
 bool Globals::mouseRightClickDown(){return _mouseRightClickDown;};
 

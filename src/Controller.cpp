@@ -152,9 +152,9 @@ void Controller::mouseEvent(vec2 dir, GLFWwindow* window)
         dir = sensibility * (dir-center)/center;
 
         if(globals.windowHeight() > globals.windowWidth())
-            dir.x /= globals.windowHeight()/globals.windowWidth();
+            dir.x /= (float)globals.windowHeight()/(float)globals.windowWidth();
         else
-            dir.y /= globals.windowWidth()/globals.windowHeight();
+            dir.y /= (float)globals.windowWidth()/(float)globals.windowHeight();
 
         // float yaw = radians(-dir.x);
         // float pitch = radians(-dir.y);
