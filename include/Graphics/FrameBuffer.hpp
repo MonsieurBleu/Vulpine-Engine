@@ -21,6 +21,8 @@ class FrameBuffer
             bool doCopy = false;
             int location = 8;
             Texture2D sortedDepthCopy;
+            Texture2D sortedUserInfoCopy;
+            int userInfoAttachement = 0;
         } unsortedDraws;
 
         vec4 clearColor = vec4(0);

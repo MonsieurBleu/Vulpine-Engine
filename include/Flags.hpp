@@ -436,6 +436,7 @@ public:
     bool writeAsSaveFileMode = false;
 
     static Flag& getFlag(const std::string& name);
+    Flag& getFlagLocal(const std::string& name);
 
     template <typename T>
     void setFlag(const std::string& flag, T value)

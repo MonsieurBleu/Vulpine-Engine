@@ -256,7 +256,15 @@ MeshModel3D& Loader<MeshModel3D>::loadFromInfos()
         else
         if(!strcasecmp(member, "patchmode"))
         {
-            if(*buff->read() == 't') r.defaultMode = GL_PATCHES;
+            auto c = buff->read();
+
+            if(*c == 't') 
+                r.defaultMode = GL_PATCHES;
+            else if(*c > '0' && *c <= '9')
+            {
+                r.defaultMode = GL_PATCHES;
+                r.patchVertices = *c-'0';
+            }
         }
         else
         if(!strcasecmp(member, "sort"))
@@ -311,7 +319,15 @@ InstancedModelRef& Loader<InstancedModelRef>::loadFromInfos()
         else
         if(!strcasecmp(member, "patchmode"))
         {
-            if(*buff->read() == 't') r->defaultMode = GL_PATCHES;
+            auto c = buff->read();
+
+            if(*c == 't') 
+                r->defaultMode = GL_PATCHES;
+            else if(*c > '0' && *c <= '9')
+            {
+                r->defaultMode = GL_PATCHES;
+                r->patchVertices = *c-'0';
+            }
         }
         else
             FILE_ERROR_MESSAGE(name, "ModelRef member '" ,  member ,  "' not recognized.");

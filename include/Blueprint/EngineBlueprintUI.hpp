@@ -174,6 +174,8 @@ namespace VulpineBlueprintUI
         void update();
 
         inline float lastTimePop = 0.;
+
+        inline int maxNotif = 16;
     
         void sent(
             vec3 color,

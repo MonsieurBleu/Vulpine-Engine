@@ -184,7 +184,8 @@ void App::init()
 
     globals._standartShaderUniform3D = {
         ShaderUniform(globals.windowSizeAddr(), 0),
-        ShaderUniform(globals.appTime.getElapsedTimeAddr(), 1),
+        // ShaderUniform(globals.appTime.getElapsedTimeAddr(), 1),
+        ShaderUniform(globals.simulationTime.getElapsedTimeAddr(), 1),
         ShaderUniform(camera.getProjectionViewMatrixAddr(), 2),
         ShaderUniform(camera.getViewMatrixAddr(), 3),
         ShaderUniform(camera.getProjectionMatrixAddr(), 4),
@@ -237,7 +238,8 @@ void App::init()
 
     globals.currentCamera = &camera;
 
-    glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    // glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_FALSE);
 
     glfwSetCharCallback(
         window, [](GLFWwindow *window, unsigned int codepoint) { globals.textInputString.push_back(codepoint); });
@@ -416,6 +418,7 @@ void App::setController(Controller *c)
     {
         c->init();
         glfwSetCursorPosCallback(globals.getWindow(), [](GLFWwindow *window, double dx, double dy) {
+            // WARNING_MESSAGE(PRINTVAR(dx), PRINTVAR(dy))
             if (globals._currentController)
                 globals._currentController->mouseEvent(vec2(dx, dy), window);
         });

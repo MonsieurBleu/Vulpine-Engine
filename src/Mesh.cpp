@@ -224,6 +224,8 @@ void MeshModel3D::setDrawMode()
         glDisable(GL_DEPTH_TEST);
     if (noBackFaceCulling)
         glDisable(GL_CULL_FACE);
+    if (defaultMode == GL_PATCHES and patchVertices != 3)
+        glPatchParameteri(GL_PATCH_VERTICES, patchVertices);
 }
 
 void MeshModel3D::resetDrawMode()
@@ -234,6 +236,8 @@ void MeshModel3D::resetDrawMode()
         glEnable(GL_DEPTH_TEST);
     if (noBackFaceCulling)
         glEnable(GL_CULL_FACE);
+    if (defaultMode == GL_PATCHES and patchVertices != 3)
+        glPatchParameteri(GL_PATCH_VERTICES, 3);
 }
 
 GLuint MeshModel3D::drawVAO(int layer, bool depthOnly)

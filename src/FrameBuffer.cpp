@@ -43,6 +43,7 @@ FrameBuffer& FrameBuffer::resizeAll(ivec2 newres)
     if(unsortedDraws.doCopy)
     {
         unsortedDraws.sortedDepthCopy.setResolution(newres).generate(true);
+        unsortedDraws.sortedUserInfoCopy.setResolution(newres).generate(true);
     }
 
     return *this;
