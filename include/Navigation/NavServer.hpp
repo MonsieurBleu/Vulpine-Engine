@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Navigation/NavMesh.hpp"
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -71,6 +72,18 @@ enum class PartialReason : uint8_t
 
 enum class Priority : uint8_t { Low = 0, Normal = 1, High = 2 };
 
+// what a path may use: NavFlags the agent can traverse, and links it recently failed to take
+struct PathFilter
+{
+    uint16_t includeFlags = kFlagWalk;
+    std::array<uint64_t, 4> excludedLinks{}; // off-mesh link polys, 0 = unused
+
+    // the requesting agent's link reservation, see ReserveLink
+    uint32_t reservation = 0;
+    uint64_t reservedLink = 0;
+    float reservedDistance = 0.0f;
+};
+
 void Init();
 void Shutdown();
 
@@ -85,7 +98,8 @@ u64 GetNavmeshVersion();
 PathHandle RequestPath(
     vec3 start, vec3 goal,
     const AgentProfile& profile = {},
-    Priority priority = Priority::Normal);
+    Priority priority = Priority::Normal,
+    const PathFilter& filter = {});
 
 // fills outPoints when the path is either `Complete` or `Partial`.
 PathStatus GetPath(PathHandle path, std::vector<vec3>& outPoints);
@@ -101,6 +115,16 @@ u64 GetPartialWatch(PathHandle path);
 
 // false while too many requests are in flight, requesting anyway just queues them behind the others
 bool CanRequestPath();
+
+
+inline constexpr int kLinkFailuresToDisable = 3;
+void ReportLinkResult(const AgentProfile& profile, uint64_t linkPoly, bool success);
+
+// == link congestion ==
+inline constexpr float kBusyLinkCost = 6.0f;
+
+void ReserveLink(const AgentProfile& profile, uint32_t& reservation, uint64_t link, float distance);
+int LinkAgentsAhead(const AgentProfile& profile, uint32_t reservation, uint64_t link, float distance);
 
 // releases or cancels a path request
 // must be called when done with the query, internal result is freed & handle is invalidated
@@ -137,8 +161,8 @@ public:
     PathCorridor(PathCorridor&&) noexcept;
     PathCorridor& operator=(PathCorridor&&) noexcept;
 
-    // takes the corridor of a Complete or Partial request
-    bool Adopt(PathHandle path, const AgentProfile& profile);
+    // takes the corridor of a Complete or Partial request, the filter should match the request's
+    bool Adopt(PathHandle path, const AgentProfile& profile, const PathFilter& filter = {});
     void Clear();
     bool Empty() const;
 
@@ -152,6 +176,8 @@ public:
     bool CanSee(vec3 to);
 
     int FindCorners(Corner* out, int maxCorners);
+
+    bool MoveOverLink(uint64_t linkPoly, vec3& start, vec3& end, uint32_t& userId);
 
     vec3 Position() const;
     vec3 Target() const;
@@ -167,6 +193,12 @@ bool ClosestPoint(vec3 pos, vec3& out, const AgentProfile& profile = {}, float s
 bool CanWalkStraight(vec3 from, vec3 to, const AgentProfile& profile = {});
 bool MoveAlongSurface(vec3 from, vec3 to, vec3& out, const AgentProfile& profile = {});
 bool RandomPointAround(vec3 center, float radius, vec3& out, const AgentProfile& profile = {});
+
+// whether a path request from here can find its start on the mesh (same snap the query thread uses)
+bool CanStartPath(vec3 pos, const AgentProfile& profile = {});
+// for an agent off the mesh: the closest mesh within maxDistance, strongly preferring below,
+// since a slope is much easier to go down than up
+bool FindRecoveryPoint(vec3 pos, vec3& out, const AgentProfile& profile = {}, float maxDistance = 8.0f);
 
 struct DebugSegment
 {

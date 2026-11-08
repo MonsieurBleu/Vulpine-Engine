@@ -1489,7 +1489,8 @@ template<> void Component<AgentNavigation>::ComponentElem::init()
 
     VulpineNav::NavMesh::ResolveAgent({nav.profile.radius, nav.profile.height, nav.profile.maxClimb, nav.profile.maxSlopeDeg});
 
-    VulpineNav::NavMesh::CreateLoader(state3D.position, nav.navmeshBuildPriority);
+    nav.detail.loaderRadius = nav.navmeshLoadRadius;
+    VulpineNav::NavMesh::CreateLoader(state3D.position, nav.navmeshBuildPriority, nav.detail.loaderRadius);
 
     nav.detail.initialized = true;
     nav.detail.lastPos = state3D.position;
@@ -1501,7 +1502,7 @@ template<> void Component<AgentNavigation>::ComponentElem::clean()
 
     if (this->data.detail.initialized)
     {
-        VulpineNav::NavMesh::UnloadLoader(this->data.detail.lastPos);
+        VulpineNav::NavMesh::UnloadLoader(this->data.detail.lastPos, this->data.detail.loaderRadius);
         this->data.detail.initialized = false;
     }
 }

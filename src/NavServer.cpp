@@ -35,13 +35,22 @@ constexpr int kMaxStraightPoints = 256;
 
 // when failing to build a path, will retry every `kRetryDelayFrames` frames, a maximum of `kMaxStartAttempts` times. 
 // if it still fails after that, the request returns NoPath
-// maybe consider changing this to time elapsed instead of frame count
+// maybe consider changing this to time elapsed instead of frame count, could become unreliable at framerates different to 60
 constexpr u64 kRetryDelayFrames = 10;
 constexpr u32 kMaxStartAttempts = 30; // about 5 seconds at 60fps
 
 constexpr u32 kMaxInFlight = 16;
 
 constexpr u32 kDeadGeneration = 0xffffffff;
+
+struct LinkReservation
+{
+    u32 id;
+    int slot;
+    u64 poly;
+    float distance;
+};
+using Reservations = std::vector<LinkReservation>;
 
 struct QueryRequest
 {
@@ -53,6 +62,8 @@ struct QueryRequest
     vec3 goal;
     vec3 extents; // half extents for the goal radius
     u32 attempts;
+    PathFilter filter;
+    std::shared_ptr<const Reservations> reservations; // snapshot when requested, read on the query thread
 
     bool operator>(const QueryRequest& o) const { return key > o.key; }
 };
@@ -114,6 +125,19 @@ std::vector<QueryRequest> newRequests;
 std::vector<QueryResult> finishedScratch;
 std::vector<DelayedRetry> retries;
 std::vector<CachedProfile> profileCache;
+
+struct LinkFailures
+{
+    int slot;
+    u64 poly;
+    int count;
+};
+std::vector<LinkFailures> linkFailures;
+
+Reservations reservations;
+std::shared_ptr<const Reservations> reservationSnapshot;
+bool reservationsDirty = false;
+u32 nextReservationId = 1;
 
 constexpr size_t kDebugMaxRecent = 128;
 constexpr u64 kDebugLifetimeFrames = 120;
@@ -228,6 +252,64 @@ float frand()
     return std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 }
 
+class NavFilter : public dtQueryFilter
+{
+public:
+    explicit NavFilter(const PathFilter& filter = {}, const Reservations* reservations = nullptr, int slot = -1)
+        : m_excluded(filter.excludedLinks), m_reservations(reservations), m_slot(slot),
+          m_self(filter.reservation), m_selfLink(filter.reservedLink), m_selfDistance(filter.reservedDistance)
+    {
+        setIncludeFlags(filter.includeFlags);
+
+        m_linkPenalty[kAreaClimbLow] = 3.0f;
+        m_linkPenalty[kAreaClimbHigh] = 8.0f;
+        m_linkPenalty[kAreaDrop] = 2.0f;
+        m_linkPenalty[kAreaSlide] = 4.0f;
+    }
+
+    float getCost(const float* pa, const float* pb,
+                  const dtPolyRef prevRef, const dtMeshTile* prevTile, const dtPoly* prevPoly,
+                  const dtPolyRef curRef, const dtMeshTile* curTile, const dtPoly* curPoly,
+                  const dtPolyRef nextRef, const dtMeshTile* nextTile, const dtPoly* nextPoly) const override
+    {
+        float cost = dtQueryFilter::getCost(pa, pb, prevRef, prevTile, prevPoly, curRef, curTile, curPoly,
+                                            nextRef, nextTile, nextPoly);
+        if (curPoly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
+            cost += m_linkPenalty[curPoly->getArea()] + kBusyLinkCost * (float)othersOn(curRef);
+        return cost;
+    }
+
+    int othersOn(dtPolyRef link) const
+    {
+        if (!m_reservations)
+            return 0;
+        int n = 0;
+        for (const LinkReservation& r : *m_reservations)
+            if (r.slot == m_slot && r.poly == link && r.id != m_self && (link != m_selfLink || r.distance < m_selfDistance))
+                n++;
+        return n;
+    }
+
+    bool passFilter(const dtPolyRef ref, const dtMeshTile* tile, const dtPoly* poly) const override
+    {
+        if (!dtQueryFilter::passFilter(ref, tile, poly))
+            return false;
+        for (uint64_t excluded : m_excluded)
+            if (excluded && excluded == ref)
+                return false;
+        return true;
+    }
+
+private:
+    float m_linkPenalty[DT_MAX_AREAS] = {};
+    std::array<uint64_t, 4> m_excluded{};
+    const Reservations* m_reservations;
+    int m_slot;
+    u32 m_self;
+    u64 m_selfLink;
+    float m_selfDistance;
+};
+
 bool snapToMesh(const dtNavMeshQuery* q, const dtQueryFilter& filter, const vec3& pos, const vec3& ext,
                 dtPolyRef& outRef, vec3& outPt)
 {
@@ -324,8 +406,7 @@ QueryResult runQuery(const QueryRequest& req, dtNavMeshQuery* q)
     QueryResult res;
     res.req = req;
 
-    // TODO: virtual filter
-    const dtQueryFilter filter;
+    const NavFilter filter(req.filter, req.reservations.get(), req.meshSlot);
 
     dtPolyRef startRef = 0;
     vec3 startPt;
@@ -494,6 +575,10 @@ void Shutdown()
     slots.clear();
     freeSlots.clear();
     profileCache.clear();
+    linkFailures.clear();
+    reservations.clear();
+    reservationSnapshot.reset();
+    reservationsDirty = false;
     debugRecent.clear();
     debugNext = 0;
     debugLastFrame = 0;
@@ -626,7 +711,20 @@ uint64_t GetNavmeshVersion()
 
 // == async requests ==
 
-PathHandle RequestPath(vec3 start, vec3 goal, const AgentProfile& profile, Priority priority)
+namespace
+{
+std::shared_ptr<const Reservations> snapshotReservations()
+{
+    if (reservationsDirty || !reservationSnapshot)
+    {
+        reservationSnapshot = std::make_shared<const Reservations>(reservations);
+        reservationsDirty = false;
+    }
+    return reservationSnapshot;
+}
+} // namespace
+
+PathHandle RequestPath(vec3 start, vec3 goal, const AgentProfile& profile, Priority priority, const PathFilter& filter)
 {
     u32 index;
     if (!freeSlots.empty())
@@ -661,7 +759,7 @@ PathHandle RequestPath(vec3 start, vec3 goal, const AgentProfile& profile, Prior
     newRequests.push_back({
         (i64)frame - (i64)priority * kFramesPerPriority,
         index, slot.generation, meshSlot,
-        start, goal, agentExtents(profile), 0});
+        start, goal, agentExtents(profile), 0, filter, snapshotReservations()});
 
     return handle;
 }
@@ -703,6 +801,74 @@ u64 GetPartialWatch(PathHandle path)
 bool CanRequestPath()
 {
     return inFlight < kMaxInFlight;
+}
+
+void ReserveLink(const AgentProfile& profile, uint32_t& reservation, uint64_t link, float distance)
+{
+    auto it = std::find_if(reservations.begin(), reservations.end(),
+                           [&](const LinkReservation& r) { return r.id == reservation; });
+
+    if (!link)
+    {
+        if (reservation && it != reservations.end())
+        {
+            *it = reservations.back();
+            reservations.pop_back();
+            reservationsDirty = true;
+        }
+        return;
+    }
+
+    const int slot = slotFor(profile, false);
+    if (slot < 0)
+        return;
+    if (!reservation)
+        reservation = nextReservationId++;
+
+    if (it == reservations.end())
+        reservations.push_back({reservation, slot, link, distance});
+    else
+        *it = {reservation, slot, link, distance};
+    reservationsDirty = true;
+}
+
+int LinkAgentsAhead(const AgentProfile& profile, uint32_t reservation, uint64_t link, float distance)
+{
+    const int slot = slotFor(profile, false);
+    int n = 0;
+    for (const LinkReservation& r : reservations)
+        if (r.slot == slot && r.poly == link && r.id != reservation && r.distance < distance)
+            n++;
+    return n;
+}
+
+void ReportLinkResult(const AgentProfile& profile, uint64_t linkPoly, bool success)
+{
+    const int slot = slotFor(profile, false);
+    if (slot < 0 || !linkPoly)
+        return;
+
+    auto it = std::find_if(linkFailures.begin(), linkFailures.end(),
+                           [&](const LinkFailures& l) { return l.slot == slot && l.poly == linkPoly; });
+
+    if (success)
+    {
+        if (it != linkFailures.end())
+            linkFailures.erase(it);
+        return;
+    }
+
+    if (it == linkFailures.end())
+    {
+        linkFailures.push_back({slot, linkPoly, 0});
+        it = linkFailures.end() - 1;
+    }
+
+    if (++it->count >= kLinkFailuresToDisable)
+    {
+        NavMesh::DisableLink(slot, linkPoly);
+        linkFailures.erase(it);
+    }
 }
 
 void ReleasePath(PathHandle path)
@@ -748,7 +914,7 @@ bool IsOnNavmesh(vec3 pos, const AgentProfile& profile)
     if (!q)
         return false;
 
-    const dtQueryFilter filter;
+    const NavFilter filter;
     const vec3 ext(max(0.1f, profile.radius), profile.height, max(0.1f, profile.radius));
     dtPolyRef ref = 0;
     vec3 nearest;
@@ -759,13 +925,71 @@ bool IsOnNavmesh(vec3 pos, const AgentProfile& profile)
     return length(vec2(nearest.x - pos.x, nearest.z - pos.z)) < 0.05f;
 }
 
+bool CanStartPath(vec3 pos, const AgentProfile& profile)
+{
+    dtNavMeshQuery* q = mainQuery(profile);
+    if (!q)
+        return false;
+
+    const NavFilter filter;
+    dtPolyRef ref = 0;
+    vec3 nearest;
+    return snapToMesh(q, filter, pos, agentExtents(profile), ref, nearest)
+        && glm::abs(nearest.y - pos.y) <= profile.height * 0.5f;
+}
+
+bool FindRecoveryPoint(vec3 pos, vec3& out, const AgentProfile& profile, float maxDistance)
+{
+    dtNavMeshQuery* q = mainQuery(profile);
+    if (!q)
+        return false;
+
+    constexpr int kMaxCandidates = 64;
+    constexpr float kAbovePenalty = 4.0f;
+    const NavFilter filter;
+    const float underFeet = profile.radius * 2.0f + 0.1f;
+
+    for (float radius = 2.0f; ; radius = min(radius * 2.0f, maxDistance))
+    {
+        const vec3 ext(radius, max(radius, profile.height), radius);
+        dtPolyRef polys[kMaxCandidates];
+        int count = 0;
+        q->queryPolygons(ptr(pos), ptr(ext), &filter, polys, &count, kMaxCandidates);
+
+        float best = FLT_MAX;
+        for (int i = 0; i < count; i++)
+        {
+            vec3 p;
+            if (dtStatusFailed(q->closestPointOnPoly(polys[i], ptr(pos), ptr(p), nullptr)))
+                continue;
+
+            const float horizontal = length(vec2(p.x - pos.x, p.z - pos.z));
+            const float below = pos.y - p.y;
+            if (below > profile.maxClimb + 0.1f && horizontal < underFeet)
+                continue;
+
+            const float vertical = below >= 0.0f ? below : -below * kAbovePenalty;
+            const float cost = horizontal * horizontal + vertical * vertical;
+            if (cost < best)
+            {
+                best = cost;
+                out = p;
+            }
+        }
+        if (best < FLT_MAX)
+            return true;
+        if (radius >= maxDistance)
+            return false;
+    }
+}
+
 bool ClosestPoint(vec3 pos, vec3& out, const AgentProfile& profile, float searchRadius)
 {
     dtNavMeshQuery* q = mainQuery(profile);
     if (!q)
         return false;
 
-    const dtQueryFilter filter;
+    const NavFilter filter;
     const vec3 ext(searchRadius, max(searchRadius, profile.height), searchRadius);
     dtPolyRef ref = 0;
     snapToMesh(q, filter, pos, ext, ref, out);
@@ -778,7 +1002,7 @@ bool CanWalkStraight(vec3 from, vec3 to, const AgentProfile& profile)
     if (!q)
         return false;
 
-    const dtQueryFilter filter;
+    const NavFilter filter;
     const vec3 ext = agentExtents(profile);
     dtPolyRef startRef = 0;
     vec3 startPt;
@@ -815,7 +1039,7 @@ bool MoveAlongSurface(vec3 from, vec3 to, vec3& out, const AgentProfile& profile
     if (!q)
         return false;
 
-    const dtQueryFilter filter;
+    const NavFilter filter;
     const vec3 ext = agentExtents(profile);
 
     dtPolyRef startRef = 0;
@@ -852,7 +1076,6 @@ bool MoveAlongSurface(vec3 from, vec3 to, vec3& out, const AgentProfile& profile
 namespace
 {
 constexpr int kCorridorMaxPolys = kMaxPathPolys;
-const dtQueryFilter corridorFilter;
 
 static_assert(sizeof(dtPolyRef) == sizeof(uint64_t));
 static_assert(int(kCornerEnd) == int(DT_STRAIGHTPATH_END) && int(kCornerOffMesh) == int(DT_STRAIGHTPATH_OFFMESH_CONNECTION));
@@ -861,6 +1084,7 @@ static_assert(int(kCornerEnd) == int(DT_STRAIGHTPATH_END) && int(kCornerOffMesh)
 struct PathCorridor::Impl
 {
     dtPathCorridor corridor;
+    NavFilter filter;
     int meshSlot = -1;
     bool hasPath = false;
 
@@ -886,7 +1110,7 @@ PathCorridor& PathCorridor::operator=(const PathCorridor& o)
 PathCorridor::PathCorridor(PathCorridor&&) noexcept = default;
 PathCorridor& PathCorridor::operator=(PathCorridor&&) noexcept = default;
 
-bool PathCorridor::Adopt(PathHandle path, const AgentProfile& profile)
+bool PathCorridor::Adopt(PathHandle path, const AgentProfile& profile, const PathFilter& filter)
 {
     const PathSlot* s = resolve(path);
     if (!s || s->polys.empty())
@@ -904,6 +1128,7 @@ bool PathCorridor::Adopt(PathHandle path, const AgentProfile& profile)
     const int count = std::min((int)s->polys.size(), kCorridorMaxPolys);
     m->corridor.reset(s->polys.front(), ptr(s->pathStart));
     m->corridor.setCorridor(ptr(s->pathEnd), s->polys.data(), count);
+    m->filter = NavFilter(filter);
     m->meshSlot = meshSlot;
     m->hasPath = true;
     return true;
@@ -923,13 +1148,13 @@ bool PathCorridor::Empty() const
 bool PathCorridor::MovePosition(vec3 pos)
 {
     dtNavMeshQuery* q = m ? m->query() : nullptr;
-    return q && m->corridor.movePosition(ptr(pos), q, &corridorFilter);
+    return q && m->corridor.movePosition(ptr(pos), q, &m->filter);
 }
 
 bool PathCorridor::MoveTarget(vec3 target)
 {
     dtNavMeshQuery* q = m ? m->query() : nullptr;
-    if (!q || !m->corridor.moveTargetPosition(ptr(target), q, &corridorFilter))
+    if (!q || !m->corridor.moveTargetPosition(ptr(target), q, &m->filter))
         return false;
 
     // moveTargetPosition keeps the old height, which hides a goal that moved to another floor
@@ -949,13 +1174,13 @@ bool PathCorridor::MoveTarget(vec3 target)
 void PathCorridor::OptimizeVisibility(vec3 next, float range)
 {
     if (dtNavMeshQuery* q = m ? m->query() : nullptr)
-        m->corridor.optimizePathVisibility(ptr(next), range, q, &corridorFilter);
+        m->corridor.optimizePathVisibility(ptr(next), range, q, &m->filter);
 }
 
 bool PathCorridor::IsValid(int lookAhead)
 {
     dtNavMeshQuery* q = m ? m->query() : nullptr;
-    return q && m->corridor.isValid(lookAhead, q, &corridorFilter);
+    return q && m->corridor.isValid(lookAhead, q, &m->filter);
 }
 
 bool PathCorridor::CanSee(vec3 to)
@@ -968,7 +1193,7 @@ bool PathCorridor::CanSee(vec3 to)
     float hitNormal[3];
     dtPolyRef visited[16];
     int visitedCount = 0;
-    const dtStatus st = q->raycast(m->corridor.getFirstPoly(), m->corridor.getPos(), ptr(to), &corridorFilter,
+    const dtStatus st = q->raycast(m->corridor.getFirstPoly(), m->corridor.getPos(), ptr(to), &m->filter,
                                    &t, hitNormal, visited, &visitedCount, 16);
     return dtStatusSucceed(st) && t == FLT_MAX;
 }
@@ -983,11 +1208,26 @@ int PathCorridor::FindCorners(Corner* out, int maxCorners)
     float verts[kMaxCorners * 3];
     unsigned char flags[kMaxCorners];
     dtPolyRef polys[kMaxCorners];
-    const int n = m->corridor.findCorners(verts, flags, polys, maxCorners, q, &corridorFilter);
+    const int n = m->corridor.findCorners(verts, flags, polys, maxCorners, q, &m->filter);
 
     for (int i = 0; i < n; i++)
         out[i] = {vec3(verts[i * 3], verts[i * 3 + 1], verts[i * 3 + 2]), flags[i], polys[i]};
     return n;
+}
+
+bool PathCorridor::MoveOverLink(uint64_t linkPoly, vec3& start, vec3& end, uint32_t& userId)
+{
+    dtNavMeshQuery* q = m ? m->query() : nullptr;
+    if (!q)
+        return false;
+
+    dtPolyRef refs[2];
+    if (!m->corridor.moveOverOffmeshConnection(linkPoly, refs, ptr(start), ptr(end), q))
+        return false;
+
+    const dtOffMeshConnection* con = q->getAttachedNavMesh()->getOffMeshConnectionByRef(linkPoly);
+    userId = con ? con->userId : 0;
+    return true;
 }
 
 vec3 PathCorridor::Position() const
@@ -1012,7 +1252,7 @@ bool RandomPointAround(vec3 center, float radius, vec3& out, const AgentProfile&
     if (!q)
         return false;
 
-    const dtQueryFilter filter;
+    const NavFilter filter;
     const vec3 ext = agentExtents(profile);
     dtPolyRef centerRef = 0;
     vec3 centerPt;

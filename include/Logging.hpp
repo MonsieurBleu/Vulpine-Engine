@@ -16,6 +16,8 @@
 #include <string_view>
 #include <system_error>
 #include <vector>
+#include <format>
+#include <type_traits>
 
 inline constexpr std::string_view TERMINAL_UNDERLINE = "\033[4m";
 inline constexpr std::string_view TERMINAL_ERROR     = "\033[1;31m";
@@ -93,6 +95,20 @@ public:
         std::string_view name_;
         std::source_location loc_;
     };
+
+    template <typename... Args>
+    struct FormatString {
+        std::format_string<Args...> fmt;
+        std::source_location loc;
+
+        template <typename T>
+            requires std::convertible_to<const T&, std::string_view>
+        consteval FormatString(const T& s, std::source_location loc = std::source_location::current())
+            : fmt(s), loc(loc) {}
+    };
+
+    template <typename... Args>
+    using PlainFormatString = std::format_string<Args...>;
 
     static inline int LogTermDisplayBits = INFO | WARN | _ERROR_ | FILE_ERROR | DEBUG;
 
@@ -362,6 +378,52 @@ public:
     static void fileError(FileName file, const MessageTypes&... messages)
     {
         logAsType(FILE_ERROR, file.location(), file.name(), messages...);
+    }
+
+    // === std::format variants. usage: method(format_string, arguments...) ===
+
+    template <typename... Args>
+    static void logAtf(LogSeverity type, const Location& loc,
+                       std::format_string<std::type_identity_t<Args>...> fmt, Args&&... args)
+    {
+        logAsType(type, loc, {}, std::format(fmt, std::forward<Args>(args)...));
+    }
+
+    // can't be logf since that's already a thing in cmath :pensive:
+    template <typename... Args>
+    static void logFmt(LogSeverity type, FormatString<std::type_identity_t<Args>...> fmt, Args&&... args)
+    {
+        logAsType(type, fmt.loc, {}, std::format(fmt.fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    static void infof(FormatString<std::type_identity_t<Args>...> fmt, Args&&... args)
+    {
+        logAsType(INFO, fmt.loc, {}, std::format(fmt.fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    static void warnf(FormatString<std::type_identity_t<Args>...> fmt, Args&&... args)
+    {
+        logAsType(WARN, fmt.loc, {}, std::format(fmt.fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    static void errorf(FormatString<std::type_identity_t<Args>...> fmt, Args&&... args)
+    {
+        logAsType(_ERROR_, fmt.loc, {}, std::format(fmt.fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    static void debugf(FormatString<std::type_identity_t<Args>...> fmt, Args&&... args)
+    {
+        logAsType(DEBUG, fmt.loc, {}, std::format(fmt.fmt, std::forward<Args>(args)...));
+    }
+
+    template <typename... Args>
+    static void fileErrorf(FileName file, PlainFormatString<std::type_identity_t<Args>...> fmt, Args&&... args)
+    {
+        logAsType(FILE_ERROR, file.location(), file.name(), std::format(fmt, std::forward<Args>(args)...));
     }
 };
 
