@@ -1230,6 +1230,42 @@ bool PathCorridor::MoveOverLink(uint64_t linkPoly, vec3& start, vec3& end, uint3
     return true;
 }
 
+float PathCorridor::WidthAt(vec3 at, vec2 dir, float maxHalfWidth, float* left, float* right)
+{
+    const float unknown = 2.0f * maxHalfWidth;
+    if (left)
+        *left = maxHalfWidth;
+    if (right)
+        *right = maxHalfWidth;
+    dtNavMeshQuery* q = m ? m->query() : nullptr;
+    if (!q || length(dir) < 1e-4f)
+        return unknown;
+
+    const vec3 ext(0.5f, 1.0f, 0.5f);
+    dtPolyRef ref = 0;
+    vec3 p;
+    if (dtStatusFailed(q->findNearestPoly(ptr(at), ptr(ext), &m->filter, &ref, ptr(p))) || !ref)
+        return unknown;
+
+    const vec2 side = normalize(vec2(-dir.y, dir.x)) * maxHalfWidth;
+    float room[2];
+    for (int i = 0; i < 2; i++)
+    {
+        const float s = i == 0 ? 1.0f : -1.0f;
+        vec3 to(p.x + side.x * s, p.y, p.z + side.y * s);
+        float t = 0.0f;
+        float hitNormal[3];
+        if (dtStatusFailed(q->raycast(ref, ptr(p), ptr(to), &m->filter, &t, hitNormal, nullptr, nullptr, 0)))
+            return unknown;
+        room[i] = (t == FLT_MAX ? 1.0f : t) * maxHalfWidth;
+    }
+    if (left)
+        *left = room[0];
+    if (right)
+        *right = room[1];
+    return room[0] + room[1];
+}
+
 vec3 PathCorridor::Position() const
 {
     if (!m)

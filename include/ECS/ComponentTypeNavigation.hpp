@@ -39,6 +39,8 @@ struct AgentNavigation
         // read by movement systems
         vec2 moveDirection = vec2(0); // horizontal & normalized, zero when arrived / no path
         float speedScale = 0.0f;      // 0 to 1, modified to smooth out movement
+        float pathWidth = 2.0f;
+        vec2 pathRoom = vec2(1.0f); // free mesh to the left (x) and right (y) of where we stand
         VulpineNav::NavServer::PathStatus status = VulpineNav::NavServer::PathStatus::Invalid;
         VulpineNav::NavServer::PartialReason partialReason = VulpineNav::NavServer::PartialReason::None;
         bool arrived = false;
@@ -57,6 +59,7 @@ struct AgentNavigation
         uint64_t partialWatch = 0;
 
         uint16_t cooldownFrames = 0;
+        uint8_t widthFrames = 0xff;
 
         struct BlockedLink
         {
@@ -118,6 +121,9 @@ void UpdateAgentNavigation(AgentNavigation& nav, vec3 position);
 void ResetAgentNavigation(AgentNavigation& nav);
 
 void FinishLinkTraversal(AgentNavigation& nav, bool success);
+
+// 0 on open ground, 1 on the narrowest paths
+float PathNarrowness(const AgentNavigation& nav);
 
 template <typename LineT, typename Drawer>
 void DebugDrawAgentNavigation(Drawer& draw, const AgentNavigation& nav, vec3 position)

@@ -72,7 +72,7 @@ enum class PartialReason : uint8_t
 
 enum class Priority : uint8_t { Low = 0, Normal = 1, High = 2 };
 
-// what a path may use: NavFlags the agent can traverse, and links it recently failed to take
+// flags the agent can traverse, and links it recently failed to take
 struct PathFilter
 {
     uint16_t includeFlags = kFlagWalk;
@@ -178,6 +178,8 @@ public:
     int FindCorners(Corner* out, int maxCorners);
 
     bool MoveOverLink(uint64_t linkPoly, vec3& start, vec3& end, uint32_t& userId);
+
+    float WidthAt(vec3 at, vec2 dir, float maxHalfWidth, float* left = nullptr, float* right = nullptr);
 
     vec3 Position() const;
     vec3 Target() const;

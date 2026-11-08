@@ -37,6 +37,13 @@ constexpr float kArriveHysteresis = 0.3f;
 constexpr float kArriveSlowRadius = 2.0f;
 constexpr float kArriveMinScale = 0.2f;
 
+constexpr float kNarrowWidth = 1.0f;
+constexpr float kNarrowMinWidth = 0.2f;
+constexpr float kNarrowMinScale = 0.4f;
+constexpr float kWidthMaxHalf = 1.0f;
+constexpr float kWidthSamples[] = {0.0f, 1.0f, 2.0f}; // along the path, so we slow down before getting on
+constexpr uint8_t kWidthFrames = 4;
+
 constexpr float kLinkSlowRadius = 1.5f;
 constexpr float kLinkMinScale = 0.3f;
 constexpr float kLinkTriggerRadii = 2.25f;
@@ -268,6 +275,35 @@ bool needsRepath(const AgentNavigation& nav, vec3 pos, bool corridorLost)
     }
 }
 
+float measureWidth(AgentNavigation& nav, vec3 pos)
+{
+    auto& d = nav.detail;
+    constexpr int kSamples = sizeof(kWidthSamples) / sizeof(kWidthSamples[0]);
+    float width = 2.0f * kWidthMaxHalf;
+    int sample = 0;
+    float travelled = 0.0f;
+    vec3 prev = pos;
+    for (int i = 0; i < d.cornerCount && sample < kSamples; i++)
+    {
+        const vec3 c = d.corners[i].pos;
+        const vec2 seg = xz(c) - xz(prev);
+        const float len = length(seg);
+        while (len > 1e-3f && sample < kSamples && kWidthSamples[sample] <= travelled + len)
+        {
+            const float t = (kWidthSamples[sample] - travelled) / len;
+            float* left = sample == 0 ? &d.pathRoom.x : nullptr;
+            float* right = sample == 0 ? &d.pathRoom.y : nullptr;
+            width = glm::min(width, d.corridor.WidthAt(mix(prev, c, t), seg / len, kWidthMaxHalf, left, right));
+            sample++;
+        }
+        travelled += len;
+        prev = c;
+        if (d.corners[i].flags & (kCornerOffMesh | kCornerEnd))
+            break;
+    }
+    return width;
+}
+
 void steer(AgentNavigation& nav, vec3 pos)
 {
     auto& d = nav.detail;
@@ -276,7 +312,11 @@ void steer(AgentNavigation& nav, vec3 pos)
     d.cornerCount = 0;
 
     if (d.arrived || d.corridor.Empty())
+    {
+        d.pathWidth = 2.0f * kWidthMaxHalf;
+        d.pathRoom = vec2(kWidthMaxHalf);
         return;
+    }
 
     Corner* corners = d.corners.data();
     int n = d.corridor.FindCorners(corners, PathCorridor::kMaxCorners);
@@ -369,6 +409,15 @@ void steer(AgentNavigation& nav, vec3 pos)
         }
     }
 
+    if (d.widthFrames == 0xff)
+        d.widthFrames = uint8_t((reinterpret_cast<uintptr_t>(&nav) >> 6) % kWidthFrames);
+    if (++d.widthFrames >= kWidthFrames)
+    {
+        d.widthFrames = 0;
+        d.pathWidth = measureWidth(nav, pos);
+    }
+    scale = std::min(scale, mix(kNarrowMinScale, 1.0f, smoothstep(kNarrowMinWidth, kNarrowWidth, d.pathWidth)));
+
     d.speedScale = scale;
 }
 
@@ -416,6 +465,11 @@ void tickBlockedLinks(AgentNavigation& nav)
 
 } // namespace
 
+
+float PathNarrowness(const AgentNavigation& nav)
+{
+    return 1.0f - smoothstep(kNarrowMinWidth, kNarrowWidth, nav.detail.pathWidth);
+}
 
 void FinishLinkTraversal(AgentNavigation& nav, bool success)
 {
