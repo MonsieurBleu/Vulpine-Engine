@@ -284,7 +284,9 @@ bool MeshModel3D::isCulled(int layer)
 { 
     if(externCullEnable and state.externCullPtr)
         return state.externCullPtr[layer];
-    
+  
+    // return true;
+
     return culled[layer]; 
 };
 

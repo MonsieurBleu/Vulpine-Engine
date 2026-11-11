@@ -659,6 +659,8 @@ void Scene::depthOnlyDraw(int layer, Camera *camera, bool doCulling, int layers)
             ShaderProgram *dom = i->material.depthOnly ? i->material.depthOnly.get() : depthOnlyMaterial.get();
             dom->activate();
 
+            
+
             ShaderUniform(camera->getProjectionViewMatrixAddr(), 2).activate();
             ShaderUniform(camera->getViewMatrixAddr(), 3).activate();
             ShaderUniform(camera->getProjectionMatrixAddr(), 4).activate();
@@ -704,7 +706,8 @@ void Scene::depthOnlyDraw(int layer, Camera *camera, bool doCulling, int layers)
             else
             {
                 for(auto j : i->staticMeshes)
-                    if(j->isCulled(layer))
+                    // if(j->isCulled(layer))
+                    if(j->cull(layer, layers))
                     {
                         j->bindAllMaps();
                         drawcnt += j->drawVAO(layer, true);
@@ -712,6 +715,7 @@ void Scene::depthOnlyDraw(int layer, Camera *camera, bool doCulling, int layers)
 
                 for(auto j : i->meshes)
                     if(j->isCulled(layer))
+                    // if(j->cull(layer, layers))
                     {
                         j->bindAllMaps();
                         drawcnt += j->drawVAO(layer, true);
