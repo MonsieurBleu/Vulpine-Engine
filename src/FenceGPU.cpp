@@ -13,10 +13,10 @@ std::string FenceGPU::toString()
     switch (r) 
     {
         case GL_ALREADY_SIGNALED : 
-            return TERMINAL_OK + "ALREADY_SIGNALED";
+            return std::string(TERMINAL_OK) + "ALREADY_SIGNALED";
         
         case GL_TIMEOUT_EXPIRED : 
-            return TERMINAL_ERROR + "TIMEOUT_EXPIRED";
+            return std::string(TERMINAL_ERROR) + "TIMEOUT_EXPIRED";
 
         default :
             return "NOT UPDATED";

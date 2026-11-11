@@ -63,33 +63,27 @@ std::ostream& operator<<(std::ostream& os, const glm::quat& u);
 
 
 #define FILE_ERROR_MESSAGE(filename, ...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::fileError(filename, __VA_ARGS__); \
 }
 
 #define WARNING_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::warn(__VA_ARGS__); \
 }
 
 #define ERROR_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::error(__VA_ARGS__); \
 }
 
 #define NOTIF_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::info(__VA_ARGS__); \
 }
 
 // also adding a macro called info cause I never remember it's called notif in this engine :(
 #define INFO_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::info(__VA_ARGS__); \
 }
 
 #define DEBUG_MESSAGE(...) { \
-    Logger::setInfo({__PRETTY_FUNCTION__, __FILE__, __LINE__}); \
     Logger::debug(__VA_ARGS__); \
 }
 
@@ -355,5 +349,28 @@ void ensureNonZeroVectorComponents(glm::vec3& v);
 // assumes a null-terminated string.
 // returns empty string if line not found
 std::string getLineFromString(const char* str, size_t line);
+
+namespace 
+{
+template <std::size_t N, typename T>
+inline constexpr std::array<T, N> _make_full_array(const T& value)
+{
+    std::array<T, N> a;
+    a.fill(value);
+    return a;
+}
+}
+
+// creates a static sized std array of size N initialized with the value V
+// this is equivalent to making a brace initialized list of the same size but should allow automatic resizing
+// usage: std::array<type, size> = make_full_array<size, value>;
+//
+// NOTE: this is a so called "constexpr templated variable" which I didn't even know was possible before this
+template <std::size_t N, auto V>
+inline constexpr std::array<decltype(V), N> make_full_array = _make_full_array<N>(V);
+
+// unsatisfying solution to generate a filled c-style array, uses the gnu range designator which is valid c++ in clang and only in clang...
+// if we ever want to make the engine gcc or msvc compatible we'll have to figure out another solution ig
+#define FILLED_C_ARRAY(N, V) { [0 ... (N) - 1] = V }
 
 #endif

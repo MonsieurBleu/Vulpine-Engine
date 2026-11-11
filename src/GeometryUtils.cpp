@@ -708,7 +708,7 @@ namespace geometry {
     }
 
     std::array<glm::vec3, 3> convexSetSupportTriangle(const std::vector<glm::vec3>& convexSet, const glm::vec3& direction) {
-        float maxDot[3] = {-std::numeric_limits<float>::infinity()};
+        float maxDot[3] = FILLED_C_ARRAY(3, -std::numeric_limits<float>::infinity());
         std::array<glm::vec3, 3> supportPoint;
         for (const glm::vec3& point : convexSet) {
             float dot = glm::dot(point, direction);

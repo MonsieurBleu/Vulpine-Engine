@@ -10,6 +10,8 @@
 
 #include <Graphics/Query.hpp>
 
+#include "Utils.hpp"
+
 #define ObjectGroupRef std::shared_ptr<ObjectGroup>
 #define newObjectGroup std::make_shared<ObjectGroup>
 
@@ -24,7 +26,7 @@ class FastUI_valueMenu;
 struct StaticSceneOctree
 {
     struct ID{
-        int8 coord[QUADTREE_ITERATION] = {-1};
+        int8 coord[QUADTREE_ITERATION] = FILLED_C_ARRAY(QUADTREE_ITERATION, -1);
     };
 
     struct Node

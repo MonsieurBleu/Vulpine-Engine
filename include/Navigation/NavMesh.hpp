@@ -29,10 +29,12 @@ namespace VulpineNav
 constexpr size_t worldSize = 4096;
 
 static constexpr float kCellSize = 0.1f; // meters per voxel, kind of acts as the resolution of the navmesh, in terms of accuracy and performance
-static constexpr float kCellHeight = 0.2f;
+static constexpr float kCellHeight = kCellSize / 2.0f;
 static constexpr int   kTileCells = 192; // tile edge in voxels
 
-static constexpr float kTileWorldSize = kTileCells * kCellSize; // 0.2 * 96 = 19.2m tile side length
+static constexpr float kTileWorldSize = kTileCells * kCellSize; // 0.1 * 192 = 19.2m tile side length
+
+static constexpr float kDetailMaxError = 0.2f;
 
 static constexpr float kWorldMinY = 0;
 static constexpr float kWorldMaxY = 512; // TODO: confirm this
@@ -194,10 +196,55 @@ private:
 };
 }
 
+// == polygon areas, flags and links ==
+// areas set what traversal costs (see the NavServer query filter), flags who may use a polygon at all
+
+enum NavArea : u8
+{
+    kAreaClimbLow  = 1,
+    kAreaClimbHigh = 2, // High and Platform climbs
+    kAreaDrop      = 3,
+    kAreaSlide     = 4, // drops that land on a steep slope and slide down it
+    kAreaGround    = 63, // RC_WALKABLE_AREA
+};
+
+enum NavFlags : u16
+{
+    kFlagWalk  = 1 << 0,
+    kFlagClimb = 1 << 1,
+    kFlagDrop  = 1 << 2,
+};
+
+enum class LinkKind : u8 { None, ClimbLow, ClimbHigh, ClimbPlatform, Drop, Slide };
+
+inline constexpr float kDropMaxHeight = 2.5f;
+
+// off-mesh link user ids: kind in bits 0-3, height difference in cm in bits 4-15,
+// and the horizontal direction the link was probed in, as a 256 step angle, in bits 16-23
+inline u32 PackLinkUserId(LinkKind kind, float height, vec3 facing)
+{
+    const float turns = atan2(facing.z, facing.x) / 6.2831853f;
+    const u32 angle = u32((int)round(turns * 256.0f) & 0xff);
+    const u32 cm = u32(clamp(height, 0.0f, 40.95f) * 100.0f + 0.5f) & 0xfff;
+    return (u32(kind) & 0xf) | (cm << 4) | (angle << 16);
+}
+inline LinkKind LinkKindFromUserId(u32 id) { return LinkKind(id & 0xf); }
+inline float LinkHeightFromUserId(u32 id) { return float((id >> 4) & 0xfff) / 100.0f; }
+inline vec3 LinkFacingFromUserId(u32 id)
+{
+    const float a = float((id >> 16) & 0xff) / 256.0f * 6.2831853f;
+    return vec3(cos(a), 0.0f, sin(a));
+}
+
 namespace NavMesh
 {
+static constexpr bool kGenerateClimbLinks = true;
+
+// defaults
 static constexpr int kLoadRadius = 6;
 static constexpr int kUnloadRadius = 8;
+static constexpr int kUnloadMargin = kUnloadRadius - kLoadRadius;
+
 
 
 
@@ -252,6 +299,10 @@ void Tick();
 // incremented when Tick adds or removes tiles
 u64 GetVersion();
 
+// sum of the per-tile versions in the square of tiles around pos, changes whenever one of them
+// is added or removed. safe from any thread; read under QueryReadLock it matches what queries see
+u64 GetRegionVersion(vec3 pos, int tileRadius = 1);
+
 class QueryReadLock
 {
 public:
@@ -265,9 +316,14 @@ void CancelWriterWait();
 
 bool IsTileWanted(vec3 pos);
 
-void CreateLoader(vec3 pos, u8 priority);
-void UpdateLoaderPosition(vec3 prevPos, vec3 newPos, u8 priority);
-void UnloadLoader(vec3 pos);
+// tiles within loadRadius of a loader get built, and are released past loadRadius + kUnloadMargin.
+// a loader must use the same radius for its whole life
+void CreateLoader(vec3 pos, u8 priority, int loadRadius = kLoadRadius);
+void UpdateLoaderPosition(vec3 prevPos, vec3 newPos, u8 priority, int loadRadius = kLoadRadius);
+void UnloadLoader(vec3 pos, int loadRadius = kLoadRadius);
+
+// switches an off-mesh link off for every agent of that slot, until its tile is rebuilt. main thread
+void DisableLink(int slot, u64 linkPoly);
 
 
 
@@ -278,13 +334,20 @@ struct DebugEdge
     vec3 start, end;
 };
 
+struct DebugLink
+{
+    vec3 start, end;
+    u8 area;
+};
+
 struct DebugGeometry
 {
     std::vector<vec3> triangles;
     std::vector<DebugEdge> walls;
     std::vector<DebugEdge> unlinked;
+    std::vector<DebugLink> links;
 
-    void clear() { triangles.clear(); walls.clear(); unlinked.clear(); }
+    void clear() { triangles.clear(); walls.clear(); unlinked.clear(); links.clear(); }
 };
 
 void GetDebugGeometry(vec3 center, int tileRadius, int slot, DebugGeometry& out);
@@ -311,6 +374,29 @@ void DebugDrawGeometry(Drawer& draw, vec3 center, int tileRadius = 1, int slot =
         unlinked.push_back(LineT{e.start, e.end});
     if (!unlinked.empty())
         draw.drawLines(unlinked, 0.0f, {}, vec3(1.0f, 0.1f, 0.8f));
+
+    // links as arcs: climbs low green / high orange, drops cyan, slides purple
+    static std::vector<LineT> arcs[4];
+    for (auto& a : arcs)
+        a.clear();
+    for (const DebugLink& l : geo.links)
+    {
+        const int bucket = l.area == kAreaClimbLow ? 0 : l.area == kAreaClimbHigh ? 1 : l.area == kAreaDrop ? 2 : 3;
+        const float bump = 0.3f + 0.25f * glm::abs(l.end.y - l.start.y);
+        constexpr int kSegments = 8;
+        vec3 prev = l.start;
+        for (int i = 1; i <= kSegments; i++)
+        {
+            const float t = (float)i / kSegments;
+            const vec3 p = mix(l.start, l.end, t) + vec3(0, bump * 4.0f * t * (1.0f - t), 0);
+            arcs[bucket].push_back(LineT{prev, p});
+            prev = p;
+        }
+    }
+    const vec3 arcColors[4] = {vec3(0.2f, 0.9f, 0.3f), vec3(1.0f, 0.5f, 0.1f), vec3(0.1f, 0.8f, 1.0f), vec3(0.7f, 0.3f, 1.0f)};
+    for (int i = 0; i < 4; i++)
+        if (!arcs[i].empty())
+            draw.drawLines(arcs[i], 0.0f, {}, arcColors[i]);
 }
 
 // == build input debug ==

@@ -7,10 +7,9 @@
 #include <array>
 #include <atomic>
 #include <condition_variable>
+#include <optional>
 #include <queue>
 #include <thread>
-
-#include "ECS/ComponentTypeNavigation.hpp"
 
 #include "JoltIntegration/PhysicsCommons.hpp"
 
@@ -27,8 +26,7 @@
 #include <recastnavigation/DetourNavMeshBuilder.h>
 
 #include "Navigation/NavMesh.hpp"
-
-#include "JoltIntegration/JoltIntegration.hpp"
+#include "Navigation/NavClimbLinks.hpp"
 
 #include <Jolt/Physics/Collision/CollisionCollectorImpl.h>
 #include <Jolt/Physics/Collision/Shape/HeightFieldShape.h>
@@ -156,6 +154,8 @@ struct TileGrid
     std::array<u16, worldTileLength * worldTileLength> farCount;
     std::array<std::atomic<u8>, worldTileLength * worldTileLength> loaded;
     std::array<TileState, worldTileLength * worldTileLength> state;
+    // bumped (under navMutex) whenever any tier's tile at this index is added or removed
+    std::array<std::atomic<u32>, worldTileLength * worldTileLength> version;
 };
 
 struct NavMeshData
@@ -224,6 +224,13 @@ std::array<NavMeshData, kMaxTiers> navMeshes{};
 std::atomic<u32> navMeshCount = 0;
 
 std::vector<ivec2> pendingRemovals;
+
+struct LinkDisable
+{
+    int slot;
+    u64 poly;
+};
+std::vector<LinkDisable> pendingLinkDisables;
 u64 meshVersion = 0;
 MeshTier::TierRegistry tierRegistry;
 u64 frame = 0;
@@ -231,7 +238,7 @@ std::vector<LoadRequest> newRequests;
 std::vector<BuildResult> resultsScratch;
 
 // worker state
-TileGeometry workerGeo;
+thread_local TileGeometry workerGeo;
 thread_local std::vector<u8> workerAreas;
 
 NavMeshData createMeshData(const MeshTier::MeshTier& tier);
@@ -297,7 +304,7 @@ SpanPair subtractSpan(const ivec2& a, const ivec2& b)
 // base tile update methods
 void addNear(int y, ivec2 span, ivec2 center, i64 baseKey);
 void removeFar(int y, ivec2 span);
-void updateRow(int y, ivec2 prevTile, ivec2 newTile, ivec2 prevUnload, ivec2 newUnload, i64 baseKey);
+void updateRow(int y, ivec2 prevTile, ivec2 newTile, ivec2 prevUnload, ivec2 newUnload, i64 baseKey, int loadRadius);
 
 void removeNear(int y, ivec2 span)
 {
@@ -328,38 +335,38 @@ void requestTile(size_t i, i64 key)
 
 void releaseTile(int x, int y);
 
-void addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
+bool addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size);
 
-void removeMeshTile(NavMeshData& mesh, int x, int y);
+bool removeMeshTile(NavMeshData& mesh, int x, int y);
 
-void addAll(BuildResult& r);
+bool addAll(BuildResult& r);
 
 void freeAll(BuildResult& r);
 
-void integrate(BuildResult& r);
+bool integrate(BuildResult& r);
 BuildResult buildRequest(const LoadRequest& req, u64 mask, const std::vector<MeshTier::MeshTier>& tiers);
-void workerLoop();
+void workerLoop(std::stop_token stop_token);
 int addTier(const MeshTier::MeshTier& tier);
 
 void gatherTileGeometry(ivec2 coord, float padding, TileGeometry& geo);
 
 bool buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeometry& geo, u8*& data, int& size,
-                   DebugBuildStages* dbg = nullptr);
+                   DebugBuildStages* dbg = nullptr, const JoltVulpine::Climb::ProbeWorld* climbWorld = nullptr);
 
 // shared with the nav server query thread
 std::mutex navMutex;
 std::atomic<bool> writerWaiting = false;
 
-// shared with worker
-std::thread worker;
+// shared with workers
+constexpr unsigned kBuildWorkers = 2;
+std::vector<std::jthread> workers;
 std::mutex requestMutex;
-std::condition_variable cv;
-bool worker_quit = false;
+std::condition_variable_any cv;
 std::priority_queue<LoadRequest, std::vector<LoadRequest>, std::greater<LoadRequest>> buildQueue;
 std::vector<BuildResult> results;
 std::vector<MeshTier::MeshTier> buildTiers;
 
-rcContext workerCtx {false};
+thread_local rcContext workerCtx {false};
 
 RecastScratch::~RecastScratch()
 {
@@ -370,11 +377,10 @@ RecastScratch::~RecastScratch()
     rcFreePolyMeshDetail(dmesh);
 }
 
-void removeMeshTile(NavMeshData& mesh, int x, int y)
+bool removeMeshTile(NavMeshData& mesh, int x, int y)
 {
     dtTileRef ref = mesh.navMesh->getTileRefAt(x, y, 0);
-    if (ref)
-        mesh.navMesh->removeTile(ref, nullptr, nullptr);
+    return ref && dtStatusSucceed(mesh.navMesh->removeTile(ref, nullptr, nullptr));
 }
 
 void freeAll(BuildResult& r)
@@ -479,10 +485,10 @@ void NavMesh::detail::removeFar(int y, ivec2 span)
     }
 }
 
-void NavMesh::detail::updateRow(int y, ivec2 prevTile, ivec2 newTile, ivec2 prevUnload, ivec2 newUnload, i64 baseKey)
+void NavMesh::detail::updateRow(int y, ivec2 prevTile, ivec2 newTile, ivec2 prevUnload, ivec2 newUnload, i64 baseKey, int loadRadius)
 {
-    const ivec2 prevLoad = rowSpan(prevTile, kLoadRadius, y);
-    const ivec2 newLoad  = rowSpan(newTile, kLoadRadius, y);
+    const ivec2 prevLoad = rowSpan(prevTile, loadRadius, y);
+    const ivec2 newLoad  = rowSpan(newTile, loadRadius, y);
 
     const SpanPair leftLoad    = subtractSpan(prevLoad, newLoad);
     const SpanPair enteredFar  = subtractSpan(newUnload, prevUnload);
@@ -513,24 +519,31 @@ void NavMesh::detail::releaseTile(int x, int y)
     grid.state[i] = Unloaded;
 }
 
-void NavMesh::detail::addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size)
+bool NavMesh::detail::addMeshTile(NavMeshData& mesh, int x, int y, u8* data, int size)
 {
     if (mesh.navMesh->getTileAt(x, y, 0) ||
         dtStatusFailed(mesh.navMesh->addTile(data, size, DT_TILE_FREE_DATA, 0, nullptr)))
     {
         dtFree(data);
+        return false;
     }
+    return true;
 }
 
-void NavMesh::detail::addAll(BuildResult& r)
+bool NavMesh::detail::addAll(BuildResult& r)
 {
     const ivec2 c = coordFromIdx(r.req.idx);
+    bool added = false;
     for (BuiltTile& t : r.tiles)
-        addMeshTile(navMeshes[t.slot], c.x, c.y, t.data, t.size);
+        added |= addMeshTile(navMeshes[t.slot], c.x, c.y, t.data, t.size);
     r.tiles.clear();
+
+    if (added)
+        grid.version[r.req.idx].fetch_add(1, std::memory_order_relaxed);
+    return added;
 }
 
-void NavMesh::detail::integrate(BuildResult& r)
+bool NavMesh::detail::integrate(BuildResult& r)
 {
     const u32 i = r.req.idx;
     const bool wanted = grid.loaded[i];
@@ -539,10 +552,9 @@ void NavMesh::detail::integrate(BuildResult& r)
     if (r.req.slotMask != 0)
     {
         if (wanted && grid.state[i] == Loaded)
-            addAll(r);
-        else
-            freeAll(r);
-        return;
+            return addAll(r);
+        freeAll(r);
+        return false;
     }
 
     // resolve pending tile
@@ -551,22 +563,23 @@ void NavMesh::detail::integrate(BuildResult& r)
     {
         freeAll(r);
         grid.state[i] = Unloaded;
-        return;
+        return false;
     }
 
     if (r.skipped) 
     {
         newRequests.push_back(r.req);
-        return;
+        return false;
     }
 
-    addAll(r);
+    const bool added = addAll(r);
     grid.state[i] = Loaded;
 
     // tiers added while this tile was being built
     const u64 missing = allSlots(navMeshCount.load(std::memory_order_relaxed)) & ~r.builtMask;
     if (missing)
         newRequests.push_back({r.req.key, i, missing});
+    return added;
 }
 
 
@@ -581,10 +594,18 @@ BuildResult NavMesh::detail::buildRequest(const LoadRequest& req, u64 mask, cons
     r.builtMask = mask;
 
     ivec2 coord = coordFromIdx(req.idx);
-    gatherTileGeometry(coord, gatherPadding(mask, tiers), workerGeo);
+    float padding = gatherPadding(mask, tiers);
+    if (kGenerateClimbLinks)
+        padding = max(padding, ClimbLinks::kProbePadding);
+    gatherTileGeometry(coord, padding, workerGeo);
 
     if (workerGeo.triCount() == 0)
         return r;
+
+    thread_local ClimbLinks::Snapshot climbSnapshot;
+    std::optional<JoltVulpine::Climb::ProbeWorld> climbWorld;
+    if (kGenerateClimbLinks && climbSnapshot.Build(workerGeo.verts))
+        climbWorld.emplace(climbSnapshot.World());
 
     for (u32 s = 0; s < tiers.size(); s++)
     {
@@ -592,7 +613,7 @@ BuildResult NavMesh::detail::buildRequest(const LoadRequest& req, u64 mask, cons
             continue;
 
         BuiltTile t{nullptr, 0, (u8)s};
-        if (!buildTierTile(coord, tiers[s], workerGeo, t.data, t.size))
+        if (!buildTierTile(coord, tiers[s], workerGeo, t.data, t.size, nullptr, climbWorld ? &*climbWorld : nullptr))
         {
             WARNING_MESSAGE("navmesh tile build failed: ", coord.x, ", ", coord.y, " tier ", tiers[s].id);
         }
@@ -604,13 +625,13 @@ BuildResult NavMesh::detail::buildRequest(const LoadRequest& req, u64 mask, cons
     return r;
 }
 
-void NavMesh::detail::workerLoop()
+void NavMesh::detail::workerLoop(std::stop_token stop_token)
 {
     currentThreadID = THREAD_ID_NAVMESH_BUILD;
 
     std::vector<MeshTier::MeshTier> tiers; // snapshot of the tiers
 
-    while (true)
+    while (!stop_token.stop_requested())
     {
         LoadRequest req;
         u64 mask;
@@ -618,9 +639,7 @@ void NavMesh::detail::workerLoop()
         // block for mutex lock scope
         {
             std::unique_lock<std::mutex> lock(requestMutex);
-            while (!worker_quit && buildQueue.empty())
-                cv.wait(lock);
-            if (worker_quit)
+            if (!cv.wait(lock, stop_token, [] { return !buildQueue.empty(); }))
                 return;
 
             req = buildQueue.top();
@@ -652,7 +671,6 @@ int NavMesh::detail::addTier(const MeshTier::MeshTier& tier)
         buildTiers.push_back(tier);
     }
 
-    // tiles already loaded don't have this tier yet
     const i64 key = (i64)frame;
     for (u32 i = 0; i < grid.state.size(); i++)
     {
@@ -664,13 +682,12 @@ int NavMesh::detail::addTier(const MeshTier::MeshTier& tier)
 
 void NavMesh::Shutdown()
 {
-    {
-        std::lock_guard<std::mutex> lock(requestMutex);
-        worker_quit = true;
-    }
-    cv.notify_one();
-    if (worker.joinable())
-        worker.join();
+    for (std::jthread& w : workers)
+        w.request_stop();
+    for (std::jthread& w : workers)
+        if (w.joinable())
+            w.join();
+    workers.clear();
 
     while (!buildQueue.empty()) buildQueue.pop();
     for (BuildResult& r : results) freeAll(r);
@@ -678,6 +695,7 @@ void NavMesh::Shutdown()
     for (BuildResult& r : resultsScratch) freeAll(r);
     resultsScratch.clear();
     pendingRemovals.clear();
+    pendingLinkDisables.clear();
 }
 
 int NavMesh::ResolveAgent(const MeshTier::AgentShape& shape)
@@ -706,11 +724,13 @@ void NavMesh::Tick()
             std::make_move_iterator(results.end()));
         results.clear();
     }
-    if (!newRequests.empty())
+    if (newRequests.size() > 1)
+        cv.notify_all();
+    else if (!newRequests.empty())
         cv.notify_one();
     newRequests.clear();
 
-    if (pendingRemovals.empty() && resultsScratch.empty())
+    if (pendingRemovals.empty() && resultsScratch.empty() && pendingLinkDisables.empty())
         return;
 
     if (!navMutex.try_lock())
@@ -719,23 +739,48 @@ void NavMesh::Tick()
         return;
     }
 
+    bool changed = false;
+
     const u32 count = navMeshCount.load(std::memory_order_relaxed);
     for (const ivec2& c : pendingRemovals)
     {
-        if (grid.loaded[idxFromTileCoord(c)]) // wanted again, keep the old tile
+        const size_t idx = idxFromTileCoord(c);
+        if (grid.loaded[idx]) // wanted again, keep the old tile
             continue;
+
+        bool removed = false;
         for (u32 s = 0; s < count; s++)
-            removeMeshTile(navMeshes[s], c.x, c.y);
+            removed |= removeMeshTile(navMeshes[s], c.x, c.y);
+        if (removed)
+            grid.version[idx].fetch_add(1, std::memory_order_relaxed);
+        changed |= removed;
     }
     pendingRemovals.clear();
 
     for (BuildResult& r : resultsScratch)
-        integrate(r);
+        changed |= integrate(r);
     resultsScratch.clear();
+
+    for (const LinkDisable& l : pendingLinkDisables)
+    {
+        if ((u32)l.slot >= count)
+            continue;
+        dtNavMesh* mesh = navMeshes[l.slot].navMesh;
+        const dtMeshTile* tile = nullptr;
+        const dtPoly* poly = nullptr;
+        if (dtStatusFailed(mesh->getTileAndPolyByRef(l.poly, &tile, &poly)) || poly->flags == 0)
+            continue;
+
+        mesh->setPolyFlags(l.poly, 0);
+        grid.version[idxFromTileCoord(tile->header->x, tile->header->y)].fetch_add(1, std::memory_order_relaxed);
+        changed = true;
+    }
+    pendingLinkDisables.clear();
 
     navMutex.unlock();
 
-    meshVersion++;
+    if (changed)
+        meshVersion++;
 
     writerWaiting.store(false, std::memory_order_release);
     writerWaiting.notify_all();
@@ -757,6 +802,24 @@ u64 NavMesh::GetVersion()
     return meshVersion;
 }
 
+u64 NavMesh::GetRegionVersion(vec3 pos, int tileRadius)
+{
+    const ivec2 c = worldToTileCoord(pos);
+    u64 sum = 0;
+    for (int y = c.y - tileRadius; y <= c.y + tileRadius; y++)
+    {
+        if (y < 0 || y >= (int)worldTileLength)
+            continue;
+        for (int x = c.x - tileRadius; x <= c.x + tileRadius; x++)
+        {
+            if (x < 0 || x >= (int)worldTileLength)
+                continue;
+            sum += grid.version[idxFromTileCoord(x, y)].load(std::memory_order_relaxed);
+        }
+    }
+    return sum;
+}
+
 void NavMesh::CancelWriterWait()
 {
     writerWaiting.store(false, std::memory_order_release);
@@ -771,24 +834,31 @@ bool NavMesh::IsTileWanted(vec3 pos)
     return grid.loaded[idxFromTileCoord(c)].load(std::memory_order_relaxed) != 0;
 }
 
-void NavMesh::CreateLoader(vec3 pos, u8 priority)
+void NavMesh::DisableLink(int slot, u64 linkPoly)
 {
+    pendingLinkDisables.push_back({slot, linkPoly});
+}
+
+void NavMesh::CreateLoader(vec3 pos, u8 priority, int loadRadius)
+{
+    const int unloadRadius = loadRadius + kUnloadMargin;
     const ivec2 tile = worldToTileCoord(pos);
     const i64 baseKey = requestKey(priority);
-    const ivec2 rows = rowRange(tile.y - kUnloadRadius, tile.y + kUnloadRadius);
+    const ivec2 rows = rowRange(tile.y - unloadRadius, tile.y + unloadRadius);
 
     if (tile.x < 0 || tile.y < 0 || tile.x > kMaxIdx || tile.y > kMaxIdx)
         WARNING_MESSAGE("NavMesh loader outside the navmesh grid: tile ", tile.x, ", ", tile.y);
 
     for (int y = rows.x; y <= rows.y; y++)
     {
-        addFar(y, rowSpan(tile, kUnloadRadius, y));
-        addNear(y, rowSpan(tile, kLoadRadius, y), tile, baseKey);
+        addFar(y, rowSpan(tile, unloadRadius, y));
+        addNear(y, rowSpan(tile, loadRadius, y), tile, baseKey);
     }
 }
 
-void NavMesh::UpdateLoaderPosition(vec3 prevPos, vec3 newPos, u8 priority)
+void NavMesh::UpdateLoaderPosition(vec3 prevPos, vec3 newPos, u8 priority, int loadRadius)
 {
+    const int unloadRadius = loadRadius + kUnloadMargin;
     const ivec2 prevTile = worldToTileCoord(prevPos);
     const ivec2 newTile = worldToTileCoord(newPos);
 
@@ -796,33 +866,34 @@ void NavMesh::UpdateLoaderPosition(vec3 prevPos, vec3 newPos, u8 priority)
         return;
 
     const i64 baseKey = requestKey(priority);
-    const ivec2 rows = rowRange(min(prevTile.y, newTile.y) - kUnloadRadius,
-                                max(prevTile.y, newTile.y) + kUnloadRadius);
+    const ivec2 rows = rowRange(min(prevTile.y, newTile.y) - unloadRadius,
+                                max(prevTile.y, newTile.y) + unloadRadius);
 
     for (int y = rows.x; y <= rows.y; y++)
     {
-        const ivec2 prevUnload = rowSpan(prevTile, kUnloadRadius, y);
-        const ivec2 newUnload = rowSpan(newTile, kUnloadRadius, y);
+        const ivec2 prevUnload = rowSpan(prevTile, unloadRadius, y);
+        const ivec2 newUnload = rowSpan(newTile, unloadRadius, y);
 
         if (prevUnload.y < prevUnload.x && newUnload.y < newUnload.x)
         {
-            y = max(prevTile.y, newTile.y) - kUnloadRadius - 1;
+            y = max(prevTile.y, newTile.y) - unloadRadius - 1;
             continue;
         }
 
-        updateRow(y, prevTile, newTile, prevUnload, newUnload, baseKey);
+        updateRow(y, prevTile, newTile, prevUnload, newUnload, baseKey, loadRadius);
     }
 }
 
-void NavMesh::UnloadLoader(vec3 pos)
+void NavMesh::UnloadLoader(vec3 pos, int loadRadius)
 {
+    const int unloadRadius = loadRadius + kUnloadMargin;
     const ivec2 tile = worldToTileCoord(pos);
-    const ivec2 rows = rowRange(tile.y - kUnloadRadius, tile.y + kUnloadRadius);
+    const ivec2 rows = rowRange(tile.y - unloadRadius, tile.y + unloadRadius);
 
     for (int y = rows.x; y <= rows.y; y++)
     {
-        removeNear(y, rowSpan(tile, kLoadRadius, y));
-        removeFar(y, rowSpan(tile, kUnloadRadius, y));
+        removeNear(y, rowSpan(tile, loadRadius, y));
+        removeFar(y, rowSpan(tile, unloadRadius, y));
     }
 }
 
@@ -867,6 +938,9 @@ void NavMesh::detail::gatherTileGeometry(ivec2 coord, float padding, TileGeometr
     tileWorldBounds(coord, padding, bmin, bmax);
     const JPH::AABox box = JPH::AABox(bmin, bmax);
 
+    // acquire the physics lock for gathering the geometry (even if we only gather static bodies)
+    std::lock_guard<std::mutex> physicsLock(JoltVulpine::physicsMutex);
+
     JPH::PhysicsSystem& physics = *JoltVulpine::jPhysicsSystem;
 
     JPH::AllHitCollisionCollector<JPH::CollideShapeBodyCollector> bodies;
@@ -898,8 +972,9 @@ rcConfig NavMesh::detail::makeTileConfig(const MeshTier::MeshTier& tier, ivec2 c
     cfg.cs = kCellSize;
     cfg.ch = kCellHeight;
     cfg.walkableSlopeAngle = tier.maxSlopeDeg;
-    cfg.walkableHeight = (int)ceilf(tier.height / cfg.ch);
-    cfg.walkableClimb = (int)floorf(tier.maxClimb / cfg.ch);
+    // -epsilon so float noise doesn't cost a whole voxel
+    cfg.walkableHeight = (int)ceilf(tier.height / cfg.ch - 1e-3f);
+    cfg.walkableClimb = (int)floorf(tier.maxClimb / cfg.ch + 1e-3f);
     cfg.walkableRadius = (int)ceilf(tier.radius / cfg.cs);
     cfg.maxEdgeLen = (int)(12.0f / cfg.cs);
     cfg.maxSimplificationError = 1.3f;
@@ -907,7 +982,7 @@ rcConfig NavMesh::detail::makeTileConfig(const MeshTier::MeshTier& tier, ivec2 c
     cfg.mergeRegionArea = rcSqr(20);
     cfg.maxVertsPerPoly = DT_VERTS_PER_POLYGON;
     cfg.detailSampleDist = cfg.cs * 6;
-    cfg.detailSampleMaxError = cfg.ch;
+    cfg.detailSampleMaxError = kDetailMaxError;
 
     cfg.tileSize = kTileCells;
     cfg.borderSize = borderCells(tier);
@@ -958,7 +1033,7 @@ void recordCompact(const rcCompactHeightfield& chf, int border, bool regionsOnly
 } // namespace
 
 bool NavMesh::detail::buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier, const TileGeometry& geo, u8*& data, int& size,
-                                    DebugBuildStages* dbg)
+                                    DebugBuildStages* dbg, const JoltVulpine::Climb::ProbeWorld* climbWorld)
 {
     data = nullptr;
     size = 0;
@@ -1039,7 +1114,12 @@ bool NavMesh::detail::buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier,
         return false;
 
     for (int i = 0; i < rc.pmesh->npolys; ++i)
-        rc.pmesh->flags[i] = (rc.pmesh->areas[i] == RC_WALKABLE_AREA) ? 1 : 0;
+        rc.pmesh->flags[i] = (rc.pmesh->areas[i] == RC_WALKABLE_AREA) ? kFlagWalk : 0;
+
+    thread_local ClimbLinks::OffMeshLinks links;
+    links.clear();
+    if (climbWorld)
+        ClimbLinks::Generate(*rc.pmesh, tier, *climbWorld, links);
 
     dtNavMeshCreateParams params{};
     params.verts = rc.pmesh->verts;
@@ -1054,6 +1134,13 @@ bool NavMesh::detail::buildTierTile(ivec2 coord, const MeshTier::MeshTier& tier,
     params.detailVertsCount = rc.dmesh->nverts;
     params.detailTris = rc.dmesh->tris;
     params.detailTriCount = rc.dmesh->ntris;
+    params.offMeshConVerts = links.verts.data();
+    params.offMeshConRad = links.rads.data();
+    params.offMeshConDir = links.dirs.data();
+    params.offMeshConAreas = links.areas.data();
+    params.offMeshConFlags = links.flags.data();
+    params.offMeshConUserID = links.userIds.data();
+    params.offMeshConCount = links.count();
     params.walkableHeight = tier.height;
     params.walkableRadius = tier.radius;
     params.walkableClimb = tier.maxClimb;
@@ -1102,13 +1189,10 @@ NavMesh::detail::NavMeshData NavMesh::detail::createMeshData(const MeshTier::Mes
 
 void NavMesh::Init()
 {
-    assert(!worker.joinable());
+    assert(workers.empty());
 
-    {
-        std::lock_guard<std::mutex> lock(requestMutex);
-        worker_quit = false;
-    }
-    worker = std::thread(&workerLoop);
+    for (unsigned i = 0; i < kBuildWorkers; i++)
+        workers.emplace_back(&workerLoop);
 }
 
 void VulpineNav::NavMesh::GetDebugGeometry(vec3 center, int tileRadius, int slot, DebugGeometry& out)
@@ -1139,6 +1223,12 @@ void VulpineNav::NavMesh::GetDebugGeometry(vec3 center, int tileRadius, int slot
             const dtMeshTile* tile = tiles[t];
             if (!tile->header)
                 continue;
+
+            for (int i = 0; i < tile->header->offMeshConCount; i++)
+            {
+                const dtOffMeshConnection& con = tile->offMeshCons[i];
+                out.links.push_back({v3(&con.pos[0]), v3(&con.pos[3]), tile->polys[con.poly].getArea()});
+            }
 
             for (int i = 0; i < tile->header->polyCount; i++)
             {

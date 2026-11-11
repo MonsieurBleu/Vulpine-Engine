@@ -9,6 +9,8 @@ WFLAGS += -Wno-unused-lambda-capture
 WFLAGS += -Wno-delete-non-virtual-dtor
 WFLAGS += -Wno-unused-variable
 WFLAGS += -Wno-macro-redefined
+WFLAGS += -Wno-c99-designator 
+WFLAGS += -Wno-gnu-designator
 
 ifeq ($(OS),Windows_NT)
 	WFLAGS += -Wno-deprecated-declarations

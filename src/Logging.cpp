@@ -1,65 +1,66 @@
 #include "Logging.hpp"
 
 #include <csignal>
-#include <stack>
-#include <stacktrace>
+#include <cstdlib>
+
+#ifndef _WIN32
+    #include <stacktrace>
+#endif
+
+namespace
+{
+    constexpr std::string_view signalName(int signal) noexcept
+    {
+        switch (signal)
+        {
+            case SIGSEGV: return "SIGSEGV"; // segmentation fault (invalid memory reference)
+            case SIGABRT: return "SIGABRT"; // abort (sent by os, basically a nicer sigkill that asks the program to stop)
+            case SIGFPE:  return "SIGFPE";  // floating point error
+            case SIGILL:  return "SIGILL";  // illegal instruction
+        #ifdef SIGBUS
+            case SIGBUS:  return "SIGBUS";  // bus error (bad memory access)
+        #endif
+            default:      return "unknown signal";
+        }
+    }
+}
 
 void handleSegfaultStackTrace(int signal)
 {
-    static bool called = false;
-    if (!called)
+    static volatile std::sig_atomic_t called = 0;
+    if (called)
+        std::_Exit(EXIT_FAILURE);
+    called = 1;
+
+#ifdef _WIN32
+    /* TODO : do a windows compatible version */
+    Logger::error("FATAL ERROR: received signal ", signalName(signal), " (", signal, ")");
+#else
+    const auto stacktrace = std::stacktrace::current();
+
+    std::string sourceFile;
+    std::string function;
+    std::uint_least32_t line = 0;
+
+    for (std::size_t i = 2; i < stacktrace.size(); ++i)
     {
-        #ifdef _WIN32
-            /* TO DO : do a windows compatible version */
-            Logger::error("FATAR ERROR");
-        #else
-            auto stacktrace = std::stacktrace::current();
-            
-            std::stacktrace_entry entry;
-            
-            for (size_t i = 2; i < stacktrace.size(); i++)
-            {
-                if (stacktrace[i].source_file().empty()) continue;
-                
-                entry = stacktrace[i];
-                break;
-            }
-            
-            Logger::LogInfo info;
-            std::string source_file = entry.source_file();
-            std::string description = entry.description();
-            info.file = source_file.c_str();
-            info.function = description.c_str();
-            info.line = entry.source_line();
+        sourceFile = stacktrace[i].source_file();
+        if (sourceFile.empty())
+            continue;
 
-            Logger::setInfo(info);
-
-            std::stringstream ss;
-            ss << "Unknown Signal " << signal;
-            std::string s = ss.str();
-            const char* signalStr = s.c_str();
-            switch (signal)
-            {
-                case SIGSEGV:
-                    signalStr = "SIGSEGV";
-                    break;
-                case SIGBUS:
-                    signalStr = "SIGBUS";
-                    break;
-                case SIGKILL:
-                    signalStr = "SIGKILL";
-                    break;
-                case SIGABRT:
-                    signalStr = "SIGABRT";
-            }
-
-            // maybe a little risky, could cause deadlock or data corruption or something but eh ¯\_(ツ)_/¯
-            // also, sorry if you're reading this exactly because it happened to you
-            // good luck!
-            Logger::error("FATAL ERROR: received Signal ", signalStr, "!\nStacktrace: ", '\n', stacktrace);
-        #endif
+        function = stacktrace[i].description();
+        line = stacktrace[i].source_line();
+        break;
     }
-    called = true;
 
-    _exit(EXIT_FAILURE);
+    // maybe a little risky, could cause deadlock or data corruption or something but eh ¯\_(ツ)_/¯
+    // also, sorry if you're reading this exactly because it happened to you
+    // good luck!
+    Logger::logAt(Logger::_ERROR_, {sourceFile, function, line},
+                  "FATAL ERROR: received signal ", signalName(signal), " (", signal, ")!\n"
+                  "Stacktrace:\n", stacktrace);
+#endif
+
+    std::cout.flush();
+    std::_Exit(EXIT_FAILURE);
 }
